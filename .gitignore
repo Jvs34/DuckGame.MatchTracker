@@ -6,3 +6,4 @@
 /build/obj
 /build/ThirdParty/DuckGame.exe
 build/build_compiled.hash
+.vs/
