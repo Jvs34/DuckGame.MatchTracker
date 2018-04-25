@@ -9,7 +9,6 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
-
 #if true
 			System.Diagnostics.Debugger.Launch();
 #endif
