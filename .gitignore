@@ -1,10 +1,11 @@
 /MatchRecorder.dll
 /MatchRecorder.pdb
 
-/build/.vs
-/build/bin
-/build/obj
-/build/ThirdParty/DuckGame.exe
+MatchRecorder/.vs
+MatchRecorder/bin
+MatchRecorder/obj
+MatchRecorder/ThirdParty/DuckGame.exe
+ThirdParty/DuckGame.exe
 build/build_compiled.hash
 .vs/
 *.TMP

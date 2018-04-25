@@ -15,21 +15,21 @@
 
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>ThirdParty\0Harmony.dll</HintPath>
+      <HintPath>..\ThirdParty\0Harmony.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="DuckGame">
-      <HintPath>ThirdParty\DuckGame.exe</HintPath>
+      <HintPath>..\ThirdParty\DuckGame.exe</HintPath>
       <Private>false</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>ThirdParty\Newtonsoft.Json.dll</HintPath>
+      <HintPath>..\ThirdParty\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="obs-websocket-dotnet">
-      <HintPath>ThirdParty\obs-websocket-dotnet.dll</HintPath>
+      <HintPath>..\ThirdParty\obs-websocket-dotnet.dll</HintPath>
     </Reference>
     <Reference Include="websocket-sharp">
-      <HintPath>ThirdParty\websocket-sharp.dll</HintPath>
+      <HintPath>..\ThirdParty\websocket-sharp.dll</HintPath>
     </Reference>
   </ItemGroup>
 
