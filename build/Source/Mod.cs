@@ -19,14 +19,15 @@ namespace MatchRecorder
 			HarmonyInstance.Create( "MatchRecorder" ).PatchAll( Assembly.GetExecutingAssembly() );
 
 		}
-
+		
+		//TOOD: this is fine for now
 		public static MatchRecorderHandler GetRecorder()
 		{
 			return matchRecorderSingleton;
 		}
 
 
-		//uhhhhh find a better place to start this, there has to be hook for when the game is fully initialized
+		//TODO:uhhhhh find a better place to start this, there has to be hook for when the game is fully initialized
 		protected override void OnPostInitialize()
 		{
 			
