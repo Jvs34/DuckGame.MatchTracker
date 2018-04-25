@@ -5,6 +5,8 @@ using Harmony;
 using DuckGame;
 using OBSWebsocketDotNet;
 using System.IO;
+using MatchTracker;
+
 
 namespace MatchRecorder
 {
