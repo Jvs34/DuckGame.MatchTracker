@@ -5,7 +5,7 @@ using Harmony;
 using DuckGame;
 using OBSWebsocketDotNet;
 using System.IO;
-//using MatchTracker;
+using MatchTracker;
 
 
 namespace MatchRecorder
@@ -13,10 +13,14 @@ namespace MatchRecorder
 	public class MatchRecorderHandler
 	{
 		private OBSWebsocket obsHandler;
+		private String roundNameFormat;
 		private OutputState recordingState;
 		private bool requestedRecordingStop;
 		private bool requestedRecordingStart;
 
+		private MatchData currentMatch;
+		private RoundData currentRound;
+		
 		//TODO: this is fucking disgusting, fix later
 		public bool IsRecording
 		{
@@ -37,10 +41,12 @@ namespace MatchRecorder
 			}
 		}
 
+
 		public MatchRecorderHandler()
 		{
+			roundNameFormat = "year year uhhhhh whatever iso standard";//TODO:name format standard
 			recordingState = OutputState.Stopped;
-			obsHandler = new OBSWebsocket
+			obsHandler = new OBSWebsocket()
 			{
 				WSTimeout = new TimeSpan( 0 , 0 , 1 , 0 , 0 )
 			};
@@ -64,10 +70,17 @@ namespace MatchRecorder
 
 		}
 
-		//only record game levels for now
+		//only record game levels for now since we're kind of tied to the gounvirtual stuff
 		public bool IsLevelRecordable( Level level )
 		{
 			return level is GameLevel;
+		}
+
+		public String GetRoundName( DateTime time )
+		{
+			String str = "";
+			//use the same name format as 
+			return str;
 		}
 
 
@@ -157,11 +170,46 @@ namespace MatchRecorder
 
 		private void StartCollectingRoundData()
 		{
+
 		}
 
 
 		private void StopCollectingRoundData()
 		{
+
+		}
+
+		private void StartCollectingMatchData()
+		{
+			currentMatch = new MatchData
+			{
+				timeStarted = DateTime.Now
+			};
+
+
+		}
+
+		private void StopCollectingMatchData()
+		{
+
+			
+		}
+
+		private PlayerData CreatePlayerDataFromProfile( Profile profile )
+		{
+			//TODO: oh god you're too tired to write this shit stop what are you doing
+			PlayerData pd = new PlayerData()
+			{
+				userId = profile.steamID.ToString(),
+				team = new HatData()
+				{
+					hatName = profile.team.name,
+					isCustomHat = profile.team.customData != null
+				},
+
+			};
+			
+			return pd;
 		}
 	}
 
