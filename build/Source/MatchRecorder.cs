@@ -11,18 +11,9 @@ namespace MatchRecorder
 	public class MatchRecorderHandler
 	{
 		private OBSWebsocket obsHandler;
-
-		private FileSystemWatcher videoFileSystemWatcher;
-
 		private OutputState recordingState;
-		private OutputState replayBufferState;
-
-		//TODO: dunno what to do with these just yet
-		private bool queuedRecording;
-		private bool queuedReplayBuffer;
-
-		private bool requestedReplayBufferSaveAndStop;
-		private bool requestedReplayBufferStart;
+		private bool requestedRecordingStop;
+		private bool requestedRecordingStart;
 
 		//TODO: this is fucking disgusting, fix later
 		public bool IsRecording
@@ -44,41 +35,16 @@ namespace MatchRecorder
 			}
 		}
 
-		//TODO: this is fucking disgusting, fix later
-		public bool IsReplayBufferActive
-		{
-			get
-			{
-				switch( replayBufferState )
-				{
-					case OutputState.Started:
-					case OutputState.Starting:
-						return true;
-
-					case OutputState.Stopped:
-					case OutputState.Stopping:
-						return false;
-				}
-
-				return false;
-			}
-		}
-
 		public MatchRecorderHandler()
 		{
 			recordingState = OutputState.Stopped;
-			replayBufferState = OutputState.Stopped;
-			queuedRecording = false;
-			queuedReplayBuffer = false;
-
 			obsHandler = new OBSWebsocket
 			{
 				WSTimeout = new TimeSpan( 0 , 0 , 1 , 0 , 0 )
 			};
 			obsHandler.Connected += OnConnected;
 			obsHandler.Disconnected += OnDisconnected;
-			//obsHandler.RecordingStateChanged += OnRecordingStateChanged;
-			obsHandler.ReplayBufferStateChanged += OnReplayBufferStateChanged;
+			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
 		}
 
 		public void Init()
@@ -107,91 +73,18 @@ namespace MatchRecorder
 		{
 			HUD.AddCornerMessage( HUDCorner.TopRight , "Connected to OBS!!!" );
 
-			InitFileSystemWatcher();
 		}
-
 
 
 		private void OnDisconnected( object sender , EventArgs e )
 		{
 			HUD.AddCornerMessage( HUDCorner.TopRight , "Disconnected from OBS!!!" );
 
-			DeleteFileSystemWatcher();
 		}
-
 
 		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type )
 		{
 			recordingState = type;
-		}
-
-
-		private void OnReplayBufferStateChanged( OBSWebsocket sender , OutputState type )
-		{
-			replayBufferState = type;
-			#region COMMENTEDCODE
-			/*
-			if( queuedReplayBuffer && replayBufferState == OutputState.Stopped )
-			{
-				StartReplayBuffer( true );
-				queuedReplayBuffer = false;
-			}
-			*/
-			#endregion COMMENTEDCODE
-		}
-
-
-		public void StartReplayBuffer( bool forced = false )
-		{
-			if( !obsHandler.IsConnected )
-			{
-				return;
-			}
-
-			if( !forced && replayBufferState == OutputState.Stopping )
-			{
-				queuedReplayBuffer = true;
-				return;
-			}
-
-			try
-			{
-				obsHandler.StartReplayBuffer();
-			}
-			catch( Exception e )
-			{
-
-			}
-		}
-
-		public void SaveReplayBuffer()
-		{
-			if( !obsHandler.IsConnected )
-				return;
-
-			try
-			{
-				obsHandler.SaveReplayBuffer();
-			}
-			catch( Exception e )
-			{
-
-			}
-		}
-
-		public void StopReplayBuffer()
-		{
-			if( !obsHandler.IsConnected )
-				return;
-
-			try
-			{
-				obsHandler.StopReplayBuffer();
-			}
-			catch( Exception e )
-			{
-
-			}
 		}
 
 		public void Update()
@@ -200,20 +93,18 @@ namespace MatchRecorder
 				return;
 
 			//localized the try catches so that the variables wouldn't be set if an exception occurs, so it may try again on the next call
-			switch( replayBufferState )
+			switch( recordingState )
 			{
 				case OutputState.Started:
 					{
-						if( requestedReplayBufferSaveAndStop )
+						if( requestedRecordingStop )
 						{
 							try
 							{
-								obsHandler.SaveReplayBuffer();
-								
-								//TODO: apparently this has priority somehow to the savereplaybuffer command!!! we need to call this after the replay is saved somehow
-								//obsHandler.StopReplayBuffer();
+								obsHandler.StopRecording();
 
-								requestedReplayBufferSaveAndStop = false;
+
+								requestedRecordingStop = false;
 							}
 							catch( Exception e )
 							{
@@ -225,12 +116,12 @@ namespace MatchRecorder
 					}
 				case OutputState.Stopped:
 					{
-						if( requestedReplayBufferStart )
+						if( requestedRecordingStart )
 						{
 							try
 							{
-								obsHandler.StartReplayBuffer();
-								requestedReplayBufferStart = false;
+								obsHandler.StartRecording();
+								requestedRecordingStart = false;
 							}
 							catch( Exception e )
 							{
@@ -243,49 +134,27 @@ namespace MatchRecorder
 
 		}
 
-		public void RequestStartReplayBuffer()
+
+		public void RequestStopRecording()
 		{
-			requestedReplayBufferStart = true;
+			requestedRecordingStop = true;
+			StartCollectingMatchData();
 		}
 
-		public void RequestSaveAndStopReplayBuffer()
+
+		public void RequestStartRecording()
 		{
-			requestedReplayBufferSaveAndStop = true;
+			requestedRecordingStart = true;
+			StopCollectingMatchData();
 		}
 
-		private void InitFileSystemWatcher()
+		private void StartCollectingMatchData()
 		{
-			videoFileSystemWatcher = new FileSystemWatcher( obsHandler.GetRecordingFolder() , "*.*" );
-			videoFileSystemWatcher.Created += OnVideoCreated;
-			
 		}
 
-		private void DeleteFileSystemWatcher()
+
+		private void StopCollectingMatchData()
 		{
-			if( videoFileSystemWatcher == null )
-				return;
-
-			videoFileSystemWatcher.Dispose();
-			videoFileSystemWatcher = null;
-		}
-
-		private void OnVideoCreated( object sender , FileSystemEventArgs e )
-		{
-			//just in case the filesystemwatcher somehow doesn't get removed
-			if( !obsHandler.IsConnected )
-				return;
-
-			
-
-			try
-			{
-				obsHandler.StopReplayBuffer();
-			}
-			catch( Exception exc )
-			{
-
-			}
-
 		}
 	}
 
@@ -313,14 +182,9 @@ namespace MatchRecorder
 			//only bother if the current level is something we care about
 			if( Mod.GetRecorder().IsLevelRecordable( Level.current ) )
 			{
-				Mod.GetRecorder().RequestStartReplayBuffer();
+				Mod.GetRecorder().RequestStartRecording();
+
 			}
-
-
-			#region COMMENTEDCODE
-			//if not recording start recording
-			//Mod.GetRecorder().StartReplayBuffer();
-			#endregion
 
 		}
 	}
@@ -333,22 +197,11 @@ namespace MatchRecorder
 		private static void Postfix( Level value )
 		{
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
-			if( Mod.GetRecorder().IsReplayBufferActive )
+			if( Mod.GetRecorder().IsRecording )
 			{
-				Mod.GetRecorder().RequestSaveAndStopReplayBuffer();
+				Mod.GetRecorder().RequestStopRecording();
 			}
 
-
-			#region COMMENTEDCODE
-			//if it's recording stop the recording
-			/*
-			if( Mod.GetRecorder().IsReplayBufferActive )
-			{
-				Mod.GetRecorder().SaveReplayBuffer();
-				Mod.GetRecorder().StopReplayBuffer();
-			}
-			*/
-			#endregion
 		}
 	}
 
