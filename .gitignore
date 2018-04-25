@@ -8,3 +8,4 @@
 build/build_compiled.hash
 .vs/
 *.TMP
+MatchUploader/obj/
