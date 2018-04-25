@@ -74,14 +74,11 @@ namespace MatchRecorder
 		private void OnConnected( object sender , EventArgs e )
 		{
 			HUD.AddCornerMessage( HUDCorner.TopRight , "Connected to OBS!!!" );
-
 		}
-
 
 		private void OnDisconnected( object sender , EventArgs e )
 		{
 			HUD.AddCornerMessage( HUDCorner.TopRight , "Disconnected from OBS!!!" );
-
 		}
 
 		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type )
@@ -94,6 +91,16 @@ namespace MatchRecorder
 			if( !obsHandler.IsConnected )
 				return;
 
+			if( Level.core.gameInProgress )
+			{
+
+			}
+
+			if( Level.core.gameFinished )
+			{
+
+			}
+
 			//localized the try catches so that the variables wouldn't be set if an exception occurs, so it may try again on the next call
 			switch( recordingState )
 			{
@@ -104,8 +111,6 @@ namespace MatchRecorder
 							try
 							{
 								obsHandler.StopRecording();
-
-
 								requestedRecordingStop = false;
 							}
 							catch( Exception e )
@@ -137,25 +142,25 @@ namespace MatchRecorder
 		}
 
 
-		public void RequestStopRecording()
+		public void StopRecording()
 		{
 			requestedRecordingStop = true;
-			StartCollectingMatchData();
+			StartCollectingRoundData();
 		}
 
 
-		public void RequestStartRecording()
+		public void StartRecording()
 		{
 			requestedRecordingStart = true;
-			StopCollectingMatchData();
+			StopCollectingRoundData();
 		}
 
-		private void StartCollectingMatchData()
+		private void StartCollectingRoundData()
 		{
 		}
 
 
-		private void StopCollectingMatchData()
+		private void StopCollectingRoundData()
 		{
 		}
 	}
@@ -184,8 +189,7 @@ namespace MatchRecorder
 			//only bother if the current level is something we care about
 			if( Mod.GetRecorder().IsLevelRecordable( Level.current ) )
 			{
-				Mod.GetRecorder().RequestStartRecording();
-
+				Mod.GetRecorder().StartRecording();
 			}
 
 		}
@@ -201,7 +205,7 @@ namespace MatchRecorder
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
 			if( Mod.GetRecorder().IsRecording )
 			{
-				Mod.GetRecorder().RequestStopRecording();
+				Mod.GetRecorder().StopRecording();
 			}
 
 		}

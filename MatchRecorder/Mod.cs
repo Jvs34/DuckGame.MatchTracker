@@ -9,7 +9,7 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
-#if true
+#if false
 			System.Diagnostics.Debugger.Launch();
 #endif
 			matchRecorderSingleton = new MatchRecorderHandler();

@@ -7,6 +7,7 @@
     <Company>Jvs</Company>
     <Version>1.0.0.0</Version>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them to your desired repo</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -24,17 +25,26 @@
     </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\ThirdParty\Newtonsoft.Json.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="obs-websocket-dotnet">
       <HintPath>..\ThirdParty\obs-websocket-dotnet.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="websocket-sharp">
       <HintPath>..\ThirdParty\websocket-sharp.dll</HintPath>
+      <Private>true</Private>
     </Reference>
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Include="..\Shared\GameData.cs" />
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="$(ILRepack) /out:$(ProjectDir)\..\MatchRecorder.dll $(OutDir)\MatchRecorder.dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\obs-websocket-dotnet.dll $(OutDir)\websocket-sharp.dll" />
+    <Exec Command="$(ILRepack) /out:$(ProjectDir)\..\$(SolutionName).dll $(OutDir)\MatchRecorder.dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\obs-websocket-dotnet.dll $(OutDir)\websocket-sharp.dll" />
   </Target>
+
+  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>

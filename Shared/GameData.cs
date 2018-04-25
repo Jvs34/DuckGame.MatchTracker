@@ -55,7 +55,7 @@ namespace MatchTracker
 	class PlayerData
 	{
 		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
-		String userid;
+		String userId;
 		//name of the user
 		String name;
 

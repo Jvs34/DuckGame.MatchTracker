@@ -9,5 +9,9 @@
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.33.0.1202" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
-
+  
+  <ItemGroup>
+    <Compile Include="..\Shared\GameData.cs" />
+  </ItemGroup>
+  
 </Project>
