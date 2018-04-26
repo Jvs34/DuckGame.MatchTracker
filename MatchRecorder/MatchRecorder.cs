@@ -7,7 +7,7 @@ using DuckGame;
 using OBSWebsocketDotNet;
 using System.IO;
 using MatchTracker;
-
+using Newtonsoft.Json;
 
 namespace MatchRecorder
 {
@@ -109,12 +109,37 @@ namespace MatchRecorder
 			if( !obsHandler.IsConnected )
 				return;
 
+			var teams = Teams.core;
+			var core = Level.core;
 
-			//TODO: get another bool and do the flipflop kind of thing to start tracking when a match starts and ends
-			bool isGameInProgress = Level.core.gameInProgress;
+			bool isGameInProgress = false;
+
+			var eventsList = Event.events;
+
+			int gay = 5 + 1;
+			gay = gay * 2;
+			//for local multiplayer we have to use a different variable
+			if( Network.isActive )
+			{
+				//isGameInProgress = Level.core.gameInProgress;
+			}
+			else
+			{
+				/*
+				int count = 0;
+
+				foreach( Team team in Teams.all )
+				{
+					count += team.activeProfiles.Count;
+				}
+
+				isGameInProgress = count > 0;
+				*/
+			}
+
 			if( lastIsGameInProgress != isGameInProgress )
 			{
-				if (isGameInProgress)
+				if( isGameInProgress )
 				{
 					StartCollectingMatchData();
 				}
@@ -204,7 +229,7 @@ namespace MatchRecorder
 			{
 				levelName = lvl.level ,
 				players = new List<PlayerData>() ,
-				timeStarted = startTime , //TODO: replace with UtcNow?
+				timeStarted = startTime ,
 				isCustomLevel = false ,
 			};
 
@@ -225,11 +250,7 @@ namespace MatchRecorder
 				currentMatch.rounds.Add( GetRoundName( currentRound.timeStarted ) );
 			}
 
-			String filePath = currentFolder;
-			filePath = Path.Combine( filePath , "rounddata" );
 
-			//as a test just write a file with the same name as the video file
-			File.WriteAllText( Path.ChangeExtension( filePath , "json" ) , "im gay" );
 		}
 
 
@@ -239,21 +260,42 @@ namespace MatchRecorder
 			{
 				return;
 			}
-			currentRound.timeEnded = endTime; //TODO: replace with UtcNow?
-												   //write to file
-			
+			currentRound.timeEnded = endTime; 
+
+			String filePath = currentFolder;
+			filePath = Path.Combine( filePath , "rounddata" );
+
+			String jsonOutput = JsonConvert.SerializeObject( currentRound , Formatting.Indented );
+
+			File.WriteAllText( Path.ChangeExtension( filePath , "json" ) , jsonOutput );
+
+
 			currentRound = null;
+		}
+
+		public void TryCollectingMatchData()
+		{
+			//try saving the match if there's one and it's got at least one round
+			if( currentMatch != null )
+			{
+				if( currentMatch.rounds.Count > 0 )
+				{
+					StopCollectingMatchData();
+				}
+			}
+
+			//try starting to collect match data regardless, it'll only be saved if there's at least one round later on
+			StartCollectingMatchData();
 		}
 
 		private void StartCollectingMatchData()
 		{
 			currentMatch = new MatchData
 			{
-				timeStarted = DateTime.Now, //TODO: replace with UtcNow?
-				
+				timeStarted = DateTime.Now ,
+				rounds = new List<string>() ,
+				players = new List<PlayerData>(),
 			};
-
-
 		}
 
 		private void StopCollectingMatchData()
@@ -262,10 +304,48 @@ namespace MatchRecorder
 			{
 				return;
 			}
-			currentMatch.timeEnded = DateTime.Now;
 
-			//TODO:save match
+			currentMatch.timeEnded = DateTime.Now;
+			Team winner = null;
+
+			if( Teams.winning.Count > 0 )
+			{
+				winner = Teams.winning.First<Team>();
+			}
+
+			if( winner != null )
+			{
+				currentMatch.winner = CreateTeamDataFromTeam( winner );
+			}
+
+			foreach( Profile pro in Profiles.active )
+			{
+				currentMatch.players.Add( CreatePlayerDataFromProfile( pro ) );
+			}
+
+
+			String filePath = baseRecordingFolder;
+			filePath = Path.Combine( filePath , "matchdata " + GetRoundName( currentMatch.timeStarted ) );
+
+			String jsonOutput = JsonConvert.SerializeObject( currentMatch , Formatting.Indented );
+
+			File.WriteAllText( Path.ChangeExtension( filePath , "json" ) , jsonOutput );
+
 			currentMatch = null;
+		}
+
+		private TeamData CreateTeamDataFromTeam( Team team )
+		{
+			TeamData td = new TeamData()
+			{
+				hasHat = team.hasHat ,
+				wins = team.wins ,
+				score = team.score ,
+				hatName = team.name ,
+				isCustomHat = team.customData != null ,
+			};
+
+			return td;
 		}
 
 		private PlayerData CreatePlayerDataFromProfile( Profile profile )
@@ -274,26 +354,12 @@ namespace MatchRecorder
 			{
 				userId = profile.steamID.ToString() ,
 				name = profile.name ,
-				nickName = profile.rawName ,
-				team = new HatData()
-				{
-					hatName = profile.team.name ,
-					isCustomHat = profile.team.customData != null
-				}
+				team = CreateTeamDataFromTeam( profile.team )
 			};
 
 			return pd;
 		}
 
-		private void WriteMatchToFile()
-		{
-
-		}
-
-		private void WriteRoundToFile()
-		{
-
-		}
 	}
 
 	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
@@ -301,12 +367,10 @@ namespace MatchRecorder
 	{
 		private static void Prefix()
 		{
-			if( Mod.GetRecorder() == null )
+			if( Mod.GetRecorder() != null )
 			{
-				return;
+				Mod.GetRecorder().Update();
 			}
-
-			Mod.GetRecorder().Update();
 		}
 	}
 
@@ -340,6 +404,20 @@ namespace MatchRecorder
 				Mod.GetRecorder().StopRecording();
 			}
 
+		}
+	}
+
+
+	//this is called once when the
+	[HarmonyPatch( typeof( Main ) , "ResetMatchStuff" )]
+	class Main_ResetMatchStuff
+	{
+		private static void Prefix()
+		{
+			if( Mod.GetRecorder() != null )
+			{
+				Mod.GetRecorder().TryCollectingMatchData();
+			}
 		}
 	}
 

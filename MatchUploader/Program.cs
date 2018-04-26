@@ -10,8 +10,8 @@ namespace MatchUploader
 			String dateFormat = "yyyy-MM-dd HH-mm-ss";
 
 			DateTime date = DateTime.Now;
-
-			Console.WriteLine( date.ToString( dateFormat ) );
+			String str = date.ToString( dateFormat );
+			Console.WriteLine( nameof( DateTime.ToLocalTime ) );
 			Console.ReadKey();
 		}
 	}

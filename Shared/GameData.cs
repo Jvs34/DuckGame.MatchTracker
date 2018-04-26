@@ -11,7 +11,7 @@ namespace MatchTracker
 	//which in theory is fine until you want to link multiple matches together later on, gotta think about this
 	public class MatchData
 	{
-		
+
 		//for the json stuff I might turn this into a string list to prevent duplicated data
 		//although it might be just fine to have
 		public List<PlayerData> players;
@@ -30,7 +30,7 @@ namespace MatchTracker
 		public DateTime timeEnded;
 
 		//might be null if uh the match is never completed I guess
-		public PlayerData matchWinner;
+		public TeamData winner;
 	}
 
 	public class RoundData
@@ -47,7 +47,7 @@ namespace MatchTracker
 		public bool skipped;
 
 		//can be null, happens a lot of course if everyone dies
-		public HatData winnerTeam;
+		public TeamData winner;
 
 		public DateTime timeStarted;
 		public DateTime timeEnded;
@@ -69,13 +69,16 @@ namespace MatchTracker
 		public String nickName;
 
 		//yes a hat is a team
-		public HatData team;
+		public TeamData team;
 	}
 
 	//hats are used to define teams in duck game, so we kinda do need to track them
-	public class HatData
+	public class TeamData
 	{
+		public bool hasHat;
 		public String hatName;
 		public bool isCustomHat;
+		public int wins;
+		public int score;
 	}
 }
