@@ -13,10 +13,14 @@ namespace MatchTracker
 	{
 		
 		//for the json stuff I might turn this into a string list to prevent duplicated data
-		public List<PlayerData> players = new List<PlayerData>();
+		//although it might be just fine to have
+		public List<PlayerData> players;
+
+		//filename(without extension) of the rounds of this match
+		public List<String> rounds;
 
 		//same as above, dunno how the json library deals with duplicated data
-		public List<RoundData> rounds = new List<RoundData>();
+		//public List<RoundData> rounds = new List<RoundData>();
 
 		//when the match started
 		public DateTime timeStarted;
@@ -33,16 +37,17 @@ namespace MatchTracker
 	{
 		//while it seems unnecessary to have a list of players here, duck game now supports disconnections without interrupting gameplay
 		//so someone might be there for one round and be gone on the other
-		public List<PlayerData> players = new List<PlayerData>();
+		public List<PlayerData> players;
 
 		//name of the level this round was played on
 		public String levelName;
 
 		//useful to filter out
-		public bool isWorkshopLevel;
+		public bool isCustomLevel;
+		public bool skipped;
 
-		//can be null, happens a lot of course
-		public PlayerData winner;
+		//can be null, happens a lot of course if everyone dies
+		public HatData winnerTeam;
 
 		public DateTime timeStarted;
 		public DateTime timeEnded;

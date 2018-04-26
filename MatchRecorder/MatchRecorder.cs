@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Harmony;
@@ -13,14 +14,17 @@ namespace MatchRecorder
 	public class MatchRecorderHandler
 	{
 		private OBSWebsocket obsHandler;
-		private String roundNameFormat;
+		private static String roundNameFormat = "yyyy-MM-dd HH-mm-ss"; //this name format is the same as the one used by default on OBS Studio
 		private OutputState recordingState;
 		private bool requestedRecordingStop;
 		private bool requestedRecordingStart;
 
 		private MatchData currentMatch;
 		private RoundData currentRound;
-		
+		private String currentFolder;
+		private static String baseRecordingFolder = @"E:\DuckGameRecordings";//TODO:load this from settings
+		private bool lastIsGameInProgress;
+
 		//TODO: this is fucking disgusting, fix later
 		public bool IsRecording
 		{
@@ -44,15 +48,18 @@ namespace MatchRecorder
 
 		public MatchRecorderHandler()
 		{
-			roundNameFormat = "year year uhhhhh whatever iso standard";//TODO:name format standard
+
+			lastIsGameInProgress = false;
 			recordingState = OutputState.Stopped;
 			obsHandler = new OBSWebsocket()
 			{
-				WSTimeout = new TimeSpan( 0 , 0 , 1 , 0 , 0 )
+				WSTimeout = new TimeSpan( 0 , 0 , 1 , 0 , 0 ) ,
 			};
+
 			obsHandler.Connected += OnConnected;
 			obsHandler.Disconnected += OnDisconnected;
 			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
+
 		}
 
 		public void Init()
@@ -76,11 +83,9 @@ namespace MatchRecorder
 			return level is GameLevel;
 		}
 
-		public String GetRoundName( DateTime time )
+		public static String GetRoundName( DateTime time )
 		{
-			String str = "";
-			//use the same name format as 
-			return str;
+			return time.ToString( roundNameFormat );
 		}
 
 
@@ -104,11 +109,24 @@ namespace MatchRecorder
 			if( !obsHandler.IsConnected )
 				return;
 
-			if( Level.core.gameInProgress )
-			{
 
+			//TODO: get another bool and do the flipflop kind of thing to start tracking when a match starts and ends
+			bool isGameInProgress = Level.core.gameInProgress;
+			if( lastIsGameInProgress != isGameInProgress )
+			{
+				if (isGameInProgress)
+				{
+					StartCollectingMatchData();
+				}
+				else
+				{
+					StopCollectingMatchData();
+				}
+
+				lastIsGameInProgress = isGameInProgress;
 			}
 
+			//I don't think this variable is used at all in multiplayer
 			if( Level.core.gameFinished )
 			{
 
@@ -123,8 +141,10 @@ namespace MatchRecorder
 						{
 							try
 							{
+								DateTime endTime = DateTime.Now;
 								obsHandler.StopRecording();
 								requestedRecordingStop = false;
+								StopCollectingRoundData( endTime );
 							}
 							catch( Exception e )
 							{
@@ -140,8 +160,18 @@ namespace MatchRecorder
 						{
 							try
 							{
+								DateTime recordingTime = DateTime.Now;
+
+								currentFolder = Path.Combine( baseRecordingFolder , GetRoundName( recordingTime ) );
+								//try setting the recording folder first, then create it before we start recording
+
+								Directory.CreateDirectory( currentFolder );
+
+								obsHandler.SetRecordingFolder( currentFolder );
+
 								obsHandler.StartRecording();
 								requestedRecordingStart = false;
+								StartCollectingRoundData( recordingTime );
 							}
 							catch( Exception e )
 							{
@@ -158,32 +188,69 @@ namespace MatchRecorder
 		public void StopRecording()
 		{
 			requestedRecordingStop = true;
-			StartCollectingRoundData();
 		}
 
 
 		public void StartRecording()
 		{
 			requestedRecordingStart = true;
-			StopCollectingRoundData();
 		}
 
-		private void StartCollectingRoundData()
+		private void StartCollectingRoundData( DateTime startTime )
 		{
+			Level lvl = Level.current;
 
+			currentRound = new RoundData()
+			{
+				levelName = lvl.level ,
+				players = new List<PlayerData>() ,
+				timeStarted = startTime , //TODO: replace with UtcNow?
+				isCustomLevel = false ,
+			};
+
+			foreach( Profile pro in Profiles.active )
+			{
+				currentRound.players.Add( CreatePlayerDataFromProfile( pro ) );
+			}
+
+
+			if( lvl is GameLevel gl )
+			{
+				currentRound.isCustomLevel = gl.isCustomLevel;
+			}
+
+			//TODO: add the name of the round to the MatchData
+			if( currentMatch != null )
+			{
+				currentMatch.rounds.Add( GetRoundName( currentRound.timeStarted ) );
+			}
+
+			String filePath = currentFolder;
+			filePath = Path.Combine( filePath , "rounddata" );
+
+			//as a test just write a file with the same name as the video file
+			File.WriteAllText( Path.ChangeExtension( filePath , "json" ) , "im gay" );
 		}
 
 
-		private void StopCollectingRoundData()
+		private void StopCollectingRoundData( DateTime endTime )
 		{
-
+			if( currentRound == null )
+			{
+				return;
+			}
+			currentRound.timeEnded = endTime; //TODO: replace with UtcNow?
+												   //write to file
+			
+			currentRound = null;
 		}
 
 		private void StartCollectingMatchData()
 		{
 			currentMatch = new MatchData
 			{
-				timeStarted = DateTime.Now
+				timeStarted = DateTime.Now, //TODO: replace with UtcNow?
+				
 			};
 
 
@@ -191,25 +258,41 @@ namespace MatchRecorder
 
 		private void StopCollectingMatchData()
 		{
+			if( currentMatch == null )
+			{
+				return;
+			}
+			currentMatch.timeEnded = DateTime.Now;
 
-			
+			//TODO:save match
+			currentMatch = null;
 		}
 
 		private PlayerData CreatePlayerDataFromProfile( Profile profile )
 		{
-			//TODO: oh god you're too tired to write this shit stop what are you doing
-			PlayerData pd = new PlayerData()
+			PlayerData pd = new PlayerData
 			{
-				userId = profile.steamID.ToString(),
+				userId = profile.steamID.ToString() ,
+				name = profile.name ,
+				nickName = profile.rawName ,
 				team = new HatData()
 				{
-					hatName = profile.team.name,
+					hatName = profile.team.name ,
 					isCustomHat = profile.team.customData != null
-				},
-
+				}
 			};
-			
+
 			return pd;
+		}
+
+		private void WriteMatchToFile()
+		{
+
+		}
+
+		private void WriteRoundToFile()
+		{
+
 		}
 	}
 
@@ -248,7 +331,8 @@ namespace MatchRecorder
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
 	class Level_SetCurrent
 	{
-		private static void Postfix( Level value )
+		//changed the Postfix to a Prefix so we can get the Level.current before it's changed to the new one
+		private static void Prefix( Level value )
 		{
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
 			if( Mod.GetRecorder().IsRecording )
