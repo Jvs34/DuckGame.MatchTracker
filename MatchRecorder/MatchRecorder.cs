@@ -109,10 +109,10 @@ namespace MatchRecorder
 			if( !obsHandler.IsConnected )
 				return;
 
-			var teams = Teams.core;
-			var core = Level.core;
+			//var teams = Teams.core;
+			//var core = Level.core;
 
-			bool isGameInProgress = false;
+			//bool isGameInProgress = false;
 
 			var eventsList = Event.events;
 
@@ -136,7 +136,7 @@ namespace MatchRecorder
 				isGameInProgress = count > 0;
 				*/
 			}
-
+			/*
 			if( lastIsGameInProgress != isGameInProgress )
 			{
 				if( isGameInProgress )
@@ -150,6 +150,7 @@ namespace MatchRecorder
 
 				lastIsGameInProgress = isGameInProgress;
 			}
+			*/
 
 			//I don't think this variable is used at all in multiplayer
 			if( Level.core.gameFinished )
@@ -248,6 +249,7 @@ namespace MatchRecorder
 			if( currentMatch != null )
 			{
 				currentMatch.rounds.Add( GetRoundName( currentRound.timeStarted ) );
+				System.Diagnostics.Debugger.Log( 1 , "RoundData" , "Added round to match\n" );
 			}
 
 
@@ -276,15 +278,19 @@ namespace MatchRecorder
 		public void TryCollectingMatchData()
 		{
 			//try saving the match if there's one and it's got at least one round
+			System.Diagnostics.Debugger.Log( 1 , "MatchData" , "Checking match data\n" );
 			if( currentMatch != null )
 			{
+				System.Diagnostics.Debugger.Log( 1 , "MatchData" , "This match has " + currentMatch.rounds.Count + " rounds\n" );
 				if( currentMatch.rounds.Count > 0 )
 				{
+					System.Diagnostics.Debugger.Log( 1 , "MatchData" , "Trying to save MatchData then\n" );
 					StopCollectingMatchData();
 				}
 			}
 
 			//try starting to collect match data regardless, it'll only be saved if there's at least one round later on
+			System.Diagnostics.Debugger.Log( 1 , "MatchData" , "Starting new MatchData\n" );
 			StartCollectingMatchData();
 		}
 
@@ -339,7 +345,6 @@ namespace MatchRecorder
 			TeamData td = new TeamData()
 			{
 				hasHat = team.hasHat ,
-				wins = team.wins ,
 				score = team.score ,
 				hatName = team.name ,
 				isCustomHat = team.customData != null ,

@@ -78,7 +78,6 @@ namespace MatchTracker
 		public bool hasHat;
 		public String hatName;
 		public bool isCustomHat;
-		public int wins;
 		public int score;
 	}
 }
