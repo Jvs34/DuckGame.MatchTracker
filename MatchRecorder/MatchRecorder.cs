@@ -23,7 +23,7 @@ namespace MatchRecorder
 		private RoundData currentRound;
 		private String currentFolder;
 		private static String baseRecordingFolder = @"E:\DuckGameRecordings";//TODO:load this from settings
-		private bool lastIsGameInProgress;
+																			 //private bool lastIsGameInProgress;
 
 		//TODO: this is fucking disgusting, fix later
 		public bool IsRecording
@@ -49,7 +49,7 @@ namespace MatchRecorder
 		public MatchRecorderHandler()
 		{
 
-			lastIsGameInProgress = false;
+			//lastIsGameInProgress = false;
 			recordingState = OutputState.Stopped;
 			obsHandler = new OBSWebsocket()
 			{
@@ -107,7 +107,9 @@ namespace MatchRecorder
 		public void Update()
 		{
 			if( !obsHandler.IsConnected )
+			{
 				return;
+			}
 
 			//var teams = Teams.core;
 			//var core = Level.core;
@@ -118,45 +120,6 @@ namespace MatchRecorder
 
 			int gay = 5 + 1;
 			gay = gay * 2;
-			//for local multiplayer we have to use a different variable
-			if( Network.isActive )
-			{
-				//isGameInProgress = Level.core.gameInProgress;
-			}
-			else
-			{
-				/*
-				int count = 0;
-
-				foreach( Team team in Teams.all )
-				{
-					count += team.activeProfiles.Count;
-				}
-
-				isGameInProgress = count > 0;
-				*/
-			}
-			/*
-			if( lastIsGameInProgress != isGameInProgress )
-			{
-				if( isGameInProgress )
-				{
-					StartCollectingMatchData();
-				}
-				else
-				{
-					StopCollectingMatchData();
-				}
-
-				lastIsGameInProgress = isGameInProgress;
-			}
-			*/
-
-			//I don't think this variable is used at all in multiplayer
-			if( Level.core.gameFinished )
-			{
-
-			}
 
 			//localized the try catches so that the variables wouldn't be set if an exception occurs, so it may try again on the next call
 			switch( recordingState )
@@ -262,7 +225,20 @@ namespace MatchRecorder
 			{
 				return;
 			}
-			currentRound.timeEnded = endTime; 
+
+			Team winner = null;
+
+			if( GameMode.lastWinners.Count > 0 )
+			{
+				winner = GameMode.lastWinners.First()?.team;
+			}
+
+			if( winner != null )
+			{
+				currentRound.winner = CreateTeamDataFromTeam( winner );
+			}
+
+			currentRound.timeEnded = endTime;
 
 			String filePath = currentFolder;
 			filePath = Path.Combine( filePath , "rounddata" );
@@ -300,7 +276,7 @@ namespace MatchRecorder
 			{
 				timeStarted = DateTime.Now ,
 				rounds = new List<string>() ,
-				players = new List<PlayerData>(),
+				players = new List<PlayerData>() ,
 			};
 		}
 
@@ -316,7 +292,7 @@ namespace MatchRecorder
 
 			if( Teams.winning.Count > 0 )
 			{
-				winner = Teams.winning.First<Team>();
+				winner = Teams.winning.First();
 			}
 
 			if( winner != null )
@@ -374,9 +350,9 @@ namespace MatchRecorder
 	{
 		private static void Prefix()
 		{
-			if( Mod.Recorder != null )
+			//if( Mod.Recorder != null )
 			{
-				Mod.Recorder.Update();
+				Mod.Recorder?.Update();
 			}
 		}
 	}
@@ -421,9 +397,9 @@ namespace MatchRecorder
 	{
 		private static void Prefix()
 		{
-			if( Mod.Recorder != null )
+			//if( Mod.Recorder != null )
 			{
-				Mod.Recorder.TryCollectingMatchData();
+				Mod.Recorder?.TryCollectingMatchData();
 			}
 		}
 	}

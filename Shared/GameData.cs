@@ -7,6 +7,17 @@ using Newtonsoft.Json;
 
 namespace MatchTracker
 {
+
+	//this is what accessed by the website, so it will list the name of the matches that were tracked
+	public class GlobalMatches
+	{
+		public List<String> matches = new List<string>();
+
+		//all the players that have ever played any rounds, even local players
+		//these player profiles will not have teamdata
+		public List<PlayerData> playerProfiles = new List<PlayerData>();
+	}
+
 	//a match is kind of hard to keep track of in a sense, reconnections might throw stats off and create duplicate matches
 	//which in theory is fine until you want to link multiple matches together later on, gotta think about this
 	public class MatchData
@@ -14,10 +25,10 @@ namespace MatchTracker
 
 		//for the json stuff I might turn this into a string list to prevent duplicated data
 		//although it might be just fine to have
-		public List<PlayerData> players;
+		public List<PlayerData> players = new List<PlayerData>();
 
 		//filename(without extension) of the rounds of this match
-		public List<String> rounds;
+		public List<String> rounds = new List<string>();
 
 		//same as above, dunno how the json library deals with duplicated data
 		//public List<RoundData> rounds = new List<RoundData>();
@@ -37,7 +48,7 @@ namespace MatchTracker
 	{
 		//while it seems unnecessary to have a list of players here, duck game now supports disconnections without interrupting gameplay
 		//so someone might be there for one round and be gone on the other
-		public List<PlayerData> players;
+		public List<PlayerData> players = new List<PlayerData>();
 
 		//id of the level this round was played on
 		//unfortunately the actual path of the level is already gone by the time this is available
