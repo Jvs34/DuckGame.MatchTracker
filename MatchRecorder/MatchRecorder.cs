@@ -23,7 +23,10 @@ namespace MatchRecorder
 		private RoundData currentRound;
 		private String currentFolder;
 		private static String baseRecordingFolder = @"E:\DuckGameRecordings";//TODO:load this from settings
-																			 //private bool lastIsGameInProgress;
+		private string roundsFolder;
+		private string matchesFolder;
+
+		//private bool lastIsGameInProgress;
 
 		//TODO: this is fucking disgusting, fix later
 		public bool IsRecording
@@ -59,13 +62,24 @@ namespace MatchRecorder
 			obsHandler.Connected += OnConnected;
 			obsHandler.Disconnected += OnDisconnected;
 			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
+			try
+			{
+				roundsFolder = Path.Combine( baseRecordingFolder , "rounds" );
+				matchesFolder = Path.Combine( baseRecordingFolder , "matches" );
 
-		}
+				if( !Directory.Exists( roundsFolder ) )
+					Directory.CreateDirectory( roundsFolder );
 
-		public void Init()
-		{
+				if( !Directory.Exists( matchesFolder ) )
+					Directory.CreateDirectory( matchesFolder );
+
+			}
+			catch( Exception e )
+			{
+
+			}
+			
 			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
-
 			try
 			{
 				obsHandler.Connect( "ws://127.0.0.1:4444" , "imgay" );
@@ -74,6 +88,12 @@ namespace MatchRecorder
 			{
 
 			}
+		}
+
+		public void Init()
+		{
+			
+
 
 		}
 
@@ -83,7 +103,7 @@ namespace MatchRecorder
 			return level is GameLevel;
 		}
 
-		public static String GetRoundName( DateTime time )
+		public static String DateTimeToString( DateTime time )
 		{
 			return time.ToString( roundNameFormat );
 		}
@@ -151,7 +171,7 @@ namespace MatchRecorder
 							{
 								DateTime recordingTime = DateTime.Now;
 
-								currentFolder = Path.Combine( baseRecordingFolder , GetRoundName( recordingTime ) );
+								currentFolder = Path.Combine( roundsFolder , DateTimeToString( recordingTime ) );
 								//try setting the recording folder first, then create it before we start recording
 
 								Directory.CreateDirectory( currentFolder );
@@ -211,7 +231,7 @@ namespace MatchRecorder
 			//TODO: add the name of the round to the MatchData
 			if( currentMatch != null )
 			{
-				currentMatch.rounds.Add( GetRoundName( currentRound.timeStarted ) );
+				currentMatch.rounds.Add( DateTimeToString( currentRound.timeStarted ) );
 				System.Diagnostics.Debugger.Log( 1 , "RoundData" , "Added round to match\n" );
 			}
 
@@ -306,8 +326,7 @@ namespace MatchRecorder
 			}
 
 
-			String filePath = baseRecordingFolder;
-			filePath = Path.Combine( filePath , "matchdata " + GetRoundName( currentMatch.timeStarted ) );
+			String filePath = Path.Combine( matchesFolder , DateTimeToString( currentMatch.timeStarted ) );
 
 			String jsonOutput = JsonConvert.SerializeObject( currentMatch , Formatting.Indented );
 
@@ -337,8 +356,6 @@ namespace MatchRecorder
 				name = profile.name ,
 				team = CreateTeamDataFromTeam( profile.team )
 			};
-
-
 
 			return pd;
 		}
