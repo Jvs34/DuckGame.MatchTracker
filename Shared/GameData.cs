@@ -39,7 +39,8 @@ namespace MatchTracker
 		//so someone might be there for one round and be gone on the other
 		public List<PlayerData> players;
 
-		//name of the level this round was played on
+		//id of the level this round was played on
+		//unfortunately the actual path of the level is already gone by the time this is available
 		public String levelName;
 
 		//useful to filter out
@@ -65,7 +66,7 @@ namespace MatchTracker
 		//name of the user
 		public String name;
 
-		//custom nickname for the player, might happen in the case of some cunt changing name to a shitty one all the time *cough* raptor *cough*
+		//custom nickname for the player, this will be set manually on another json
 		public String nickName;
 
 		//yes a hat is a team

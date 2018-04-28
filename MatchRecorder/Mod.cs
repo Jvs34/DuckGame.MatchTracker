@@ -7,6 +7,11 @@ namespace MatchRecorder
 	{
 		private static MatchRecorderHandler matchRecorderSingleton = null;
 
+		public static MatchRecorderHandler Recorder
+		{
+			get => matchRecorderSingleton;
+		}
+
 		protected override void OnPreInitialize()
 		{
 #if false
@@ -19,17 +24,11 @@ namespace MatchRecorder
 
 		}
 
-		//TOOD: this is fine for now
-		public static MatchRecorderHandler GetRecorder()
-		{
-			return matchRecorderSingleton;
-		}
-
 
 		//TODO:uhhhhh find a better place to start this, there has to be hook for when the game is fully initialized
 		protected override void OnPostInitialize()
 		{
-			GetRecorder().Init();
+			Recorder.Init();
 		}
 	}
 }

@@ -362,6 +362,8 @@ namespace MatchRecorder
 				team = CreateTeamDataFromTeam( profile.team )
 			};
 
+
+
 			return pd;
 		}
 
@@ -372,9 +374,9 @@ namespace MatchRecorder
 	{
 		private static void Prefix()
 		{
-			if( Mod.GetRecorder() != null )
+			if( Mod.Recorder != null )
 			{
-				Mod.GetRecorder().Update();
+				Mod.Recorder.Update();
 			}
 		}
 	}
@@ -387,9 +389,9 @@ namespace MatchRecorder
 		private static void Postfix()
 		{
 			//only bother if the current level is something we care about
-			if( Mod.GetRecorder().IsLevelRecordable( Level.current ) )
+			if( Mod.Recorder.IsLevelRecordable( Level.current ) )
 			{
-				Mod.GetRecorder().StartRecording();
+				Mod.Recorder.StartRecording();
 			}
 
 		}
@@ -404,9 +406,9 @@ namespace MatchRecorder
 		private static void Prefix( Level value )
 		{
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
-			if( Mod.GetRecorder().IsRecording )
+			if( Mod.Recorder.IsRecording )
 			{
-				Mod.GetRecorder().StopRecording();
+				Mod.Recorder.StopRecording();
 			}
 
 		}
@@ -419,9 +421,9 @@ namespace MatchRecorder
 	{
 		private static void Prefix()
 		{
-			if( Mod.GetRecorder() != null )
+			if( Mod.Recorder != null )
 			{
-				Mod.GetRecorder().TryCollectingMatchData();
+				Mod.Recorder.TryCollectingMatchData();
 			}
 		}
 	}
