@@ -52,6 +52,10 @@ namespace MatchRecorder
 		public MatchRecorderHandler()
 		{
 
+#if DEBUG
+			baseRecordingFolder = @"E:\DebugGameRecordings";
+#endif
+
 			//lastIsGameInProgress = false;
 			recordingState = OutputState.Stopped;
 			obsHandler = new OBSWebsocket()
@@ -78,7 +82,7 @@ namespace MatchRecorder
 			{
 
 			}
-			
+
 			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
 			try
 			{
@@ -92,7 +96,7 @@ namespace MatchRecorder
 
 		public void Init()
 		{
-			
+
 
 
 		}
@@ -131,10 +135,9 @@ namespace MatchRecorder
 				return;
 			}
 
-			//var teams = Teams.core;
-			//var core = Level.core;
+			var teams = Teams.core;
+			var core = Level.core;
 
-			//bool isGameInProgress = false;
 
 			var eventsList = Event.events;
 
@@ -357,6 +360,24 @@ namespace MatchRecorder
 				team = CreateTeamDataFromTeam( profile.team )
 			};
 
+			//I could've done this with an inlined check but I had other shit to call in here so not yet
+			if( !Network.isActive )
+			{
+				pd.userId = profile.id;
+			}
+
+			//TODO: multiple local players made by the host have the same steamid, try to use a different method for those guys
+			//this does not actually work properly
+			/*
+			if( Network.isActive && profile.linkedProfile != null )
+			{
+				//try to convert the profile name into something like like PLAYER2
+				int netIndex = profile.networkIndex + 1;
+				pd.userId = "Profile" + netIndex;
+			}
+			*/
+
+
 			return pd;
 		}
 
@@ -407,7 +428,7 @@ namespace MatchRecorder
 
 			//only really useful in multiplayer, since continuing a match from the endgame screen doesn't trigger ResetMatchStuff on other clients
 			//so unfortunately we have to do this hack
-			if( Network.isActive && Network.isClient )
+			if( Network.isActive && Network.isClient && !Level.core.gameInProgress )
 			{
 				Level oldValue = Level.current;
 				Level newValue = value;

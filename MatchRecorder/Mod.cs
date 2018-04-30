@@ -14,7 +14,7 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
-#if false
+#if DEBUG
 			System.Diagnostics.Debugger.Launch();
 #endif
 			matchRecorderSingleton = new MatchRecorderHandler();
