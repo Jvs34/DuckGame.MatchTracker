@@ -396,6 +396,7 @@ namespace MatchRecorder
 	class Level_SetCurrent
 	{
 		//changed the Postfix to a Prefix so we can get the Level.current before it's changed to the new one
+		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
 		private static void Prefix( Level value )
 		{
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
@@ -404,11 +405,23 @@ namespace MatchRecorder
 				Mod.Recorder.StopRecording();
 			}
 
+			//only really useful in multiplayer, since continuing a match from the endgame screen doesn't trigger ResetMatchStuff on other clients
+			//so unfortunately we have to do this hack
+			if( Network.isActive && Network.isClient )
+			{
+				Level oldValue = Level.current;
+				Level newValue = value;
+				if( oldValue is RockScoreboard && Mod.Recorder.IsLevelRecordable( newValue ) )
+				{
+					Mod.Recorder?.TryCollectingMatchData();
+				}
+			}
 		}
 	}
 
 
-	//this is called once when the
+	//this is called once when a new match starts, but not if you're a client and in multiplayer and the host decides to continue from the endgame screen instead of going
+	//back to lobby first
 	[HarmonyPatch( typeof( Main ) , "ResetMatchStuff" )]
 	class Main_ResetMatchStuff
 	{
