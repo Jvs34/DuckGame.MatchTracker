@@ -12,3 +12,4 @@ build/build_compiled.hash
 *.TMP
 ThirdParty/DuckGame.exe
 MatchRecorder/Properties/launchSettings.json
+settings.json

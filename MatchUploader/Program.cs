@@ -6,12 +6,15 @@ namespace MatchUploader
 	{
 		static void Main( string [] args )
 		{
-			//%CCYY-%MM-%DD %hh-%mm-%ss
-			String dateFormat = "yyyy-MM-dd HH-mm-ss";
+			try
+			{
 
-			DateTime date = DateTime.Now;
-			String str = date.ToString( dateFormat );
-			Console.WriteLine( nameof( DateTime.ToLocalTime ) );
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e.ToString() );
+			}
+			Console.WriteLine( "Program either had an exception or it's done working" );
 			Console.ReadKey();
 		}
 	}
