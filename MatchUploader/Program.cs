@@ -6,9 +6,10 @@ namespace MatchUploader
 	{
 		static void Main( string [] args )
 		{
+			MatchManager mm = new MatchManager();
 			try
 			{
-
+				mm.UpdateGlobalData( @"E:\DebugGameRecordings" );
 			}
 			catch( Exception e )
 			{

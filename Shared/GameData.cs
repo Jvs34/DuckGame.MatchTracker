@@ -9,13 +9,16 @@ namespace MatchTracker
 {
 
 	//this is what accessed by the website, so it will list the name of the matches that were tracked
-	public class GlobalMatches
+	public class GlobalData
 	{
 		public List<String> matches = new List<string>();
 
+		//unfortunately sometimes duck game might crash because someone still hasn't fixed the end game screen crash so the match might not get saved
+		public List<String> rounds = new List<string>();
+
 		//all the players that have ever played any rounds, even local players
 		//these player profiles will not have teamdata
-		public List<PlayerData> playerProfiles = new List<PlayerData>();
+		public List<PlayerData> players = new List<PlayerData>();
 	}
 
 	//a match is kind of hard to keep track of in a sense, reconnections might throw stats off and create duplicate matches
