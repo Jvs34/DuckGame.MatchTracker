@@ -13,20 +13,18 @@ namespace MatchRecorder
 {
 	public class MatchRecorderHandler
 	{
+		private SharedSettings sharedSettings;
 		private OBSWebsocket obsHandler;
-		private static String roundNameFormat = "yyyy-MM-dd HH-mm-ss"; //this name format is the same as the one used by default on OBS Studio
 		private OutputState recordingState;
 		private bool requestedRecordingStop;
 		private bool requestedRecordingStart;
 
 		private MatchData currentMatch;
 		private RoundData currentRound;
-		private String currentFolder;
-		private static String baseRecordingFolder = @"E:\DuckGameRecordings";//TODO:load this from settings
+
 		private string roundsFolder;
 		private string matchesFolder;
 
-		//private bool lastIsGameInProgress;
 
 		//TODO: this is fucking disgusting, fix later
 		public bool IsRecording
@@ -48,13 +46,25 @@ namespace MatchRecorder
 			}
 		}
 
-
-		public MatchRecorderHandler()
+		public String GetRecordingFolder()
 		{
-
 #if DEBUG
-			baseRecordingFolder = @"E:\DebugGameRecordings";
+			return sharedSettings.debugBaseRecordingFolder;
+#else
+			return sharedSettings.baseRecordingFolder;
 #endif
+		}
+
+		public MatchRecorderHandler( String modPath )
+		{
+			sharedSettings = new SharedSettings();
+			String sharedSettingsPath = Path.Combine( Path.Combine( modPath , "Settings" ) , "shared.json" );
+			
+			{
+				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+			}
+
+
 
 			//lastIsGameInProgress = false;
 			recordingState = OutputState.Stopped;
@@ -68,8 +78,8 @@ namespace MatchRecorder
 			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
 			try
 			{
-				roundsFolder = Path.Combine( baseRecordingFolder , "rounds" );
-				matchesFolder = Path.Combine( baseRecordingFolder , "matches" );
+				roundsFolder = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
+				matchesFolder = Path.Combine( GetRecordingFolder() , sharedSettings.matchesFolder );
 
 				if( !Directory.Exists( roundsFolder ) )
 					Directory.CreateDirectory( roundsFolder );
@@ -107,9 +117,9 @@ namespace MatchRecorder
 			return level is GameLevel;
 		}
 
-		public static String DateTimeToString( DateTime time )
+		public String DateTimeToString( DateTime time )
 		{
-			return time.ToString( roundNameFormat );
+			return time.ToString( sharedSettings.timestampFormat );
 		}
 
 
@@ -174,7 +184,7 @@ namespace MatchRecorder
 							{
 								DateTime recordingTime = DateTime.Now;
 
-								currentFolder = Path.Combine( roundsFolder , DateTimeToString( recordingTime ) );
+								String currentFolder = Path.Combine( roundsFolder , DateTimeToString( recordingTime ) );
 								//try setting the recording folder first, then create it before we start recording
 
 								Directory.CreateDirectory( currentFolder );
@@ -263,12 +273,12 @@ namespace MatchRecorder
 
 			currentRound.timeEnded = endTime;
 
-			String filePath = currentFolder;
-			filePath = Path.Combine( filePath , "rounddata" );
+			String filePath = Path.Combine( roundsFolder , DateTimeToString( currentRound.timeStarted ) );
+			filePath = Path.Combine( filePath , sharedSettings.roundDataFile );
 
 			String jsonOutput = JsonConvert.SerializeObject( currentRound , Formatting.Indented );
 
-			File.WriteAllText( Path.ChangeExtension( filePath , "json" ) , jsonOutput );
+			File.WriteAllText( filePath , jsonOutput );
 
 
 			currentRound = null;

@@ -23,10 +23,16 @@ namespace MatchUploader
 {
 	public class MatchUploaderHandler
 	{
+		private String settingsFolder;
 		private SharedSettings sharedSettings;
 		private UploaderSettings uploaderSettings;
 
 		private bool initialized = false;
+
+		public bool Initialized
+		{
+			get => initialized;
+		}
 
 		public MatchUploaderHandler()
 		{
@@ -35,24 +41,33 @@ namespace MatchUploader
 			uploaderSettings = new UploaderSettings();
 			//load the settings
 			//since we're still debugging shit, we're running from visual studio
-			String settingsFolder = Path.Combine( Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) ) , "Settings" );
+			settingsFolder = Path.Combine( Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) ) , "Settings" );
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
 			String uploaderSettingsPath = Path.Combine( settingsFolder , "uploader.json" );
 
-			try
+			//try
 			{
 				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 				uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
 				initialized = true;
 			}
+			/*
 			catch( Exception e )
 			{
 				initialized = false;
 			}
+			*/
 
 		}
 
-		
+		//in this context, settings are only the uploaderSettings
+		public void SaveSettings()
+		{
+			File.WriteAllText(
+				Path.Combine( settingsFolder , "uploader.json" ) ,
+				JsonConvert.SerializeObject( uploaderSettings , Formatting.Indented )
+			);
+		}
 
 
 		public async Task DoYoutubeLoginAsync()
@@ -82,16 +97,16 @@ namespace MatchUploader
 		public void UpdateGlobalData()
 		{
 			//
-			/*
-			String roundsPath = Path.Combine( BasePath , "rounds" );
-			String matchesPath = Path.Combine( BasePath , "matches" );
+			
+			String roundsPath = Path.Combine( sharedSettings.baseRecordingFolder , sharedSettings.roundsFolder );
+			String matchesPath = Path.Combine( sharedSettings.baseRecordingFolder , sharedSettings.matchesFolder );
 
-			if( !Directory.Exists( BasePath ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
+			if( !Directory.Exists( sharedSettings.baseRecordingFolder ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
 			{
 				throw new DirectoryNotFoundException( "Folders do not exist" );
 			}
 
-			String globalDataPath = Path.Combine( BasePath , "data.json" );
+			String globalDataPath = Path.Combine( sharedSettings.baseRecordingFolder , sharedSettings.roundDataFile );
 
 
 
@@ -134,7 +149,7 @@ namespace MatchUploader
 
 
 			File.WriteAllText( globalDataPath , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
-			*/
+			
 		}
 
 
@@ -195,7 +210,7 @@ namespace MatchUploader
 
 		private void videoInserRequest_UploadSessionData( IUploadSessionData obj )
 		{
-			
+
 		}
 
 		void videosInsertRequest_ProgressChanged( IUploadProgress progress )

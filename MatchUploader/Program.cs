@@ -10,6 +10,7 @@ namespace MatchUploader
 		{
 			MatchUploaderHandler mu = new MatchUploaderHandler();
 
+			Console.WriteLine( mu.Initialized );
 
 			/*
 			String path = Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) );

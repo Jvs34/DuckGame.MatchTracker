@@ -17,7 +17,7 @@ namespace MatchRecorder
 #if DEBUG
 			System.Diagnostics.Debugger.Launch();
 #endif
-			matchRecorderSingleton = new MatchRecorderHandler();
+			matchRecorderSingleton = new MatchRecorderHandler( configuration.directory );
 
 			//HUD.AddInputChangeDisplay
 			HarmonyInstance.Create( "MatchRecorder" ).PatchAll( Assembly.GetExecutingAssembly() );
