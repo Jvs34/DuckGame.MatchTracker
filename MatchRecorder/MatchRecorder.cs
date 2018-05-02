@@ -76,6 +76,7 @@ namespace MatchRecorder
 			obsHandler.Connected += OnConnected;
 			obsHandler.Disconnected += OnDisconnected;
 			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
+
 			try
 			{
 				roundsFolder = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
