@@ -6,7 +6,7 @@ using Newtonsoft.Json;
 
 namespace MatchUploader
 {
-    public class MatchUploaderSettings
+    public class UploaderSettings
     {
 		String lastUploadToResume = null; //this is the round name itself, we can get the path to the video file later
 		Uri uploadToResume = null;

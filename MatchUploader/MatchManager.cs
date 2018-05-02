@@ -24,21 +24,37 @@ namespace MatchUploader
 	public class MatchUploaderHandler
 	{
 		private SharedSettings sharedSettings;
-		private MatchUploaderSettings settings;
+		private UploaderSettings uploaderSettings;
 
-		private String basePath;
 
 		public MatchUploaderHandler()
 		{
-			BasePath = @"E:\DebugGameRecordings";
+			sharedSettings = new SharedSettings();
+			uploaderSettings = new UploaderSettings();
+			//load the settings
+			//since we're still debugging shit, we're running from visual studio
+			String settingsFolder = Path.Combine( Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) ) , "Settings" );
+			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
+			String uploaderSettingsPath = Path.Combine( settingsFolder , "shared.json" );
+
+			try
+			{
+				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+				uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
+			}
+			catch( Exception e )
+			{
+
+			}
+
 		}
 
-		public MatchUploaderHandler( String path ) => BasePath = path;
+		
 
-		public string BasePath { get => basePath; set => basePath = value; }
 
 		public async Task DoYoutubeLoginAsync()
 		{
+			/*
 			UserCredential credential = null;
 			
 			using( var stream = new FileStream( @"C:\Users\Jvsth\OneDrive\Documents\DuckGame\Mods\MatchTracker\Settings\client_secrets.json" , FileMode.Open , FileAccess.Read ) )
@@ -55,6 +71,7 @@ namespace MatchUploader
 				HttpClientInitializer = credential ,
 				ApplicationName = "Duck Game Match Uploader" ,
 			} );
+			*/
 		}
 
 
@@ -62,7 +79,7 @@ namespace MatchUploader
 		public void UpdateGlobalData()
 		{
 			//
-
+			/*
 			String roundsPath = Path.Combine( BasePath , "rounds" );
 			String matchesPath = Path.Combine( BasePath , "matches" );
 
@@ -114,14 +131,16 @@ namespace MatchUploader
 
 
 			File.WriteAllText( globalDataPath , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
+			*/
 		}
 
 
 		public async System.Threading.Tasks.Task UploadRoundToYoutubeAsync( String roundName )
 		{
+			/*
 			UserCredential credential;
 
-			/*
+			
 			using( var stream = new FileStream( @"C:\Users\Jvsth\OneDrive\Documents\DuckGame\Mods\MatchTracker\Settings\client_secrets.json" , FileMode.Open , FileAccess.Read ) )
 			{
 				var permissions = new [] { YouTubeService.Scope.YoutubeUpload };

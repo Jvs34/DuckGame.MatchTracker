@@ -14,3 +14,4 @@ ThirdParty/DuckGame.exe
 MatchRecorder/Properties/launchSettings.json
 client_secrets.json
 *.TokenResponse-user
+Settings/uploader.json

@@ -8,6 +8,9 @@ namespace MatchUploader
 	{
 		static void Main( string [] args )
 		{
+			MatchUploaderHandler mu = new MatchUploaderHandler();
+
+
 			/*
 			String path = Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) );
 			MatchTracker.SharedSettings serializ = new MatchTracker.SharedSettings()
