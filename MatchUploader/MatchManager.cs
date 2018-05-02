@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using Newtonsoft.Json;
 using MatchTracker;
+using Google.Apis;
 
 /*
 	Goes through all the folders, puts all rounds and matches into data.json
@@ -14,27 +15,32 @@ namespace MatchUploader
 {
 	public class MatchManager
 	{
+		private String basePath;
 
 		public MatchManager()
 		{
-
+			BasePath = @"E:\DebugGameRecordings";
 		}
+
+		public MatchManager( String path ) => BasePath = path;
+
+		public string BasePath { get => basePath; set => basePath = value; }
 
 
 		//updates the global data.json
-		public void UpdateGlobalData( String path )
+		public void UpdateGlobalData()
 		{
 			//
 
-			String roundsPath = Path.Combine( path , "rounds" );
-			String matchesPath = Path.Combine( path , "matches" );
+			String roundsPath = Path.Combine( BasePath , "rounds" );
+			String matchesPath = Path.Combine( BasePath , "matches" );
 
-			if( !Directory.Exists( path ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
+			if( !Directory.Exists( BasePath ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
 			{
 				throw new DirectoryNotFoundException( "Folders do not exist" );
 			}
 
-			String globalDataPath = Path.Combine( path , "data.json" );
+			String globalDataPath = Path.Combine( BasePath , "data.json" );
 
 
 
@@ -80,5 +86,9 @@ namespace MatchUploader
 		}
 
 
+		public void UploadRoundToYoutube( String roundName )
+		{
+
+		}
 	}
 }
