@@ -10,7 +10,20 @@ namespace MatchUploader
 		{
 			MatchUploaderHandler mu = new MatchUploaderHandler();
 
-			Console.WriteLine( mu.Initialized );
+			/*
+			MatchTracker.PlayerData pd1 = new MatchTracker.PlayerData()
+			{
+				userId = "69"
+			};
+
+			MatchTracker.PlayerData pd2 = new MatchTracker.PlayerData()
+			{
+				userId = "69"
+			};
+
+			Console.WriteLine( pd1.Equals( pd2 ) );
+			*/
+			mu.UpdateGlobalData();
 
 			/*
 			String path = Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) );
@@ -22,7 +35,7 @@ namespace MatchUploader
 
 			File.WriteAllText( Path.Combine( path , "Settings\\shared.json" ) , JsonConvert.SerializeObject( serializ , Formatting.Indented ) );
 			*/
-			
+
 			/*
 			MatchUploaderHandler mm = new MatchUploaderHandler( @"E:\DebugGameRecordings" );
 

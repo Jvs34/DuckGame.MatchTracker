@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Newtonsoft.Json;
 using MatchTracker;
@@ -60,6 +61,15 @@ namespace MatchUploader
 
 		}
 
+		public String GetRecordingFolder()
+		{
+#if DEBUG
+			return sharedSettings.debugBaseRecordingFolder;
+#else
+			return sharedSettings.baseRecordingFolder;
+#endif
+		}
+
 		//in this context, settings are only the uploaderSettings
 		public void SaveSettings()
 		{
@@ -98,15 +108,15 @@ namespace MatchUploader
 		{
 			//
 			
-			String roundsPath = Path.Combine( sharedSettings.baseRecordingFolder , sharedSettings.roundsFolder );
-			String matchesPath = Path.Combine( sharedSettings.baseRecordingFolder , sharedSettings.matchesFolder );
+			String roundsPath = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
+			String matchesPath = Path.Combine( GetRecordingFolder() , sharedSettings.matchesFolder );
 
-			if( !Directory.Exists( sharedSettings.baseRecordingFolder ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
+			if( !Directory.Exists( GetRecordingFolder() ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
 			{
 				throw new DirectoryNotFoundException( "Folders do not exist" );
 			}
 
-			String globalDataPath = Path.Combine( sharedSettings.baseRecordingFolder , sharedSettings.roundDataFile );
+			String globalDataPath = Path.Combine( GetRecordingFolder() , sharedSettings.globalDataFile );
 
 
 
@@ -139,12 +149,30 @@ namespace MatchUploader
 			Console.WriteLine( "Matches\n" );
 			foreach( var matchPath in matchFiles )
 			{
-				String matchName = Path.GetFileName( matchPath );
+				String matchName = Path.GetFileNameWithoutExtension( matchPath );
 				Console.WriteLine( matchName + "\n" );
+
 				if( !globalData.matches.Contains( matchName ) )
 				{
 					globalData.matches.Add( matchName );
 				}
+
+				MatchData md = JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( matchPath ) );
+
+				foreach( PlayerData ply in md.players )
+				{
+					if( !globalData.players.Any( p => p.userId == ply.userId ) )
+					{
+						PlayerData toAdd = ply;
+						ply.team = null;
+
+						globalData.players.Add( toAdd );
+
+						Console.WriteLine( "The global data does now contains " + ply.userId + "\n" );
+					}
+				}
+				
+				//while we're here, let's check if all the players are added to the global data too
 			}
 
 
