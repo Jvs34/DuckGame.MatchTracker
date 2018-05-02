@@ -26,25 +26,28 @@ namespace MatchUploader
 		private SharedSettings sharedSettings;
 		private UploaderSettings uploaderSettings;
 
+		private bool initialized = false;
 
 		public MatchUploaderHandler()
 		{
+			initialized = false;
 			sharedSettings = new SharedSettings();
 			uploaderSettings = new UploaderSettings();
 			//load the settings
 			//since we're still debugging shit, we're running from visual studio
 			String settingsFolder = Path.Combine( Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) ) , "Settings" );
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
-			String uploaderSettingsPath = Path.Combine( settingsFolder , "shared.json" );
+			String uploaderSettingsPath = Path.Combine( settingsFolder , "uploader.json" );
 
 			try
 			{
 				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 				uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
+				initialized = true;
 			}
 			catch( Exception e )
 			{
-
+				initialized = false;
 			}
 
 		}

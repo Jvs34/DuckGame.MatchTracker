@@ -8,9 +8,9 @@ namespace MatchUploader
 {
     public class UploaderSettings
     {
-		String lastUploadToResume = null; //this is the round name itself, we can get the path to the video file later
-		Uri uploadToResume = null;
-		float uploadSpeed = 0; //in kylobytes per seconds, 0 means no throttling
-		ClientSecrets secrets = new ClientSecrets();
+		public String lastUploadToResume = null; //this is the round name itself, we can get the path to the video file later
+		public Uri uploadToResume = null;
+		public float uploadSpeed = 0; //in kylobytes per seconds, 0 means no throttling
+		public ClientSecrets secrets;
 	}
 }
