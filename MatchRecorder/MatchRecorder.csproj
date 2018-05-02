@@ -39,6 +39,7 @@
 
   <ItemGroup>
     <Compile Include="..\Shared\GameData.cs" />
+    <Compile Include="..\Shared\SharedSettings.cs" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

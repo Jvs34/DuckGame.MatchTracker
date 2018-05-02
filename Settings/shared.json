@@ -1,0 +1,10 @@
+{
+  "baseRecordingFolder": "E:\\DuckGameRecordings",
+  "debugBaseRecordingFolder": "E:\\DebugGameRecordings",
+  "roundsFolder": "rounds",
+  "matchesFolder": "matches",
+  "timestampFormat": "yyyy-MM-dd HH-mm-ss",
+  "roundDataFile": "rounddata.json",
+  "roundVideoFile": "video.mp4",
+  "globalDataFile": "data.json"
+}
