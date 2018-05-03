@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 	Also returns match/round data from the timestamped name and whatnot
 
 */
+
 namespace MatchUploader
 {
 	public class MatchUploaderHandler
@@ -39,7 +40,12 @@ namespace MatchUploader
 		{
 			initialized = false;
 			sharedSettings = new SharedSettings();
-			uploaderSettings = new UploaderSettings();
+			uploaderSettings = new UploaderSettings()
+			{
+				secrets = new ClientSecrets(),
+				dataStore = new KeyValueDataStore(),
+			};
+
 			//load the settings
 			//since we're still debugging shit, we're running from visual studio
 			settingsFolder = Path.Combine( Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) ) , "Settings" );
@@ -51,6 +57,11 @@ namespace MatchUploader
 				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 				uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
 				initialized = true;
+
+				if( uploaderSettings.dataStore == null )
+				{
+					uploaderSettings.dataStore = new KeyValueDataStore();
+				}
 			}
 			/*
 			catch( Exception e )
@@ -79,9 +90,22 @@ namespace MatchUploader
 			);
 		}
 
+		
+
 
 		public async Task DoYoutubeLoginAsync()
 		{
+			UserCredential uc = null;
+
+			var permissions = new [] { YouTubeService.Scope.YoutubeUpload };
+
+			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets , 
+				permissions , 
+				"user" , 
+				CancellationToken.None , 
+				uploaderSettings.dataStore 
+			);
+
 			/*
 			UserCredential credential = null;
 			
@@ -107,6 +131,7 @@ namespace MatchUploader
 		public void UpdateGlobalData()
 		{
 			//
+		
 			
 			String roundsPath = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
 			String matchesPath = Path.Combine( GetRecordingFolder() , sharedSettings.matchesFolder );
@@ -159,6 +184,7 @@ namespace MatchUploader
 
 				MatchData md = JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( matchPath ) );
 
+				//while we're here, let's check if all the players are added to the global data too
 				foreach( PlayerData ply in md.players )
 				{
 					if( !globalData.players.Any( p => p.userId == ply.userId ) )
@@ -172,7 +198,7 @@ namespace MatchUploader
 					}
 				}
 				
-				//while we're here, let's check if all the players are added to the global data too
+				
 			}
 
 
@@ -181,7 +207,7 @@ namespace MatchUploader
 		}
 
 
-		public async System.Threading.Tasks.Task UploadRoundToYoutubeAsync( String roundName )
+		public async Task UploadRoundToYoutubeAsync( String roundName )
 		{
 			/*
 			UserCredential credential;

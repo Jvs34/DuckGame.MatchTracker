@@ -9,6 +9,8 @@ namespace MatchUploader
 		static void Main( string [] args )
 		{
 			MatchUploaderHandler mu = new MatchUploaderHandler();
+			mu.DoYoutubeLoginAsync().Wait();
+			mu.SaveSettings();
 
 			/*
 			MatchTracker.PlayerData pd1 = new MatchTracker.PlayerData()
@@ -23,7 +25,7 @@ namespace MatchUploader
 
 			Console.WriteLine( pd1.Equals( pd2 ) );
 			*/
-			mu.UpdateGlobalData();
+			//mu.UpdateGlobalData();
 
 			/*
 			String path = Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) );
