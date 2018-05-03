@@ -67,7 +67,7 @@ namespace MatchTracker
 		public DateTime timeStarted;
 		public DateTime timeEnded;
 
-		//youtube url of this round, this will be empty by default, then filled by the uploader before being stored away
+		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
 		public String youtubeUrl;
 	}
 
@@ -85,6 +85,11 @@ namespace MatchTracker
 
 		//yes a hat is a team
 		public TeamData team;
+
+		public String GetName()
+		{
+			return nickName != null ? nickName : name;
+		}
 	}
 
 	//hats are used to define teams in duck game, so we kinda do need to track them

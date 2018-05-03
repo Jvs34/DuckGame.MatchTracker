@@ -13,22 +13,6 @@ namespace MatchUploader
 			mu.SaveSettings();
 
 			mu.UploadRoundToYoutubeAsync( "2018-04-30 11-47-24" ).Wait();
-
-			/*
-			MatchTracker.PlayerData pd1 = new MatchTracker.PlayerData()
-			{
-				userId = "69"
-			};
-
-			MatchTracker.PlayerData pd2 = new MatchTracker.PlayerData()
-			{
-				userId = "69"
-			};
-
-			Console.WriteLine( pd1.Equals( pd2 ) );
-			*/
-			//mu.UpdateGlobalData();
-
 			/*
 			String path = Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) );
 			MatchTracker.SharedSettings serializ = new MatchTracker.SharedSettings()

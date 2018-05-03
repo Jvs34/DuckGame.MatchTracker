@@ -193,29 +193,49 @@ namespace MatchUploader
 
 		public Video GetVideoDataForRound( String roundName )
 		{
+			RoundData roundData = sharedSettings.GetRoundData( roundName );
+			String winner = sharedSettings.GetRoundWinnerName( roundData );
+
+			if( winner.Length == 0 )
+			{
+				winner = "Nobody";
+			}
+
+
+			String description = String.Format( "Recorded on {0}\nThe winner is {1}" , sharedSettings.DateTimeToString( roundData.timeStarted ) , winner );
+
+
 			Video videoData = new Video()
 			{
 				Snippet = new VideoSnippet()
 				{
 					Title = roundName ,
-					Tags = new List<String>() { "duckgame" } , //new string [] { "duckgame" } ,
+					Tags = new List<String>() { "duckgame" , "peniscorp" } , //new string [] { "duckgame" } ,
 					CategoryId = "20" , // See https://developers.google.com/youtube/v3/docs/videoCategories/list
-					Description = "This is a duck game recording" ,
-					
+					Description = description ,
 				} ,
 				Status = new VideoStatus()
 				{
 					PrivacyStatus = "unlisted" ,
 				} ,
 
+				RecordingDetails = new VideoRecordingDetails()
+				{
+					RecordingDateRaw = roundData.timeStarted.ToString()
+				}
+				
 			};
+
+			
 
 			return videoData;
 		}
 
-		public void AddYoutubeIdToRound( String roundName , String videoId )
+		private void AddYoutubeIdToRound( String roundName , String videoId )
 		{
-
+			RoundData roundData = sharedSettings.GetRoundData( roundName );
+			roundData.youtubeUrl = videoId;
+			sharedSettings.SaveRoundData( roundName , roundData );
 		}
 
 
@@ -224,6 +244,13 @@ namespace MatchUploader
 			if( youtubeService == null )
 			{
 				throw new NullReferenceException( "Youtube service is not initialized!!!\n" );
+			}
+
+			RoundData roundData = sharedSettings.GetRoundData( roundName );
+
+			if( roundData.youtubeUrl != null )
+			{
+				return;
 			}
 
 			Console.WriteLine( "Beginning to upload {0} \n" , roundName );
@@ -242,12 +269,13 @@ namespace MatchUploader
 
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
+				//TODO:Maybe it's possible to create a throttable request by extending the class of this one and initializing it with this one's values
 				var videosInsertRequest = youtubeService.Videos.Insert( videoData , "snippet,status" , fileStream , "video/*" );
 				videosInsertRequest.ChunkSize = ResumableUpload.MinimumChunkSize;
 				videosInsertRequest.ProgressChanged += OnUploadProgress;
 				videosInsertRequest.ResponseReceived += OnResponseReceived;
 				videosInsertRequest.UploadSessionData += OnStartUploading;
-				//await videosInsertRequest
+
 				if( resumeUpload )
 				{
 					Console.WriteLine( "Resuming upload\n" );
