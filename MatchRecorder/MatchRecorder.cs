@@ -46,14 +46,6 @@ namespace MatchRecorder
 			}
 		}
 
-		public String GetRecordingFolder()
-		{
-#if DEBUG
-			return sharedSettings.debugBaseRecordingFolder;
-#else
-			return sharedSettings.baseRecordingFolder;
-#endif
-		}
 
 		public MatchRecorderHandler( String modPath )
 		{
@@ -79,8 +71,8 @@ namespace MatchRecorder
 
 			try
 			{
-				roundsFolder = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
-				matchesFolder = Path.Combine( GetRecordingFolder() , sharedSettings.matchesFolder );
+				roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
+				matchesFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.matchesFolder );
 
 				if( !Directory.Exists( roundsFolder ) )
 					Directory.CreateDirectory( roundsFolder );
@@ -118,11 +110,6 @@ namespace MatchRecorder
 			return level is GameLevel;
 		}
 
-		public String DateTimeToString( DateTime time )
-		{
-			return time.ToString( sharedSettings.timestampFormat );
-		}
-
 
 		private void OnConnected( object sender , EventArgs e )
 		{
@@ -145,15 +132,6 @@ namespace MatchRecorder
 			{
 				return;
 			}
-
-			var teams = Teams.core;
-			var core = Level.core;
-
-
-			var eventsList = Event.events;
-
-			int gay = 5 + 1;
-			gay = gay * 2;
 
 			//localized the try catches so that the variables wouldn't be set if an exception occurs, so it may try again on the next call
 			switch( recordingState )
@@ -184,13 +162,12 @@ namespace MatchRecorder
 							try
 							{
 								DateTime recordingTime = DateTime.Now;
-
-								String currentFolder = Path.Combine( roundsFolder , DateTimeToString( recordingTime ) );
+								String roundPath = Path.Combine( roundsFolder , sharedSettings.DateTimeToString( recordingTime ) );
 								//try setting the recording folder first, then create it before we start recording
 
-								Directory.CreateDirectory( currentFolder );
+								Directory.CreateDirectory( roundPath );
 
-								obsHandler.SetRecordingFolder( currentFolder );
+								obsHandler.SetRecordingFolder( roundPath );
 
 								obsHandler.StartRecording();
 								requestedRecordingStart = false;
@@ -241,12 +218,10 @@ namespace MatchRecorder
 			{
 				currentRound.isCustomLevel = gl.isCustomLevel;
 			}
-
-			//TODO: add the name of the round to the MatchData
+			
 			if( currentMatch != null )
 			{
-				currentMatch.rounds.Add( DateTimeToString( currentRound.timeStarted ) );
-				System.Diagnostics.Debugger.Log( 1 , "RoundData" , "Added round to match\n" );
+				currentMatch.rounds.Add( sharedSettings.DateTimeToString( currentRound.timeStarted ) );
 			}
 
 
@@ -274,13 +249,7 @@ namespace MatchRecorder
 
 			currentRound.timeEnded = endTime;
 
-			String filePath = Path.Combine( roundsFolder , DateTimeToString( currentRound.timeStarted ) );
-			filePath = Path.Combine( filePath , sharedSettings.roundDataFile );
-
-			String jsonOutput = JsonConvert.SerializeObject( currentRound , Formatting.Indented );
-
-			File.WriteAllText( filePath , jsonOutput );
-
+			sharedSettings.SaveRoundData( sharedSettings.DateTimeToString( currentRound.timeStarted ) , currentRound );
 
 			currentRound = null;
 		}
@@ -288,19 +257,15 @@ namespace MatchRecorder
 		public void TryCollectingMatchData()
 		{
 			//try saving the match if there's one and it's got at least one round
-			System.Diagnostics.Debugger.Log( 1 , "MatchData" , "Checking match data\n" );
 			if( currentMatch != null )
 			{
-				System.Diagnostics.Debugger.Log( 1 , "MatchData" , "This match has " + currentMatch.rounds.Count + " rounds\n" );
 				if( currentMatch.rounds.Count > 0 )
 				{
-					System.Diagnostics.Debugger.Log( 1 , "MatchData" , "Trying to save MatchData then\n" );
 					StopCollectingMatchData();
 				}
 			}
 
 			//try starting to collect match data regardless, it'll only be saved if there's at least one round later on
-			System.Diagnostics.Debugger.Log( 1 , "MatchData" , "Starting new MatchData\n" );
 			StartCollectingMatchData();
 		}
 
@@ -340,12 +305,7 @@ namespace MatchRecorder
 			}
 
 
-			String filePath = Path.Combine( matchesFolder , DateTimeToString( currentMatch.timeStarted ) );
-
-			String jsonOutput = JsonConvert.SerializeObject( currentMatch , Formatting.Indented );
-
-			File.WriteAllText( Path.ChangeExtension( filePath , "json" ) , jsonOutput );
-
+			sharedSettings.SaveMatchData( sharedSettings.DateTimeToString( currentMatch.timeStarted ) , currentMatch );
 			currentMatch = null;
 		}
 
