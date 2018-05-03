@@ -39,29 +39,77 @@ namespace MatchTracker
 #endif
 		}
 
-		//utility functions for saving, these will obviously not work on the blazor thinghie
+		//these are supposed to be used for either the filesystem based Gets or the URL based ones
+		public GlobalData LoadGlobalData( String data )
+		{
+			return JsonConvert.DeserializeObject<GlobalData>( data );
+		}
 
-		public void SaveMatchData( String matchName , MatchData matchData )
+		public MatchData LoadMatchData( String data )
+		{
+			return JsonConvert.DeserializeObject<MatchData>( data );
+		}
+
+		public RoundData LoadRoundData( String data )
+		{
+			return JsonConvert.DeserializeObject<RoundData>( data );
+		}
+
+		//utility functions for saving, these will obviously not work on the blazor website so we're not going to include them
+#if !BLAZOR
+		public GlobalData GetGlobalDataFromPath()
+		{
+			String globalDataPath = GetGlobalPath();
+			return LoadGlobalData( File.ReadAllText( globalDataPath ) );
+		}
+
+		public MatchData GetMatchDataFromPath( String matchName )
+		{
+			String matchPath = GetMatchPath( matchName );
+			return LoadMatchData( File.ReadAllText( matchPath ) );
+		}
+
+		public RoundData GetRoundDataFromPath( String roundName )
+		{
+			String roundPath = GetRoundPath( roundName );
+			return LoadRoundData( File.ReadAllText( roundPath ) );
+		}
+
+		public String GetGlobalPath()
+		{
+			return Path.Combine( GetRecordingFolder() , globalDataFile );
+		}
+
+		public String GetMatchPath( String matchName )
 		{
 			String matchFolder = Path.Combine( GetRecordingFolder() , matchesFolder );
 			String matchPath = Path.Combine( matchFolder , matchName );
-			matchPath = Path.ChangeExtension( matchPath , "json" );
-
-			File.WriteAllText( matchPath , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
+			return Path.ChangeExtension( matchPath , "json" );
 		}
 
-		public void SaveRoundData( String roundName , RoundData roundData )
+		public String GetRoundPath( String roundName )
 		{
 			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
-			String roundPath = Path.Combine( Path.Combine( roundFolder , roundName ) , roundDataFile );
-
-			File.WriteAllText( roundPath , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
+			String roundFile = Path.Combine( roundFolder , roundName );
+			return Path.Combine( roundFile , roundDataFile );
 		}
 
 		public void SaveGlobalData( GlobalData globalData )
 		{
-			String globalDataPath = Path.Combine( GetRecordingFolder() , globalDataFile );
-			File.WriteAllText( globalDataPath , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
+			File.WriteAllText( GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
 		}
+
+		public void SaveMatchData( String matchName , MatchData matchData )
+		{
+			File.WriteAllText( GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
+		}
+
+		public void SaveRoundData( String roundName , RoundData roundData )
+		{
+			File.WriteAllText( GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
+		}
+
+#endif
+
 	}
 }
