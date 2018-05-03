@@ -127,7 +127,7 @@ namespace MatchUploader
 				throw new DirectoryNotFoundException( "Folders do not exist" );
 			}
 
-			String globalDataPath = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.globalDataFile );
+			String globalDataPath = sharedSettings.GetGlobalPath();
 
 
 
@@ -135,9 +135,7 @@ namespace MatchUploader
 
 			if( File.Exists( globalDataPath ) )
 			{
-				String fileData = File.ReadAllText( globalDataPath );
-
-				globalData = JsonConvert.DeserializeObject<GlobalData>( fileData );
+				globalData = sharedSettings.GetGlobalData();
 			}
 
 			var roundFolders = Directory.EnumerateDirectories( roundsPath );
@@ -168,7 +166,7 @@ namespace MatchUploader
 					globalData.matches.Add( matchName );
 				}
 
-				MatchData md = JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( matchPath ) );
+				MatchData md = sharedSettings.GetMatchData( matchName );
 
 				//while we're here, let's check if all the players are added to the global data too
 				foreach( PlayerData ply in md.players )
@@ -188,7 +186,7 @@ namespace MatchUploader
 			}
 
 
-			File.WriteAllText( globalDataPath , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
+			sharedSettings.SaveGlobalData( globalData );
 
 		}
 
@@ -213,16 +211,6 @@ namespace MatchUploader
 			};
 
 			return videoData;
-		}
-
-		public void GetRoundData( String roundName )
-		{
-
-		}
-
-		public void SaveRoundData( String roundName , RoundData roundData )
-		{
-
 		}
 
 		public void AddYoutubeIdToRound( String roundName , String videoId )
@@ -250,7 +238,7 @@ namespace MatchUploader
 			bool resumeUpload = uploaderSettings.uploadToResume == roundName && uploaderSettings.uploadToResumeURI != null;
 			uploaderSettings.uploadToResume = roundName;
 
-			await Task.Delay( TimeSpan.FromSeconds( 5 ) );
+			//await Task.Delay( TimeSpan.FromSeconds( 5 ) );
 
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{

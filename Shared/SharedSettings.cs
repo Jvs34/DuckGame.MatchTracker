@@ -40,39 +40,39 @@ namespace MatchTracker
 		}
 
 		//these are supposed to be used for either the filesystem based Gets or the URL based ones
-		public GlobalData LoadGlobalData( String data )
+		public GlobalData DeserializeGlobalData( String data )
 		{
 			return JsonConvert.DeserializeObject<GlobalData>( data );
 		}
 
-		public MatchData LoadMatchData( String data )
+		public MatchData DeserializeMatchData( String data )
 		{
 			return JsonConvert.DeserializeObject<MatchData>( data );
 		}
 
-		public RoundData LoadRoundData( String data )
+		public RoundData DeserializeRoundData( String data )
 		{
 			return JsonConvert.DeserializeObject<RoundData>( data );
 		}
 
 		//utility functions for saving, these will obviously not work on the blazor website so we're not going to include them
 #if !BLAZOR
-		public GlobalData GetGlobalDataFromPath()
+		public GlobalData GetGlobalData()
 		{
 			String globalDataPath = GetGlobalPath();
-			return LoadGlobalData( File.ReadAllText( globalDataPath ) );
+			return DeserializeGlobalData( File.ReadAllText( globalDataPath ) );
 		}
 
-		public MatchData GetMatchDataFromPath( String matchName )
+		public MatchData GetMatchData( String matchName )
 		{
 			String matchPath = GetMatchPath( matchName );
-			return LoadMatchData( File.ReadAllText( matchPath ) );
+			return DeserializeMatchData( File.ReadAllText( matchPath ) );
 		}
 
-		public RoundData GetRoundDataFromPath( String roundName )
+		public RoundData GetRoundData( String roundName )
 		{
 			String roundPath = GetRoundPath( roundName );
-			return LoadRoundData( File.ReadAllText( roundPath ) );
+			return DeserializeRoundData( File.ReadAllText( roundPath ) );
 		}
 
 		public String GetGlobalPath()
