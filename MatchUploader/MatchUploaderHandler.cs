@@ -220,9 +220,11 @@ namespace MatchUploader
 
 			};
 
-
 			return videoData;
 		}
+
+
+
 
 		public async Task UploadRoundToYoutubeAsync( String roundName )
 		{
@@ -256,10 +258,12 @@ namespace MatchUploader
 				//await videosInsertRequest
 				if( resumeUpload )
 				{
+					Console.WriteLine( "Resuming upload\n" );
 					await videosInsertRequest.ResumeAsync( uploaderSettings.uploadToResumeURI );
 				}
 				else
 				{
+					Console.WriteLine( "Starting a new upload\n" );
 					await videosInsertRequest.UploadAsync();
 				}
 				
