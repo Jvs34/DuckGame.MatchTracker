@@ -74,14 +74,7 @@ namespace MatchUploader
 
 		}
 
-		public String GetRecordingFolder()
-		{
-#if DEBUG
-			return sharedSettings.debugBaseRecordingFolder;
-#else
-			return sharedSettings.baseRecordingFolder;
-#endif
-		}
+
 
 		//in this context, settings are only the uploaderSettings
 		public void SaveSettings()
@@ -112,7 +105,7 @@ namespace MatchUploader
 			{
 				HttpClientInitializer = uc ,
 				ApplicationName = Assembly.GetEntryAssembly().GetName().Name ,
-
+				GZipEnabled = true,
 			} );
 
 
@@ -126,15 +119,15 @@ namespace MatchUploader
 			//
 
 
-			String roundsPath = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
-			String matchesPath = Path.Combine( GetRecordingFolder() , sharedSettings.matchesFolder );
+			String roundsPath = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
+			String matchesPath = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.matchesFolder );
 
-			if( !Directory.Exists( GetRecordingFolder() ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
+			if( !Directory.Exists( sharedSettings.GetRecordingFolder() ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
 			{
 				throw new DirectoryNotFoundException( "Folders do not exist" );
 			}
 
-			String globalDataPath = Path.Combine( GetRecordingFolder() , sharedSettings.globalDataFile );
+			String globalDataPath = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.globalDataFile );
 
 
 
@@ -206,7 +199,7 @@ namespace MatchUploader
 			{
 				Snippet = new VideoSnippet()
 				{
-					Title = "Duck Game Testing Video" + roundName ,
+					Title = roundName ,
 					Tags = new List<String>() { "duckgame" } , //new string [] { "duckgame" } ,
 					CategoryId = "20" , // See https://developers.google.com/youtube/v3/docs/videoCategories/list
 					Description = "This is a duck game recording" ,
@@ -215,7 +208,6 @@ namespace MatchUploader
 				Status = new VideoStatus()
 				{
 					PrivacyStatus = "unlisted" ,
-
 				} ,
 
 			};
@@ -223,7 +215,20 @@ namespace MatchUploader
 			return videoData;
 		}
 
+		public void GetRoundData( String roundName )
+		{
 
+		}
+
+		public void SaveRoundData( String roundName , RoundData roundData )
+		{
+
+		}
+
+		public void AddYoutubeIdToRound( String roundName , String videoId )
+		{
+
+		}
 
 
 		public async Task UploadRoundToYoutubeAsync( String roundName )
@@ -237,7 +242,7 @@ namespace MatchUploader
 
 			Video videoData = GetVideoDataForRound( roundName );
 
-			String roundsFolder = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
+			String roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
 			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , sharedSettings.roundVideoFile );
 
 			//is this a resumable one?
@@ -251,10 +256,9 @@ namespace MatchUploader
 			{
 				var videosInsertRequest = youtubeService.Videos.Insert( videoData , "snippet,status" , fileStream , "video/*" );
 				videosInsertRequest.ChunkSize = ResumableUpload.MinimumChunkSize;
-				videosInsertRequest.ProgressChanged += videosInsertRequest_ProgressChanged;
-				videosInsertRequest.ResponseReceived += videosInsertRequest_ResponseReceived;
-				videosInsertRequest.UploadSessionData += videoInserRequest_UploadSessionData;
-
+				videosInsertRequest.ProgressChanged += OnUploadProgress;
+				videosInsertRequest.ResponseReceived += OnResponseReceived;
+				videosInsertRequest.UploadSessionData += OnStartUploading;
 				//await videosInsertRequest
 				if( resumeUpload )
 				{
@@ -271,16 +275,15 @@ namespace MatchUploader
 
 		}
 
-		//TODO: rename these functions
 
-		private void videoInserRequest_UploadSessionData( IUploadSessionData resumable )
+		private void OnStartUploading( IUploadSessionData resumable )
 		{
 			uploaderSettings.uploadToResumeURI = resumable.UploadUri;
 			//save right away in case the program crashes or connection screws up
 			SaveSettings();
 		}
 
-		void videosInsertRequest_ProgressChanged( IUploadProgress progress )
+		void OnUploadProgress( IUploadProgress progress )
 		{
 			switch( progress.Status )
 			{
@@ -294,12 +297,14 @@ namespace MatchUploader
 			}
 		}
 
-		void videosInsertRequest_ResponseReceived( Video video )
+		void OnResponseReceived( Video video )
 		{
 			String roundName = uploaderSettings.uploadToResume;
 			uploaderSettings.uploadToResume = null;
 			uploaderSettings.uploadToResumeURI = null;
 			SaveSettings();
+
+			AddYoutubeIdToRound( roundName , video.Id );
 
 			Console.WriteLine( "Video id '{0}' was successfully uploaded." , video.Id );
 		}
