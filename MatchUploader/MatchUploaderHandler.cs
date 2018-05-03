@@ -14,6 +14,7 @@ using Google.Apis.YouTube.v3.Data;
 using Google.Apis.Upload;
 using Google.Apis.Util.Store;
 using System.Threading.Tasks;
+using System.Reflection;
 
 /*
 	Goes through all the folders, puts all rounds and matches into data.json
@@ -30,6 +31,7 @@ namespace MatchUploader
 		private UploaderSettings uploaderSettings;
 
 		private bool initialized = false;
+		private YouTubeService youtubeService;
 
 		public bool Initialized
 		{
@@ -42,8 +44,8 @@ namespace MatchUploader
 			sharedSettings = new SharedSettings();
 			uploaderSettings = new UploaderSettings()
 			{
-				secrets = new ClientSecrets(),
-				dataStore = new KeyValueDataStore(),
+				secrets = new ClientSecrets() ,
+				dataStore = new KeyValueDataStore() ,
 			};
 
 			//load the settings
@@ -90,7 +92,7 @@ namespace MatchUploader
 			);
 		}
 
-		
+
 
 
 		public async Task DoYoutubeLoginAsync()
@@ -99,31 +101,22 @@ namespace MatchUploader
 
 			var permissions = new [] { YouTubeService.Scope.YoutubeUpload };
 
-			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets , 
-				permissions , 
-				"user" , 
-				CancellationToken.None , 
-				uploaderSettings.dataStore 
+			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
+				permissions ,
+				"user" ,
+				CancellationToken.None ,
+				uploaderSettings.dataStore
 			);
 
-			/*
-			UserCredential credential = null;
-			
-			using( var stream = new FileStream( @"C:\Users\Jvsth\OneDrive\Documents\DuckGame\Mods\MatchTracker\Settings\client_secrets.json" , FileMode.Open , FileAccess.Read ) )
+			youtubeService = new YouTubeService( new BaseClientService.Initializer()
 			{
-				var permissions = new [] { YouTubeService.Scope.YoutubeUpload };
-				var secrets = GoogleClientSecrets.Load( stream ).Secrets;
-				FileDataStore dataStore = new FileDataStore( @"C:\Users\Jvsth\OneDrive\Documents\DuckGame\Mods\MatchTracker\Settings" , true );
-				credential = await GoogleWebAuthorizationBroker.AuthorizeAsync( secrets , permissions , "user" , CancellationToken.None , dataStore );
-				Console.WriteLine( dataStore.FolderPath + "\n" );
-			}
+				HttpClientInitializer = uc ,
+				ApplicationName = Assembly.GetEntryAssembly().GetName().Name ,
 
-			var youtubeService = new YouTubeService( new BaseClientService.Initializer()
-			{
-				HttpClientInitializer = credential ,
-				ApplicationName = "Duck Game Match Uploader" ,
 			} );
-			*/
+
+
+			youtubeService.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
 		}
 
 
@@ -131,8 +124,8 @@ namespace MatchUploader
 		public void UpdateGlobalData()
 		{
 			//
-		
-			
+
+
 			String roundsPath = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
 			String matchesPath = Path.Combine( GetRecordingFolder() , sharedSettings.matchesFolder );
 
@@ -197,74 +190,90 @@ namespace MatchUploader
 						Console.WriteLine( "The global data does now contains " + ply.userId + "\n" );
 					}
 				}
-				
-				
+
+
 			}
 
 
 			File.WriteAllText( globalDataPath , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
-			
+
 		}
 
 
-		public async Task UploadRoundToYoutubeAsync( String roundName )
+		public Video GetVideoDataForRound( String roundName )
 		{
-			/*
-			UserCredential credential;
-
-			
-			using( var stream = new FileStream( @"C:\Users\Jvsth\OneDrive\Documents\DuckGame\Mods\MatchTracker\Settings\client_secrets.json" , FileMode.Open , FileAccess.Read ) )
-			{
-				var permissions = new [] { YouTubeService.Scope.YoutubeUpload };
-				var secrets = GoogleClientSecrets.Load( stream ).Secrets;
-				FileDataStore dataStore = new FileDataStore( @"C:\Users\Jvsth\OneDrive\Documents\DuckGame\Mods\MatchTracker\Settings" , true );
-				credential = await GoogleWebAuthorizationBroker.AuthorizeAsync( secrets , permissions , "user" , CancellationToken.None , dataStore );
-				Console.WriteLine( dataStore.FolderPath + "\n" );
-			}
-
-			var youtubeService = new YouTubeService( new BaseClientService.Initializer()
-			{
-				HttpClientInitializer = credential ,
-				ApplicationName = "Duck Game Match Uploader" ,
-			} );
-
-
-			var video = new Video
+			Video videoData = new Video()
 			{
 				Snippet = new VideoSnippet()
 				{
-					Title = "Duck Game Testing Video" ,
-					Tags = new string [] { "duckgame" } ,
+					Title = "Duck Game Testing Video" + roundName ,
+					Tags = new List<String>() { "duckgame" } , //new string [] { "duckgame" } ,
 					CategoryId = "20" , // See https://developers.google.com/youtube/v3/docs/videoCategories/list
 					Description = "This is a duck game recording" ,
+					
 				} ,
 				Status = new VideoStatus()
 				{
 					PrivacyStatus = "unlisted" ,
+
 				} ,
+
 			};
 
-			String roundsFolder = Path.Combine( BasePath , "rounds" );
-			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , "video.mp4" );
 
-			//ResumableUpload resumableUploadStream = new ResumableUpload();
+			return videoData;
+		}
 
-			
+		public async Task UploadRoundToYoutubeAsync( String roundName )
+		{
+			if( youtubeService == null )
+			{
+				throw new NullReferenceException( "Youtube service is not initialized!!!\n" );
+			}
+
+			Console.WriteLine( "Beginning to upload {0} \n" , roundName );
+
+			Video videoData = GetVideoDataForRound( roundName );
+
+			String roundsFolder = Path.Combine( GetRecordingFolder() , sharedSettings.roundsFolder );
+			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , sharedSettings.roundVideoFile );
+
+			//is this a resumable one?
+
+			bool resumeUpload = uploaderSettings.uploadToResume == roundName && uploaderSettings.uploadToResumeURI != null;
+			uploaderSettings.uploadToResume = roundName;
+
+			await Task.Delay( TimeSpan.FromSeconds( 5 ) );
+
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
-				var videosInsertRequest = youtubeService.Videos.Insert( video , "snippet,status" , fileStream , "video/*" );
-				videosInsertRequest.ChunkSize = 64 * 1024;
+				var videosInsertRequest = youtubeService.Videos.Insert( videoData , "snippet,status" , fileStream , "video/*" );
+				videosInsertRequest.ChunkSize = ResumableUpload.MinimumChunkSize;
 				videosInsertRequest.ProgressChanged += videosInsertRequest_ProgressChanged;
 				videosInsertRequest.ResponseReceived += videosInsertRequest_ResponseReceived;
 				videosInsertRequest.UploadSessionData += videoInserRequest_UploadSessionData;
-				//await videosInsertRequest.UploadAsync();
+
+				//await videosInsertRequest
+				if( resumeUpload )
+				{
+					await videosInsertRequest.ResumeAsync( uploaderSettings.uploadToResumeURI );
+				}
+				else
+				{
+					await videosInsertRequest.UploadAsync();
+				}
+				
 			}
-			*/
+
 		}
 
-		private void videoInserRequest_UploadSessionData( IUploadSessionData obj )
-		{
+		//TODO: rename these functions
 
+		private void videoInserRequest_UploadSessionData( IUploadSessionData resumable )
+		{
+			uploaderSettings.uploadToResumeURI = resumable.UploadUri;
+			//save right away in case the program crashes or connection screws up
+			SaveSettings();
 		}
 
 		void videosInsertRequest_ProgressChanged( IUploadProgress progress )
@@ -283,6 +292,11 @@ namespace MatchUploader
 
 		void videosInsertRequest_ResponseReceived( Video video )
 		{
+			String roundName = uploaderSettings.uploadToResume;
+			uploaderSettings.uploadToResume = null;
+			uploaderSettings.uploadToResumeURI = null;
+			SaveSettings();
+
 			Console.WriteLine( "Video id '{0}' was successfully uploaded." , video.Id );
 		}
 	}

@@ -12,6 +12,8 @@ namespace MatchUploader
 			mu.DoYoutubeLoginAsync().Wait();
 			mu.SaveSettings();
 
+			mu.UploadRoundToYoutubeAsync( "2018-04-30 11-47-24" ).Wait();
+
 			/*
 			MatchTracker.PlayerData pd1 = new MatchTracker.PlayerData()
 			{

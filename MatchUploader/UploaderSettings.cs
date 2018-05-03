@@ -10,8 +10,8 @@ namespace MatchUploader
 {
 	public class UploaderSettings
 	{
-		public String lastUploadToResume = null; //this is the round name itself, we can get the path to the video file later
-		public Uri uploadToResume = null;
+		public String uploadToResume = null; //this is the round name itself, we can get the path to the video file later
+		public Uri uploadToResumeURI = null;
 		public float uploadSpeed = 0; //in kylobytes per seconds, 0 means no throttling
 		public ClientSecrets secrets;
 		public KeyValueDataStore dataStore;
@@ -21,7 +21,7 @@ namespace MatchUploader
 	//this is kind of horrible atm since it's storing json string inside of json but I am following the IDataStore implementation correctly at least, for now
 	public class KeyValueDataStore : IDataStore
 	{
-		
+
 		public Dictionary<String , String> data;
 		private static readonly Task CompletedTask = Task.FromResult( 0 ); //FileDataStore does it
 
@@ -70,7 +70,14 @@ namespace MatchUploader
 
 		public Task StoreAsync<T>( string key , T value )
 		{
-			data.Add( key , JsonConvert.SerializeObject( value ) );
+			if( data.ContainsKey( key ) )
+			{
+				data [key] = JsonConvert.SerializeObject( value );
+			}
+			else
+			{
+				data.Add( key , JsonConvert.SerializeObject( value ) );
+			}
 			return CompletedTask;
 		}
 
