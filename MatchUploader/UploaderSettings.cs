@@ -15,6 +15,7 @@ namespace MatchUploader
 		public float uploadSpeed = 0; //in kylobytes per seconds, 0 means no throttling
 		public ClientSecrets secrets;
 		public KeyValueDataStore dataStore;
+		public Uri discordWebhook;
 	}
 
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
 using System.Reflection;
 using Newtonsoft.Json;
 namespace MatchUploader
@@ -9,35 +10,24 @@ namespace MatchUploader
 		static void Main( string [] args )
 		{
 			MatchUploaderHandler mu = new MatchUploaderHandler();
-			mu.DoYoutubeLoginAsync().Wait();
-			mu.SaveSettings();
-
-			mu.UploadRoundToYoutubeAsync( "2018-04-30 11-47-24" ).Wait();
-			/*
-			String path = Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) );
-			MatchTracker.SharedSettings serializ = new MatchTracker.SharedSettings()
-			{
-				baseRecordingFolder = @"E:\DuckGameRecordings" ,
-				debugBaseRecordingFolder = @"E:\DebugGameRecordings"
-			};
-
-			File.WriteAllText( Path.Combine( path , "Settings\\shared.json" ) , JsonConvert.SerializeObject( serializ , Formatting.Indented ) );
-			*/
-
-			/*
-			MatchUploaderHandler mm = new MatchUploaderHandler( @"E:\DebugGameRecordings" );
-
+			
 			try
 			{
-				mm.UpdateGlobalData();
-				mm.UploadRoundToYoutubeAsync( "2018-04-30 11-47-24" ).Wait(); //Willox:that box actually saved you
+				
+				mu.UpdateGlobalData();
+				mu.DoYoutubeLoginAsync().Wait();
+				mu.SaveSettings();
+
+				//mu.UploadRoundToYoutubeAsync( "2018-04-28 19-55-08" ).Wait();
+				//mu.UploadAllRounds().Wait();
+
+
 			}
 			catch( Exception e )
 			{
-				Console.WriteLine( e.ToString() );
-			}
-			*/
 
+			}
+			
 			Console.WriteLine( "Program either had an exception or it's done working" );
 			Console.ReadKey();
 		}

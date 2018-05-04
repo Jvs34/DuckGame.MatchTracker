@@ -15,6 +15,7 @@ using Google.Apis.Upload;
 using Google.Apis.Util.Store;
 using System.Threading.Tasks;
 using System.Reflection;
+using System.Net.Http;
 
 /*
 	Goes through all the folders, puts all rounds and matches into data.json
@@ -140,12 +141,10 @@ namespace MatchUploader
 
 			var roundFolders = Directory.EnumerateDirectories( roundsPath );
 
-			Console.WriteLine( "Rounds\n" );
 			foreach( var folderPath in roundFolders )
 			{
 				//if it doesn't contain the folder, check if the round is valid
 				String folderName = Path.GetFileName( folderPath );
-				Console.WriteLine( folderName + "\n" );
 
 				if( !globalData.rounds.Contains( folderName ) )
 				{
@@ -155,11 +154,9 @@ namespace MatchUploader
 
 			var matchFiles = Directory.EnumerateFiles( matchesPath );
 
-			Console.WriteLine( "Matches\n" );
 			foreach( var matchPath in matchFiles )
 			{
 				String matchName = Path.GetFileNameWithoutExtension( matchPath );
-				Console.WriteLine( matchName + "\n" );
 
 				if( !globalData.matches.Contains( matchName ) )
 				{
@@ -178,7 +175,6 @@ namespace MatchUploader
 
 						globalData.players.Add( toAdd );
 
-						Console.WriteLine( "The global data does now contains " + ply.userId + "\n" );
 					}
 				}
 
@@ -217,13 +213,7 @@ namespace MatchUploader
 				Status = new VideoStatus()
 				{
 					PrivacyStatus = "unlisted" ,
-				} ,
-
-				RecordingDetails = new VideoRecordingDetails()
-				{
-					RecordingDateRaw = roundData.timeStarted.ToString()
-				}
-				
+				} ,				
 			};
 
 			
@@ -238,6 +228,24 @@ namespace MatchUploader
 			sharedSettings.SaveRoundData( roundName , roundData );
 		}
 
+		public async Task UploadAllRounds()
+		{
+			GlobalData globalData = sharedSettings.GetGlobalData();
+
+			bool resumeUpload = uploaderSettings.uploadToResume != null && uploaderSettings.uploadToResumeURI != null;
+			if( resumeUpload )
+			{
+				await UploadRoundToYoutubeAsync( uploaderSettings.uploadToResume );
+			}
+
+			//after that is done, start uploading everything else
+
+			foreach( String roundName in globalData.rounds )
+			{
+				await UploadRoundToYoutubeAsync( roundName );
+			}
+
+		}
 
 		public async Task UploadRoundToYoutubeAsync( String roundName )
 		{
@@ -321,8 +329,28 @@ namespace MatchUploader
 			SaveSettings();
 
 			AddYoutubeIdToRound( roundName , video.Id );
-
+			
 			Console.WriteLine( "Video id '{0}' was successfully uploaded." , video.Id );
+			SendVideoWebHook( video.Id );
+
+		}
+
+		public void SendVideoWebHook( String videoId )
+		{
+			if( youtubeService == null || uploaderSettings.discordWebhook == null )
+			{
+				return;
+			}
+
+			Uri webhookUrl = uploaderSettings.discordWebhook;
+
+			var message = new
+			{
+				content = String.Format( "https://www.youtube.com/watch?v={0}" , videoId ),
+			};
+
+			var content = new StringContent( JsonConvert.SerializeObject( message , Formatting.Indented ) , System.Text.Encoding.UTF8 , "application/json" );
+			youtubeService.HttpClient.PostAsync( webhookUrl , content );
 		}
 	}
 }
