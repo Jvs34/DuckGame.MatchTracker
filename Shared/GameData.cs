@@ -88,7 +88,7 @@ namespace MatchTracker
 
 		public String GetName()
 		{
-			return nickName != null ? nickName : name;
+			return nickName ?? name;
 		}
 	}
 
