@@ -19,7 +19,8 @@ namespace MatchUploader
 				mu.SaveSettings();
 
 				//mu.UploadRoundToYoutubeAsync( "2018-04-28 19-55-08" ).Wait();
-				//mu.UploadAllRounds().Wait();
+				mu.CleanupVideos();
+				mu.UploadAllRounds().Wait();
 
 
 			}

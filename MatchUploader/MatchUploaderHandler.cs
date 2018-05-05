@@ -106,7 +106,7 @@ namespace MatchUploader
 			{
 				HttpClientInitializer = uc ,
 				ApplicationName = Assembly.GetEntryAssembly().GetName().Name ,
-				GZipEnabled = true,
+				GZipEnabled = true ,
 			} );
 
 
@@ -213,10 +213,10 @@ namespace MatchUploader
 				Status = new VideoStatus()
 				{
 					PrivacyStatus = "unlisted" ,
-				} ,				
+				} ,
 			};
 
-			
+
 
 			return videoData;
 		}
@@ -245,6 +245,20 @@ namespace MatchUploader
 				await UploadRoundToYoutubeAsync( roundName );
 			}
 
+		}
+
+		public void CleanupVideos()
+		{
+			GlobalData globalData = sharedSettings.GetGlobalData();
+			foreach( String roundName in globalData.rounds )
+			{
+				RoundData roundData = sharedSettings.GetRoundData( roundName );
+				if( roundData.youtubeUrl != null )
+				{
+					
+					RemoveVideoFile( roundName );
+				}
+			}
 		}
 
 		public async Task UploadRoundToYoutubeAsync( String roundName )
@@ -294,7 +308,7 @@ namespace MatchUploader
 					Console.WriteLine( "Starting a new upload\n" );
 					await videosInsertRequest.UploadAsync();
 				}
-				
+
 			}
 
 		}
@@ -329,10 +343,35 @@ namespace MatchUploader
 			SaveSettings();
 
 			AddYoutubeIdToRound( roundName , video.Id );
-			
+
 			Console.WriteLine( "Video id '{0}' was successfully uploaded." , video.Id );
 			SendVideoWebHook( video.Id );
+			//RemoveVideoFile( roundName );
+		}
 
+		private void RemoveVideoFile( string roundName )
+		{
+			RoundData roundData = sharedSettings.GetRoundData( roundName );
+
+			//don't accidentally delete stuff that somehow doesn't have a url set
+			if( roundData.youtubeUrl == null )
+				return;
+
+			try
+			{
+				String roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
+				String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , sharedSettings.roundVideoFile );
+
+				if( File.Exists( filePath ) )
+				{
+					Console.WriteLine( "Removed video file for {0}\n" , roundName );
+					File.Delete( filePath );
+				}
+			}
+			catch( Exception e )
+			{
+
+			}
 		}
 
 		public void SendVideoWebHook( String videoId )
@@ -346,7 +385,7 @@ namespace MatchUploader
 
 			var message = new
 			{
-				content = String.Format( "https://www.youtube.com/watch?v={0}" , videoId ),
+				content = String.Format( "https://www.youtube.com/watch?v={0}" , videoId ) ,
 			};
 
 			var content = new StringContent( JsonConvert.SerializeObject( message , Formatting.Indented ) , System.Text.Encoding.UTF8 , "application/json" );
