@@ -2,16 +2,18 @@
 /MatchTracker.pdb
 
 MatchRecorder/.vs
-MatchRecorder/bin
-MatchRecorder/obj
-MatchUploader/obj/
+MatchRecorder/bin/
+MatchRecorder/obj/
+MatchRecorder/Properties/launchSettings.json
+
 MatchUploader/bin/
 MatchUploader/obj/
+
+MatchViewer/bin/
+MatchViewer/obj/
+
 build/build_compiled.hash
 .vs/
 *.TMP
 ThirdParty/DuckGame.exe
-MatchRecorder/Properties/launchSettings.json
-client_secrets.json
-*.TokenResponse-user
 Settings/uploader.json

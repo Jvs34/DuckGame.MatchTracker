@@ -11,6 +11,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Browser" Version="0.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Blazor.Build" Version="0.3.0" />
     <DotNetCliToolReference Include="Microsoft.AspNetCore.Blazor.Cli" Version="0.3.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Shared\GameData.cs" />
+    <Compile Include="..\Shared\SharedSettings.cs" />
   </ItemGroup>
 
 </Project>
