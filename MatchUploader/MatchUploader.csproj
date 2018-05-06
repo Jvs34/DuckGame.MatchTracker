@@ -7,8 +7,14 @@
     <Description>Uploads recorder matches from MatchRecorder to youtube and github pages.</Description>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <Optimize>false</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.33.0.1215" />
+    <PackageReference Include="LibGit2Sharp" Version="0.25.0" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
   

@@ -16,6 +16,9 @@ namespace MatchUploader
 		public ClientSecrets secrets;
 		public KeyValueDataStore dataStore;
 		public Uri discordWebhook;
+
+		public String gitUsername;
+		public String gitPassword;
 	}
 
 

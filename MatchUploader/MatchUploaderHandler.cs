@@ -13,6 +13,8 @@ using Google.Apis.Upload;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Net.Http;
+using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
 /*
 	Goes through all the folders, puts all rounds and matches into data.json
 	Also returns match/round data from the timestamped name and whatnot
@@ -67,7 +69,6 @@ namespace MatchUploader
 				initialized = false;
 			}
 			*/
-
 		}
 
 
@@ -237,8 +238,8 @@ namespace MatchUploader
 
 			foreach( String roundName in globalData.rounds )
 			{
+				CommitGitChanges();
 				await UploadRoundToYoutubeAsync( roundName );
-
 			}
 
 		}
@@ -259,7 +260,62 @@ namespace MatchUploader
 		//TODO: find a good and portable git package for this
 		public void CommitGitChanges()
 		{
+			if( !Repository.IsValid( sharedSettings.GetRecordingFolder() ) )
+			{
+				Console.WriteLine( "{0} is not a valid git repository\n" );
+				return;
+			}
 
+			using( Repository repository = new Repository( sharedSettings.GetRecordingFolder() ) )
+			{
+				Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , "jvstheluacoder@gmail.com" , DateTime.Now );
+
+				Branch currentBranch = repository.Branches.First( branch => branch.IsCurrentRepositoryHead );
+
+				if( currentBranch == null )
+				{
+					throw new NullReferenceException( "Branch is NULL???????" );
+				}
+
+				bool hasChanges = false;
+
+				foreach( var item in repository.RetrieveStatus() )
+				{
+					if( item.State != FileStatus.Ignored && item.State != FileStatus.Unaltered )
+					{
+						Console.WriteLine( "File {0} {1}" , item.FilePath , item.State );
+
+						Commands.Stage( repository , item.FilePath );
+						hasChanges = true;
+					}
+				}
+
+
+				if( hasChanges )
+				{
+					//Commands.Stage( repository , "*" );
+
+					repository.Commit( "Updated database" , us , us );
+
+					Console.WriteLine( "Creating commit" );
+
+					//I guess you should always try to push regardless if there has been any changes
+					PushOptions pushOptions = new PushOptions
+					{
+						CredentialsProvider = new CredentialsHandler( ( url , usernameFromUrl , types ) =>
+						new UsernamePasswordCredentials()
+						{
+							Username = uploaderSettings.gitUsername ,
+							Password = uploaderSettings.gitPassword ,
+						} )
+					};
+					repository.Network.Push( currentBranch , pushOptions );
+				}
+
+				//await Task.Delay( 1000 );
+
+				return;
+			}
 		}
 
 		public async Task UploadRoundToYoutubeAsync( String roundName )

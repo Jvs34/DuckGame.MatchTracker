@@ -10,7 +10,7 @@ namespace MatchViewer
 		static void Main( string [] args )
 		{
 			var serviceProvider = new BrowserServiceProvider( services =>
-			 {
+			{
 				// Add any custom services here
 			} );
 
