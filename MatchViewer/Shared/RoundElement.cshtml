@@ -1,0 +1,36 @@
+﻿<div class="card text-right" style="width: 16rem;" >
+    <img class="card-img-top" src=@GetImage() alt=@roundName title=@roundName/>
+    <div class="card-img-overlay">
+        <h5 class="card-title">0:25</h5>
+    </div>
+</div>
+
+@functions 
+{
+    [Parameter]
+    String roundName { get; set; }
+
+    //set once it's done loading the data
+    private RoundData roundData;
+
+    String GetImage()
+    {
+        if( roundData != null )
+        {
+            return string.Format( "https://img.youtube.com/vi/{0}/0.jpg" , roundData.youtubeUrl );
+        }
+        return "https://img.youtube.com/vi/riHF4syvyRw/0.jpg";
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+
+        //test with a fake delay for now
+        await Task.Delay( TimeSpan.FromSeconds( 2 ) );
+
+        roundData = new RoundData()
+        {
+            youtubeUrl = "63EVShEEvZA"
+        };
+    }
+}

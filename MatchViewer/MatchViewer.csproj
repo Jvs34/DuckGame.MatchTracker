@@ -27,4 +27,16 @@
     <Compile Include="..\Shared\SharedSettings.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <BlazorGenerate Remove="Shared\RoundElement.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Shared\RoundElement.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Shared\RoundElement.cshtml" />
+  </ItemGroup>
+
 </Project>
