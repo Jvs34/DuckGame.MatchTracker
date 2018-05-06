@@ -2,25 +2,20 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
 using MatchTracker;
-using Google.Apis;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.YouTube.v3;
 using System.Threading;
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3.Data;
 using Google.Apis.Upload;
-using Google.Apis.Util.Store;
 using System.Threading.Tasks;
 using System.Reflection;
 using System.Net.Http;
-
 /*
 	Goes through all the folders, puts all rounds and matches into data.json
 	Also returns match/round data from the timestamped name and whatnot
-
 */
 
 namespace MatchUploader
@@ -243,6 +238,7 @@ namespace MatchUploader
 			foreach( String roundName in globalData.rounds )
 			{
 				await UploadRoundToYoutubeAsync( roundName );
+
 			}
 
 		}
@@ -255,10 +251,15 @@ namespace MatchUploader
 				RoundData roundData = sharedSettings.GetRoundData( roundName );
 				if( roundData.youtubeUrl != null )
 				{
-					
 					RemoveVideoFile( roundName );
 				}
 			}
+		}
+
+		//TODO: find a good and portable git package for this
+		public void CommitGitChanges()
+		{
+
 		}
 
 		public async Task UploadRoundToYoutubeAsync( String roundName )

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Net.Http;
-using System.Reflection;
-using Newtonsoft.Json;
 namespace MatchUploader
 {
 	class Program
@@ -17,12 +13,8 @@ namespace MatchUploader
 				mu.UpdateGlobalData();
 				mu.DoYoutubeLoginAsync().Wait();
 				mu.SaveSettings();
-
-				//mu.UploadRoundToYoutubeAsync( "2018-04-28 19-55-08" ).Wait();
 				mu.CleanupVideos();
 				mu.UploadAllRounds().Wait();
-
-
 			}
 			catch( Exception e )
 			{
