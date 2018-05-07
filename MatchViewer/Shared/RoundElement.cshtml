@@ -1,7 +1,7 @@
-﻿<div class="card text-right" style="width: 16rem;" >
-    <img class="card-img-top" src=@GetImage() alt=@roundName title=@roundName/>
+﻿<div class="card text-right" style="width: 240px; height: 180px" >
+    <img class="card-img-top" src=@GetImage() alt=@roundName title=@roundName />
     <div class="card-img-overlay">
-        <h5 class="card-title">0:25</h5>
+        <h5 class="card-title">@GetDuration()</h5>
     </div>
 </div>
 
@@ -19,8 +19,17 @@
         {
             return string.Format( "https://img.youtube.com/vi/{0}/0.jpg" , roundData.youtubeUrl );
         }
-        return "https://img.youtube.com/vi/riHF4syvyRw/0.jpg";
+        return "https://img.youtube.com/vi/0/0.jpg";
     }
+
+    static String GetDuration()
+    {
+        TimeSpan duration = new TimeSpan( 0 , 0 , 1 , 20 , 0 );
+
+
+        return duration.ToString( "mm':'ss" );
+    }
+
 
     protected override async Task OnParametersSetAsync()
     {
