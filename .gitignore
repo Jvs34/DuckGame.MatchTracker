@@ -17,3 +17,4 @@ build/build_compiled.hash
 *.TMP
 ThirdParty/DuckGame.exe
 Settings/uploader.json
+*.user

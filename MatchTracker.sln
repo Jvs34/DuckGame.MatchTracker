@@ -5,7 +5,9 @@ VisualStudioVersion = 15.0.27428.2037
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorder", "MatchRecorder\MatchRecorder.csproj", "{E4AB7ED5-3306-4688-98FA-01FE183532F3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchUploader", "MatchUploader\MatchUploader.csproj", "{C78C371D-900D-4DA0-B8C3-77B16A40832E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchUploader", "MatchUploader\MatchUploader.csproj", "{C78C371D-900D-4DA0-B8C3-77B16A40832E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchViewer", "MatchViewer\MatchViewer.csproj", "{39C12C40-5052-40AB-9BC7-69B1E35AA304}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,6 +31,14 @@ Global
 		{C78C371D-900D-4DA0-B8C3-77B16A40832E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{C78C371D-900D-4DA0-B8C3-77B16A40832E}.Release|x86.ActiveCfg = Release|Any CPU
 		{C78C371D-900D-4DA0-B8C3-77B16A40832E}.Release|x86.Build.0 = Release|Any CPU
+		{39C12C40-5052-40AB-9BC7-69B1E35AA304}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{39C12C40-5052-40AB-9BC7-69B1E35AA304}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{39C12C40-5052-40AB-9BC7-69B1E35AA304}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{39C12C40-5052-40AB-9BC7-69B1E35AA304}.Debug|x86.Build.0 = Debug|Any CPU
+		{39C12C40-5052-40AB-9BC7-69B1E35AA304}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{39C12C40-5052-40AB-9BC7-69B1E35AA304}.Release|Any CPU.Build.0 = Release|Any CPU
+		{39C12C40-5052-40AB-9BC7-69B1E35AA304}.Release|x86.ActiveCfg = Release|Any CPU
+		{39C12C40-5052-40AB-9BC7-69B1E35AA304}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
