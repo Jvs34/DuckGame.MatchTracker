@@ -1,7 +1,9 @@
 using System;
-using System.IO;
 using System.Linq;
+#if !BLAZOR
+using System.IO;
 using Newtonsoft.Json;
+#endif
 
 namespace MatchTracker
 {
@@ -58,6 +60,8 @@ namespace MatchTracker
 			return winnerName;
 		}
 
+#if !BLAZOR
+
 		//these are supposed to be used for either the filesystem based Gets or the URL based ones
 		public GlobalData DeserializeGlobalData( String data )
 		{
@@ -75,7 +79,6 @@ namespace MatchTracker
 		}
 
 		//utility functions for saving, these will obviously not work on the blazor website so we're not going to include them
-#if !BLAZOR
 		public GlobalData GetGlobalData()
 		{
 			String globalDataPath = GetGlobalPath();

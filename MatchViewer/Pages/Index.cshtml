@@ -1,3 +1,25 @@
 ﻿@page "/"
+@inject IMatchDatabase MatchDatabase
 
-<RoundElement roundName ="2018-04-29 22-31-38"></RoundElement>
+@if( globalData != null )
+{
+    foreach( String roundName in globalData.rounds )
+    {
+        <RoundElement roundName=@roundName></RoundElement>
+    }
+}
+
+
+<RoundElement roundName="2018-04-29 22-31-38"></RoundElement>
+
+@functions
+{
+    GlobalData globalData = null;
+
+    protected override async Task OnInitAsync()
+    {
+        globalData = await MatchDatabase.GetGlobalData();
+    }
+
+
+}

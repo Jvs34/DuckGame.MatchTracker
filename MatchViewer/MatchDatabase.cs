@@ -1,10 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using MatchTracker;
 using Flurl;
+using Microsoft.AspNetCore.Blazor;
 
 namespace MatchViewer
 {
@@ -15,34 +14,72 @@ namespace MatchViewer
 		Task<MatchData> GetMatchData( String matchName );
 
 		Task<RoundData> GetRoundData( String roundName );
-
 	}
 
-    public class MatchDatabase : IMatchDatabase
-    {
+	public class MatchDatabase : IMatchDatabase
+	{
 		private HttpClient client;
-		private Uri baseRepositoryURL;
+		private String baseRepositoryUrl;
 		private SharedSettings sharedSettings;
 
 		public MatchDatabase( HttpClient givenClient )
 		{
-			givenClient = client;
-			baseRepositoryURL = new Uri("https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/");
+			client = givenClient;
+			baseRepositoryUrl = "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/";
+			//find a way to load the sharedssettings from the root
+			sharedSettings = new SharedSettings();
+			LoadSettings();
 		}
 
-		public Task<GlobalData> GetGlobalData()
+		public async void LoadSettings()
 		{
-			throw new NotImplementedException();
+			sharedSettings = await client.GetJsonAsync<SharedSettings>( "/shared.json" );
 		}
 
-		public Task<MatchData> GetMatchData( string matchName )
+		public String GetRepositoryUrl()
 		{
-			throw new NotImplementedException();
+			return baseRepositoryUrl;
 		}
 
-		public Task<RoundData> GetRoundData( string roundName )
+		public async Task<GlobalData> GetGlobalData()
 		{
-			throw new NotImplementedException();
+			String globalDataUrl = GetGlobalUrl();
+			Console.WriteLine( globalDataUrl );
+			return await client.GetJsonAsync<GlobalData>( globalDataUrl );
+		}
+
+		public async Task<MatchData> GetMatchData( string matchName )
+		{
+			String matchDataUrl = GetMatchUrl( matchName );
+			Console.WriteLine( matchDataUrl );
+			return await client.GetJsonAsync<MatchData>( matchDataUrl );
+		}
+
+		public async Task<RoundData> GetRoundData( string roundName )
+		{
+			String roundDataUrl = GetRoundUrl( roundName );
+			Console.WriteLine( roundDataUrl );
+
+			return await client.GetJsonAsync<RoundData>( roundDataUrl );
+		}
+
+		public String GetGlobalUrl()
+		{
+			return Url.Combine( GetRepositoryUrl() , sharedSettings.globalDataFile );
+		}
+
+		public String GetMatchUrl( String matchName )
+		{
+			String matchFolder = Url.Combine( GetRepositoryUrl() , sharedSettings.matchesFolder );
+			String matchPath = Url.Combine( matchFolder , matchName );
+			return Url.Combine( matchPath , ".json" );
+		}
+
+		public String GetRoundUrl( String roundName )
+		{
+			String roundFolder = Url.Combine( GetRepositoryUrl() , sharedSettings.roundsFolder );
+			String roundFile = Url.Combine( roundFolder , roundName );
+			return Url.Combine( roundFile , sharedSettings.roundDataFile );
 		}
 	}
 }

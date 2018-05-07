@@ -12,6 +12,7 @@ namespace MatchViewer
 			var serviceProvider = new BrowserServiceProvider( services =>
 			{
 				// Add any custom services here
+				services.Add( ServiceDescriptor.Singleton<IMatchDatabase , MatchDatabase>() );
 			} );
 
 			new BrowserRenderer( serviceProvider ).AddComponent<App>( "app" );

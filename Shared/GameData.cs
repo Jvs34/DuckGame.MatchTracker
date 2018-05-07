@@ -65,6 +65,11 @@ namespace MatchTracker
 
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
 		public String youtubeUrl;
+
+		public TimeSpan GetDuration()
+		{
+			return timeEnded.Subtract( timeStarted );
+		}
 	}
 
 

@@ -1,11 +1,12 @@
-﻿<div class="card text-right" style="width: 240px; height: 180px" >
+﻿@inject IMatchDatabase MatchDatabase
+<div class="card text-right" style="width: 240px; height: 180px">
     <img class="card-img-top" src=@GetImage() alt=@roundName title=@roundName />
     <div class="card-img-overlay">
         <h5 class="card-title">@GetDuration()</h5>
     </div>
 </div>
 
-@functions 
+@functions
 {
     [Parameter]
     String roundName { get; set; }
@@ -22,9 +23,14 @@
         return "https://img.youtube.com/vi/0/0.jpg";
     }
 
-    static String GetDuration()
+    String GetDuration()
     {
-        TimeSpan duration = new TimeSpan( 0 , 0 , 1 , 20 , 0 );
+        TimeSpan duration = new TimeSpan( 0 , 0 , 0 , 0 , 0 );
+
+        if( roundData != null )
+        {
+            duration = roundData.GetDuration();
+        }
 
 
         return duration.ToString( "mm':'ss" );
@@ -35,11 +41,9 @@
     {
 
         //test with a fake delay for now
-        await Task.Delay( TimeSpan.FromSeconds( 2 ) );
+        //await Task.Delay( TimeSpan.FromSeconds( 2 ) );
+        roundData = await MatchDatabase.GetRoundData( roundName );
 
-        roundData = new RoundData()
-        {
-            youtubeUrl = "63EVShEEvZA"
-        };
+        StateHasChanged();
     }
 }
