@@ -1,13 +1,10 @@
 ﻿@page "/"
 @inject IMatchDatabase MatchDatabase
 
-@if( globalData != null )
-{
-    foreach( String roundName in globalData.rounds )
-    {
-        <RoundElement roundName=@roundName></RoundElement>
-    }
-}
+
+<div class="progress">
+    <div class="progress-bar" role="progressbar" aria-valuenow="@MatchDatabase.GetCachedProgress()" aria-valuemin="0" aria-valuemax="100"></div>
+</div>
 
 
 <RoundElement roundName="2018-04-29 22-31-38"></RoundElement>
@@ -18,8 +15,27 @@
 
     protected override async Task OnInitAsync()
     {
-        globalData = await MatchDatabase.GetGlobalData();
+        //globalData = await MatchDatabase.GetGlobalData();
+        MatchDatabase.LoadAllData();
     }
 
 
+
+    /*
+    if( globalData != null )
+    {
+        int count = 0;
+        foreach( String roundName in globalData.rounds )
+        {
+            //don't want to spend ages doing this like last time
+            if( count > 10 )
+            {
+                break;
+            }
+            //<RoundElement roundName=@roundName></RoundElement>
+            count++;
+        }
+
+    }
+    */
 }
