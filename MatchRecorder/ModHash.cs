@@ -6,7 +6,7 @@ namespace MatchRecorder
 	[HarmonyPatch( typeof( ModLoader ) )]
 	[HarmonyPatch( "<GetModHash>b__4" )]
 	[HarmonyPatch( new [] { typeof( DuckGame.Mod ) } )]
-	class ModLoader_GetModHash
+	internal static class ModLoader_GetModHash
 	{
 		static bool Prefix( ref bool __result , DuckGame.Mod a )
 		{

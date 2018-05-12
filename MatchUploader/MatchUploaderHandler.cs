@@ -27,18 +27,13 @@ namespace MatchUploader
 		private String settingsFolder;
 		private SharedSettings sharedSettings;
 		private UploaderSettings uploaderSettings;
-
-		private bool initialized = false;
 		private YouTubeService youtubeService;
 
-		public bool Initialized
-		{
-			get => initialized;
-		}
+		public bool Initialized { get; }
 
 		public MatchUploaderHandler()
 		{
-			initialized = false;
+			Initialized = false;
 			sharedSettings = new SharedSettings();
 			uploaderSettings = new UploaderSettings()
 			{
@@ -47,8 +42,8 @@ namespace MatchUploader
 			};
 
 			//load the settings
-			//since we're still debugging shit, we're running from visual studio
-			settingsFolder = Path.Combine( Path.GetFullPath( Path.Combine( AppContext.BaseDirectory , "..\\..\\..\\..\\" ) ) , "Settings" );
+			//get the working directory
+			settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
 			String uploaderSettingsPath = Path.Combine( settingsFolder , "uploader.json" );
 
@@ -56,7 +51,7 @@ namespace MatchUploader
 			{
 				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 				uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
-				initialized = true;
+				Initialized = true;
 
 				if( uploaderSettings.dataStore == null )
 				{
@@ -90,6 +85,8 @@ namespace MatchUploader
 			UserCredential uc = null;
 
 			var permissions = new [] { YouTubeService.Scope.YoutubeUpload };
+
+			//TODO: allow switching between users? is this needed?
 
 			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
 				permissions ,
@@ -173,10 +170,7 @@ namespace MatchUploader
 
 					}
 				}
-
-
 			}
-
 
 			sharedSettings.SaveGlobalData( globalData );
 
@@ -212,8 +206,6 @@ namespace MatchUploader
 				} ,
 			};
 
-
-
 			return videoData;
 		}
 
@@ -231,7 +223,7 @@ namespace MatchUploader
 			bool resumeUpload = uploaderSettings.uploadToResume != null && uploaderSettings.uploadToResumeURI != null;
 			if( resumeUpload )
 			{
-				await UploadRoundToYoutubeAsync( uploaderSettings.uploadToResume );
+				await UploadRoundToYoutubeAsync( uploaderSettings.uploadToResume ).ConfigureAwait( false );
 			}
 
 			//after that is done, start uploading everything else
@@ -239,7 +231,7 @@ namespace MatchUploader
 			foreach( String roundName in globalData.rounds )
 			{
 				CommitGitChanges();
-				await UploadRoundToYoutubeAsync( roundName );
+				await UploadRoundToYoutubeAsync( roundName ).ConfigureAwait( false );
 			}
 
 		}
@@ -268,7 +260,7 @@ namespace MatchUploader
 
 			using( Repository repository = new Repository( sharedSettings.GetRecordingFolder() ) )
 			{
-				Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , "jvstheluacoder@gmail.com" , DateTime.Now );
+				Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , uploaderSettings.gitEmail , DateTime.Now );
 
 				Branch currentBranch = repository.Branches.First( branch => branch.IsCurrentRepositoryHead );
 

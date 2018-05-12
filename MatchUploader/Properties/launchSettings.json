@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MatchUploader": {
+      "commandName": "Project",
+      "workingDirectory": "..\\"
+    }
+  }
+}

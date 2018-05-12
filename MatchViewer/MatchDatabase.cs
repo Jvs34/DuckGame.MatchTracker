@@ -17,7 +17,9 @@ namespace MatchViewer
 
 		Task<RoundData> GetRoundData( String roundName );
 
-		int GetCachedProgress();
+		int GetMatchesCount();
+		int GetRoundsCount();
+
 
 		Task LoadAllData();
 	}
@@ -34,6 +36,7 @@ namespace MatchViewer
 			roundData = new Dictionary<string , RoundData>();
 		}
 
+		/*
 		public int GetCachedProgress()
 		{
 			int matchProgress = 0;
@@ -53,6 +56,7 @@ namespace MatchViewer
 			roundProgress = ( currentRoundsCount * 50 ) / roundCount;
 			return matchProgress + roundProgress;
 		}
+		*/
 	}
 
 	public class MatchDatabase : IMatchDatabase
@@ -102,8 +106,7 @@ namespace MatchViewer
 			}
 		}
 
-		public int GetCachedProgress() => cachedData.GetCachedProgress();
-
+		
 		public async Task<GlobalData> GetGlobalData()
 		{
 			String globalDataUrl = GetGlobalUrl();
@@ -144,6 +147,14 @@ namespace MatchViewer
 			return Url.Combine( roundFile , sharedSettings.roundDataFile );
 		}
 
+		public int GetMatchesCount()
+		{
+			return cachedData.matchData.Count;
+		}
 
+		public int GetRoundsCount()
+		{
+			return cachedData.roundData.Count;
+		}
 	}
 }

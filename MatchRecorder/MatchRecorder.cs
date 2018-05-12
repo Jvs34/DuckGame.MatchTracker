@@ -25,7 +25,6 @@ namespace MatchRecorder
 		private string roundsFolder;
 		private string matchesFolder;
 
-
 		//TODO: this is fucking disgusting, fix later
 		public bool IsRecording
 		{
@@ -51,14 +50,9 @@ namespace MatchRecorder
 		{
 			sharedSettings = new SharedSettings();
 			String sharedSettingsPath = Path.Combine( Path.Combine( modPath , "Settings" ) , "shared.json" );
-			
-			{
-				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
-			}
 
+			sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 
-
-			//lastIsGameInProgress = false;
 			recordingState = OutputState.Stopped;
 			obsHandler = new OBSWebsocket()
 			{
@@ -69,31 +63,24 @@ namespace MatchRecorder
 			obsHandler.Disconnected += OnDisconnected;
 			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
 
-			try
-			{
-				roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
-				matchesFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.matchesFolder );
+			roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
+			matchesFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.matchesFolder );
 
-				if( !Directory.Exists( roundsFolder ) )
-					Directory.CreateDirectory( roundsFolder );
+			if( !Directory.Exists( roundsFolder ) )
+				Directory.CreateDirectory( roundsFolder );
 
-				if( !Directory.Exists( matchesFolder ) )
-					Directory.CreateDirectory( matchesFolder );
+			if( !Directory.Exists( matchesFolder ) )
+				Directory.CreateDirectory( matchesFolder );
 
-			}
-			catch( Exception e )
-			{
-
-			}
 
 			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
 			try
 			{
 				obsHandler.Connect( "ws://127.0.0.1:4444" , "imgay" );
 			}
-			catch( Exception e )
+			catch( Exception )
 			{
-
+				HUD.AddCornerMessage( HUDCorner.BottomRight , "Could not connect to OBS!!!" );
 			}
 		}
 
@@ -147,7 +134,7 @@ namespace MatchRecorder
 								requestedRecordingStop = false;
 								StopCollectingRoundData( endTime );
 							}
-							catch( Exception e )
+							catch( Exception )
 							{
 
 							}
@@ -173,7 +160,7 @@ namespace MatchRecorder
 								requestedRecordingStart = false;
 								StartCollectingRoundData( recordingTime );
 							}
-							catch( Exception e )
+							catch( Exception )
 							{
 
 							}
@@ -218,7 +205,7 @@ namespace MatchRecorder
 			{
 				currentRound.isCustomLevel = gl.isCustomLevel;
 			}
-			
+
 			if( currentMatch != null )
 			{
 				currentMatch.rounds.Add( sharedSettings.DateTimeToString( currentRound.timeStarted ) );
@@ -355,7 +342,7 @@ namespace MatchRecorder
 	}
 
 	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
-	class UpdateLoop
+	internal static class UpdateLoop
 	{
 		private static void Prefix()
 		{
@@ -369,7 +356,7 @@ namespace MatchRecorder
 
 	//start recording
 	[HarmonyPatch( typeof( VirtualTransition ) , nameof( VirtualTransition.GoUnVirtual ) )]
-	class VirtualTransition_GoUnVirtual
+	internal static class VirtualTransition_GoUnVirtual
 	{
 		private static void Postfix()
 		{
@@ -385,7 +372,7 @@ namespace MatchRecorder
 
 	//save the video and stop recording
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
-	class Level_SetCurrent
+	internal static class Level_SetCurrent
 	{
 		//changed the Postfix to a Prefix so we can get the Level.current before it's changed to the new one
 		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
@@ -415,7 +402,7 @@ namespace MatchRecorder
 	//this is called once when a new match starts, but not if you're a client and in multiplayer and the host decides to continue from the endgame screen instead of going
 	//back to lobby first
 	[HarmonyPatch( typeof( Main ) , "ResetMatchStuff" )]
-	class Main_ResetMatchStuff
+	internal static class Main_ResetMatchStuff
 	{
 		private static void Prefix()
 		{

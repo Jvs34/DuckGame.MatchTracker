@@ -3,39 +3,42 @@
 
 
 <div class="progress">
-    <div class="progress-bar" role="progressbar" aria-valuenow="@MatchDatabase.GetCachedProgress()" aria-valuemin="0" aria-valuemax="100"></div>
+    <div class="progress-bar" role="progressbar" aria-valuenow=@MatchDatabase.GetMatchesCount() aria-valuemin="0" aria-valuemax="100"></div>
 </div>
 
+<div class="progress">
+    <div class="progress-bar" role="progressbar" aria-valuenow=@MatchDatabase.GetRoundsCount() aria-valuemin="0" aria-valuemax="100"></div>
+</div>
 
 <RoundElement roundName="2018-04-29 22-31-38"></RoundElement>
 
 @functions
 {
-    GlobalData globalData = null;
+GlobalData globalData = null;
 
-    protected override async Task OnInitAsync()
+protected override async Task OnInitAsync()
+{
+    //globalData = await MatchDatabase.GetGlobalData();
+    MatchDatabase.LoadAllData();
+}
+
+
+
+/*
+if( globalData != null )
+{
+    int count = 0;
+    foreach( String roundName in globalData.rounds )
     {
-        //globalData = await MatchDatabase.GetGlobalData();
-        MatchDatabase.LoadAllData();
-    }
-
-
-
-    /*
-    if( globalData != null )
-    {
-        int count = 0;
-        foreach( String roundName in globalData.rounds )
+        //don't want to spend ages doing this like last time
+        if( count > 10 )
         {
-            //don't want to spend ages doing this like last time
-            if( count > 10 )
-            {
-                break;
-            }
-            //<RoundElement roundName=@roundName></RoundElement>
-            count++;
+            break;
         }
-
+        //<RoundElement roundName=@roundName></RoundElement>
+        count++;
     }
-    */
+
+}
+*/
 }

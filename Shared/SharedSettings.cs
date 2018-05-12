@@ -54,7 +54,7 @@ namespace MatchTracker
 				{
 					winnerName = winners.First().GetName();
 				}
-				
+
 			}
 
 			return winnerName;

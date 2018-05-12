@@ -5,19 +5,15 @@ namespace MatchRecorder
 {
 	public class Mod : DuckGame.Mod
 	{
-		private static MatchRecorderHandler matchRecorderSingleton = null;
 
-		public static MatchRecorderHandler Recorder
-		{
-			get => matchRecorderSingleton;
-		}
+		public static MatchRecorderHandler Recorder { get; private set; }
 
 		protected override void OnPreInitialize()
 		{
 #if DEBUG
 			System.Diagnostics.Debugger.Launch();
 #endif
-			matchRecorderSingleton = new MatchRecorderHandler( configuration.directory );
+			Recorder = new MatchRecorderHandler( configuration.directory );
 
 			//HUD.AddInputChangeDisplay
 			HarmonyInstance.Create( "MatchRecorder" ).PatchAll( Assembly.GetExecutingAssembly() );
