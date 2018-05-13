@@ -1,44 +1,50 @@
 ﻿@page "/"
 @inject IMatchDatabase MatchDatabase
 
-
-<div class="progress">
-    <div class="progress-bar" role="progressbar" aria-valuenow=@MatchDatabase.GetMatchesCount() aria-valuemin="0" aria-valuemax="100"></div>
+<div class="row no-gutters">
+    @if( globalData != null )
+    {
+        int i = 0;
+        foreach( String roundName in globalData.rounds )
+        {
+            <div class="col-md-auto">
+                <RoundElement roundName=@roundName taskDelay=@i></RoundElement>
+            </div>
+            i++;
+        }
+    }
 </div>
-
-<div class="progress">
-    <div class="progress-bar" role="progressbar" aria-valuenow=@MatchDatabase.GetRoundsCount() aria-valuemin="0" aria-valuemax="100"></div>
-</div>
-
-<RoundElement roundName="2018-04-29 22-31-38"></RoundElement>
 
 @functions
 {
-GlobalData globalData = null;
+    //<RoundElement roundName="2018-04-29 22-31-38"></RoundElement>
+    GlobalData globalData = null;
 
-protected override async Task OnInitAsync()
-{
-    //globalData = await MatchDatabase.GetGlobalData();
-    MatchDatabase.LoadAllData();
-}
-
-
-
-/*
-if( globalData != null )
-{
-    int count = 0;
-    foreach( String roundName in globalData.rounds )
+    protected override async Task OnInitAsync()
     {
-        //don't want to spend ages doing this like last time
-        if( count > 10 )
-        {
-            break;
-        }
-        //<RoundElement roundName=@roundName></RoundElement>
-        count++;
+
+        await MatchDatabase.LoadAllData();
+        globalData = await MatchDatabase.GetGlobalData();
+
     }
 
-}
-*/
+
+
+    /*
+    if( globalData != null )
+    {
+        int count = 0;
+        foreach( String roundName in globalData.rounds )
+        {
+            //don't want to spend ages doing this like last time
+            if( count > 10 )
+            {
+                break;
+            }
+            //<RoundElement roundName=@roundName></RoundElement>
+            count++;
+        }
+
+    }
+    */
 }

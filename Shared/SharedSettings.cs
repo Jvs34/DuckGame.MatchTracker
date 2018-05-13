@@ -14,6 +14,7 @@ namespace MatchTracker
 		//global paths
 		public String baseRecordingFolder;
 		public String debugBaseRecordingFolder; //still debating over this one
+		public String baseRepositoryUrl; //this has to be a github url for raw access
 
 		//local paths
 		public String roundsFolder = "rounds";

@@ -249,7 +249,6 @@ namespace MatchUploader
 			}
 		}
 
-		//TODO: find a good and portable git package for this
 		public void CommitGitChanges()
 		{
 			if( !Repository.IsValid( sharedSettings.GetRecordingFolder() ) )

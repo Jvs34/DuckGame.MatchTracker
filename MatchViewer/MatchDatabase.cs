@@ -31,101 +31,142 @@ namespace MatchViewer
 		public Dictionary<String , RoundData> roundData;
 		public CachedMatchDatabase()
 		{
-			globalData = new GlobalData();
+			globalData = null;
 			matchData = new Dictionary<string , MatchData>();
 			roundData = new Dictionary<string , RoundData>();
 		}
-
-		/*
-		public int GetCachedProgress()
-		{
-			int matchProgress = 0;
-			int roundProgress = 0;
-
-			int matchCount = globalData.matches.Count;
-			int roundCount = globalData.rounds.Count;
-
-			if( matchCount == 0 || roundCount == 0 )
-				return 0;
-
-			int currentMatchesCount = globalData.matches.Count( str => matchData.ContainsKey( str ) );
-			int currentRoundsCount = globalData.rounds.Count( str => roundData.ContainsKey( str ) );
-
-			//250:13 = 50:x
-			matchProgress = ( currentMatchesCount * 50 ) / matchCount;
-			roundProgress = ( currentRoundsCount * 50 ) / roundCount;
-			return matchProgress + roundProgress;
-		}
-		*/
 	}
 
 	public class MatchDatabase : IMatchDatabase
 	{
 		private HttpClient client;
-		private String baseRepositoryUrl;
 		private SharedSettings sharedSettings;
 		private CachedMatchDatabase cachedData;
+		private bool loadedSettings;
 
 		public MatchDatabase( HttpClient givenClient )
 		{
 			client = givenClient;
-			baseRepositoryUrl = "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/";
+			//baseRepositoryUrl = "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/";
 			//find a way to load the sharedssettings from the root
 			sharedSettings = new SharedSettings();
+			loadedSettings = false;
 			cachedData = new CachedMatchDatabase();
-			LoadSettings();
+
+			//UGH:I hate this shit so much, this might have some race condition, but hopefully since this is an injected singleton, it'll be done loading
+			//by the time it's needed, if shit doesn't work then point fingers at this
 		}
 
-		public async void LoadSettings()
+		public async Task LoadSettings()
 		{
+			if( loadedSettings )
+				return;
 
+			//TODO: THIS FILE IS NOT SYNCED ONE WAY TO THE WWWROOT FOLDER YET!!!!
 			Console.WriteLine( "Requesting shared.json" );
 			sharedSettings = await client.GetJsonAsync<SharedSettings>( "/shared.json" );
+			loadedSettings = true;
 		}
 
 		public String GetRepositoryUrl()
 		{
-			return baseRepositoryUrl;
+			return sharedSettings.baseRepositoryUrl;
 		}
 
 		public async Task LoadAllData()
 		{
-			cachedData.globalData = await GetGlobalData();
+			await LoadSettings();
+			await GetGlobalData();
 			foreach( String matchName in cachedData.globalData.matches )
 			{
-				MatchData matchData = await GetMatchData( matchName );
-				var matchList = cachedData.matchData;
-				matchList.Add( matchName , matchData );
+				await GetMatchData( matchName );
 			}
 
 			foreach( String roundName in cachedData.globalData.rounds )
 			{
-				RoundData roundData = await GetRoundData( roundName );
-				var roundList = cachedData.roundData;
-				roundList.Add( roundName , roundData );
+				await GetRoundData( roundName );
 			}
 		}
 
-		
+
+		private void CacheGlobalData( GlobalData globalData )
+		{
+			cachedData.globalData = globalData;
+		}
+
+		private void CacheMatchData( String matchName , MatchData matchData )
+		{
+			if( !cachedData.matchData.ContainsKey( matchName ) )
+			{
+				cachedData.matchData.Add( matchName , matchData );
+			}
+		}
+
+		private void CacheRoundData( String roundName , RoundData roundData )
+		{
+			if( !cachedData.roundData.ContainsKey( roundName ) )
+			{
+				cachedData.roundData.Add( roundName , roundData );
+			}
+		}
+
 		public async Task<GlobalData> GetGlobalData()
 		{
-			String globalDataUrl = GetGlobalUrl();
-			Console.WriteLine( "Requesting {0}" , globalDataUrl );
-			return await client.GetJsonAsync<GlobalData>( globalDataUrl );
+			await LoadSettings();
+
+			GlobalData globalData;
+			if( cachedData.globalData != null )
+			{
+				return cachedData.globalData;
+			}
+			else
+			{
+				String globalDataUrl = GetGlobalUrl();
+				Console.WriteLine( "Requesting {0}" , globalDataUrl );
+				globalData = await client.GetJsonAsync<GlobalData>( globalDataUrl );
+				CacheGlobalData( globalData );
+			}
+
+			return globalData;
 		}
 
 		public async Task<MatchData> GetMatchData( string matchName )
 		{
-			String matchDataUrl = GetMatchUrl( matchName );
-			Console.WriteLine( "Requesting {0} " , matchDataUrl );
-			return await client.GetJsonAsync<MatchData>( matchDataUrl );
+			await LoadSettings();
+
+			MatchData matchData;
+			if( cachedData.matchData.ContainsKey( matchName ) && cachedData.matchData.TryGetValue( matchName , out matchData ) )
+			{
+				return matchData;
+			}
+			else
+			{
+				String matchDataUrl = GetMatchUrl( matchName );
+				Console.WriteLine( "Requesting {0} " , matchDataUrl );
+				matchData = await client.GetJsonAsync<MatchData>( matchDataUrl );
+				CacheMatchData( matchName , matchData );
+			}
+			return matchData;
+
 		}
 
 		public async Task<RoundData> GetRoundData( string roundName )
 		{
-			String roundDataUrl = GetRoundUrl( roundName );
-			Console.WriteLine( "Requesting {0} " , roundDataUrl );
-			return await client.GetJsonAsync<RoundData>( roundDataUrl );
+			await LoadSettings();
+
+			RoundData roundData;
+			if( cachedData.roundData.ContainsKey( roundName ) && cachedData.roundData.TryGetValue( roundName , out roundData ) )
+			{
+				return roundData;
+			}
+			else
+			{
+				String roundDataUrl = GetRoundUrl( roundName );
+				Console.WriteLine( "Requesting {0} " , roundDataUrl );
+				roundData = await client.GetJsonAsync<RoundData>( roundDataUrl );
+				CacheRoundData( roundName , roundData );
+			}
+			return roundData;
 		}
 
 		public String GetGlobalUrl()
@@ -137,7 +178,7 @@ namespace MatchViewer
 		{
 			String matchFolder = Url.Combine( GetRepositoryUrl() , sharedSettings.matchesFolder );
 			String matchPath = Url.Combine( matchFolder , matchName + ".json" );
-			return matchPath;//Url.Combine( matchPath , ".json" );
+			return matchPath;//Url.Combine( matchPath , ".json" );//this would try to add /.json so don't do it here
 		}
 
 		public String GetRoundUrl( String roundName )

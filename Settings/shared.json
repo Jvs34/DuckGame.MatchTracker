@@ -1,6 +1,7 @@
 {
   "baseRecordingFolder": "E:\\DuckGameRecordings",
   "debugBaseRecordingFolder": "E:\\DebugGameRecordings",
+  "baseRepositoryUrl": "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/",
   "roundsFolder": "rounds",
   "matchesFolder": "matches",
   "timestampFormat": "yyyy-MM-dd HH-mm-ss",

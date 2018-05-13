@@ -11,6 +11,9 @@
     [Parameter]
     String roundName { get; set; }
 
+    [Parameter]
+    int taskDelay { get; set; }
+
     //set once it's done loading the data
     private RoundData roundData;
 
@@ -36,14 +39,23 @@
         return duration.ToString( "mm':'ss" );
     }
 
+    protected override bool ShouldRender()
+    {
+        return roundData != null;
+    }
+
+
 
     protected override async Task OnParametersSetAsync()
     {
+        if( roundName == "" )
+        {
+            return;
+        }
 
         //test with a fake delay for now
-        //await Task.Delay( TimeSpan.FromSeconds( 2 ) );
+        await Task.Delay( TimeSpan.FromMilliseconds( taskDelay * 250 ) );
         roundData = await MatchDatabase.GetRoundData( roundName );
-
-        StateHasChanged();
+        
     }
 }
