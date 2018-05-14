@@ -23,7 +23,7 @@
     protected override async Task OnInitAsync()
     {
 
-        await MatchDatabase.LoadAllData();
+        MatchDatabase.LoadAllData();
         globalData = await MatchDatabase.GetGlobalData();
 
     }

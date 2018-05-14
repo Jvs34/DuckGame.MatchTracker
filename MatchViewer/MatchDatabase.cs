@@ -42,7 +42,11 @@ namespace MatchViewer
 		private HttpClient client;
 		private SharedSettings sharedSettings;
 		private CachedMatchDatabase cachedData;
-		private bool loadedSettings;
+
+		private Task settingsTask;
+		private Task<GlobalData> globalDataTask;
+		private Dictionary<String , Task<MatchData>> matchDataTasks;
+		private Dictionary<String , Task<RoundData>> roundDataTasks;
 
 		public MatchDatabase( HttpClient givenClient )
 		{
@@ -50,32 +54,24 @@ namespace MatchViewer
 			//baseRepositoryUrl = "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/";
 			//find a way to load the sharedssettings from the root
 			sharedSettings = new SharedSettings();
-			loadedSettings = false;
 			cachedData = new CachedMatchDatabase();
-
-			//UGH:I hate this shit so much, this might have some race condition, but hopefully since this is an injected singleton, it'll be done loading
-			//by the time it's needed, if shit doesn't work then point fingers at this
+			settingsTask = LoadSettings();
+			matchDataTasks = new Dictionary<String , Task<MatchData>>();
+			roundDataTasks = new Dictionary<String , Task<RoundData>>();
 		}
 
 		public async Task LoadSettings()
 		{
-			if( loadedSettings )
-				return;
-
 			//TODO: THIS FILE IS NOT SYNCED ONE WAY TO THE WWWROOT FOLDER YET!!!!
 			Console.WriteLine( "Requesting shared.json" );
 			sharedSettings = await client.GetJsonAsync<SharedSettings>( "/shared.json" );
-			loadedSettings = true;
 		}
 
-		public String GetRepositoryUrl()
-		{
-			return sharedSettings.baseRepositoryUrl;
-		}
 
 		public async Task LoadAllData()
 		{
-			await LoadSettings();
+			await settingsTask.ConfigureAwait( false );
+			//await LoadSettings();
 			await GetGlobalData();
 			foreach( String matchName in cachedData.globalData.matches )
 			{
@@ -94,12 +90,22 @@ namespace MatchViewer
 			cachedData.globalData = globalData;
 		}
 
+		private bool HasGlobalDataCache()
+		{
+			return cachedData.globalData != null;
+		}
+
 		private void CacheMatchData( String matchName , MatchData matchData )
 		{
 			if( !cachedData.matchData.ContainsKey( matchName ) )
 			{
 				cachedData.matchData.Add( matchName , matchData );
 			}
+		}
+
+		private bool HasMatchDataCache( String matchName )
+		{
+			return cachedData.matchData.ContainsKey( matchName );
 		}
 
 		private void CacheRoundData( String roundName , RoundData roundData )
@@ -110,29 +116,99 @@ namespace MatchViewer
 			}
 		}
 
+		private bool HasRoundDataCache( String roundName )
+		{
+			return cachedData.roundData.ContainsKey( roundName );
+		}
+
 		public async Task<GlobalData> GetGlobalData()
 		{
-			await LoadSettings();
+			//if there is cached data, just return it
+			//if there is no cached data and there is a pending task, just wait the task
+			//if there is no cached data, make the http call and save the task
 
 			GlobalData globalData;
-			if( cachedData.globalData != null )
+			if( HasGlobalDataCache() || globalDataTask != null )
 			{
-				return cachedData.globalData;
+				Console.WriteLine( "Waiting for cached globaldata" );
+				if( globalDataTask != null )
+				{
+					await globalDataTask;
+				}
+				globalData = cachedData.globalData;
 			}
 			else
 			{
-				String globalDataUrl = GetGlobalUrl();
-				Console.WriteLine( "Requesting {0}" , globalDataUrl );
-				globalData = await client.GetJsonAsync<GlobalData>( globalDataUrl );
+				globalDataTask = GetInternalGlobalData();
+				globalData = await globalDataTask.ConfigureAwait( false );
 				CacheGlobalData( globalData );
 			}
-
 			return globalData;
 		}
 
 		public async Task<MatchData> GetMatchData( string matchName )
 		{
-			await LoadSettings();
+			MatchData matchData;
+
+			if( HasMatchDataCache( matchName ) || matchDataTasks.ContainsKey( matchName ) )
+			{
+				Console.WriteLine( "Waiting for cached matchdata" );
+				if( matchDataTasks.TryGetValue( matchName , out Task<MatchData> task ) )
+				{
+					await task;
+				}
+
+				cachedData.matchData.TryGetValue( matchName , out matchData );
+			}
+			else
+			{
+				var task = GetInternalMatchData( matchName );
+				matchDataTasks.Add( matchName , task );
+				matchData = await task.ConfigureAwait( false );
+				CacheMatchData( matchName , matchData );
+			}
+			return matchData;
+		}
+
+		public async Task<RoundData> GetRoundData( string roundName )
+		{
+			RoundData roundData;
+
+			if( HasRoundDataCache( roundName ) || roundDataTasks.ContainsKey( roundName ) )
+			{
+				Console.WriteLine( "Waiting for cached rounddata" );
+				if( roundDataTasks.TryGetValue( roundName , out Task<RoundData> task ) )
+				{
+					await task;
+				}
+
+				cachedData.roundData.TryGetValue( roundName , out roundData );
+			}
+			else
+			{
+				var task = GetInternalRoundData( roundName );
+				roundDataTasks.Add( roundName , task );
+				roundData = await task.ConfigureAwait( false );
+				CacheRoundData( roundName , roundData );
+			}
+			return roundData;
+		}
+
+
+		async Task<GlobalData> GetInternalGlobalData()
+		{
+			await settingsTask.ConfigureAwait( false );
+
+			GlobalData globalData;
+			String globalDataUrl = GetGlobalUrl();
+			Console.WriteLine( "Requesting {0}" , globalDataUrl );
+			globalData = await client.GetJsonAsync<GlobalData>( globalDataUrl );
+			return globalData;
+		}
+
+		async Task<MatchData> GetInternalMatchData( string matchName )
+		{
+			await settingsTask.ConfigureAwait( false );
 
 			MatchData matchData;
 			if( cachedData.matchData.ContainsKey( matchName ) && cachedData.matchData.TryGetValue( matchName , out matchData ) )
@@ -150,9 +226,9 @@ namespace MatchViewer
 
 		}
 
-		public async Task<RoundData> GetRoundData( string roundName )
+		async Task<RoundData> GetInternalRoundData( string roundName )
 		{
-			await LoadSettings();
+			await settingsTask.ConfigureAwait( false );
 
 			RoundData roundData;
 			if( cachedData.roundData.ContainsKey( roundName ) && cachedData.roundData.TryGetValue( roundName , out roundData ) )
@@ -167,6 +243,12 @@ namespace MatchViewer
 				CacheRoundData( roundName , roundData );
 			}
 			return roundData;
+		}
+
+		#region URLCRAP
+		public String GetRepositoryUrl()
+		{
+			return sharedSettings.baseRepositoryUrl;
 		}
 
 		public String GetGlobalUrl()
@@ -197,5 +279,6 @@ namespace MatchViewer
 		{
 			return cachedData.roundData.Count;
 		}
+		#endregion
 	}
 }

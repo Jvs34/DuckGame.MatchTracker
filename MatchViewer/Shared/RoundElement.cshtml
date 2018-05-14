@@ -54,7 +54,7 @@
         }
 
         //test with a fake delay for now
-        await Task.Delay( TimeSpan.FromMilliseconds( taskDelay * 250 ) );
+        await Task.Delay( TimeSpan.FromMilliseconds( taskDelay * 200 ) );
         roundData = await MatchDatabase.GetRoundData( roundName );
         
     }
