@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net471</TargetFramework>
@@ -40,6 +40,7 @@
   <ItemGroup>
     <Compile Include="..\Shared\GameData.cs" />
     <Compile Include="..\Shared\SharedSettings.cs" />
+    <Compile Include="..\Shared\SharedSettingsFS.cs" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

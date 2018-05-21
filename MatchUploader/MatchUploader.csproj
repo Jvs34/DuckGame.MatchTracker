@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <Authors>Jvs</Authors>
     <Description>Uploads recorder matches from MatchRecorder to youtube and github pages.</Description>
+    <Version>1.0.0.0</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -21,6 +22,7 @@
   <ItemGroup>
     <Compile Include="..\Shared\GameData.cs" />
     <Compile Include="..\Shared\SharedSettings.cs" />
+    <Compile Include="..\Shared\SharedSettingsFS.cs" />
   </ItemGroup>
   
 </Project>

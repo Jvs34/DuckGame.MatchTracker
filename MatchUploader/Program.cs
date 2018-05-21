@@ -10,9 +10,7 @@ namespace MatchUploader
 			
 			try
 			{
-				
 				mu.UpdateGlobalData();
-				
 				mu.DoYoutubeLoginAsync().Wait();
 				mu.SaveSettings();
 				mu.CleanupVideos();
@@ -23,7 +21,6 @@ namespace MatchUploader
 			{
 
 			}
-			
 
 			Console.WriteLine( "Program either had an exception or it's done working" );
 			Console.ReadKey();

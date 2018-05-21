@@ -224,14 +224,15 @@ namespace MatchUploader
 			if( resumeUpload )
 			{
 				await UploadRoundToYoutubeAsync( uploaderSettings.uploadToResume ).ConfigureAwait( false );
+				CommitGitChanges();
 			}
 
 			//after that is done, start uploading everything else
 
 			foreach( String roundName in globalData.rounds )
 			{
-				CommitGitChanges();
 				await UploadRoundToYoutubeAsync( roundName ).ConfigureAwait( false );
+				CommitGitChanges();
 			}
 
 		}

@@ -1,8 +1,9 @@
 ﻿@inject IMatchDatabase MatchDatabase
-<div class="card text-right" style="width: 240px; height: 180px">
+
+<div class="card text-right" style="width: 320px; height: 180px">
     <img class="card-img-top" src=@GetImage() alt=@roundName title=@roundName />
     <div class="card-img-overlay">
-        <h5 class="card-title">@GetDuration()</h5>
+        <h5 class="card-title"><font color="white" >@GetDuration()</font></h5>
     </div>
 </div>
 
@@ -21,7 +22,7 @@
     {
         if( roundData != null )
         {
-            return string.Format( "https://img.youtube.com/vi/{0}/0.jpg" , roundData.youtubeUrl );
+            return string.Format( "https://img.youtube.com/vi/{0}/mqdefault.jpg" , roundData.youtubeUrl );
         }
         return "missingvideo.png";
     }
@@ -35,16 +36,19 @@
             duration = roundData.GetDuration();
         }
 
-
         return duration.ToString( "mm':'ss" );
     }
 
+
+    //apparently this doesn't work properly as the first draw is always done anyway
+    /*
     protected override bool ShouldRender()
     {
         return roundData != null;
     }
+    */
 
-
+    
 
     protected override async Task OnParametersSetAsync()
     {
@@ -56,6 +60,6 @@
         //test with a fake delay for now
         await Task.Delay( TimeSpan.FromMilliseconds( taskDelay * 200 ) );
         roundData = await MatchDatabase.GetRoundData( roundName );
-        
+
     }
 }
