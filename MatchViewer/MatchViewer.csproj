@@ -40,7 +40,25 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Include="Pages\MatchView.cshtml" />
+    <None Include="Pages\RoundView.cshtml" />
     <None Include="Shared\RoundElement.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <BlazorGenerate Remove="Pages\MatchView.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Pages\MatchView.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <BlazorGenerate Remove="Pages\RoundView.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Remove="Pages\RoundView.cshtml" />
   </ItemGroup>
 
 </Project>

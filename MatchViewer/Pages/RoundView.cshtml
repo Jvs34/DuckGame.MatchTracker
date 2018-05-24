@@ -1,0 +1,53 @@
+﻿@page "/roundview"
+@inject IMatchDatabase MatchDatabase
+
+<div class="row no-gutters">
+    @if( globalData != null )
+    {
+        int i = 0;
+        foreach( String roundName in globalData.rounds )
+        {
+            <div class="col-md-auto">
+                <RoundElement roundName=@roundName taskDelay=@i></RoundElement>
+            </div>
+            i++;
+        }
+    }
+</div>
+
+
+
+
+@functions
+{
+    //<RoundElement roundName="2018-04-29 22-31-38"></RoundElement>
+    GlobalData globalData = null;
+
+    protected override async Task OnInitAsync()
+    {
+
+        MatchDatabase.LoadAllData();
+        globalData = await MatchDatabase.GetGlobalData();
+
+    }
+
+
+
+    /*
+    if( globalData != null )
+    {
+        int count = 0;
+        foreach( String roundName in globalData.rounds )
+        {
+            //don't want to spend ages doing this like last time
+            if( count > 10 )
+            {
+                break;
+            }
+            //<RoundElement roundName=@roundName></RoundElement>
+            count++;
+        }
+
+    }
+    */
+}

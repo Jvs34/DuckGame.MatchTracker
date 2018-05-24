@@ -1,0 +1,10 @@
+﻿@page "/matchview"
+@inject IMatchDatabase MatchDatabase
+
+@functions
+{
+    protected override async Task OnInitAsync()
+    {
+        await MatchDatabase.LoadAllMatches();
+    }
+}

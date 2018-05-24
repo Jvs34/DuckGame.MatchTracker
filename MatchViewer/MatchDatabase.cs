@@ -22,6 +22,7 @@ namespace MatchViewer
 
 
 		Task LoadAllData();
+		Task LoadAllMatches();
 	}
 
 	class CachedMatchDatabase
@@ -71,18 +72,27 @@ namespace MatchViewer
 		public async Task LoadAllData()
 		{
 			await settingsTask.ConfigureAwait( false );
-			//await LoadSettings();
 			await GetGlobalData();
-			foreach( String matchName in cachedData.globalData.matches )
-			{
-				await GetMatchData( matchName );
-			}
+			await LoadAllMatches();
 
 			foreach( String roundName in cachedData.globalData.rounds )
 			{
 				await GetRoundData( roundName );
 			}
 		}
+
+		public async Task LoadAllMatches()
+		{
+			await settingsTask.ConfigureAwait( false );
+			await GetGlobalData();
+
+			foreach( String matchName in cachedData.globalData.matches )
+			{
+				await GetMatchData( matchName );
+			}
+		}
+
+		
 
 
 		private void CacheGlobalData( GlobalData globalData )
