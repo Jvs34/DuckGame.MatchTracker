@@ -8,7 +8,7 @@
         foreach( String roundName in globalData.rounds )
         {
             <div class="col-md-auto">
-                <RoundElement roundName=@roundName taskDelay=@i></RoundElement>
+                <RoundElement roundName=@roundName></RoundElement>
             </div>
             i++;
         }
@@ -26,7 +26,7 @@
     protected override async Task OnInitAsync()
     {
 
-        MatchDatabase.LoadAllData();
+        //MatchDatabase.LoadAllData();
         globalData = await MatchDatabase.GetGlobalData();
 
     }

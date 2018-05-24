@@ -12,8 +12,25 @@
     [Parameter]
     String roundName { get; set; }
 
-    [Parameter]
-    int taskDelay { get; set; }
+    //this delay will increase when a new roundelement requests data and decrease when it's done
+    private static int qRequests = 0;
+
+    static int QueuedRequests
+    {
+        get
+        {
+            return qRequests;
+        }
+
+        set
+        {
+            if( value <= 0 )
+            {
+                value = 0;
+            }
+            qRequests = value;
+        }
+    }
 
     //set once it's done loading the data
     private RoundData roundData;
@@ -40,26 +57,20 @@
     }
 
 
-    //apparently this doesn't work properly as the first draw is always done anyway
-    /*
-    protected override bool ShouldRender()
-    {
-        return roundData != null;
-    }
-    */
-
-    
-
     protected override async Task OnParametersSetAsync()
     {
+
         if( roundName == "" )
         {
             return;
         }
 
+        QueuedRequests++;
+
         //test with a fake delay for now
-        await Task.Delay( TimeSpan.FromMilliseconds( taskDelay * 200 ) );
+        await Task.Delay( TimeSpan.FromMilliseconds( QueuedRequests * 200 ) );
         roundData = await MatchDatabase.GetRoundData( roundName );
 
+        QueuedRequests--;
     }
 }
