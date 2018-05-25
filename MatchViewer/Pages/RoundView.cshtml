@@ -22,6 +22,7 @@
 
 @functions
 {
+    //I can't exactly add parameter to it just yet as it's an optional one, and I dunno how blazor handles it just yet, we'll see
     //[Parameter]
     String matchName { get; set; }
 
@@ -36,25 +37,8 @@
 
     public void Dispose()
     {
+        //reset the queued requests when we move away from this page
         RoundElement.QueuedRequests = 0;
     }
 
-
-    /*
-    if( globalData != null )
-    {
-        int count = 0;
-        foreach( String roundName in globalData.rounds )
-        {
-            //don't want to spend ages doing this like last time
-            if( count > 10 )
-            {
-                break;
-            }
-            //<RoundElement roundName=@roundName></RoundElement>
-            count++;
-        }
-
-    }
-    */
 }

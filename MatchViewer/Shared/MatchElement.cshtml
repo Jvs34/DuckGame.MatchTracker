@@ -1,0 +1,19 @@
+﻿
+<div class="card text-right" style="width: 320px; height: 180px">
+    <h5 class="card-title">im gay</h5>
+</div>
+
+@functions
+{
+    [Parameter]
+    String matchName { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if( matchName == "" )
+        {
+            return;
+        }
+
+    }
+}
