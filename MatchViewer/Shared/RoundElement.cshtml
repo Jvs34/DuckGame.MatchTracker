@@ -1,5 +1,4 @@
-﻿@inject IMatchDatabase MatchDatabase
-
+﻿
 <div class="card text-right" style="width: 320px; height: 180px">
     <img class="card-img-top" src=@GetImage() alt=@roundName title=@roundName />
     <div class="card-img-overlay">
@@ -15,7 +14,7 @@
     //this delay will increase when a new roundelement requests data and decrease when it's done
     private static int qRequests = 0;
 
-    static int QueuedRequests
+    public static int QueuedRequests
     {
         get
         {
@@ -37,7 +36,7 @@
 
     String GetImage()
     {
-        if( roundData != null )
+        if( roundData != null && roundData.youtubeUrl != null )
         {
             return string.Format( "https://img.youtube.com/vi/{0}/mqdefault.jpg" , roundData.youtubeUrl );
         }
@@ -68,7 +67,9 @@
         QueuedRequests++;
 
         //test with a fake delay for now
+        Console.WriteLine( "Delaying for {0} milliseconds" , QueuedRequests * 200 );
         await Task.Delay( TimeSpan.FromMilliseconds( QueuedRequests * 200 ) );
+
         roundData = await MatchDatabase.GetRoundData( roundName );
 
         QueuedRequests--;

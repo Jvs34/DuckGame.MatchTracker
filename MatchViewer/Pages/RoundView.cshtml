@@ -1,5 +1,7 @@
 ﻿@page "/roundview"
-@inject IMatchDatabase MatchDatabase
+@page "/roundview/{matchName}"
+
+@implements IDisposable
 
 <div class="row no-gutters">
     @if( globalData != null )
@@ -20,7 +22,9 @@
 
 @functions
 {
-    //<RoundElement roundName="2018-04-29 22-31-38"></RoundElement>
+    //[Parameter]
+    String matchName { get; set; }
+
     GlobalData globalData = null;
 
     protected override async Task OnInitAsync()
@@ -28,9 +32,12 @@
 
         //MatchDatabase.LoadAllData();
         globalData = await MatchDatabase.GetGlobalData();
-
     }
 
+    public void Dispose()
+    {
+        RoundElement.QueuedRequests = 0;
+    }
 
 
     /*
