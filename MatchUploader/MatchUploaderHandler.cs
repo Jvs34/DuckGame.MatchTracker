@@ -48,23 +48,15 @@ namespace MatchUploader
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
 			String uploaderSettingsPath = Path.Combine( settingsFolder , "uploader.json" );
 
-			//try
-			{
-				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
-				uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
-				Initialized = true;
+			sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+			uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
+			Initialized = true;
 
-				if( uploaderSettings.dataStore == null )
-				{
-					uploaderSettings.dataStore = new KeyValueDataStore();
-				}
-			}
-			/*
-			catch( Exception e )
+			if( uploaderSettings.dataStore == null )
 			{
-				initialized = false;
+				uploaderSettings.dataStore = new KeyValueDataStore();
 			}
-			*/
+
 		}
 
 
@@ -224,6 +216,8 @@ namespace MatchUploader
 			foreach( String roundName in globalData.rounds )
 			{
 				await UploadRoundToYoutubeAsync( roundName ).ConfigureAwait( false );
+				RoundData roundData = sharedSettings.GetRoundData( roundName );
+				RemoveVideoFile( roundName );
 				CommitGitChanges();
 			}
 
@@ -364,7 +358,7 @@ namespace MatchUploader
 			SaveSettings();//save right away in case the program crashes or connection screws up
 		}
 
-		void OnUploadProgress( IUploadProgress progress )
+		private void OnUploadProgress( IUploadProgress progress )
 		{
 			switch( progress.Status )
 			{
@@ -378,7 +372,7 @@ namespace MatchUploader
 			}
 		}
 
-		void OnResponseReceived( Video video )
+		private void OnResponseReceived( Video video )
 		{
 			String roundName = currentVideo;
 			uploaderSettings.pendingUploads.Remove( roundName );
