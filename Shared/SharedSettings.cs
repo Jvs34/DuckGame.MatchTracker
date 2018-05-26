@@ -34,27 +34,5 @@ namespace MatchTracker
 #endif
 		}
 
-		public String GetRoundWinnerName( RoundData roundData )
-		{
-			String winnerName = "";
-
-			//check if anyone actually won
-			if( roundData.winner != null )
-			{
-				var winners = roundData.players.FindAll( p => p.team.hatName == roundData.winner.hatName );
-				if( winners.Count > 1 )
-				{
-					winnerName = roundData.winner.hatName;
-				}
-				else
-				{
-					winnerName = winners[0].GetName();
-				}
-
-			}
-
-			return winnerName;
-		}
-
 	}
 }

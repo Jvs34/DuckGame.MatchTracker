@@ -1,12 +1,18 @@
 ﻿
-<div class="card text-right" style="width: 320px; height: 180px">
-    <h5 class="card-title">im gay</h5>
+<div class="card" style="width: 320px; height: 180px">
+    <div class="card-header">
+        @matchName
+    </div>
+
+    add a carousel here or something
 </div>
 
 @functions
 {
     [Parameter]
     String matchName { get; set; }
+
+    MatchData matchData = null;
 
     protected override async Task OnParametersSetAsync()
     {
@@ -15,5 +21,6 @@
             return;
         }
 
+        matchData = await MatchDatabase.GetMatchData( matchName );
     }
 }

@@ -1,7 +1,10 @@
 ﻿
-<div class="card text-right" style="width: 320px; height: 180px">
+<div class="card" style="width: 320px; height: 180px">
+    <div class="card-header">
+        @roundName
+    </div>
     <img class="card-img-top" src=@GetImage() alt=@roundName title=@roundName />
-    <div class="card-img-overlay">
+    <div class="card-img-overlay text-right">
         <h5 class="card-title"><font color="white" >@GetDuration()</font></h5>
     </div>
 </div>

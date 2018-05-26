@@ -41,6 +41,33 @@ namespace MatchTracker
 
 		//might be null if uh the match is never completed I guess
 		public TeamData winner;
+
+		public TimeSpan GetDuration()
+		{
+			return timeEnded.Subtract( timeStarted );
+		}
+
+		public String GetWinnerName()
+		{
+			String winnerName = "";
+
+			//check if anyone actually won
+			if( winner != null )
+			{
+				var winners = players.FindAll( p => p.team.hatName == winner.hatName );
+				if( winners.Count > 1 )
+				{
+					winnerName = winner.hatName;
+				}
+				else
+				{
+					winnerName = winners [0].GetName();
+				}
+
+			}
+
+			return winnerName;
+		}
 	}
 
 	public class RoundData
@@ -69,6 +96,28 @@ namespace MatchTracker
 		public TimeSpan GetDuration()
 		{
 			return timeEnded.Subtract( timeStarted );
+		}
+
+		public String GetWinnerName()
+		{
+			String winnerName = "";
+
+			//check if anyone actually won
+			if( winner != null )
+			{
+				var winners = players.FindAll( p => p.team.hatName == winner.hatName );
+				if( winners.Count > 1 )
+				{
+					winnerName = winner.hatName;
+				}
+				else
+				{
+					winnerName = winners [0].GetName();
+				}
+
+			}
+
+			return winnerName;
 		}
 	}
 

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Util.Store;
@@ -10,8 +9,12 @@ namespace MatchUploader
 {
 	public class UploaderSettings
 	{
+		//deprecated
 		public String uploadToResume = null; //this is the round name itself, we can get the path to the video file later
 		public Uri uploadToResumeURI = null;
+		//
+		public Dictionary<String , Uri> pendingUploads = new Dictionary<String , Uri>();
+
 		public float uploadSpeed = 0; //in kylobytes per seconds, 0 means no throttling
 		public ClientSecrets secrets;
 		public KeyValueDataStore dataStore;

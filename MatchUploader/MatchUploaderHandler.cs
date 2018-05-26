@@ -28,6 +28,7 @@ namespace MatchUploader
 		private SharedSettings sharedSettings;
 		private UploaderSettings uploaderSettings;
 		private YouTubeService youtubeService;
+		private string currentVideo;
 
 		public bool Initialized { get; }
 
@@ -180,7 +181,7 @@ namespace MatchUploader
 		public Video GetVideoDataForRound( String roundName )
 		{
 			RoundData roundData = sharedSettings.GetRoundData( roundName );
-			String winner = sharedSettings.GetRoundWinnerName( roundData );
+			String winner = roundData.GetWinnerName(); //sharedSettings.GetRoundWinnerName( roundData );
 
 			if( winner.Length == 0 )
 			{
@@ -219,15 +220,6 @@ namespace MatchUploader
 		public async Task UploadAllRounds()
 		{
 			GlobalData globalData = sharedSettings.GetGlobalData();
-
-			bool resumeUpload = uploaderSettings.uploadToResume != null && uploaderSettings.uploadToResumeURI != null;
-			if( resumeUpload )
-			{
-				await UploadRoundToYoutubeAsync( uploaderSettings.uploadToResume ).ConfigureAwait( false );
-				CommitGitChanges();
-			}
-
-			//after that is done, start uploading everything else
 
 			foreach( String roundName in globalData.rounds )
 			{
@@ -324,20 +316,12 @@ namespace MatchUploader
 				return;
 			}
 
-			Console.WriteLine( "Beginning to upload {0} \n" , roundName );
-
 			Video videoData = GetVideoDataForRound( roundName );
 
 			String roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
 			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , sharedSettings.roundVideoFile );
 
-			//is this a resumable one?
-
-			bool resumeUpload = uploaderSettings.uploadToResume == roundName && uploaderSettings.uploadToResumeURI != null;
-			uploaderSettings.uploadToResume = roundName;
-
-			//await Task.Delay( TimeSpan.FromSeconds( 5 ) );
-
+			currentVideo = roundName;
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
 				//TODO:Maybe it's possible to create a throttable request by extending the class of this one and initializing it with this one's values
@@ -347,27 +331,37 @@ namespace MatchUploader
 				videosInsertRequest.ResponseReceived += OnResponseReceived;
 				videosInsertRequest.UploadSessionData += OnStartUploading;
 
-				if( resumeUpload )
+
+				if( uploaderSettings.pendingUploads.ContainsKey( currentVideo ) )
 				{
-					Console.WriteLine( "Resuming upload\n" );
-					await videosInsertRequest.ResumeAsync( uploaderSettings.uploadToResumeURI );
+					Console.WriteLine( "Resuming upload {0} \n" , currentVideo );
+					if( uploaderSettings.pendingUploads.TryGetValue( currentVideo , out Uri resumableUri ) )
+					{
+						await videosInsertRequest.ResumeAsync( resumableUri );
+					}
 				}
 				else
 				{
-					Console.WriteLine( "Starting a new upload\n" );
+					Console.WriteLine( "Beginning to upload {0} \n" , currentVideo );
 					await videosInsertRequest.UploadAsync();
 				}
 
 			}
+			currentVideo = null;
 
 		}
 
 
 		private void OnStartUploading( IUploadSessionData resumable )
 		{
-			uploaderSettings.uploadToResumeURI = resumable.UploadUri;
-			//save right away in case the program crashes or connection screws up
-			SaveSettings();
+
+			if( uploaderSettings.pendingUploads.TryGetValue( currentVideo , out Uri resumableUri ) )
+			{
+				Console.WriteLine( "Replacing resumable upload url for {0}" , currentVideo );
+				uploaderSettings.pendingUploads.Remove( currentVideo );
+			}
+			uploaderSettings.pendingUploads.Add( currentVideo , resumable.UploadUri );
+			SaveSettings();//save right away in case the program crashes or connection screws up
 		}
 
 		void OnUploadProgress( IUploadProgress progress )
@@ -386,16 +380,14 @@ namespace MatchUploader
 
 		void OnResponseReceived( Video video )
 		{
-			String roundName = uploaderSettings.uploadToResume;
-			uploaderSettings.uploadToResume = null;
-			uploaderSettings.uploadToResumeURI = null;
-			SaveSettings();
+			String roundName = currentVideo;
+			uploaderSettings.pendingUploads.Remove( roundName );
 
+			SaveSettings();
 			AddYoutubeIdToRound( roundName , video.Id );
 
-			Console.WriteLine( "Video id '{0}' was successfully uploaded." , video.Id );
+			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , currentVideo , video.Id );
 			SendVideoWebHook( video.Id );
-			//RemoveVideoFile( roundName );
 		}
 
 		private void RemoveVideoFile( string roundName )
