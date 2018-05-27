@@ -18,3 +18,6 @@ build/build_compiled.hash
 ThirdParty/DuckGame.exe
 Settings/uploader.json
 *.user
+MatchBot/bin/
+MatchBot/obj/
+MatchBot/appsettings.json
