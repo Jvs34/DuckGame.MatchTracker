@@ -29,6 +29,8 @@ namespace MatchUploader
 		private UploaderSettings uploaderSettings;
 		private YouTubeService youtubeService;
 		private string currentVideo;
+		private Repository databaseRepository;
+		private Branch currentBranch;
 
 		public bool Initialized { get; }
 
@@ -57,9 +59,16 @@ namespace MatchUploader
 				uploaderSettings.dataStore = new KeyValueDataStore();
 			}
 
+
+			if( Repository.IsValid( sharedSettings.GetRecordingFolder() ) )
+			{
+				Console.WriteLine( "Loaded {0}" , sharedSettings.GetRecordingFolder() );
+				databaseRepository = new Repository( sharedSettings.GetRecordingFolder() );
+				currentBranch = databaseRepository.Branches.First( branch => branch.IsCurrentRepositoryHead );
+
+			}
+
 		}
-
-
 
 		//in this context, settings are only the uploaderSettings
 		public void SaveSettings()
@@ -69,9 +78,6 @@ namespace MatchUploader
 				JsonConvert.SerializeObject( uploaderSettings , Formatting.Indented )
 			);
 		}
-
-
-
 
 		public async Task DoYoutubeLoginAsync()
 		{
@@ -197,6 +203,10 @@ namespace MatchUploader
 				{
 					PrivacyStatus = "unlisted" ,
 				} ,
+				RecordingDetails = new VideoRecordingDetails()
+				{
+					RecordingDate = roundData.timeStarted,
+				}
 			};
 
 			return videoData;
@@ -215,10 +225,15 @@ namespace MatchUploader
 
 			foreach( String roundName in globalData.rounds )
 			{
+				RoundData oldRoundData = sharedSettings.GetRoundData( roundName );
 				await UploadRoundToYoutubeAsync( roundName ).ConfigureAwait( false );
 				RoundData roundData = sharedSettings.GetRoundData( roundName );
 				RemoveVideoFile( roundName );
-				CommitGitChanges();
+				if( oldRoundData.youtubeUrl != roundData.youtubeUrl )
+				{
+					CommitGitChanges();
+				}
+				
 			}
 
 		}
@@ -238,61 +253,46 @@ namespace MatchUploader
 
 		public void CommitGitChanges()
 		{
-			if( !Repository.IsValid( sharedSettings.GetRecordingFolder() ) )
-			{
-				Console.WriteLine( "{0} is not a valid git repository\n" );
+			if( databaseRepository == null )
 				return;
+
+			Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , uploaderSettings.gitEmail , DateTime.Now );
+			bool hasChanges = false;
+
+			Console.WriteLine( "Fetching repository status" );
+
+			foreach( var item in databaseRepository.RetrieveStatus() )
+			{
+				if( item.State != FileStatus.Ignored && item.State != FileStatus.Unaltered )
+				{
+					Console.WriteLine( "File {0} {1}" , item.FilePath , item.State );
+
+					Commands.Stage( databaseRepository , item.FilePath );
+					hasChanges = true;
+				}
 			}
 
-			using( Repository repository = new Repository( sharedSettings.GetRecordingFolder() ) )
+
+			if( hasChanges )
 			{
-				Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , uploaderSettings.gitEmail , DateTime.Now );
+				//Commands.Stage( repository , "*" );
 
-				Branch currentBranch = repository.Branches.First( branch => branch.IsCurrentRepositoryHead );
+				databaseRepository.Commit( "Updated database" , us , us );
 
-				if( currentBranch == null )
+				Console.WriteLine( "Creating commit" );
+
+				//I guess you should always try to push regardless if there has been any changes
+				PushOptions pushOptions = new PushOptions
 				{
-					throw new NullReferenceException( "Branch is NULL???????" );
-				}
-
-				bool hasChanges = false;
-
-				foreach( var item in repository.RetrieveStatus() )
-				{
-					if( item.State != FileStatus.Ignored && item.State != FileStatus.Unaltered )
+					CredentialsProvider = new CredentialsHandler( ( url , usernameFromUrl , types ) =>
+					new UsernamePasswordCredentials()
 					{
-						Console.WriteLine( "File {0} {1}" , item.FilePath , item.State );
-
-						Commands.Stage( repository , item.FilePath );
-						hasChanges = true;
-					}
-				}
-
-
-				if( hasChanges )
-				{
-					//Commands.Stage( repository , "*" );
-
-					repository.Commit( "Updated database" , us , us );
-
-					Console.WriteLine( "Creating commit" );
-
-					//I guess you should always try to push regardless if there has been any changes
-					PushOptions pushOptions = new PushOptions
-					{
-						CredentialsProvider = new CredentialsHandler( ( url , usernameFromUrl , types ) =>
-						new UsernamePasswordCredentials()
-						{
-							Username = uploaderSettings.gitUsername ,
-							Password = uploaderSettings.gitPassword ,
-						} )
-					};
-					repository.Network.Push( currentBranch , pushOptions );
-				}
-
-				//await Task.Delay( 1000 );
-
-				return;
+						Username = uploaderSettings.gitUsername ,
+						Password = uploaderSettings.gitPassword ,
+					} )
+				};
+				databaseRepository.Network.Push( currentBranch , pushOptions );
+				Console.WriteLine( "Commit pushed" );
 			}
 		}
 
@@ -300,7 +300,7 @@ namespace MatchUploader
 		{
 			if( youtubeService == null )
 			{
-				throw new NullReferenceException( "Youtube service is not initialized!!!\n" );
+				throw new NullReferenceException( "Youtube service is not initialized!!!" );
 			}
 
 			RoundData roundData = sharedSettings.GetRoundData( roundName );
@@ -315,20 +315,20 @@ namespace MatchUploader
 			String roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
 			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , sharedSettings.roundVideoFile );
 
-			currentVideo = roundName;
+			
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
+				currentVideo = roundName;
 				//TODO:Maybe it's possible to create a throttable request by extending the class of this one and initializing it with this one's values
-				var videosInsertRequest = youtubeService.Videos.Insert( videoData , "snippet,status" , fileStream , "video/*" );
+				var videosInsertRequest = youtubeService.Videos.Insert( videoData , "snippet,status,recordingDetails" , fileStream , "video/*" );
 				videosInsertRequest.ChunkSize = ResumableUpload.MinimumChunkSize;
 				videosInsertRequest.ProgressChanged += OnUploadProgress;
 				videosInsertRequest.ResponseReceived += OnResponseReceived;
 				videosInsertRequest.UploadSessionData += OnStartUploading;
 
-
 				if( uploaderSettings.pendingUploads.ContainsKey( currentVideo ) )
 				{
-					Console.WriteLine( "Resuming upload {0} \n" , currentVideo );
+					Console.WriteLine( "Resuming upload {0}" , currentVideo );
 					if( uploaderSettings.pendingUploads.TryGetValue( currentVideo , out Uri resumableUri ) )
 					{
 						await videosInsertRequest.ResumeAsync( resumableUri );
@@ -336,12 +336,13 @@ namespace MatchUploader
 				}
 				else
 				{
-					Console.WriteLine( "Beginning to upload {0} \n" , currentVideo );
+					Console.WriteLine( "Beginning to upload {0}" , currentVideo );
 					await videosInsertRequest.UploadAsync();
 				}
-
+				currentVideo = null;
+				
 			}
-			currentVideo = null;
+			
 
 		}
 
@@ -367,7 +368,7 @@ namespace MatchUploader
 					break;
 
 				case UploadStatus.Failed:
-					Console.WriteLine( "An error prevented the upload from completing.\n{0}" , progress.Exception );
+					Console.WriteLine( "An error prevented the upload from completing. {0}" , progress.Exception );
 					break;
 			}
 		}
@@ -399,7 +400,7 @@ namespace MatchUploader
 
 				if( File.Exists( filePath ) )
 				{
-					Console.WriteLine( "Removed video file for {0}\n" , roundName );
+					Console.WriteLine( "Removed video file for {0}" , roundName );
 					File.Delete( filePath );
 				}
 			}
