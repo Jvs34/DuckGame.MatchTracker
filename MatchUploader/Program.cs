@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+
 namespace MatchUploader
 {
 	class Program
@@ -7,7 +9,6 @@ namespace MatchUploader
 		{
 			MatchUploaderHandler mu = new MatchUploaderHandler();
 
-			
 			try
 			{
 				mu.UpdateGlobalData();
