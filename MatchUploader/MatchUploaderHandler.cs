@@ -83,7 +83,7 @@ namespace MatchUploader
 		{
 			UserCredential uc = null;
 
-			var permissions = new [] { YouTubeService.Scope.YoutubeUpload };
+			var permissions = new [] { YouTubeService.Scope.Youtube };
 
 			//TODO: allow switching between users? is this needed?
 
@@ -205,11 +205,54 @@ namespace MatchUploader
 				} ,
 				RecordingDetails = new VideoRecordingDetails()
 				{
-					RecordingDate = roundData.timeStarted,
+					RecordingDate = roundData.timeStarted ,
 				}
 			};
 
 			return videoData;
+		}
+
+		public Playlist GetPlaylistDataForMatch( String matchName )
+		{
+			MatchData matchData = sharedSettings.GetMatchData( matchName );
+
+			String winner = matchData.GetWinnerName();
+
+			if( winner.Length == 0 )
+			{
+				winner = "Nobody";
+			}
+
+
+			return new Playlist()
+			{
+				Snippet = new PlaylistSnippet()
+				{
+					Title = matchName ,
+					Description = String.Format( "Recorded on {0}\nThe winner is {1}" , sharedSettings.DateTimeToString( matchData.timeStarted ) , winner ) ,
+					Tags = new List<String>() { "duckgame" , "peniscorp" }
+				} ,
+				Status = new PlaylistStatus()
+				{
+					PrivacyStatus = "public"
+				}
+			};
+		}
+
+		public PlaylistItem GetPlaylistItemForRound( String roundName )
+		{
+			RoundData roundData = sharedSettings.GetRoundData( roundName );
+			return new PlaylistItem()
+			{
+				Snippet = new PlaylistItemSnippet()
+				{
+					ResourceId = new ResourceId()
+					{
+						Kind = "youtube#video",
+						VideoId = roundData.youtubeUrl
+					}
+				},
+			};
 		}
 
 		private void AddYoutubeIdToRound( String roundName , String videoId )
@@ -233,7 +276,151 @@ namespace MatchUploader
 				{
 					CommitGitChanges();
 				}
-				
+
+			}
+
+		}
+
+		public async Task<List<Playlist>> GetAllPlaylists()
+		{
+			List<Playlist> allplaylists = new List<Playlist>();
+			var playlistsRequest = youtubeService.Playlists.List( "snippet" );
+			playlistsRequest.Mine = true;
+			playlistsRequest.MaxResults = 50;
+
+			PlaylistListResponse playlistResponse = null;
+			do
+			{
+				playlistResponse = await playlistsRequest.ExecuteAsync();
+
+				//try to aggregate playlists until the response gives 0 videos
+				foreach( var plitem in playlistResponse.Items )
+				{
+					if( !allplaylists.Contains( plitem ) )
+					{
+						allplaylists.Add( plitem );
+					}
+				}
+				playlistsRequest.PageToken = playlistResponse.NextPageToken;
+			}
+			while( playlistResponse.Items.Count > 0 && playlistResponse.NextPageToken != null );
+			return allplaylists;
+		}
+
+		public async Task<List<PlaylistItem>> GetAllPlaylistItems( String playlistId )
+		{
+			List<PlaylistItem> allplaylistitems = new List<PlaylistItem>();
+			var playlistItemsRequest = youtubeService.PlaylistItems.List( "snippet" );
+			playlistItemsRequest.PlaylistId = playlistId;
+			playlistItemsRequest.MaxResults = 50;
+			
+			PlaylistItemListResponse playlistItemListResponse = null;
+
+			do
+			{
+				playlistItemListResponse = await playlistItemsRequest.ExecuteAsync();
+				foreach( var plitem in playlistItemListResponse.Items )
+				{
+					if( !allplaylistitems.Contains( plitem ) )
+					{
+						allplaylistitems.Add( plitem );
+					}
+				}
+				playlistItemsRequest.PageToken = playlistItemListResponse.NextPageToken;
+			}
+			while( playlistItemListResponse.Items.Count > 0 && playlistItemListResponse.NextPageToken != null );
+
+			return allplaylistitems;
+		}
+
+		public async Task CleanPlaylists()
+		{
+			try
+			{
+				var allplaylists = await GetAllPlaylists();
+				foreach( var playlist in allplaylists )
+				{
+					var allvideos = await GetAllPlaylistItems( playlist.Id );
+					foreach( var item in allvideos )
+					{
+						await youtubeService.PlaylistItems.Delete( item.Id ).ExecuteAsync();
+					}
+				}
+			}
+			catch( Exception ex )
+			{
+
+			}
+		}
+
+		public async Task UpdatePlaylists()
+		{
+
+			//TODO:I'm gonna regret writing this piece of shit tomorrow
+
+			//go through every match, then try to find the playlist on youtube that contains its name, if it doesn't exist, create it
+			//get all playlists first
+
+			try
+			{
+				var allplaylists = await GetAllPlaylists();
+
+				var playlistItemsRequest = youtubeService.PlaylistItems.List( "snippet" );
+
+				GlobalData globalData = sharedSettings.GetGlobalData();
+				foreach( var matchName in globalData.matches )
+				{
+					MatchData matchData = sharedSettings.GetMatchData( matchName );
+					Playlist matchPlaylist = allplaylists.FirstOrDefault( x => x.Snippet.Title == matchName );
+
+					try
+					{
+						if( matchPlaylist == null )
+						{
+							Console.WriteLine( "Did not find playlist for {0}, creating" , matchName );
+							//create the playlist now, doesn't matter that it's empty
+							Playlist pl = GetPlaylistDataForMatch( matchName );
+							var createPlaylistRequest = youtubeService.Playlists.Insert( pl , "snippet,status" );
+							matchPlaylist = await createPlaylistRequest.ExecuteAsync();
+						}
+					}
+					catch( Exception ex )
+					{
+						Console.WriteLine( "Could not create playlist for {0}" , matchName );
+					}
+
+					//if we have a playlist now, add the rounds we already have avaiable to it
+					if( matchPlaylist != null )
+					{
+						playlistItemsRequest.PlaylistId = matchPlaylist.Id;
+						//get the playlist items now
+						var playlistItems = await GetAllPlaylistItems( matchPlaylist.Id );
+
+						for( int i = 0; i < matchData.rounds.Count; i++ )
+						//foreach( String roundName in matchData.rounds )
+						{
+							String roundName = matchData.rounds [i];
+
+							RoundData roundData = sharedSettings.GetRoundData( roundName );
+							if( roundData.youtubeUrl != null )
+							{
+								//check if this youtube id is in the playlist, otherwise add it
+
+								if( !playlistItems.Any( x => x.Snippet.ResourceId.VideoId == roundData.youtubeUrl ) )
+								{
+									Console.WriteLine( "Could not find video for playlist, adding" );
+									PlaylistItem roundPlaylistItem = GetPlaylistItemForRound( roundName );
+									roundPlaylistItem.Snippet.Position = i + 1;
+									roundPlaylistItem.Snippet.PlaylistId = matchPlaylist.Id;
+									await youtubeService.PlaylistItems.Insert( roundPlaylistItem , "snippet" ).ExecuteAsync();
+								}
+							}
+						}
+					}
+				}
+			}
+			catch( Exception ex )
+			{
 			}
 
 		}
@@ -315,7 +502,7 @@ namespace MatchUploader
 			String roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
 			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , sharedSettings.roundVideoFile );
 
-			
+
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
 				currentVideo = roundName;
@@ -340,9 +527,9 @@ namespace MatchUploader
 					await videosInsertRequest.UploadAsync();
 				}
 				currentVideo = null;
-				
+
 			}
-			
+
 
 		}
 

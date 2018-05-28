@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 
 namespace MatchUploader
 {
@@ -16,11 +15,14 @@ namespace MatchUploader
 				mu.SaveSettings();
 				mu.CleanupVideos();
 				mu.CommitGitChanges();
+				//mu.CleanPlaylists().Wait();
+				mu.UpdatePlaylists().Wait();
 				mu.UploadAllRounds().Wait();
+			
 			}
 			catch( Exception e )
 			{
-
+				Console.WriteLine( e );
 			}
 
 			Console.WriteLine( "Program either had an exception or it's done working" );

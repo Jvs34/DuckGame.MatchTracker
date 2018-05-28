@@ -25,6 +25,9 @@ namespace MatchRecorder
 		protected override void OnPostInitialize()
 		{
 			Recorder?.Init();
+#if DEBUG
+			GenerateLevelImage gay = new GenerateLevelImage();
+#endif
 		}
 	}
 }
