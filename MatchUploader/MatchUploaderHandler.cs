@@ -529,8 +529,6 @@ namespace MatchUploader
 				currentVideo = null;
 
 			}
-
-
 		}
 
 
