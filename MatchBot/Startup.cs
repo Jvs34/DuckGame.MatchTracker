@@ -36,7 +36,7 @@ namespace MatchBot
 				options.CredentialProvider = new ConfigurationCredentialProvider( Configuration );
 				options.Middleware.Add( new CatchExceptionMiddleware<Exception>( async ( context , exception ) =>
 				{
-					await context.TraceActivity( "LuisMatchBot Exception" , exception );
+					await context.TraceActivity( "MatchBot Exception" , exception );
 					await context.SendActivity( "Sorry, it looks like something went wrong!" );
 				} ) );
 

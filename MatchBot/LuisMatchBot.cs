@@ -52,17 +52,23 @@ namespace MatchBot
 			//check if we have a target to the query, if the target is "I", the user that sent the message is the target
 			var entities = GetEntities( result.Entities );
 			//we only target one player
+
+			await turnContext.SendActivity( "Not implemented yet, LastPlayed" );
 		}
 
 		private async Task HandleMostWins( ITurnContext turnContext , RecognizerResult result )
 		{
 			var entities = GetEntities( result.Entities );
 
-			
+			foreach( var kv in entities )
+			{
+				await turnContext.SendActivity( $"{kv.Key} " );
+			}
 
+			await turnContext.SendActivity( "Not implemented yet, MostWins" );
 		}
 
-		private (String , int ) GetMostWins( bool matchOrRound , List<String> players )
+		private (String, int) GetMostWins( bool matchOrRound , List<String> players )
 		{
 
 			return ("", 0);

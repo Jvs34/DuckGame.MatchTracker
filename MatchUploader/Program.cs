@@ -18,7 +18,7 @@ namespace MatchUploader
 				//mu.CleanPlaylists().Wait();
 				mu.UpdatePlaylists().Wait();
 				mu.UploadAllRounds().Wait();
-			
+				mu.UpdatePlaylists().Wait();
 			}
 			catch( Exception e )
 			{

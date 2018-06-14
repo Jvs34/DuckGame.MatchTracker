@@ -32,7 +32,7 @@ namespace MatchTracker
 		//same as above, dunno how the json library deals with duplicated data
 		//public List<RoundData> rounds = new List<RoundData>();
 
-		//when the match started
+		//when the match started, this is also used as the name for the file
 		public DateTime timeStarted;
 
 		//this might actually be invalid if the match is never completed, like when the game crashes before the end
