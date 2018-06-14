@@ -8,48 +8,63 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 using Microsoft.Bot.Connector;
-using Microsoft.Bot.Connector.DirectLine;
 using Microsoft.Rest;
+using MatchTracker;
+using System.IO;
+using Newtonsoft.Json;
 
 namespace MatchBot
 {
 	public class DiscordHandler
 	{
-		private class LocalCredentials : ServiceClientCredentials
-		{
-
-
-			public override Task ProcessHttpRequestAsync( HttpRequestMessage request , CancellationToken cancellationToken )
-			{
-				Console.WriteLine( request.RequestUri );
-				request.Headers.Authorization = new AuthenticationHeaderValue( "Bearer" , "" );
-				return base.ProcessHttpRequestAsync( request , cancellationToken );
-			}
-		}
-
-
 		private DiscordSocketClient discordClient;
 		private ConnectorClient microsoftBotClient;
+		private SharedSettings sharedSettings;
+		private BotSettings botSettings;
 
 		public DiscordHandler()
 		{
 			discordClient = new DiscordSocketClient();
 			discordClient.Connected += OnDiscordConnected;
 			discordClient.Disconnected += OnDiscordDisconnected;
-			//client.LoginAsync( TokenType.Bot , "" );
+			discordClient.MessageReceived += OnDiscordMessage;
 
 			microsoftBotClient = new ConnectorClient( new Uri( "https://localhost" ) );
+
+			sharedSettings = new SharedSettings();
+			botSettings = new BotSettings();
+
+			String dir = Directory.GetParent( Directory.GetCurrentDirectory() ).FullName;
+			String settingsFolder = Path.Combine( Path.GetFullPath( dir ) , "Settings" );
+			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
+			String botSettingsPath = Path.Combine( settingsFolder , "bot.json" );
+
+			Console.WriteLine( sharedSettingsPath );
+
+			sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+			botSettings = JsonConvert.DeserializeObject<BotSettings>( File.ReadAllText( botSettingsPath ) );
+		}
+
+		public async Task Initialize()
+		{
+			await discordClient.LoginAsync( TokenType.Bot , botSettings.discordToken );
+		}
+
+
+
+		private async Task OnDiscordMessage( SocketMessage arg )
+		{
 			
 		}
 
-		private Task OnDiscordDisconnected( Exception arg )
+		private async Task OnDiscordDisconnected( Exception arg )
 		{
-			throw new NotImplementedException();
+			
 		}
 
-		private Task OnDiscordConnected()
+		private async Task OnDiscordConnected()
 		{
-			throw new NotImplementedException();
+			
 		}
 	}
 }

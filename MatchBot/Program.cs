@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
 using Discord;
-using Microsoft.Bot.Connector.DirectLine;
 using System;
 using Microsoft.Rest;
 

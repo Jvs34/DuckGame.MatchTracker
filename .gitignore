@@ -21,3 +21,4 @@ Settings/uploader.json
 MatchBot/bin/
 MatchBot/obj/
 MatchBot/appsettings.json
+Settings/bot.json
