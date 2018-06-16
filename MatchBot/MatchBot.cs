@@ -10,12 +10,13 @@ using Newtonsoft.Json.Linq;
 
 namespace MatchBot
 {
-	public class LuisMatchBot : IBot
+	public class MatchBot : IBot
 	{
 		public async Task OnTurn( ITurnContext turnContext )
 		{
 			if( turnContext.Activity.Type == ActivityTypes.Message )
 			{
+				Console.WriteLine( turnContext.Activity.Text );
 				var result = turnContext.Services.Get<RecognizerResult>( LuisRecognizerMiddleware.LuisRecognizerResultKey );
 				var topIntent = result?.GetTopScoringIntent();
 				switch( ( topIntent != null ) ? topIntent.Value.intent : null )

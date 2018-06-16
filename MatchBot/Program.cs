@@ -1,8 +1,7 @@
-﻿using Microsoft.AspNetCore;
-using Microsoft.AspNetCore.Hosting;
-using Discord;
+﻿using Discord;
 using System;
 using Microsoft.Rest;
+using System.Threading;
 
 namespace MatchBot
 {
@@ -10,14 +9,13 @@ namespace MatchBot
 	{
 		public static void Main( string [] args )
 		{
-			DiscordHandler handler = new DiscordHandler();
+			DiscordBotHandler handler = new DiscordBotHandler();
+			handler.Initialize().Wait();
 
-			BuildWebHost( args ).RunAsync().Wait();
+			Console.WriteLine( "Gay" );
+			Console.ReadKey();
 		}
 
-		public static IWebHost BuildWebHost( string [] args ) =>
-			WebHost.CreateDefaultBuilder( args )
-				.UseStartup<Startup>()
-				.Build();
+
 	}
 }
