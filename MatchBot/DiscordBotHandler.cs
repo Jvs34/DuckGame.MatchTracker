@@ -11,6 +11,7 @@ using Microsoft.Bot;
 using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Builder.TraceExtensions;
 using Microsoft.Bot.Builder.Ai.LUIS;
+using System.Linq;
 
 namespace MatchBot
 {
@@ -23,15 +24,12 @@ namespace MatchBot
 
 		public DiscordBotHandler()
 		{
-
-			discordClient = new DiscordSocketClient( new DiscordSocketConfig()
-			{
-				AlwaysDownloadUsers = true,
-			});
+			discordClient = new DiscordSocketClient();
 
 			discordClient.Connected += OnDiscordConnected;
 			discordClient.Disconnected += OnDiscordDisconnected;
 			discordClient.MessageReceived += OnDiscordMessage;
+			discordClient.Ready += OnDiscordReady;
 
 			bot = new MatchBot();
 
@@ -47,77 +45,84 @@ namespace MatchBot
 			sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 			botSettings = JsonConvert.DeserializeObject<BotSettings>( File.ReadAllText( botSettingsPath ) );
 
+			//add middleware to our botadapter stuff
+			//TODO: we might need a json datastore for this later? who knows, maybe make it use the botSettings shit
+			MemoryStorage dataStore = new MemoryStorage();
+
 			Use( new CatchExceptionMiddleware<Exception>( async ( context , exception ) =>
 			{
 				await context.TraceActivity( "MatchBot Exception" , exception );
 				await context.SendActivity( "Sorry, it looks like something went wrong!" );
 			} ) );
-
-			MemoryStorage dataStore = new MemoryStorage();
 			Use( new ConversationState<DuckGameDatabase>( dataStore ) );
+			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.luisModelId , botSettings.luisSubcriptionKey , botSettings.luisUri ) ) );
 
-			Use( new LuisRecognizerMiddleware(
-				new LuisModel( "7ca2989c-899b-40ac-a8a6-a26c887080e6" , "2b40fa31e06a440cb98b783bb2d71a73" ,
-					new Uri( "https://westus.api.cognitive.microsoft.com/luis/v2.0/apps/" )
-				)
-			) );
 		}
+
 
 		public async Task Initialize()
 		{
 			await discordClient.LoginAsync( TokenType.Bot , botSettings.discordToken );
 			await discordClient.StartAsync();
 			await discordClient.SetStatusAsync( UserStatus.Online );
-
-			/*
-			try
-			{
-				var v = discordClient.CurrentUser;
-
-				Activity chatActivity = new Activity()
-				{
-					Type = ActivityTypes.Message ,
-					//From = ConvertDiscordUserToChannelAccount( discordClient.CurrentUser ) ,
-					//Recipient = ConvertDiscordUserToChannelAccount( discordClient.CurrentUser ) ,
-					Text = "test",
-				};
-
-				ConversationParameters conv = new ConversationParameters()
-				{
-					Activity = chatActivity ,
-					Members = new ChannelAccount [] { } ,
-					//Bot = ConvertDiscordUserToChannelAccount( discordClient.CurrentUser ) ,
-				};
-
-				await microsoftBotClient.Conversations.CreateConversationAsync( conv );
-			}
-			catch( Exception ex )
-			{
-				Console.WriteLine( ex );
-			}
-			*/
-		}
-
-
-
-
-		private async Task OnDiscordMessage( SocketMessage msg )
-		{
-			Console.WriteLine( msg.Content );
-		}
-
-		private async Task OnDiscordDisconnected( Exception arg )
-		{
-
 		}
 
 		private async Task OnDiscordConnected()
 		{
-
+			Console.WriteLine( "Connected to Discord" );
 		}
 
+		private async Task OnDiscordDisconnected( Exception arg )
+		{
+			Console.WriteLine( "Disconnected from Discord {0}" , arg.ToString() );
+		}
 
-		public ChannelAccount ConvertDiscordUserToChannelAccount( SocketUser user )
+		private async Task OnDiscordReady()
+		{
+			Console.WriteLine( discordClient.CurrentUser );
+		}
+
+		private async Task OnDiscordMessage( SocketMessage msg )
+		{
+			//I dunno if this'll happen but we don't care about our own messages
+			if( msg.Author == discordClient.CurrentUser )
+				return;
+
+			/*
+			if( !msg.MentionedUsers.Contains( discordClient.CurrentUser ) )
+				return;
+			*/
+
+			Console.WriteLine( msg.Content );
+			await HandleIncomingMessage( msg );
+			
+		}
+
+		private async Task HandleIncomingMessage( SocketMessage msg )
+		{
+			Activity act = GetActivityFromMessage( msg );
+			using( TurnContext context = new TurnContext( this , act ) )
+			{
+				await RunPipeline( context , null , null );
+			}
+		}
+
+		private Activity GetActivityFromMessage( SocketMessage msg )
+		{
+			return new Activity()
+			{
+				Text = msg.Content ,
+				ChannelId = msg.Channel.Name , //this is a little backwards but we only care about the nice name, not the actual id here
+				From = DiscordUserToBotAccount( msg.Author ) ,
+				Recipient = DiscordUserToBotAccount( discordClient.CurrentUser ) ,
+				Conversation = new ConversationAccount( true , null , msg.Channel.Id.ToString() , msg.Channel.Name ),
+				Timestamp = msg.Timestamp,
+				Id = msg.Id.ToString(),
+				Type = "message"
+			};
+		}
+
+		public ChannelAccount DiscordUserToBotAccount( SocketUser user )
 		{
 			return new ChannelAccount()
 			{
@@ -127,20 +132,10 @@ namespace MatchBot
 			};
 		}
 
-		public override Task<ResourceResponse []> SendActivities( ITurnContext context , Activity [] activities )
-		{
-			throw new NotImplementedException();
-		}
+		public override async Task<ResourceResponse []> SendActivities( ITurnContext context , Activity [] activities ) => throw new NotImplementedException();
 
-		//these ones aren't even used on ConsoleAdapter
-		public override Task<ResourceResponse> UpdateActivity( ITurnContext context , Activity activity )
-		{
-			throw new NotImplementedException();
-		}
-
-		public override Task DeleteActivity( ITurnContext context , ConversationReference reference )
-		{
-			throw new NotImplementedException();
-		}
+		//these ones aren't even used on ConsoleAdapter, although it would probably be nice to do that
+		public override async Task<ResourceResponse> UpdateActivity( ITurnContext context , Activity activity ) => throw new NotImplementedException();
+		public override async Task DeleteActivity( ITurnContext context , ConversationReference reference ) => throw new NotImplementedException();
 	}
 }

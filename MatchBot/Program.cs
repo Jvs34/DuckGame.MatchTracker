@@ -12,7 +12,7 @@ namespace MatchBot
 			DiscordBotHandler handler = new DiscordBotHandler();
 			handler.Initialize().Wait();
 
-			Console.WriteLine( "Gay" );
+			Console.WriteLine( "Press a key to fucking stop" );
 			Console.ReadKey();
 		}
 

@@ -9,5 +9,8 @@ namespace MatchBot
     {
 		public String discordClientId;
 		public String discordToken;
+		public String luisModelId;
+		public String luisSubcriptionKey;
+		public Uri luisUri;
     }
 }
