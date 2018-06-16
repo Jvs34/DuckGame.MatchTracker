@@ -127,7 +127,7 @@ namespace MatchBot
 			return new Activity()
 			{
 				Text = text ,
-				ChannelId = msg.Channel.Id.ToString() , //this is a little backwards but we only care about the nice name, not the actual id here
+				ChannelId = msg.Channel.Id.ToString() ,
 				From = DiscordUserToBotAccount( msg.Author ) ,
 				Recipient = DiscordUserToBotAccount( discordClient.CurrentUser ) ,
 				Conversation = new ConversationAccount( true , null , msg.Channel.Id.ToString() , msg.Channel.Name ),
@@ -143,7 +143,7 @@ namespace MatchBot
 			{
 				Id = user.Id.ToString() ,
 				Name = user.Username ,
-				Role = user.IsBot ? "bot" : "user"
+				Role = user.IsBot ? RoleTypes.Bot : RoleTypes.User
 			};
 		}
 
