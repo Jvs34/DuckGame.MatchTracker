@@ -12,6 +12,7 @@ using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Builder.TraceExtensions;
 using Microsoft.Bot.Builder.Ai.LUIS;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace MatchBot
 {
@@ -85,26 +86,44 @@ namespace MatchBot
 		private async Task OnDiscordMessage( SocketMessage msg )
 		{
 			//I dunno if this'll happen but we don't care about our own messages
-			if( msg.Author == discordClient.CurrentUser )
+			if( msg.Author.Id == discordClient.CurrentUser.Id )
 				return;
 
+			//do this later
 			/*
 			if( !msg.MentionedUsers.Contains( discordClient.CurrentUser ) )
 				return;
 			*/
 
-			Console.WriteLine( msg.Content );
 			await HandleIncomingMessage( msg );
-			
 		}
 
+		//message incoming from discord, ignoring the ones from the bot
 		private async Task HandleIncomingMessage( SocketMessage msg )
 		{
 			Activity act = GetActivityFromMessage( msg );
 			using( TurnContext context = new TurnContext( this , act ) )
+			using( var typingstate = msg.Channel.EnterTypingState() )
 			{
-				await RunPipeline( context , null , null );
+				await RunPipeline( context , BotCallback );
 			}
+		}
+
+		//message outgoing from the bot
+		private async Task HandleOutgoingMessage( ITurnContext context , Activity act )
+		{
+			ulong channelId = Convert.ToUInt64( context.Activity.ChannelId );
+			ISocketMessageChannel channel = discordClient.GetChannel( channelId ) as ISocketMessageChannel;
+			
+			if( channel != null )
+			{
+				await channel.SendMessageAsync( act.Text );
+			}
+		}
+
+		private async Task BotCallback( ITurnContext context )
+		{
+			await bot.OnTurn( context );
 		}
 
 		private Activity GetActivityFromMessage( SocketMessage msg )
@@ -112,13 +131,13 @@ namespace MatchBot
 			return new Activity()
 			{
 				Text = msg.Content ,
-				ChannelId = msg.Channel.Name , //this is a little backwards but we only care about the nice name, not the actual id here
+				ChannelId = msg.Channel.Id.ToString() , //this is a little backwards but we only care about the nice name, not the actual id here
 				From = DiscordUserToBotAccount( msg.Author ) ,
 				Recipient = DiscordUserToBotAccount( discordClient.CurrentUser ) ,
 				Conversation = new ConversationAccount( true , null , msg.Channel.Id.ToString() , msg.Channel.Name ),
 				Timestamp = msg.Timestamp,
 				Id = msg.Id.ToString(),
-				Type = "message"
+				Type = ActivityTypes.Message,
 			};
 		}
 
@@ -132,7 +151,20 @@ namespace MatchBot
 			};
 		}
 
-		public override async Task<ResourceResponse []> SendActivities( ITurnContext context , Activity [] activities ) => throw new NotImplementedException();
+		public override async Task<ResourceResponse []> SendActivities( ITurnContext context , Activity [] activities )
+		{
+			List<ResourceResponse> responses = new List<ResourceResponse>();
+			foreach( Activity activity in activities )
+			{
+				responses.Add( new ResourceResponse( activity.Id ) );
+				if( activity.Type == ActivityTypes.Message && activity.From.Role == RoleTypes.Bot )
+				{
+					await HandleOutgoingMessage( context , activity );
+					//Console.WriteLine( string.Format( "{0}" , (object) activity.Text ) );
+				}
+			}
+			return responses.ToArray();
+		}
 
 		//these ones aren't even used on ConsoleAdapter, although it would probably be nice to do that
 		public override async Task<ResourceResponse> UpdateActivity( ITurnContext context , Activity activity ) => throw new NotImplementedException();

@@ -63,7 +63,7 @@ namespace MatchBot
 
 			foreach( var kv in entities )
 			{
-				await turnContext.SendActivity( $"{kv.Key} " );
+				Console.WriteLine( kv.Key );
 			}
 
 			await turnContext.SendActivity( "Not implemented yet, MostWins" );

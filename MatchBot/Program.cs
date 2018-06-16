@@ -9,11 +9,19 @@ namespace MatchBot
 	{
 		public static void Main( string [] args )
 		{
-			DiscordBotHandler handler = new DiscordBotHandler();
-			handler.Initialize().Wait();
+			try
+			{
 
-			Console.WriteLine( "Press a key to fucking stop" );
-			Console.ReadKey();
+				DiscordBotHandler handler = new DiscordBotHandler();
+				handler.Initialize().Wait();
+
+				Console.WriteLine( "Press a key to fucking stop" );
+				Console.ReadKey();
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e );
+			}
 		}
 
 
