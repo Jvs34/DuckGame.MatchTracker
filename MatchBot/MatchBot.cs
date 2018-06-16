@@ -31,7 +31,11 @@ namespace MatchBot
 							await HandleMostWins( turnContext , result );
 							break;
 						}
-					default: break;
+					default:
+						{
+							turnContext.SendActivity( "Sorry, I don't understand the message" );
+							break;
+						}
 				}
 			}
 		}

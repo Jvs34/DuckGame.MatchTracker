@@ -30,7 +30,6 @@ namespace MatchBot
 			discordClient.Connected += OnDiscordConnected;
 			discordClient.Disconnected += OnDiscordDisconnected;
 			discordClient.MessageReceived += OnDiscordMessage;
-			discordClient.Ready += OnDiscordReady;
 
 			bot = new MatchBot();
 
@@ -78,22 +77,14 @@ namespace MatchBot
 			Console.WriteLine( "Disconnected from Discord {0}" , arg.ToString() );
 		}
 
-		private async Task OnDiscordReady()
-		{
-			Console.WriteLine( discordClient.CurrentUser );
-		}
-
 		private async Task OnDiscordMessage( SocketMessage msg )
 		{
-			//I dunno if this'll happen but we don't care about our own messages
+			//there's no equality check on this class unfortunately
 			if( msg.Author.Id == discordClient.CurrentUser.Id )
 				return;
 
-			//do this later
-			/*
-			if( !msg.MentionedUsers.Contains( discordClient.CurrentUser ) )
+			if( !msg.MentionedUsers.Any( x => x.Id == discordClient.CurrentUser.Id ) )
 				return;
-			*/
 
 			await HandleIncomingMessage( msg );
 		}
@@ -128,9 +119,14 @@ namespace MatchBot
 
 		private Activity GetActivityFromMessage( SocketMessage msg )
 		{
+			String text = msg.Content;
+			//TODO: clean the message of all mentions and turn them into plain text
+			String mention = discordClient.CurrentUser.Mention.Replace( "!" , String.Empty );//so there's an exclamation mark here somehow, why tho
+			text = text.Replace( mention , String.Empty );
+
 			return new Activity()
 			{
-				Text = msg.Content ,
+				Text = text ,
 				ChannelId = msg.Channel.Id.ToString() , //this is a little backwards but we only care about the nice name, not the actual id here
 				From = DiscordUserToBotAccount( msg.Author ) ,
 				Recipient = DiscordUserToBotAccount( discordClient.CurrentUser ) ,
@@ -160,7 +156,6 @@ namespace MatchBot
 				if( activity.Type == ActivityTypes.Message && activity.From.Role == RoleTypes.Bot )
 				{
 					await HandleOutgoingMessage( context , activity );
-					//Console.WriteLine( string.Format( "{0}" , (object) activity.Text ) );
 				}
 			}
 			return responses.ToArray();
