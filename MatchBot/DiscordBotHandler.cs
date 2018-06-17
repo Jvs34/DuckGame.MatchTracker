@@ -19,9 +19,8 @@ namespace MatchBot
 	public class DiscordBotHandler : BotAdapter
 	{
 		private DiscordSocketClient discordClient;
-		private SharedSettings sharedSettings;
 		private BotSettings botSettings;
-		private IBot bot;
+		private MatchBot bot;
 
 		public DiscordBotHandler()
 		{
@@ -33,34 +32,32 @@ namespace MatchBot
 
 			bot = new MatchBot();
 
-			sharedSettings = new SharedSettings();
+			
 			botSettings = new BotSettings();
 
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
-			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
 			String botSettingsPath = Path.Combine( settingsFolder , "bot.json" );
-
-			Console.WriteLine( sharedSettingsPath );
-
-			sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 			botSettings = JsonConvert.DeserializeObject<BotSettings>( File.ReadAllText( botSettingsPath ) );
 
 			//add middleware to our botadapter stuff
 			//TODO: we might need a json datastore for this later? who knows, maybe make it use the botSettings shit
-			MemoryStorage dataStore = new MemoryStorage();
+			//MemoryStorage dataStore = new MemoryStorage();
 
 			Use( new CatchExceptionMiddleware<Exception>( async ( context , exception ) =>
 			{
 				await context.TraceActivity( "MatchBot Exception" , exception );
 				await context.SendActivity( "Sorry, it looks like something went wrong!" );
 			} ) );
-			Use( new ConversationState<DuckGameDatabase>( dataStore ) );
-			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.luisModelId , botSettings.luisSubcriptionKey , botSettings.luisUri ) ) );
 
+			//Use( new ConversationState<GameDatabase>( dataStore ) ); //don't actually need this I think
+
+			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.luisModelId , botSettings.luisSubcriptionKey , botSettings.luisUri ) ) );
 		}
+
 
 		public async Task Initialize()
 		{
+			await bot.Initialize();
 			await discordClient.LoginAsync( TokenType.Bot , botSettings.discordToken );
 			await discordClient.StartAsync();
 			await discordClient.SetStatusAsync( UserStatus.Online );

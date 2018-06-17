@@ -8,10 +8,59 @@ using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Schema;
 using Newtonsoft.Json.Linq;
 
+using MatchTracker;
+using System.IO;
+using Newtonsoft.Json;
+
 namespace MatchBot
 {
 	public class MatchBot : IBot
 	{
+		private GameDatabase gameDatabase;
+
+		private Task loadDatabaseTask;
+
+		public MatchBot()
+		{
+			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
+			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
+
+			gameDatabase = new GameDatabase();
+			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) ); 
+			gameDatabase.LoadGlobalData += LoadDatabaseGlobalData;
+			gameDatabase.LoadMatchData += LoadDatabaseMatchData;
+			gameDatabase.LoadRoundData += LoadDatabaseRoundData;
+
+			loadDatabaseTask = gameDatabase.Load();
+		}
+
+		//TODO: turn these asyncs
+		private async Task<GlobalData> LoadDatabaseGlobalData( SharedSettings sharedSettings )
+		{
+			Console.WriteLine( "Loading GlobalData" );
+			return sharedSettings.GetGlobalData();
+		}
+
+		private async Task<MatchData> LoadDatabaseMatchData( SharedSettings sharedSettings , string matchName )
+		{
+			Console.WriteLine( $"Loading MatchData {matchName}" );
+
+			return sharedSettings.GetMatchData( matchName );
+		}
+
+		private async Task<RoundData> LoadDatabaseRoundData( SharedSettings sharedSettings , string roundName )
+		{
+			Console.WriteLine( $"Loading RoundData {roundName}" );
+
+			return sharedSettings.GetRoundData( roundName );
+		}
+
+
+		public async Task Initialize()
+		{
+			await loadDatabaseTask;
+		}
+
 		public async Task OnTurn( ITurnContext turnContext )
 		{
 			if( turnContext.Activity.Type == ActivityTypes.Message )
@@ -33,7 +82,7 @@ namespace MatchBot
 						}
 					default:
 						{
-							await turnContext.SendActivity( "Sorry, I don't understand the message" );
+							await turnContext.SendActivity( "Sorry I can't seem to understand you" );
 							break;
 						}
 				}
@@ -58,7 +107,7 @@ namespace MatchBot
 			var entities = GetEntities( result.Entities );
 			//we only target one player
 
-			await turnContext.SendActivity( "Not implemented yet, LastPlayed" );
+			await turnContext.SendActivity( "Not yet implemented: LastPlayed" );
 		}
 
 		private async Task HandleMostWins( ITurnContext turnContext , RecognizerResult result )

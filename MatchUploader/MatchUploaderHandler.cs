@@ -194,7 +194,7 @@ namespace MatchUploader
 		public Video GetVideoDataForRound( String roundName )
 		{
 			RoundData roundData = sharedSettings.GetRoundData( roundName );
-			String winner = roundData.GetWinnerName(); //sharedSettings.GetRoundWinnerName( roundData );
+			String winner = roundData.GetWinnerName();
 
 			if( winner.Length == 0 )
 			{
