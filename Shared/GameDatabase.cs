@@ -24,13 +24,13 @@ namespace MatchTracker
 
 		public async Task Load()
 		{
-			globalData = await GetGlobalData( true );//LoadGlobalData( sharedSettings );
+			await GetGlobalData( true );
 
 			if( globalData != null )
 			{
 				foreach( String matchName in globalData.matches )
 				{
-					matchesData [matchName] = await GetMatchData( matchName , true ); //LoadMatchData( sharedSettings , matchName );
+					await GetMatchData( matchName , true );
 				}
 			}
 
@@ -38,7 +38,7 @@ namespace MatchTracker
 			{
 				foreach( String roundName in globalData.rounds )
 				{
-					roundsData [roundName] = await GetRoundData( roundName , true ); //LoadRoundData( sharedSettings , roundName );
+					await GetRoundData( roundName , true );
 				}
 			}
 		}
