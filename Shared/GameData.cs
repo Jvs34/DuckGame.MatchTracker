@@ -15,22 +15,21 @@ namespace MatchTracker
 		//all the players that have ever played any rounds, even local players
 		//these player profiles will not have teamdata
 		public List<PlayerData> players = new List<PlayerData>();
+
+		//TODO: level shit
 	}
 
 	//a match is kind of hard to keep track of in a sense, reconnections might throw stats off and create duplicate matches
 	//which in theory is fine until you want to link multiple matches together later on, gotta think about this
 	public class MatchData
 	{
+		//name of the match
+		public String matchName;
 
-		//for the json stuff I might turn this into a string list to prevent duplicated data
-		//although it might be just fine to have
 		public List<PlayerData> players = new List<PlayerData>();
 
 		//filename(without extension) of the rounds of this match
 		public List<String> rounds = new List<string>();
-
-		//same as above, dunno how the json library deals with duplicated data
-		//public List<RoundData> rounds = new List<RoundData>();
 
 		//when the match started, this is also used as the name for the file
 		public DateTime timeStarted;
@@ -72,6 +71,8 @@ namespace MatchTracker
 
 	public class RoundData
 	{
+		public String roundName;
+
 		//while it seems unnecessary to have a list of players here, duck game now supports disconnections without interrupting gameplay
 		//so someone might be there for one round and be gone on the other
 		public List<PlayerData> players = new List<PlayerData>();

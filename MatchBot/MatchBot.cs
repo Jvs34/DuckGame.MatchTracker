@@ -33,7 +33,7 @@ namespace MatchBot
 						}
 					default:
 						{
-							turnContext.SendActivity( "Sorry, I don't understand the message" );
+							await turnContext.SendActivity( "Sorry, I don't understand the message" );
 							break;
 						}
 				}

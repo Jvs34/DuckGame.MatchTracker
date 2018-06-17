@@ -122,8 +122,6 @@ namespace MatchUploader
 
 			String globalDataPath = sharedSettings.GetGlobalPath();
 
-
-
 			GlobalData globalData = new GlobalData();
 
 			if( File.Exists( globalDataPath ) )
@@ -141,6 +139,15 @@ namespace MatchUploader
 				if( !globalData.rounds.Contains( folderName ) )
 				{
 					globalData.rounds.Add( folderName );
+				}
+
+				RoundData roundData = sharedSettings.GetRoundData( folderName );
+				if( roundData.roundName == null )
+				{
+					roundData.roundName = sharedSettings.DateTimeToString( roundData.timeStarted );
+					Console.WriteLine( $"Adding roundName to roundData {roundData.roundName}" );
+
+					sharedSettings.SaveRoundData( roundData.roundName , roundData );
 				}
 			}
 
@@ -168,6 +175,14 @@ namespace MatchUploader
 						globalData.players.Add( toAdd );
 
 					}
+				}
+
+				if( md.matchName == null )
+				{
+					md.matchName = sharedSettings.DateTimeToString( md.timeStarted );
+					Console.WriteLine( $"Adding matchName to matchData {md.matchName}" );
+
+					sharedSettings.SaveMatchData( md.matchName , md );
 				}
 			}
 

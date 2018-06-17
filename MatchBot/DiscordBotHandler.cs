@@ -59,7 +59,6 @@ namespace MatchBot
 
 		}
 
-
 		public async Task Initialize()
 		{
 			await discordClient.LoginAsync( TokenType.Bot , botSettings.discordToken );
@@ -94,7 +93,7 @@ namespace MatchBot
 		{
 			Activity act = GetActivityFromMessage( msg );
 			using( TurnContext context = new TurnContext( this , act ) )
-			using( var typingstate = msg.Channel.EnterTypingState() )
+			using( IDisposable disposable = msg.Channel.EnterTypingState() )
 			{
 				await RunPipeline( context , BotCallback );
 			}
@@ -103,10 +102,11 @@ namespace MatchBot
 		//message outgoing from the bot
 		private async Task HandleOutgoingMessage( ITurnContext context , Activity act )
 		{
+			//get the channel the original message came from
 			ulong channelId = Convert.ToUInt64( context.Activity.ChannelId );
-			ISocketMessageChannel channel = discordClient.GetChannel( channelId ) as ISocketMessageChannel;
-			
-			if( channel != null )
+
+			//shouldn't this already be an ISocketMessageChannel? why do I have to cast to it? 🤔
+			if( discordClient.GetChannel( channelId ) is ISocketMessageChannel channel )
 			{
 				await channel.SendMessageAsync( act.Text );
 			}

@@ -177,7 +177,6 @@ namespace MatchRecorder
 			requestedRecordingStop = true;
 		}
 
-
 		public void StartRecording()
 		{
 			requestedRecordingStart = true;
@@ -195,11 +194,12 @@ namespace MatchRecorder
 				isCustomLevel = false ,
 			};
 
+			currentRound.roundName = sharedSettings.DateTimeToString( currentRound.timeStarted );
+
 			foreach( Profile pro in Profiles.active )
 			{
 				currentRound.players.Add( CreatePlayerDataFromProfile( pro ) );
 			}
-
 
 			if( lvl is GameLevel gl )
 			{
@@ -244,12 +244,9 @@ namespace MatchRecorder
 		public void TryCollectingMatchData()
 		{
 			//try saving the match if there's one and it's got at least one round
-			if( currentMatch != null )
+			if( currentMatch != null && currentMatch.rounds.Count > 0 )
 			{
-				if( currentMatch.rounds.Count > 0 )
-				{
-					StopCollectingMatchData();
-				}
+				StopCollectingMatchData();
 			}
 
 			//try starting to collect match data regardless, it'll only be saved if there's at least one round later on
@@ -264,6 +261,8 @@ namespace MatchRecorder
 				rounds = new List<string>() ,
 				players = new List<PlayerData>() ,
 			};
+
+			currentMatch.matchName = sharedSettings.DateTimeToString( currentMatch.timeStarted );
 		}
 
 		private void StopCollectingMatchData()

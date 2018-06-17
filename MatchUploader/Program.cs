@@ -15,7 +15,6 @@ namespace MatchUploader
 				mu.SaveSettings();
 				mu.CleanupVideos();
 				mu.CommitGitChanges();
-				//mu.CleanPlaylists().Wait();
 				mu.UpdatePlaylists().Wait();
 				mu.UploadAllRounds().Wait();
 				mu.UpdatePlaylists().Wait();
