@@ -146,19 +146,34 @@ namespace MatchBot
 			}
 
 
-				//go through the last round the player came up on the search
-
-			var kv = gameDatabase.roundsData.LastOrDefault(
-				x => x.Value.players.Any( p => 
-				String.Equals( p.nickName ,  target , StringComparison.CurrentCultureIgnoreCase ) ||
-				String.Equals( p.name , target , StringComparison.CurrentCultureIgnoreCase ) )
-			);
-				
-			if( kv.Value != null )
+			//break out early if it's already been found
+			if( lastPlayed == null )
 			{
-				RoundData roundData = kv.Value;
-				lastPlayed = roundData.timeEnded;
+				//first try to find the actual player object for this
+
+				GlobalData gd = await gameDatabase.GetGlobalData();
+
+				PlayerData pd = gd.players.FirstOrDefault( p =>
+					String.Equals( p.nickName , target , StringComparison.CurrentCultureIgnoreCase ) ||
+					String.Equals( p.name , target , StringComparison.CurrentCultureIgnoreCase ) );
+
+				if( pd != null )
+				{
+					//go through the last round the player came up on the search
+
+					var kv = gameDatabase.roundsData.LastOrDefault(
+						x => x.Value.players.Any( p =>
+						p.userId == pd.userId ) );
+
+					if( kv.Value != null )
+					{
+						RoundData roundData = kv.Value;
+						lastPlayed = roundData.timeEnded;
+					}
+				}
 			}
+
+
 
 			if( lastPlayed == null )
 			{
@@ -167,12 +182,12 @@ namespace MatchBot
 			else
 			{
 				String fancyTarget = target;
-				if( target.Equals( "we" , StringComparison.CurrentCultureIgnoreCase ) || target.Equals( "I" , StringComparison.CurrentCultureIgnoreCase ) )
+				if( target.Equals( "we" , StringComparison.CurrentCultureIgnoreCase ) || target.Equals( "i" , StringComparison.CurrentCultureIgnoreCase ) )
 				{
 					fancyTarget = "you";
 				}
 
-				await turnContext.SendActivity( $"The last time {target} played was on {lastPlayed}" );
+				await turnContext.SendActivity( $"The last time {fancyTarget} played was on {lastPlayed}" );
 			}
 			//await turnContext.SendActivity( "Not yet implemented: LastPlayed" );
 		}
