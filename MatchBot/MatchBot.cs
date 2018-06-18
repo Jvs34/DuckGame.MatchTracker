@@ -90,7 +90,9 @@ namespace MatchBot
 						}
 					default:
 						{
-							await turnContext.SendActivity( "Sorry I can't seem to understand you" );
+							await turnContext.SendActivity( "*Quack*" );
+
+							//await turnContext.SendActivity( "Sorry I can't seem to understand you" );
 							break;
 						}
 				}
@@ -109,6 +111,52 @@ namespace MatchBot
 			return list;
 		}
 
+		private List<PlayerData> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<String , List<string>> entities )
+		{
+			List<PlayerData> players = new List<PlayerData>();
+
+			GlobalData globalData = gameDatabase.globalData;
+
+			if( entities.TryGetValue( "Player_Name" , out List<String> playerNames ) )
+			{
+				//first off, any "we" should be ignored
+				//"me" and "i" should be turned into the user that sent the message
+
+				//TODO: it would be nice if I was able to use fuzzy search here so I'm gonna keep this TODO here
+				foreach( String name in playerNames )
+				{
+					String playerName = name;
+					if( String.Equals( playerName , "we" , StringComparison.CurrentCultureIgnoreCase ) )
+					{
+						continue;
+					}
+
+					//TODO:I'm sure I can find a better way to do this later on, maybe some middleware has this as an option
+					//if one of the entities is "i" or "me", the user meant himself, so search for his name instead
+					if( String.Equals( playerName , "i" , StringComparison.CurrentCultureIgnoreCase ) || String.Equals( playerName , "me" , StringComparison.CurrentCultureIgnoreCase ) )
+					{
+						playerName = turnContext.Activity.From.Name;
+					}
+
+					//try to find the name of the player
+					PlayerData pd = globalData.players.FirstOrDefault( p => {
+						return String.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase ) ||
+											   String.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
+					} );
+
+					if( pd != null )
+					{
+						players.Add( pd );
+					}
+				}
+
+
+			}
+
+
+			return players;
+		}
+
 		private async Task HandleLastPlayed( ITurnContext turnContext , RecognizerResult result )
 		{
 			var entities = GetEntities( result.Entities );
@@ -124,8 +172,6 @@ namespace MatchBot
 			}
 
 			Console.WriteLine( $"Target is {target}" );
-
-
 
 			if( target.Equals( "we" , StringComparison.CurrentCultureIgnoreCase ) )
 			{
