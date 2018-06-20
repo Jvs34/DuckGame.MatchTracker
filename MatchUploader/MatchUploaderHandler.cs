@@ -196,7 +196,7 @@ namespace MatchUploader
 			RoundData roundData = sharedSettings.GetRoundData( roundName );
 			String winner = roundData.GetWinnerName();
 
-			if( winner.Length == 0 )
+			if( String.IsNullOrEmpty( winner ) )
 			{
 				winner = "Nobody";
 			}
@@ -233,7 +233,7 @@ namespace MatchUploader
 
 			String winner = matchData.GetWinnerName();
 
-			if( winner.Length == 0 )
+			if( String.IsNullOrEmpty( winner ) )
 			{
 				winner = "Nobody";
 			}

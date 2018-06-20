@@ -117,16 +117,22 @@ namespace MatchBot
 		private Activity GetActivityFromMessage( SocketMessage msg )
 		{
 			String text = msg.Content;
-			//TODO: clean the message of all mentions and turn them into plain text
-			String mention = discordClient.CurrentUser.Mention.Replace( "!" , String.Empty );//so there's an exclamation mark here somehow, why tho
-			text = text.Replace( mention , String.Empty );
+
+			foreach( var mentionedUser in msg.MentionedUsers )
+			{
+				//the string that's used to mention this user, we need to remove the exclamation mark here tho
+				String mentionString = mentionedUser.Mention.Replace( "!" , String.Empty );
+
+				//the bot doesn't need to see "DuckBot" at the start of the message everytime, so remove that specifically
+				text = text.Replace( mentionString , mentionedUser.Id == discordClient.CurrentUser.Id ? String.Empty : mentionedUser.Username );
+			}
 
 			return new Activity()
 			{
 				Text = text ,
 				ChannelId = msg.Channel.Id.ToString() ,
-				From = DiscordUserToBotAccount( msg.Author ) ,
-				Recipient = DiscordUserToBotAccount( discordClient.CurrentUser ) ,
+				From = DiscordUserToBotFrameworkAccount( msg.Author ) ,
+				Recipient = DiscordUserToBotFrameworkAccount( discordClient.CurrentUser ) ,
 				Conversation = new ConversationAccount( true , null , msg.Channel.Id.ToString() , msg.Channel.Name ),
 				Timestamp = msg.Timestamp,
 				Id = msg.Id.ToString(),
@@ -134,7 +140,7 @@ namespace MatchBot
 			};
 		}
 
-		public ChannelAccount DiscordUserToBotAccount( SocketUser user )
+		public ChannelAccount DiscordUserToBotFrameworkAccount( SocketUser user )
 		{
 			return new ChannelAccount()
 			{

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Bot;
 using Microsoft.Bot.Builder;
@@ -14,11 +15,18 @@ using MatchTracker;
 using System.IO;
 using Newtonsoft.Json;
 using Microsoft.Cognitive.LUIS.Models;
+using System.Text;
 
 namespace MatchBot
 {
 	public class MatchBot : IBot
 	{
+		enum GameType
+		{
+			Match,
+			Round
+		};
+
 		private GameDatabase gameDatabase;
 
 		private Task loadDatabaseTask;
@@ -29,7 +37,9 @@ namespace MatchBot
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
 
 			gameDatabase = new GameDatabase();
-			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) ); 
+			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+
+			//TODO: turn these into http calls instead
 			gameDatabase.LoadGlobalData += LoadDatabaseGlobalData;
 			gameDatabase.LoadMatchData += LoadDatabaseMatchData;
 			gameDatabase.LoadRoundData += LoadDatabaseRoundData;
@@ -58,7 +68,7 @@ namespace MatchBot
 			return sharedSettings.GetRoundData( roundName );
 		}
 
-
+		//if this is ever hosted on azure, this part would have to be added somewhere else, maybe on OnTurn
 		public async Task Initialize()
 		{
 			await loadDatabaseTask;
@@ -91,8 +101,6 @@ namespace MatchBot
 					default:
 						{
 							await turnContext.SendActivity( "*Quack*" );
-
-							//await turnContext.SendActivity( "Sorry I can't seem to understand you" );
 							break;
 						}
 				}
@@ -111,11 +119,11 @@ namespace MatchBot
 			return list;
 		}
 
-		private List<PlayerData> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<String , List<string>> entities )
+		private async Task<List<PlayerData>> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<String , List<string>> entities )
 		{
 			List<PlayerData> players = new List<PlayerData>();
 
-			GlobalData globalData = gameDatabase.globalData;
+			GlobalData globalData = await gameDatabase.GetGlobalData();
 
 			if( entities.TryGetValue( "Player_Name" , out List<String> playerNames ) )
 			{
@@ -132,14 +140,15 @@ namespace MatchBot
 					}
 
 					//TODO:I'm sure I can find a better way to do this later on, maybe some middleware has this as an option
-					//if one of the entities is "i" or "me", the user meant himself, so search for his name instead
+					//if one of the entities is "i" or "me", the user meant himself, so
 					if( String.Equals( playerName , "i" , StringComparison.CurrentCultureIgnoreCase ) || String.Equals( playerName , "me" , StringComparison.CurrentCultureIgnoreCase ) )
 					{
 						playerName = turnContext.Activity.From.Name;
 					}
 
 					//try to find the name of the player
-					PlayerData pd = globalData.players.FirstOrDefault( p => {
+					PlayerData pd = globalData.players.FirstOrDefault( p =>
+					{
 						return String.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase ) ||
 											   String.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
 					} );
@@ -159,21 +168,13 @@ namespace MatchBot
 
 		private async Task HandleLastPlayed( ITurnContext turnContext , RecognizerResult result )
 		{
-			var entities = GetEntities( result.Entities );
+			List<PlayerData> players = await GetPlayerDataEntities( turnContext , GetEntities( result.Entities ) );
 			//we only target one entity, a name, "I" or "we"
-			String target = "we";
-			DateTime ? lastPlayed = null;
+			DateTime? lastPlayed = null;
 
-			if( entities.ContainsKey( "Player_Name" ) )
-			{
-				//get the first value
-				List<String> nameslist = entities ["Player_Name"];
-				target = nameslist.FirstOrDefault();
-			}
+			PlayerData target = null;
 
-			Console.WriteLine( $"Target is {target}" );
-
-			if( target.Equals( "we" , StringComparison.CurrentCultureIgnoreCase ) )
+			if( players.Count == 0 )
 			{
 				//find the last match played
 				var lastRound = gameDatabase.roundsData.LastOrDefault();
@@ -182,29 +183,19 @@ namespace MatchBot
 					lastPlayed = lastRound.Value.timeEnded;
 				}
 			}
-
-			//turn "i" into a name, like the guy that sent the message
-			if( target.Equals( "i" , StringComparison.CurrentCultureIgnoreCase ) )
-			{
-				//who sent the message?
-				var from = turnContext.Activity.From;
-				target = from.Name;
-			}
-
-
-			//break out early if it's already been found
-			if( lastPlayed == null )
+			else
 			{
 				//first try to find the actual player object for this
 
 				GlobalData gd = await gameDatabase.GetGlobalData();
 
-				PlayerData pd = gd.players.FirstOrDefault( p =>
-					String.Equals( p.nickName , target , StringComparison.CurrentCultureIgnoreCase ) ||
-					String.Equals( p.name , target , StringComparison.CurrentCultureIgnoreCase ) );
+				//we only care about the first player really
+
+				PlayerData pd = players.FirstOrDefault();
 
 				if( pd != null )
 				{
+					target = pd;
 					//go through the last round the player came up on the search
 
 					var kv = gameDatabase.roundsData.LastOrDefault(
@@ -220,22 +211,21 @@ namespace MatchBot
 			}
 
 
-
 			if( lastPlayed == null )
 			{
 				await turnContext.SendActivity( "There doesn't seem to be anything on record" );
 			}
 			else
 			{
-				String fancyTarget = target;
-				if( target.Equals( "we" , StringComparison.CurrentCultureIgnoreCase ) || target.Equals( "i" , StringComparison.CurrentCultureIgnoreCase ) )
+				String fancyTarget = "you";
+
+				if( target != null )
 				{
-					fancyTarget = "you";
+					fancyTarget = target.name;
 				}
 
 				await turnContext.SendActivity( $"The last time {fancyTarget} played was on {lastPlayed}" );
 			}
-			//await turnContext.SendActivity( "Not yet implemented: LastPlayed" );
 		}
 
 		private async Task HandleMostWins( ITurnContext turnContext , RecognizerResult result )
@@ -252,13 +242,83 @@ namespace MatchBot
 
 		private async Task HandleTimesPlayed( ITurnContext turnContext , RecognizerResult result )
 		{
-			await turnContext.SendActivity( "Not implemented yet: TimesPlayed" );
+			var entities = GetEntities( result.Entities );
+			List<PlayerData> playerTargets = await GetPlayerDataEntities( turnContext , entities );
+			//is the user asking about matches or rounds?
+			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
+			String gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
+			//if there's multiple targets, we need to check if all of them are in the same matches when we count
+
+			int timesPlayed = 0;
+
+			//we're counting all matches/rounds, pretty easy
+			if( playerTargets.Count == 0 )
+			{
+				GlobalData gd = await gameDatabase.GetGlobalData();
+				timesPlayed = gameType == GameType.Match ? gd.matches.Count : gd.rounds.Count;
+			}
+			else
+			{
+				//we need to check if all of the players are in the same matches/rounds when we count
+				GlobalData gd = await gameDatabase.GetGlobalData();
+
+				//TODO: now that I've merged things a little bit with the interfaces, this will hopefully be less terrible
+
+
+				//gameType == GameType.Match
+				await IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
+				{
+					int count = 0;
+					foreach( PlayerData playerData in matchOrRound.players )
+					{
+						if( playerTargets.Any( x => x.userId == playerData.userId ) )
+						{
+							count++;
+						}
+					}
+
+					if( count == playerTargets.Count )
+					{
+						Interlocked.Increment( ref timesPlayed );
+					}
+				} );
+
+			}
+			
+
+			if( playerTargets.Count == 0 )
+			{
+				await turnContext.SendActivity( $"You've played {timesPlayed} {gameTypeString}" );
+			}
+			else
+			{
+				String plys = string.Join(" and " , from ply in playerTargets select ply.GetName() );
+				await turnContext.SendActivity( $"{plys} played {timesPlayed} {gameTypeString}" );
+			}
 		}
 
-		private (String, int) GetMostWins( bool matchOrRound , List<String> players )
-		{
 
-			return ("", 0);
+		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
+		{
+			if( callback == null )
+				return;
+
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+
+			List<String> matchesOrRounds = matchOrRound ? globalData.matches : globalData.rounds;
+
+
+			foreach( String matchOrRoundName in matchesOrRounds )
+			{
+				IWinner iterateItem = matchOrRound ?
+					await gameDatabase.GetMatchData( matchOrRoundName ) as IWinner :
+					await gameDatabase.GetRoundData( matchOrRoundName ) as IWinner;
+
+				await callback( iterateItem );
+			}
+
+
+			//Task.WhenAll()
 		}
 
 	}

@@ -25,7 +25,6 @@ namespace MatchRecorder
 		private string roundsFolder;
 		private string matchesFolder;
 
-		//TODO: this is fucking disgusting, fix later
 		public bool IsRecording
 		{
 			get
