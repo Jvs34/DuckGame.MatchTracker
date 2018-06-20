@@ -221,7 +221,7 @@ namespace MatchBot
 
 				if( target != null )
 				{
-					fancyTarget = target.name;
+					fancyTarget = target.GetName();
 				}
 
 				await turnContext.SendActivity( $"The last time {fancyTarget} played was on {lastPlayed}" );
@@ -284,7 +284,6 @@ namespace MatchBot
 				} );
 
 			}
-			
 
 			if( playerTargets.Count == 0 )
 			{
@@ -293,11 +292,12 @@ namespace MatchBot
 			else
 			{
 				String plys = string.Join(" and " , from ply in playerTargets select ply.GetName() );
-				await turnContext.SendActivity( $"{plys} played {timesPlayed} {gameTypeString}" );
+				String together = playerTargets.Count > 1 ? " together" : String.Empty;
+				await turnContext.SendActivity( $"{plys} played {timesPlayed} {gameTypeString}{together}" );
 			}
 		}
 
-
+		//I'm thinking this should probably be in the gamedatabase or something
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
 		{
 			if( callback == null )
@@ -307,18 +307,18 @@ namespace MatchBot
 
 			List<String> matchesOrRounds = matchOrRound ? globalData.matches : globalData.rounds;
 
-
+			List<Task> callbackTasks = new List<Task>();
 			foreach( String matchOrRoundName in matchesOrRounds )
 			{
 				IWinner iterateItem = matchOrRound ?
 					await gameDatabase.GetMatchData( matchOrRoundName ) as IWinner :
 					await gameDatabase.GetRoundData( matchOrRoundName ) as IWinner;
 
-				await callback( iterateItem );
+				callbackTasks.Add( callback( iterateItem ) );
 			}
 
 
-			//Task.WhenAll()
+			await Task.WhenAll( callbackTasks );
 		}
 
 	}

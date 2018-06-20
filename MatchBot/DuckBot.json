@@ -1,0 +1,835 @@
+{
+  "luis_schema_version": "3.0.0",
+  "versionId": "0.2",
+  "name": "DuckBot",
+  "desc": "Quack quack, I query duck game matches",
+  "culture": "en-us",
+  "intents": [
+    {
+      "name": "LastPlayed"
+    },
+    {
+      "name": "MostWins"
+    },
+    {
+      "name": "None"
+    },
+    {
+      "name": "TimesPlayed"
+    }
+  ],
+  "entities": [
+    {
+      "name": "Player.Name",
+      "roles": [
+        "userid",
+        "name",
+        "player",
+        "nickname"
+      ]
+    },
+    {
+      "name": "GameType",
+      "children": [
+        "Match",
+        "Round"
+      ],
+      "roles": []
+    }
+  ],
+  "composites": [],
+  "closedLists": [],
+  "patternAnyEntities": [],
+  "regex_entities": [],
+  "prebuiltEntities": [
+    {
+      "name": "datetimeV2",
+      "roles": []
+    }
+  ],
+  "model_features": [],
+  "regex_features": [],
+  "patterns": [],
+  "utterances": [
+    {
+      "text": "<@450203547938717696> gay",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "<@450203547938717696> how many times did i win",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 41,
+          "endPos": 41
+        }
+      ]
+    },
+    {
+      "text": "did i win the most?",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 4,
+          "endPos": 4
+        }
+      ]
+    },
+    {
+      "text": "gay",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "hi",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "how gayed?",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "how long ago did we play",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 17,
+          "endPos": 18
+        }
+      ]
+    },
+    {
+      "text": "how long ago did we play last",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 17,
+          "endPos": 18
+        }
+      ]
+    },
+    {
+      "text": "how many gay have i gayed",
+      "intent": "None",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 11
+        }
+      ]
+    },
+    {
+      "text": "how many gays is meepen",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "how many matches did i play",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "how many matches did i win",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "how many matches did willox metaman win",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 26
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 28,
+          "endPos": 34
+        }
+      ]
+    },
+    {
+      "text": "how many matches did willox win",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 26
+        }
+      ]
+    },
+    {
+      "text": "how many matches has raptor played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 26
+        }
+      ]
+    },
+    {
+      "text": "how many matches have i played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 22,
+          "endPos": 22
+        }
+      ]
+    },
+    {
+      "text": "how many matches have i won",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "how many matches have me and raptor played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 22,
+          "endPos": 23
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 29,
+          "endPos": 34
+        }
+      ]
+    },
+    {
+      "text": "how many rounds did i play",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 20
+        }
+      ]
+    },
+    {
+      "text": "how many rounds did i win",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 20
+        }
+      ]
+    },
+    {
+      "text": "how many rounds did willox win",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "how many rounds has raptor played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "how many rounds has twigletowns played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 30
+        }
+      ]
+    },
+    {
+      "text": "how many rounds has willox and raptor played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 31,
+          "endPos": 36
+        }
+      ]
+    },
+    {
+      "text": "how many rounds has willox played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "how many rounds have i played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "how many rounds have me and willox played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 22
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 28,
+          "endPos": 33
+        }
+      ]
+    },
+    {
+      "text": "how many rounds have willox and raptor played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 26
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 32,
+          "endPos": 37
+        }
+      ]
+    },
+    {
+      "text": "how many times did i play",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 19
+        }
+      ]
+    },
+    {
+      "text": "how many times did i win",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 19
+        }
+      ]
+    },
+    {
+      "text": "how many times did we play",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 20
+        }
+      ]
+    },
+    {
+      "text": "how many times did willox win",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "how many times has meepen played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "how many times has metaman played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "how many times has raptor played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "how many times has twigletowns played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 29
+        }
+      ]
+    },
+    {
+      "text": "how many times has willox played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "how many times has willox won",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 19,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "how many times have i played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 20
+        }
+      ]
+    },
+    {
+      "text": "how many times have me and raptor played together",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 21
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 27,
+          "endPos": 32
+        }
+      ]
+    },
+    {
+      "text": "how many times have me and willox played together",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 21
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 27,
+          "endPos": 32
+        }
+      ]
+    },
+    {
+      "text": "how many times have we palyed",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "how many times have we played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "how many times have willox and metaman played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 31,
+          "endPos": 37
+        }
+      ]
+    },
+    {
+      "text": "how many times have willox and raptor played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 31,
+          "endPos": 36
+        }
+      ]
+    },
+    {
+      "text": "im gay",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "is meepen gay",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "meepen play",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "test",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "when did everybody last play?",
+      "intent": "LastPlayed",
+      "entities": []
+    },
+    {
+      "text": "when did meepen last play",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 9,
+          "endPos": 14
+        }
+      ]
+    },
+    {
+      "text": "when did we play last",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 9,
+          "endPos": 10
+        }
+      ]
+    },
+    {
+      "text": "when was the last time fucktor played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 29
+        }
+      ]
+    },
+    {
+      "text": "when was the last time i played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 23
+        }
+      ]
+    },
+    {
+      "text": "when was the last time jvs played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "when was the last time meepen played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 28
+        }
+      ]
+    },
+    {
+      "text": "when was the last time metaman played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 29
+        }
+      ]
+    },
+    {
+      "text": "when was the last time raptor played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 28
+        }
+      ]
+    },
+    {
+      "text": "when was the last time twigletowns played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 33
+        }
+      ]
+    },
+    {
+      "text": "when was the last time we palyed",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "when was the last time we played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 24
+        }
+      ]
+    },
+    {
+      "text": "when was the last time willox and raptor played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 28
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 34,
+          "endPos": 39
+        }
+      ]
+    },
+    {
+      "text": "when was the last time willox played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 28
+        }
+      ]
+    },
+    {
+      "text": "who has the most match wins",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 17,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "who has the most round wins",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 17,
+          "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "who won the most times",
+      "intent": "MostWins",
+      "entities": []
+    }
+  ]
+}
