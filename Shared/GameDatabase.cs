@@ -24,23 +24,25 @@ namespace MatchTracker
 
 		public async Task Load()
 		{
+			List<Task> loadingTasks = new List<Task>();
+
+			//can't add this to the tasks as we have to wait for this one before we can actually know to fetch the rest
 			await GetGlobalData( true );
 
 			if( globalData != null )
 			{
 				foreach( String matchName in globalData.matches )
 				{
-					await GetMatchData( matchName , true );
+					loadingTasks.Add( GetMatchData( matchName , true ) );
+				}
+
+				foreach( String roundName in globalData.rounds )
+				{
+					loadingTasks.Add( GetRoundData( roundName , true ) );
 				}
 			}
 
-			if( globalData != null )
-			{
-				foreach( String roundName in globalData.rounds )
-				{
-					await GetRoundData( roundName , true );
-				}
-			}
+			await Task.WhenAll( loadingTasks );
 		}
 
 		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
@@ -74,7 +76,6 @@ namespace MatchTracker
 				matchData = await LoadMatchData( sharedSettings , matchName );
 				matchesData [matchName] = matchData;
 			}
-
 
 			return matchData;
 		}

@@ -119,6 +119,8 @@ namespace MatchBot
 			return list;
 		}
 
+		//TODO: I have to change the way I assume "we", as it is incorrect to handle it as an ignored entity
+
 		private async Task<List<PlayerData>> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<String , List<string>> entities )
 		{
 			List<PlayerData> players = new List<PlayerData>();
@@ -127,6 +129,8 @@ namespace MatchBot
 
 			if( entities.TryGetValue( "Player_Name" , out List<String> playerNames ) )
 			{
+
+				
 				//first off, any "we" should be ignored
 				//"me" and "i" should be turned into the user that sent the message
 
@@ -262,10 +266,6 @@ namespace MatchBot
 				//we need to check if all of the players are in the same matches/rounds when we count
 				GlobalData gd = await gameDatabase.GetGlobalData();
 
-				//TODO: now that I've merged things a little bit with the interfaces, this will hopefully be less terrible
-
-
-				//gameType == GameType.Match
 				await IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 				{
 					int count = 0;

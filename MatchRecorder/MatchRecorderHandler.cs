@@ -71,6 +71,10 @@ namespace MatchRecorder
 			if( !Directory.Exists( matchesFolder ) )
 				Directory.CreateDirectory( matchesFolder );
 
+			if( !File.Exists( sharedSettings.GetGlobalPath() ) )
+			{
+				sharedSettings.SaveGlobalData( new MatchTracker.GlobalData() );
+			}
 
 			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
 			try
@@ -237,6 +241,10 @@ namespace MatchRecorder
 
 			sharedSettings.SaveRoundData( sharedSettings.DateTimeToString( currentRound.timeStarted ) , currentRound );
 
+			MatchTracker.GlobalData globalData = sharedSettings.GetGlobalData();
+			globalData.rounds.Add( currentRound.roundName );
+			sharedSettings.SaveGlobalData( globalData );
+
 			currentRound = null;
 		}
 
@@ -291,6 +299,27 @@ namespace MatchRecorder
 
 
 			sharedSettings.SaveMatchData( sharedSettings.DateTimeToString( currentMatch.timeStarted ) , currentMatch );
+
+			//also add this match to the globaldata as well
+			MatchTracker.GlobalData globalData = sharedSettings.GetGlobalData();
+			globalData.matches.Add( currentMatch.matchName );
+
+			//try adding the players from the matchdata into the globaldata
+
+			foreach( PlayerData ply in currentMatch.players )
+			{
+				if( !globalData.players.Any( p => p.userId == ply.userId ) )
+				{
+					ply.team = null;
+
+					globalData.players.Add( ply );
+
+				}
+			}
+
+			sharedSettings.SaveGlobalData( globalData );
+
+
 			currentMatch = null;
 		}
 
