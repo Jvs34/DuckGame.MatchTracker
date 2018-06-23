@@ -249,13 +249,9 @@ namespace MatchBot
 		private async Task HandleMostWins( ITurnContext turnContext , RecognizerResult result )
 		{
 			var entities = GetEntities( result.Entities );
+			List<RecognizedPlayerData> recognizedPlayerEntities = await GetPlayerDataEntities( turnContext , entities );
+			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
 
-			foreach( var kv in entities )
-			{
-				Console.WriteLine( kv.Key );
-			}
-
-			await turnContext.SendActivity( "Not implemented yet: MostWins" );
 		}
 
 		private async Task HandleTimesPlayed( ITurnContext turnContext , RecognizerResult result )
@@ -319,58 +315,6 @@ namespace MatchBot
 					await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 				}
 			}
-
-			/*
-			var entities = GetEntities( result.Entities );
-			List<RecognizedPlayerData> playerTargets = await GetPlayerDataEntities( turnContext , entities );
-			//is the user asking about matches or rounds?
-			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
-			String gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
-			//if there's multiple targets, we need to check if all of them are in the same matches when we count
-
-			int timesPlayed = 0;
-
-			//we're counting all matches/rounds, pretty easy
-			if( playerTargets.Count == 0 )
-			{
-				GlobalData gd = await gameDatabase.GetGlobalData();
-				timesPlayed = gameType == GameType.Match ? gd.matches.Count : gd.rounds.Count;
-			}
-			else
-			{
-				//we need to check if all of the players are in the same matches/rounds when we count
-				GlobalData gd = await gameDatabase.GetGlobalData();
-
-				await IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
-				{
-					int count = 0;
-					foreach( PlayerData playerData in matchOrRound.players )
-					{
-						if( playerTargets.Any( x => x.userId == playerData.userId ) )
-						{
-							count++;
-						}
-					}
-
-					if( count == playerTargets.Count )
-					{
-						Interlocked.Increment( ref timesPlayed );
-					}
-				} );
-
-			}
-
-			if( playerTargets.Count == 0 )
-			{
-				await turnContext.SendActivity( $"You've played {timesPlayed} {gameTypeString}" );
-			}
-			else
-			{
-				String plys = string.Join( " and " , from ply in playerTargets select ply.GetName() );
-				String together = playerTargets.Count > 1 ? " together" : String.Empty;
-				await turnContext.SendActivity( $"{plys} played {timesPlayed} {gameTypeString}{together}" );
-			}
-			*/
 		}
 
 		//I'm thinking this should probably be in the gamedatabase or something
