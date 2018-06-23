@@ -21,11 +21,26 @@ namespace MatchBot
 {
 	public class MatchBot : IBot
 	{
+		enum TargetType
+		{
+			Everyone, //targets everyone
+			Author, //targets the author of the message
+			Other //targets someone else
+		}
+		//class used to store info about the recognized Luis entity
+		private class RecognizedPlayerData
+		{
+			public String Target { get; set; } //"we" , "i" , "me" , "Jvs" these are the kind of targets we can expect
+			public bool IsSpecialTarget { get; set; } //if this target is a special one, it means the target and what the PlayerDataTarget might be set by code instead of a normal name search
+			public PlayerData PlayerDataTarget { get; set; } //the target of this, might be null if not found
+			public TargetType TargetType { get; set; } //the kind of target of this entity
+		}
+
 		enum GameType
 		{
 			Match,
 			Round
-		};
+		}
 
 		private GameDatabase gameDatabase;
 
@@ -121,115 +136,113 @@ namespace MatchBot
 
 		//TODO: I have to change the way I assume "we", as it is incorrect to handle it as an ignored entity
 
-		private async Task<List<PlayerData>> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<String , List<string>> entities )
+		private async Task<List<RecognizedPlayerData>> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<String , List<string>> entities )
 		{
-			List<PlayerData> players = new List<PlayerData>();
+			List<RecognizedPlayerData> playerTargets = new List<RecognizedPlayerData>();
+			//List<PlayerData> players = new List<PlayerData>();
 
 			GlobalData globalData = await gameDatabase.GetGlobalData();
 
 			if( entities.TryGetValue( "Player_Name" , out List<String> playerNames ) )
 			{
-
-				
-				//first off, any "we" should be ignored
 				//"me" and "i" should be turned into the user that sent the message
 
 				//TODO: it would be nice if I was able to use fuzzy search here so I'm gonna keep this TODO here
 				foreach( String name in playerNames )
 				{
+					RecognizedPlayerData recognizedPlayerData = new RecognizedPlayerData();
 					String playerName = name;
+					//if there's a "we"
+
 					if( String.Equals( playerName , "we" , StringComparison.CurrentCultureIgnoreCase ) )
 					{
-						continue;
+						recognizedPlayerData.IsSpecialTarget = true;
+						recognizedPlayerData.PlayerDataTarget = null;
+						recognizedPlayerData.TargetType = TargetType.Everyone;
 					}
 
 					//TODO:I'm sure I can find a better way to do this later on, maybe some middleware has this as an option
 					//if one of the entities is "i" or "me", the user meant himself, so
-					if( String.Equals( playerName , "i" , StringComparison.CurrentCultureIgnoreCase ) || String.Equals( playerName , "me" , StringComparison.CurrentCultureIgnoreCase ) )
+
+					//the target is already a special one, skip searching for the name
+					if( !recognizedPlayerData.IsSpecialTarget )
 					{
-						playerName = turnContext.Activity.From.Name;
+						if( String.Equals( playerName , "i" , StringComparison.CurrentCultureIgnoreCase ) ||
+							String.Equals( playerName , "me" , StringComparison.CurrentCultureIgnoreCase ) )
+						{
+							playerName = turnContext.Activity.From.Name;
+							recognizedPlayerData.IsSpecialTarget = true;
+							recognizedPlayerData.TargetType = TargetType.Author;
+						}
+
+
+						//try to find the name of the player
+						PlayerData pd = globalData.players.Find( p =>
+						{
+							return String.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase ) ||
+												   String.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
+						} );
+
+						recognizedPlayerData.PlayerDataTarget = pd;
+
+						if( !recognizedPlayerData.IsSpecialTarget )
+						{
+							recognizedPlayerData.TargetType = TargetType.Other;
+						}
 					}
 
-					//try to find the name of the player
-					PlayerData pd = globalData.players.FirstOrDefault( p =>
-					{
-						return String.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase ) ||
-											   String.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
-					} );
+					recognizedPlayerData.Target = playerName;
 
-					if( pd != null )
-					{
-						players.Add( pd );
-					}
+					playerTargets.Add( recognizedPlayerData );
+
 				}
-
 
 			}
 
-
-			return players;
+			return playerTargets;
 		}
 
 		private async Task HandleLastPlayed( ITurnContext turnContext , RecognizerResult result )
 		{
-			List<PlayerData> players = await GetPlayerDataEntities( turnContext , GetEntities( result.Entities ) );
-			//we only target one entity, a name, "I" or "we"
-			DateTime? lastPlayed = null;
+			List<RecognizedPlayerData> recognizedPlayerEntities = await GetPlayerDataEntities( turnContext , GetEntities( result.Entities ) );
 
-			PlayerData target = null;
-
-			if( players.Count == 0 )
+			foreach( RecognizedPlayerData recognizedPlayer in recognizedPlayerEntities )
 			{
-				//find the last match played
-				var lastRound = gameDatabase.roundsData.LastOrDefault();
-				if( lastRound.Value != null )
+				//if this recognizedplayerdata has a null playertarget and is a special target then it's probably one that targets everyone
+				DateTime? lastPlayed = null;
+				String target = ( recognizedPlayer.TargetType == TargetType.Other ) ? recognizedPlayer.Target : "you";
+
+				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
-					lastPlayed = lastRound.Value.timeEnded;
+					var lastRound = gameDatabase.roundsData.LastOrDefault();
+					if( lastRound.Value != null )
+					{
+						lastPlayed = lastRound.Value.timeEnded;
+					}
 				}
-			}
-			else
-			{
-				//first try to find the actual player object for this
-
-				GlobalData gd = await gameDatabase.GetGlobalData();
-
-				//we only care about the first player really
-
-				PlayerData pd = players.FirstOrDefault();
-
-				if( pd != null )
+				else if( recognizedPlayer.PlayerDataTarget != null )
 				{
-					target = pd;
 					//go through the last round the player came up on the search
 
-					var kv = gameDatabase.roundsData.LastOrDefault(
-						x => x.Value.players.Any( p =>
-						p.userId == pd.userId ) );
+					var kv = gameDatabase.roundsData.LastOrDefault( x => x.Value.players.Any( p => p.userId == recognizedPlayer.PlayerDataTarget.userId ) );
 
 					if( kv.Value != null )
 					{
-						RoundData roundData = kv.Value;
-						lastPlayed = roundData.timeEnded;
+						lastPlayed = kv.Value.timeEnded;
 					}
+
 				}
-			}
 
-
-			if( lastPlayed == null )
-			{
-				await turnContext.SendActivity( "There doesn't seem to be anything on record" );
-			}
-			else
-			{
-				String fancyTarget = "you";
-
-				if( target != null )
+				if( lastPlayed != null )
 				{
-					fancyTarget = target.GetName();
+					await turnContext.SendActivity( $"The last time {target} played was on {lastPlayed}" );
 				}
-
-				await turnContext.SendActivity( $"The last time {fancyTarget} played was on {lastPlayed}" );
+				else
+				{
+					await turnContext.SendActivity( $"Sorry, there's nothing on record for {target}" );
+				}
 			}
+
 		}
 
 		private async Task HandleMostWins( ITurnContext turnContext , RecognizerResult result )
@@ -247,7 +260,7 @@ namespace MatchBot
 		private async Task HandleTimesPlayed( ITurnContext turnContext , RecognizerResult result )
 		{
 			var entities = GetEntities( result.Entities );
-			List<PlayerData> playerTargets = await GetPlayerDataEntities( turnContext , entities );
+			List<RecognizedPlayerData> playerTargets = await GetPlayerDataEntities( turnContext , entities );
 			//is the user asking about matches or rounds?
 			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
 			String gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
@@ -291,7 +304,7 @@ namespace MatchBot
 			}
 			else
 			{
-				String plys = string.Join(" and " , from ply in playerTargets select ply.GetName() );
+				String plys = string.Join( " and " , from ply in playerTargets select ply.GetName() );
 				String together = playerTargets.Count > 1 ? " together" : String.Empty;
 				await turnContext.SendActivity( $"{plys} played {timesPlayed} {gameTypeString}{together}" );
 			}
