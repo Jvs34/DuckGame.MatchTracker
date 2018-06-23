@@ -101,5 +101,28 @@ namespace MatchTracker
 
 			return roundData;
 		}
+
+		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
+		{
+			if( callback == null )
+				return;
+
+			GlobalData globalData = await GetGlobalData();
+
+			List<String> matchesOrRounds = matchOrRound ? globalData.matches : globalData.rounds;
+
+			List<Task> callbackTasks = new List<Task>();
+			foreach( String matchOrRoundName in matchesOrRounds )
+			{
+				IWinner iterateItem = matchOrRound ?
+					await GetMatchData( matchOrRoundName ) as IWinner :
+					await GetRoundData( matchOrRoundName ) as IWinner;
+
+				callbackTasks.Add( callback( iterateItem ) );
+			}
+
+
+			await Task.WhenAll( callbackTasks );
+		}
 	}
 }

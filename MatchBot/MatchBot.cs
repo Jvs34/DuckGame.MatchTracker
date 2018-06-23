@@ -16,6 +16,7 @@ using System.IO;
 using Newtonsoft.Json;
 using Microsoft.Cognitive.LUIS.Models;
 using System.Text;
+using System.Globalization;
 
 namespace MatchBot
 {
@@ -47,6 +48,8 @@ namespace MatchBot
 
 		private Task loadDatabaseTask;
 
+		private Timer refreshTimer;
+
 		public MatchBot()
 		{
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
@@ -60,6 +63,19 @@ namespace MatchBot
 			gameDatabase.LoadMatchData += LoadDatabaseMatchData;
 			gameDatabase.LoadRoundData += LoadDatabaseRoundData;
 
+			RefreshDatabase();
+			//loadDatabaseTask = gameDatabase.Load();
+			refreshTimer = new Timer( this.RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 )  );
+		}
+
+		public void RefreshDatabase( Object dontactuallycare = null )
+		{
+			if( loadDatabaseTask != null && !loadDatabaseTask.IsCompleted )
+			{
+				Console.WriteLine( "Database hasn't finished loading, skipping refresh" );
+				return;
+			}
+			
 			loadDatabaseTask = gameDatabase.Load();
 		}
 
@@ -95,6 +111,8 @@ namespace MatchBot
 
 		public async Task OnTurn( ITurnContext turnContext )
 		{
+			await Initialize();
+
 			if( turnContext.Activity.Type == ActivityTypes.Message )
 			{
 				Console.WriteLine( turnContext.Activity.Text );
@@ -117,6 +135,12 @@ namespace MatchBot
 							await HandleTimesPlayed( turnContext , result );
 							break;
 						}
+					case "Help":
+						{
+							await HandleHelp( turnContext );
+
+							break;
+						}
 					default:
 						{
 							await turnContext.SendActivity( "*Quack*" );
@@ -124,6 +148,11 @@ namespace MatchBot
 						}
 				}
 			}
+		}
+
+		private async Task HandleHelp( ITurnContext turnContext )
+		{
+			throw new NotImplementedException();
 		}
 
 		private Dictionary<String , List<string>> GetEntities( IDictionary<String , JToken> results )
@@ -214,7 +243,8 @@ namespace MatchBot
 			foreach( RecognizedPlayerData recognizedPlayer in recognizedPlayerEntities )
 			{
 				//if this recognizedplayerdata has a null playertarget and is a special target then it's probably one that targets everyone
-				DateTime? lastPlayed = null;
+				DateTime lastPlayed = DateTime.MinValue;
+				bool foundLastPlayed = false;
 
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
@@ -222,6 +252,7 @@ namespace MatchBot
 					if( lastRound.Value != null )
 					{
 						lastPlayed = lastRound.Value.timeEnded;
+						foundLastPlayed = true;
 					}
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
@@ -233,13 +264,16 @@ namespace MatchBot
 					if( kv.Value != null )
 					{
 						lastPlayed = kv.Value.timeEnded;
+						foundLastPlayed = true;
 					}
 
 				}
 
-				if( lastPlayed != null )
+				if( foundLastPlayed )
 				{
-					await turnContext.SendActivity( $"The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed}" );
+					CultureInfo ci = CultureInfo.CreateSpecificCulture( "en-US" );
+
+					await turnContext.SendActivity( $"The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed.ToString( "HH:mm:ss dddd d MMMM yyyy" , ci )}" );
 				}
 				else
 				{
@@ -321,7 +355,7 @@ namespace MatchBot
 			int wins = 0;
 			int losses = 0;
 
-			await IterateOverAllRoundsOrMatches( ismatchOrRound , async ( matchOrRound ) =>
+			await gameDatabase.IterateOverAllRoundsOrMatches( ismatchOrRound , async ( matchOrRound ) =>
 			{
 				//even if it's team mode we consider it a win
 				List<PlayerData> matchOrRoundWinners = matchOrRound.GetWinners();
@@ -361,7 +395,7 @@ namespace MatchBot
 
 					Object locking = new object();
 
-					await IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
+					await gameDatabase.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
 						if( matchOrRound is IStartEnd duration )
 						{
@@ -379,7 +413,7 @@ namespace MatchBot
 					GlobalData gd = await gameDatabase.GetGlobalData();
 					Object locking = new object();
 
-					await IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
+					await gameDatabase.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
 						if( matchOrRound.players.Any( x => x.userId == recognizedPlayer.PlayerDataTarget.userId ) )
 						{
@@ -405,30 +439,6 @@ namespace MatchBot
 					await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 				}
 			}
-		}
-
-		//I'm thinking this should probably be in the gamedatabase or something
-		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
-		{
-			if( callback == null )
-				return;
-
-			GlobalData globalData = await gameDatabase.GetGlobalData();
-
-			List<String> matchesOrRounds = matchOrRound ? globalData.matches : globalData.rounds;
-
-			List<Task> callbackTasks = new List<Task>();
-			foreach( String matchOrRoundName in matchesOrRounds )
-			{
-				IWinner iterateItem = matchOrRound ?
-					await gameDatabase.GetMatchData( matchOrRoundName ) as IWinner :
-					await gameDatabase.GetRoundData( matchOrRoundName ) as IWinner;
-
-				callbackTasks.Add( callback( iterateItem ) );
-			}
-
-
-			await Task.WhenAll( callbackTasks );
 		}
 
 	}
