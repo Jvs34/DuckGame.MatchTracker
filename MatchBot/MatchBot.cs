@@ -66,12 +66,14 @@ namespace MatchBot
 		//TODO: turn these asyncs
 		private async Task<GlobalData> LoadDatabaseGlobalData( SharedSettings sharedSettings )
 		{
+			await Task.CompletedTask;
 			Console.WriteLine( "Loading GlobalData" );
 			return sharedSettings.GetGlobalData();
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchData( SharedSettings sharedSettings , string matchName )
 		{
+			await Task.CompletedTask;
 			Console.WriteLine( $"Loading MatchData {matchName}" );
 
 			return sharedSettings.GetMatchData( matchName );
@@ -79,6 +81,7 @@ namespace MatchBot
 
 		private async Task<RoundData> LoadDatabaseRoundData( SharedSettings sharedSettings , string roundName )
 		{
+			await Task.CompletedTask;
 			Console.WriteLine( $"Loading RoundData {roundName}" );
 
 			return sharedSettings.GetRoundData( roundName );
@@ -251,7 +254,92 @@ namespace MatchBot
 			var entities = GetEntities( result.Entities );
 			List<RecognizedPlayerData> recognizedPlayerEntities = await GetPlayerDataEntities( turnContext , entities );
 			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
+			String gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
 
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+
+			//if there's 0 recognized player objects that means that the user wants to know who won the most, hopefully
+			if( recognizedPlayerEntities.Count == 0 )
+			{
+				//go through every player that's defined in the database and check which one has the most wins
+				PlayerData mostWinsWinner = null;
+				int mostWins = 0;
+				int mostWinsLosses = 0;
+
+				foreach( PlayerData player in globalData.players )
+				{
+					int wins = 0;
+					int losses = 0;
+
+					(wins, losses) = await GetPlayerWinsAndLosses( player , gameType == GameType.Match );
+
+					if( wins > mostWins )
+					{
+						mostWinsWinner = player;
+						mostWins = wins;
+						mostWinsLosses = losses;
+					}
+				}
+
+				if( mostWinsWinner != null )
+				{
+					await turnContext.SendActivity( $"{mostWinsWinner.GetName()} won {mostWins} and lost {mostWinsLosses} {gameTypeString}" );
+				}
+				else
+				{
+					await turnContext.SendActivity( "Doesn't seem like there's someone with more wins than anybody else" );
+				}
+			}
+			else
+			{
+
+				foreach( RecognizedPlayerData recognizedPlayer in recognizedPlayerEntities )
+				{
+
+					if( recognizedPlayer.PlayerDataTarget != null )
+					{
+						int wins = 0;
+						int losses = 0;
+
+						(wins, losses) = await GetPlayerWinsAndLosses( recognizedPlayer.PlayerDataTarget , gameType == GameType.Match );
+
+
+						await turnContext.SendActivity( $"{recognizedPlayer.PlayerDataTarget.GetName()} won {wins} and lost {losses} {gameTypeString}" );
+
+					}
+					else
+					{
+						await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
+					}
+
+				}
+			}
+		}
+
+		private async Task<(int, int)> GetPlayerWinsAndLosses( PlayerData player , bool ismatchOrRound )
+		{
+			int wins = 0;
+			int losses = 0;
+
+			await IterateOverAllRoundsOrMatches( ismatchOrRound , async ( matchOrRound ) =>
+			{
+				//even if it's team mode we consider it a win
+				List<PlayerData> matchOrRoundWinners = matchOrRound.GetWinners();
+
+				if( matchOrRoundWinners.Any( x => x.userId == player.userId ) )
+				{
+					Interlocked.Increment( ref wins );
+				}
+				else
+				{
+					Interlocked.Increment( ref losses );
+				}
+
+				await Task.CompletedTask;
+
+			} );
+
+			return (wins, losses);
 		}
 
 		private async Task HandleTimesPlayed( ITurnContext turnContext , RecognizerResult result )
@@ -266,7 +354,7 @@ namespace MatchBot
 				int timesPlayed = 0;
 				TimeSpan durationPlayed = TimeSpan.Zero;
 
-				if ( recognizedPlayer.TargetType == TargetType.Everyone )
+				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
 					GlobalData gd = await gameDatabase.GetGlobalData();
 					timesPlayed = gameType == GameType.Match ? gd.matches.Count : gd.rounds.Count;
@@ -282,7 +370,8 @@ namespace MatchBot
 								durationPlayed = durationPlayed.Add( duration.GetDuration() );
 							}
 						}
-					});
+						await Task.CompletedTask;
+					} );
 
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
@@ -292,7 +381,7 @@ namespace MatchBot
 
 					await IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
-						if( matchOrRound.players.Any( x=> x.userId == recognizedPlayer.PlayerDataTarget.userId ) )
+						if( matchOrRound.players.Any( x => x.userId == recognizedPlayer.PlayerDataTarget.userId ) )
 						{
 							Interlocked.Increment( ref timesPlayed );
 							if( matchOrRound is IStartEnd duration )
@@ -303,12 +392,13 @@ namespace MatchBot
 								}
 							}
 						}
+						await Task.CompletedTask;
 					} );
 				}
 
 				if( timesPlayed > 0 )
 				{
-					await turnContext.SendActivity( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {durationPlayed.Hours} hours" );
+					await turnContext.SendActivity( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {durationPlayed.Hours} hours of playtime" );
 				}
 				else
 				{

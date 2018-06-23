@@ -32,7 +32,7 @@ namespace MatchBot
 
 			bot = new MatchBot();
 
-			
+
 			botSettings = new BotSettings();
 
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
@@ -65,11 +65,13 @@ namespace MatchBot
 
 		private async Task OnDiscordConnected()
 		{
+			await Task.CompletedTask;
 			Console.WriteLine( "Connected to Discord" );
 		}
 
 		private async Task OnDiscordDisconnected( Exception arg )
 		{
+			await Task.CompletedTask;
 			Console.WriteLine( "Disconnected from Discord {0}" , arg.ToString() );
 		}
 
@@ -133,10 +135,10 @@ namespace MatchBot
 				ChannelId = msg.Channel.Id.ToString() ,
 				From = DiscordUserToBotFrameworkAccount( msg.Author ) ,
 				Recipient = DiscordUserToBotFrameworkAccount( discordClient.CurrentUser ) ,
-				Conversation = new ConversationAccount( true , null , msg.Channel.Id.ToString() , msg.Channel.Name ),
-				Timestamp = msg.Timestamp,
-				Id = msg.Id.ToString(),
-				Type = ActivityTypes.Message,
+				Conversation = new ConversationAccount( true , null , msg.Channel.Id.ToString() , msg.Channel.Name ) ,
+				Timestamp = msg.Timestamp ,
+				Id = msg.Id.ToString() ,
+				Type = ActivityTypes.Message ,
 			};
 		}
 
@@ -165,7 +167,15 @@ namespace MatchBot
 		}
 
 		//these ones aren't even used on ConsoleAdapter, although it would probably be nice to do that
-		public override async Task<ResourceResponse> UpdateActivity( ITurnContext context , Activity activity ) => throw new NotImplementedException();
-		public override async Task DeleteActivity( ITurnContext context , ConversationReference reference ) => throw new NotImplementedException();
+		public override async Task<ResourceResponse> UpdateActivity( ITurnContext context , Activity activity )
+		{
+			await Task.CompletedTask;
+			return null;
+		}
+
+		public override async Task DeleteActivity( ITurnContext context , ConversationReference reference )
+		{
+			await Task.CompletedTask;
+		}
 	}
 }
