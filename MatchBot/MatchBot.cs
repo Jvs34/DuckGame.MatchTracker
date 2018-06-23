@@ -34,6 +34,7 @@ namespace MatchBot
 			public bool IsSpecialTarget { get; set; } //if this target is a special one, it means the target and what the PlayerDataTarget might be set by code instead of a normal name search
 			public PlayerData PlayerDataTarget { get; set; } //the target of this, might be null if not found
 			public TargetType TargetType { get; set; } //the kind of target of this entity
+			public String FancyTarget { get; set; } //the colloquial target
 		}
 
 		enum GameType
@@ -134,8 +135,6 @@ namespace MatchBot
 			return list;
 		}
 
-		//TODO: I have to change the way I assume "we", as it is incorrect to handle it as an ignored entity
-
 		private async Task<List<RecognizedPlayerData>> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<String , List<string>> entities )
 		{
 			List<RecognizedPlayerData> playerTargets = new List<RecognizedPlayerData>();
@@ -159,6 +158,7 @@ namespace MatchBot
 						recognizedPlayerData.IsSpecialTarget = true;
 						recognizedPlayerData.PlayerDataTarget = null;
 						recognizedPlayerData.TargetType = TargetType.Everyone;
+						recognizedPlayerData.FancyTarget = "you";
 					}
 
 					//TODO:I'm sure I can find a better way to do this later on, maybe some middleware has this as an option
@@ -173,6 +173,7 @@ namespace MatchBot
 							playerName = turnContext.Activity.From.Name;
 							recognizedPlayerData.IsSpecialTarget = true;
 							recognizedPlayerData.TargetType = TargetType.Author;
+							recognizedPlayerData.FancyTarget = "you";
 						}
 
 
@@ -187,6 +188,7 @@ namespace MatchBot
 
 						if( !recognizedPlayerData.IsSpecialTarget )
 						{
+							recognizedPlayerData.FancyTarget = playerName;
 							recognizedPlayerData.TargetType = TargetType.Other;
 						}
 					}
@@ -210,7 +212,6 @@ namespace MatchBot
 			{
 				//if this recognizedplayerdata has a null playertarget and is a special target then it's probably one that targets everyone
 				DateTime? lastPlayed = null;
-				String target = ( recognizedPlayer.TargetType == TargetType.Other ) ? recognizedPlayer.Target : "you";
 
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
@@ -235,11 +236,11 @@ namespace MatchBot
 
 				if( lastPlayed != null )
 				{
-					await turnContext.SendActivity( $"The last time {target} played was on {lastPlayed}" );
+					await turnContext.SendActivity( $"The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed}" );
 				}
 				else
 				{
-					await turnContext.SendActivity( $"Sorry, there's nothing on record for {target}" );
+					await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 				}
 			}
 
@@ -259,6 +260,67 @@ namespace MatchBot
 
 		private async Task HandleTimesPlayed( ITurnContext turnContext , RecognizerResult result )
 		{
+			var entities = GetEntities( result.Entities );
+			List<RecognizedPlayerData> recognizedPlayerEntities = await GetPlayerDataEntities( turnContext , entities );
+			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
+			String gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
+
+			foreach( RecognizedPlayerData recognizedPlayer in recognizedPlayerEntities )
+			{
+				int timesPlayed = 0;
+				TimeSpan durationPlayed = TimeSpan.Zero;
+
+				if ( recognizedPlayer.TargetType == TargetType.Everyone )
+				{
+					GlobalData gd = await gameDatabase.GetGlobalData();
+					timesPlayed = gameType == GameType.Match ? gd.matches.Count : gd.rounds.Count;
+
+					Object locking = new object();
+
+					await IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
+					{
+						if( matchOrRound is IStartEnd duration )
+						{
+							lock( locking )
+							{
+								durationPlayed = durationPlayed.Add( duration.GetDuration() );
+							}
+						}
+					});
+
+				}
+				else if( recognizedPlayer.PlayerDataTarget != null )
+				{
+					GlobalData gd = await gameDatabase.GetGlobalData();
+					Object locking = new object();
+
+					await IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
+					{
+						if( matchOrRound.players.Any( x=> x.userId == recognizedPlayer.PlayerDataTarget.userId ) )
+						{
+							Interlocked.Increment( ref timesPlayed );
+							if( matchOrRound is IStartEnd duration )
+							{
+								lock( locking )
+								{
+									durationPlayed = durationPlayed.Add( duration.GetDuration() );
+								}
+							}
+						}
+					} );
+				}
+
+				if( timesPlayed > 0 )
+				{
+					await turnContext.SendActivity( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {durationPlayed.Hours} hours" );
+				}
+				else
+				{
+					await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
+				}
+			}
+
+			/*
 			var entities = GetEntities( result.Entities );
 			List<RecognizedPlayerData> playerTargets = await GetPlayerDataEntities( turnContext , entities );
 			//is the user asking about matches or rounds?
@@ -308,6 +370,7 @@ namespace MatchBot
 				String together = playerTargets.Count > 1 ? " together" : String.Empty;
 				await turnContext.SendActivity( $"{plys} played {timesPlayed} {gameTypeString}{together}" );
 			}
+			*/
 		}
 
 		//I'm thinking this should probably be in the gamedatabase or something
