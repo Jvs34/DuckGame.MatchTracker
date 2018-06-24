@@ -197,7 +197,7 @@ namespace MatchRecorder
 				isCustomLevel = false ,
 			};
 
-			currentRound.roundName = sharedSettings.DateTimeToString( currentRound.timeStarted );
+			currentRound.name = sharedSettings.DateTimeToString( currentRound.timeStarted );
 
 			foreach( Profile pro in Profiles.active )
 			{
@@ -242,7 +242,7 @@ namespace MatchRecorder
 			sharedSettings.SaveRoundData( sharedSettings.DateTimeToString( currentRound.timeStarted ) , currentRound );
 
 			MatchTracker.GlobalData globalData = sharedSettings.GetGlobalData();
-			globalData.rounds.Add( currentRound.roundName );
+			globalData.rounds.Add( currentRound.name );
 			sharedSettings.SaveGlobalData( globalData );
 
 			currentRound = null;
@@ -269,7 +269,7 @@ namespace MatchRecorder
 				players = new List<PlayerData>() ,
 			};
 
-			currentMatch.matchName = sharedSettings.DateTimeToString( currentMatch.timeStarted );
+			currentMatch.name = sharedSettings.DateTimeToString( currentMatch.timeStarted );
 		}
 
 		private void StopCollectingMatchData()
@@ -302,7 +302,7 @@ namespace MatchRecorder
 
 			//also add this match to the globaldata as well
 			MatchTracker.GlobalData globalData = sharedSettings.GetGlobalData();
-			globalData.matches.Add( currentMatch.matchName );
+			globalData.matches.Add( currentMatch.name );
 
 			//try adding the players from the matchdata into the globaldata
 

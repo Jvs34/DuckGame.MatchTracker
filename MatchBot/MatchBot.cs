@@ -17,6 +17,7 @@ using Newtonsoft.Json;
 using Microsoft.Cognitive.LUIS.Models;
 using System.Text;
 using System.Globalization;
+using System.Net.Http;
 
 namespace MatchBot
 {
@@ -50,8 +51,12 @@ namespace MatchBot
 
 		private Timer refreshTimer;
 
+		private HttpClient httpClient;
+
 		public MatchBot()
 		{
+			httpClient = new HttpClient();
+
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
 
@@ -59,9 +64,9 @@ namespace MatchBot
 			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 
 			//TODO: turn these into http calls instead
-			gameDatabase.LoadGlobalData += LoadDatabaseGlobalData;
-			gameDatabase.LoadMatchData += LoadDatabaseMatchData;
-			gameDatabase.LoadRoundData += LoadDatabaseRoundData;
+			gameDatabase.LoadGlobalData += LoadDatabaseGlobalDataFile;
+			gameDatabase.LoadMatchData += LoadDatabaseMatchDataFile;
+			gameDatabase.LoadRoundData += LoadDatabaseRoundDataFile;
 
 			RefreshDatabase();
 			//loadDatabaseTask = gameDatabase.Load();
@@ -75,19 +80,19 @@ namespace MatchBot
 				Console.WriteLine( "Database hasn't finished loading, skipping refresh" );
 				return;
 			}
-			
+
 			loadDatabaseTask = gameDatabase.Load();
 		}
 
 		//TODO: turn these asyncs
-		private async Task<GlobalData> LoadDatabaseGlobalData( SharedSettings sharedSettings )
+		private async Task<GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
 			Console.WriteLine( "Loading GlobalData" );
 			return sharedSettings.GetGlobalData();
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchData( SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataFile( SharedSettings sharedSettings , string matchName )
 		{
 			await Task.CompletedTask;
 			Console.WriteLine( $"Loading MatchData {matchName}" );
@@ -95,7 +100,7 @@ namespace MatchBot
 			return sharedSettings.GetMatchData( matchName );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundData( SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataFile( SharedSettings sharedSettings , string roundName )
 		{
 			await Task.CompletedTask;
 			Console.WriteLine( $"Loading RoundData {roundName}" );
@@ -152,7 +157,7 @@ namespace MatchBot
 
 		private async Task HandleHelp( ITurnContext turnContext )
 		{
-			throw new NotImplementedException();
+			await Task.CompletedTask;
 		}
 
 		private Dictionary<String , List<string>> GetEntities( IDictionary<String , JToken> results )

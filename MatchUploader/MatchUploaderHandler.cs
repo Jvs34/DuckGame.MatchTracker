@@ -142,12 +142,12 @@ namespace MatchUploader
 				}
 
 				RoundData roundData = sharedSettings.GetRoundData( folderName );
-				if( roundData.roundName == null )
+				if( String.IsNullOrEmpty( roundData.name ) )
 				{
-					roundData.roundName = sharedSettings.DateTimeToString( roundData.timeStarted );
-					Console.WriteLine( $"Adding roundName to roundData {roundData.roundName}" );
+					roundData.name = sharedSettings.DateTimeToString( roundData.timeStarted );
+					Console.WriteLine( $"Adding roundName to roundData {roundData.name}" );
 
-					sharedSettings.SaveRoundData( roundData.roundName , roundData );
+					sharedSettings.SaveRoundData( roundData.name , roundData );
 				}
 			}
 
@@ -177,12 +177,12 @@ namespace MatchUploader
 					}
 				}
 
-				if( md.matchName == null )
+				if( String.IsNullOrEmpty( md.name ) )
 				{
-					md.matchName = sharedSettings.DateTimeToString( md.timeStarted );
-					Console.WriteLine( $"Adding matchName to matchData {md.matchName}" );
+					md.name = sharedSettings.DateTimeToString( md.timeStarted );
+					Console.WriteLine( $"Adding matchName to matchData {md.name}" );
 
-					sharedSettings.SaveMatchData( md.matchName , md );
+					sharedSettings.SaveMatchData( md.name , md );
 				}
 			}
 

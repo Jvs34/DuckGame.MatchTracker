@@ -27,10 +27,10 @@ namespace MatchTracker
 
 	//a match is kind of hard to keep track of in a sense, reconnections might throw stats off and create duplicate matches
 	//which in theory is fine until you want to link multiple matches together later on, gotta think about this
-	public class MatchData : IPlayersList, IRoundsList, IStartEnd, IWinner
+	public class MatchData : IPlayersList, IRoundsList, IStartEnd, IWinner , IYoutube
 	{
 		//name of the match
-		public String matchName;
+		public String name { get; set; }
 
 		public List<PlayerData> players { get; set; }
 
@@ -40,6 +40,8 @@ namespace MatchTracker
 		public DateTime timeEnded { get; set; }
 
 		public TeamData winner { get; set; }
+
+		public String youtubeUrl { get; set; }
 
 		public MatchData()
 		{
@@ -71,9 +73,9 @@ namespace MatchTracker
 		}
 	}
 
-	public class RoundData : IPlayersList, IStartEnd, IWinner
+	public class RoundData : IPlayersList, IStartEnd, IWinner , IYoutube
 	{
-		public String roundName;
+		public String name { get; set; }
 
 		public List<PlayerData> players { get; set; }
 
@@ -91,7 +93,7 @@ namespace MatchTracker
 		public TeamData winner { get; set; }
 
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
-		public String youtubeUrl;
+		public String youtubeUrl { get; set; }
 
 		public RoundData()
 		{
@@ -168,6 +170,8 @@ namespace MatchTracker
 
 	public interface IStartEnd
 	{
+		String name { get; set; }
+
 		DateTime timeStarted { get; set; }
 		DateTime timeEnded { get; set; }
 
@@ -182,5 +186,10 @@ namespace MatchTracker
 	public interface IRoundsList
 	{
 		List<String> rounds { get; set; }
+	}
+
+	public interface IYoutube
+	{
+		String youtubeUrl { get; set; }
 	}
 }
