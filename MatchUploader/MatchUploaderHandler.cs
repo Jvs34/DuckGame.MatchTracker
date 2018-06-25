@@ -335,13 +335,19 @@ namespace MatchUploader
 				foreach( String roundName in matchData.rounds )
 				{
 					RoundData oldRoundData = await gameDatabase.GetRoundData( roundName );
-					await UploadRoundToYoutubeAsync( roundName ).ConfigureAwait( false );
-					RoundData roundData = await gameDatabase.GetRoundData( roundName );
-					RemoveVideoFile( roundName ).Wait();
-					if( oldRoundData.youtubeUrl != roundData.youtubeUrl )
+
+					bool isUploaded = oldRoundData.youtubeUrl != null;
+
+					if( !isUploaded )
 					{
-						await AddRoundToPlaylist( roundName , matchName , playlistItems );
-						CommitGitChanges();
+						await UploadRoundToYoutubeAsync( roundName ).ConfigureAwait( false );
+						RoundData roundData = await gameDatabase.GetRoundData( roundName );
+						await RemoveVideoFile( roundName );
+						if( !isUploaded && roundData.youtubeUrl != null )
+						{
+							await AddRoundToPlaylist( roundName , matchName , playlistItems );
+							CommitGitChanges();
+						}
 					}
 				}
 			}

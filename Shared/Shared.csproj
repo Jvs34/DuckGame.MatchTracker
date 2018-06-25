@@ -4,9 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <Optimize>false</Optimize>
-  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Flurl" Version="2.7.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
