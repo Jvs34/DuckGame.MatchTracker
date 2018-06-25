@@ -15,7 +15,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared\Shared.csproj" />
+    <ProjectReference Include="..\Shared\Shared.csproj">
+      <Private>true</Private>
+    </ProjectReference>
   </ItemGroup>
 
   <ItemGroup>
@@ -42,7 +44,7 @@
   </ItemGroup>
   
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="$(ILRepack) /out:$(ProjectDir)\..\$(SolutionName).dll $(OutDir)\MatchRecorder.dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\obs-websocket-dotnet.dll $(OutDir)\websocket-sharp.dll" />
+    <Exec Command="$(ILRepack) /out:$(ProjectDir)\..\$(SolutionName).dll $(OutDir)\MatchRecorder.dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\obs-websocket-dotnet.dll $(OutDir)\websocket-sharp.dll $(OutDir)\Shared.dll $(OutDir)\Flurl.dll" />
   </Target>
 
   <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
