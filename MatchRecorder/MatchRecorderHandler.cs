@@ -8,12 +8,13 @@ using OBSWebsocketDotNet;
 using System.IO;
 using MatchTracker;
 using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
 	public class MatchRecorderHandler
 	{
-		private SharedSettings sharedSettings;
+		private GameDatabase gameDatabase;
 		private OBSWebsocket obsHandler;
 		private OutputState recordingState;
 		private bool requestedRecordingStop;
@@ -47,11 +48,18 @@ namespace MatchRecorder
 
 		public MatchRecorderHandler( String modPath )
 		{
-			sharedSettings = new SharedSettings();
+			gameDatabase = new GameDatabase();
+			gameDatabase.sharedSettings = new SharedSettings();
+			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
+			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
+			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
+			gameDatabase.SaveGlobalDataDelegate += SaveDatabaseGlobalDataFile;
+			gameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
+			gameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
+
 			String sharedSettingsPath = Path.Combine( Path.Combine( modPath , "Settings" ) , "shared.json" );
 
-			sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
-
+			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 			recordingState = OutputState.Stopped;
 			obsHandler = new OBSWebsocket()
 			{
@@ -62,8 +70,8 @@ namespace MatchRecorder
 			obsHandler.Disconnected += OnDisconnected;
 			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
 
-			roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
-			matchesFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.matchesFolder );
+			roundsFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
+			matchesFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.matchesFolder );
 
 			if( !Directory.Exists( roundsFolder ) )
 				Directory.CreateDirectory( roundsFolder );
@@ -71,9 +79,9 @@ namespace MatchRecorder
 			if( !Directory.Exists( matchesFolder ) )
 				Directory.CreateDirectory( matchesFolder );
 
-			if( !File.Exists( sharedSettings.GetGlobalPath() ) )
+			if( !File.Exists( gameDatabase.sharedSettings.GetGlobalPath() ) )
 			{
-				sharedSettings.SaveGlobalData( new MatchTracker.GlobalData() );
+				gameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
 			}
 
 			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
@@ -85,6 +93,43 @@ namespace MatchRecorder
 			{
 				HUD.AddCornerMessage( HUDCorner.BottomRight , "Could not connect to OBS!!!" );
 			}
+		}
+
+
+		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
+		{
+			await Task.CompletedTask;
+			return sharedSettings.DeserializeGlobalData( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
+		}
+
+		private async Task<MatchData> LoadDatabaseMatchDataFile( SharedSettings sharedSettings , string matchName )
+		{
+			await Task.CompletedTask;
+			return sharedSettings.DeserializeMatchData( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) );
+		}
+
+		private async Task<RoundData> LoadDatabaseRoundDataFile( SharedSettings sharedSettings , string roundName )
+		{
+			await Task.CompletedTask;
+			return sharedSettings.DeserializeRoundData( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
+		}
+
+		private async Task SaveDatabaseGlobalDataFile( SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
+		{
+			await Task.CompletedTask;
+			File.WriteAllText( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData  ) );
+		}
+
+		private async Task SaveDatabaseMatchDataFile( SharedSettings sharedSettings , String matchName , MatchData matchData )
+		{
+			await Task.CompletedTask;
+			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , sharedSettings.SerializeMatchData( matchData ) );
+		}
+
+		private async Task SaveDatabaseRoundataFile( SharedSettings sharedSettings , String roundName , RoundData roundData )
+		{
+			await Task.CompletedTask;
+			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );
 		}
 
 		public void Init()
@@ -152,7 +197,7 @@ namespace MatchRecorder
 							try
 							{
 								DateTime recordingTime = DateTime.Now;
-								String roundPath = Path.Combine( roundsFolder , sharedSettings.DateTimeToString( recordingTime ) );
+								String roundPath = Path.Combine( roundsFolder , gameDatabase.sharedSettings.DateTimeToString( recordingTime ) );
 								//try setting the recording folder first, then create it before we start recording
 
 								Directory.CreateDirectory( roundPath );
@@ -197,7 +242,7 @@ namespace MatchRecorder
 				isCustomLevel = false ,
 			};
 
-			currentRound.name = sharedSettings.DateTimeToString( currentRound.timeStarted );
+			currentRound.name = gameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted );
 
 			foreach( Profile pro in Profiles.active )
 			{
@@ -211,7 +256,7 @@ namespace MatchRecorder
 
 			if( currentMatch != null )
 			{
-				currentMatch.rounds.Add( sharedSettings.DateTimeToString( currentRound.timeStarted ) );
+				currentMatch.rounds.Add( gameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) );
 			}
 
 
@@ -239,11 +284,11 @@ namespace MatchRecorder
 
 			currentRound.timeEnded = endTime;
 
-			sharedSettings.SaveRoundData( sharedSettings.DateTimeToString( currentRound.timeStarted ) , currentRound );
+			gameDatabase.SaveRoundData( gameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) , currentRound ).Wait();
 
-			MatchTracker.GlobalData globalData = sharedSettings.GetGlobalData();
+			MatchTracker.GlobalData globalData = gameDatabase.GetGlobalData().Result;
 			globalData.rounds.Add( currentRound.name );
-			sharedSettings.SaveGlobalData( globalData );
+			gameDatabase.SaveGlobalData( globalData ).Wait();
 
 			currentRound = null;
 		}
@@ -269,7 +314,7 @@ namespace MatchRecorder
 				players = new List<PlayerData>() ,
 			};
 
-			currentMatch.name = sharedSettings.DateTimeToString( currentMatch.timeStarted );
+			currentMatch.name = gameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted );
 		}
 
 		private void StopCollectingMatchData()
@@ -298,10 +343,10 @@ namespace MatchRecorder
 			}
 
 
-			sharedSettings.SaveMatchData( sharedSettings.DateTimeToString( currentMatch.timeStarted ) , currentMatch );
+			gameDatabase.SaveMatchData( gameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted ) , currentMatch ).Wait();
 
 			//also add this match to the globaldata as well
-			MatchTracker.GlobalData globalData = sharedSettings.GetGlobalData();
+			MatchTracker.GlobalData globalData = gameDatabase.GetGlobalData().Result;
 			globalData.matches.Add( currentMatch.name );
 
 			//try adding the players from the matchdata into the globaldata
@@ -317,7 +362,7 @@ namespace MatchRecorder
 				}
 			}
 
-			sharedSettings.SaveGlobalData( globalData );
+			gameDatabase.SaveGlobalData( globalData ).Wait();
 
 
 			currentMatch = null;

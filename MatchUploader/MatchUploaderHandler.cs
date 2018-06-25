@@ -25,7 +25,7 @@ namespace MatchUploader
 	public class MatchUploaderHandler
 	{
 		private String settingsFolder;
-		private SharedSettings sharedSettings;
+		private GameDatabase gameDatabase;
 		private UploaderSettings uploaderSettings;
 		private YouTubeService youtubeService;
 		private string currentVideo;
@@ -36,8 +36,16 @@ namespace MatchUploader
 
 		public MatchUploaderHandler()
 		{
+			gameDatabase = new GameDatabase();
+			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
+			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
+			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
+			gameDatabase.SaveGlobalDataDelegate += SaveDatabaseGlobalDataFile;
+			gameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
+			gameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
+
 			Initialized = false;
-			sharedSettings = new SharedSettings();
+			gameDatabase.sharedSettings = new SharedSettings();
 			uploaderSettings = new UploaderSettings()
 			{
 				secrets = new ClientSecrets() ,
@@ -50,7 +58,7 @@ namespace MatchUploader
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
 			String uploaderSettingsPath = Path.Combine( settingsFolder , "uploader.json" );
 
-			sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 			uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
 			Initialized = true;
 
@@ -60,14 +68,50 @@ namespace MatchUploader
 			}
 
 
-			if( Repository.IsValid( sharedSettings.GetRecordingFolder() ) )
+			if( Repository.IsValid( gameDatabase.sharedSettings.GetRecordingFolder() ) )
 			{
-				Console.WriteLine( "Loaded {0}" , sharedSettings.GetRecordingFolder() );
-				databaseRepository = new Repository( sharedSettings.GetRecordingFolder() );
+				Console.WriteLine( "Loaded {0}" , gameDatabase.sharedSettings.GetRecordingFolder() );
+				databaseRepository = new Repository( gameDatabase.sharedSettings.GetRecordingFolder() );
 				currentBranch = databaseRepository.Branches.First( branch => branch.IsCurrentRepositoryHead );
 
 			}
 
+		}
+
+		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
+		{
+			await Task.CompletedTask;
+			return sharedSettings.DeserializeGlobalData( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
+		}
+
+		private async Task<MatchData> LoadDatabaseMatchDataFile( SharedSettings sharedSettings , string matchName )
+		{
+			await Task.CompletedTask;
+			return sharedSettings.DeserializeMatchData( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) );
+		}
+
+		private async Task<RoundData> LoadDatabaseRoundDataFile( SharedSettings sharedSettings , string roundName )
+		{
+			await Task.CompletedTask;
+			return sharedSettings.DeserializeRoundData( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
+		}
+
+		private async Task SaveDatabaseGlobalDataFile( SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
+		{
+			await Task.CompletedTask;
+			File.WriteAllText( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
+		}
+
+		private async Task SaveDatabaseMatchDataFile( SharedSettings sharedSettings , String matchName , MatchData matchData )
+		{
+			await Task.CompletedTask;
+			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , sharedSettings.SerializeMatchData( matchData ) );
+		}
+
+		private async Task SaveDatabaseRoundataFile( SharedSettings sharedSettings , String roundName , RoundData roundData )
+		{
+			await Task.CompletedTask;
+			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );
 		}
 
 		//in this context, settings are only the uploaderSettings
@@ -107,26 +151,26 @@ namespace MatchUploader
 
 
 		//updates the global data.json
-		public void UpdateGlobalData()
+		public async Task UpdateGlobalData()
 		{
 			//
 
 
-			String roundsPath = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
-			String matchesPath = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.matchesFolder );
+			String roundsPath = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
+			String matchesPath = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.matchesFolder );
 
-			if( !Directory.Exists( sharedSettings.GetRecordingFolder() ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
+			if( !Directory.Exists( gameDatabase.sharedSettings.GetRecordingFolder() ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
 			{
 				throw new DirectoryNotFoundException( "Folders do not exist" );
 			}
 
-			String globalDataPath = sharedSettings.GetGlobalPath();
+			String globalDataPath = gameDatabase.sharedSettings.GetGlobalPath();
 
 			GlobalData globalData = new GlobalData();
 
 			if( File.Exists( globalDataPath ) )
 			{
-				globalData = sharedSettings.GetGlobalData();
+				globalData = gameDatabase.sharedSettings.GetGlobalData();
 			}
 
 			var roundFolders = Directory.EnumerateDirectories( roundsPath );
@@ -141,13 +185,13 @@ namespace MatchUploader
 					globalData.rounds.Add( folderName );
 				}
 
-				RoundData roundData = sharedSettings.GetRoundData( folderName );
+				RoundData roundData = await gameDatabase.GetRoundData( folderName );
 				if( String.IsNullOrEmpty( roundData.name ) )
 				{
-					roundData.name = sharedSettings.DateTimeToString( roundData.timeStarted );
+					roundData.name = gameDatabase.sharedSettings.DateTimeToString( roundData.timeStarted );
 					Console.WriteLine( $"Adding roundName to roundData {roundData.name}" );
 
-					sharedSettings.SaveRoundData( roundData.name , roundData );
+					await gameDatabase.SaveRoundData( roundData.name , roundData );
 				}
 			}
 
@@ -162,7 +206,7 @@ namespace MatchUploader
 					globalData.matches.Add( matchName );
 				}
 
-				MatchData md = sharedSettings.GetMatchData( matchName );
+				MatchData md = await gameDatabase.GetMatchData( matchName );
 
 				//while we're here, let's check if all the players are added to the global data too
 				foreach( PlayerData ply in md.players )
@@ -179,21 +223,21 @@ namespace MatchUploader
 
 				if( String.IsNullOrEmpty( md.name ) )
 				{
-					md.name = sharedSettings.DateTimeToString( md.timeStarted );
+					md.name = gameDatabase.sharedSettings.DateTimeToString( md.timeStarted );
 					Console.WriteLine( $"Adding matchName to matchData {md.name}" );
 
-					sharedSettings.SaveMatchData( md.name , md );
+					await gameDatabase.SaveMatchData( md.name , md );
 				}
 			}
 
-			sharedSettings.SaveGlobalData( globalData );
+			await gameDatabase.SaveGlobalData( globalData );
 
 		}
 
 
-		public Video GetVideoDataForRound( String roundName )
+		public async Task<Video> GetVideoDataForRound( String roundName )
 		{
-			RoundData roundData = sharedSettings.GetRoundData( roundName );
+			RoundData roundData = await gameDatabase.GetRoundData( roundName );
 			String winner = roundData.GetWinnerName();
 
 			if( String.IsNullOrEmpty( winner ) )
@@ -202,7 +246,7 @@ namespace MatchUploader
 			}
 
 
-			String description = String.Format( "Recorded on {0}\nThe winner is {1}" , sharedSettings.DateTimeToString( roundData.timeStarted ) , winner );
+			String description = String.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.sharedSettings.DateTimeToString( roundData.timeStarted ) , winner );
 
 
 			Video videoData = new Video()
@@ -227,9 +271,9 @@ namespace MatchUploader
 			return videoData;
 		}
 
-		public Playlist GetPlaylistDataForMatch( String matchName )
+		public async Task<Playlist> GetPlaylistDataForMatch( String matchName )
 		{
-			MatchData matchData = sharedSettings.GetMatchData( matchName );
+			MatchData matchData = await gameDatabase.GetMatchData( matchName );
 
 			String winner = matchData.GetWinnerName();
 
@@ -244,7 +288,7 @@ namespace MatchUploader
 				Snippet = new PlaylistSnippet()
 				{
 					Title = matchName ,
-					Description = String.Format( "Recorded on {0}\nThe winner is {1}" , sharedSettings.DateTimeToString( matchData.timeStarted ) , winner ) ,
+					Description = String.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.sharedSettings.DateTimeToString( matchData.timeStarted ) , winner ) ,
 					Tags = new List<String>() { "duckgame" , "peniscorp" }
 				} ,
 				Status = new PlaylistStatus()
@@ -254,9 +298,9 @@ namespace MatchUploader
 			};
 		}
 
-		public PlaylistItem GetPlaylistItemForRound( String roundName )
+		public async Task<PlaylistItem> GetPlaylistItemForRound( String roundName )
 		{
-			RoundData roundData = sharedSettings.GetRoundData( roundName );
+			RoundData roundData = await gameDatabase.GetRoundData( roundName );
 			return new PlaylistItem()
 			{
 				Snippet = new PlaylistItemSnippet()
@@ -270,30 +314,37 @@ namespace MatchUploader
 			};
 		}
 
-		private void AddYoutubeIdToRound( String roundName , String videoId )
+		private async Task AddYoutubeIdToRound( String roundName , String videoId )
 		{
-			RoundData roundData = sharedSettings.GetRoundData( roundName );
+			RoundData roundData = await gameDatabase.GetRoundData( roundName );
 			roundData.youtubeUrl = videoId;
-			sharedSettings.SaveRoundData( roundName , roundData );
+			await gameDatabase.SaveRoundData( roundName , roundData );
 		}
 
 		public async Task UploadAllRounds()
 		{
-			GlobalData globalData = sharedSettings.GetGlobalData();
+			Console.WriteLine( "Starting youtube uploads" );
 
-			foreach( String roundName in globalData.rounds )
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+
+			foreach( String matchName in globalData.matches )
 			{
-				RoundData oldRoundData = sharedSettings.GetRoundData( roundName );
-				await UploadRoundToYoutubeAsync( roundName ).ConfigureAwait( false );
-				RoundData roundData = sharedSettings.GetRoundData( roundName );
-				RemoveVideoFile( roundName );
-				if( oldRoundData.youtubeUrl != roundData.youtubeUrl )
+				MatchData matchData = await gameDatabase.GetMatchData( matchName );
+				List<PlaylistItem> playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
+
+				foreach( String roundName in matchData.rounds )
 				{
-					CommitGitChanges();
+					RoundData oldRoundData = await gameDatabase.GetRoundData( roundName );
+					await UploadRoundToYoutubeAsync( roundName ).ConfigureAwait( false );
+					RoundData roundData = await gameDatabase.GetRoundData( roundName );
+					RemoveVideoFile( roundName ).Wait();
+					if( oldRoundData.youtubeUrl != roundData.youtubeUrl )
+					{
+						await AddRoundToPlaylist( roundName , matchName , playlistItems );
+						CommitGitChanges();
+					}
 				}
-
 			}
-
 		}
 
 		public async Task<List<Playlist>> GetAllPlaylists()
@@ -328,7 +379,7 @@ namespace MatchUploader
 			var playlistItemsRequest = youtubeService.PlaylistItems.List( "snippet" );
 			playlistItemsRequest.PlaylistId = playlistId;
 			playlistItemsRequest.MaxResults = 50;
-			
+
 			PlaylistItemListResponse playlistItemListResponse = null;
 
 			do
@@ -364,7 +415,55 @@ namespace MatchUploader
 			}
 			catch( Exception ex )
 			{
+				Console.WriteLine( ex );
+			}
+		}
 
+		public async Task<Playlist> CreatePlaylist( String matchName , MatchData matchData )
+		{
+			try
+			{
+				Playlist pl = await GetPlaylistDataForMatch( matchName );
+				var createPlaylistRequest = youtubeService.Playlists.Insert( pl , "snippet,status" );
+				Playlist matchPlaylist = await createPlaylistRequest.ExecuteAsync();
+				if( matchPlaylist != null )
+				{
+					matchData.youtubeUrl = matchPlaylist.Id;
+				}
+
+				return matchPlaylist;
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e );
+			}
+
+			return null;
+		}
+
+		public async Task AddRoundToPlaylist( String roundName , String matchName , List<PlaylistItem> playlistItems )
+		{
+			MatchData matchData = await gameDatabase.GetMatchData( matchName );
+			RoundData roundData = await gameDatabase.GetRoundData( roundName );
+
+			if( matchData.youtubeUrl == null || roundData.youtubeUrl == null )
+			{
+				Console.WriteLine( $"Could not add round {roundName} to playlist because either match url or round url are missing" );
+				await Task.CompletedTask;
+				return;
+			}
+
+			
+
+			int roundIndex = matchData.rounds.IndexOf( roundName );
+
+			if( !playlistItems.Any( x => x.Snippet.ResourceId.VideoId == roundData.youtubeUrl ) )
+			{
+				Console.WriteLine( $"Could not find {roundName} on playlist {matchName}, adding" );
+				PlaylistItem roundPlaylistItem = await GetPlaylistItemForRound( roundName );
+				roundPlaylistItem.Snippet.Position = roundIndex + 1;
+				roundPlaylistItem.Snippet.PlaylistId = matchData.youtubeUrl;
+				await youtubeService.PlaylistItems.Insert( roundPlaylistItem , "snippet" ).ExecuteAsync();
 			}
 		}
 
@@ -378,14 +477,17 @@ namespace MatchUploader
 
 			try
 			{
+				//queue all the addrounds tasks together
+				List<Task> addrounds = new List<Task>();
+
+				Console.WriteLine( "Searching all playlists..." );
 				var allplaylists = await GetAllPlaylists();
 
-				var playlistItemsRequest = youtubeService.PlaylistItems.List( "snippet" );
+				GlobalData globalData = await gameDatabase.GetGlobalData();
 
-				GlobalData globalData = sharedSettings.GetGlobalData();
 				foreach( var matchName in globalData.matches )
 				{
-					MatchData matchData = sharedSettings.GetMatchData( matchName );
+					MatchData matchData = await gameDatabase.GetMatchData( matchName );
 					Playlist matchPlaylist = allplaylists.FirstOrDefault( x => x.Snippet.Title == matchName );
 
 					try
@@ -394,61 +496,64 @@ namespace MatchUploader
 						{
 							Console.WriteLine( "Did not find playlist for {0}, creating" , matchName );
 							//create the playlist now, doesn't matter that it's empty
-							Playlist pl = GetPlaylistDataForMatch( matchName );
-							var createPlaylistRequest = youtubeService.Playlists.Insert( pl , "snippet,status" );
-							matchPlaylist = await createPlaylistRequest.ExecuteAsync();
+							Playlist pl = await CreatePlaylist( matchName , matchData );
+							if( pl != null )
+							{
+								await gameDatabase.SaveMatchData( matchName , matchData );
+							}
+						}
+						else
+						{
+							//add this playlist id to the youtubeurl of the matchdata
+							if( matchData.youtubeUrl == null )
+							{
+								matchData.youtubeUrl = matchPlaylist.Id;
+								await gameDatabase.SaveMatchData( matchName , matchData );
+							}
 						}
 					}
 					catch( Exception ex )
 					{
-						Console.WriteLine( "Could not create playlist for {0}" , matchName );
+						Console.WriteLine( "Could not create playlist for {0}" , matchName , ex );
 					}
 
-					//if we have a playlist now, add the rounds we already have avaiable to it
-					if( matchPlaylist != null )
+					if( matchData.youtubeUrl != null )
 					{
-						playlistItemsRequest.PlaylistId = matchPlaylist.Id;
-						//get the playlist items now
-						var playlistItems = await GetAllPlaylistItems( matchPlaylist.Id );
+						List<PlaylistItem> playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
 
-						for( int i = 0; i < matchData.rounds.Count; i++ )
-						//foreach( String roundName in matchData.rounds )
+						foreach( String roundName in matchData.rounds )
 						{
-							String roundName = matchData.rounds [i];
-
-							RoundData roundData = sharedSettings.GetRoundData( roundName );
+							// 
+							RoundData roundData = await gameDatabase.GetRoundData( roundName );
 							if( roundData.youtubeUrl != null )
 							{
-								//check if this youtube id is in the playlist, otherwise add it
-
-								if( !playlistItems.Any( x => x.Snippet.ResourceId.VideoId == roundData.youtubeUrl ) )
-								{
-									Console.WriteLine( "Could not find video for playlist, adding" );
-									PlaylistItem roundPlaylistItem = GetPlaylistItemForRound( roundName );
-									roundPlaylistItem.Snippet.Position = i + 1;
-									roundPlaylistItem.Snippet.PlaylistId = matchPlaylist.Id;
-									await youtubeService.PlaylistItems.Insert( roundPlaylistItem , "snippet" ).ExecuteAsync();
-								}
+								addrounds.Add( AddRoundToPlaylist( roundName , matchName , playlistItems ) );
 							}
 						}
 					}
+					
 				}
+
+				//finally await it all at once
+				await Task.WhenAll( addrounds );
+
 			}
 			catch( Exception ex )
 			{
+				Console.WriteLine( ex );
 			}
 
 		}
 
-		public void CleanupVideos()
+		public async Task CleanupVideos()
 		{
-			GlobalData globalData = sharedSettings.GetGlobalData();
+			GlobalData globalData = await gameDatabase.GetGlobalData();
 			foreach( String roundName in globalData.rounds )
 			{
-				RoundData roundData = sharedSettings.GetRoundData( roundName );
+				RoundData roundData = await gameDatabase.GetRoundData( roundName );
 				if( roundData.youtubeUrl != null )
 				{
-					RemoveVideoFile( roundName );
+					await RemoveVideoFile( roundName );
 				}
 			}
 		}
@@ -505,17 +610,17 @@ namespace MatchUploader
 				throw new NullReferenceException( "Youtube service is not initialized!!!" );
 			}
 
-			RoundData roundData = sharedSettings.GetRoundData( roundName );
+			RoundData roundData = await gameDatabase.GetRoundData( roundName );
 
 			if( roundData.youtubeUrl != null )
 			{
 				return;
 			}
 
-			Video videoData = GetVideoDataForRound( roundName );
+			Video videoData = await GetVideoDataForRound( roundName );
 
-			String roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
-			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , sharedSettings.roundVideoFile );
+			String roundsFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
+			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.sharedSettings.roundVideoFile );
 
 
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
@@ -579,15 +684,15 @@ namespace MatchUploader
 			uploaderSettings.pendingUploads.Remove( roundName );
 
 			SaveSettings();
-			AddYoutubeIdToRound( roundName , video.Id );
+			AddYoutubeIdToRound( roundName , video.Id ).Wait();
 
 			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , currentVideo , video.Id );
 			SendVideoWebHook( video.Id );
 		}
 
-		private void RemoveVideoFile( string roundName )
+		private async Task RemoveVideoFile( string roundName )
 		{
-			RoundData roundData = sharedSettings.GetRoundData( roundName );
+			RoundData roundData = await gameDatabase.GetRoundData( roundName );
 
 			//don't accidentally delete stuff that somehow doesn't have a url set
 			if( roundData.youtubeUrl == null )
@@ -595,8 +700,8 @@ namespace MatchUploader
 
 			try
 			{
-				String roundsFolder = Path.Combine( sharedSettings.GetRecordingFolder() , sharedSettings.roundsFolder );
-				String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , sharedSettings.roundVideoFile );
+				String roundsFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
+				String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.sharedSettings.roundVideoFile );
 
 				if( File.Exists( filePath ) )
 				{
@@ -606,7 +711,7 @@ namespace MatchUploader
 			}
 			catch( Exception e )
 			{
-
+				Console.WriteLine( e );
 			}
 		}
 

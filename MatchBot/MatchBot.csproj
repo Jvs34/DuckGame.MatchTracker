@@ -17,13 +17,7 @@
     <PackageReference Include="Microsoft.Bot.Builder.Core" Version="4.0.1-preview" />
     <PackageReference Include="Microsoft.Bot.Builder.Core.Extensions" Version="4.0.1-preview" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Shared\GameData.cs" />
-    <Compile Include="..\Shared\GameDatabase.cs" />
-    <Compile Include="..\Shared\SharedSettings.cs" />
-    <Compile Include="..\Shared\SharedSettingsFS.cs" />
+    <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 
 </Project>

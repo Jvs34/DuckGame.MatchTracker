@@ -10,9 +10,14 @@ namespace MatchTracker
 		public GlobalData globalData;
 		public Dictionary<string , MatchData> matchesData;
 		public Dictionary<string , RoundData> roundsData;
-		public event Func<SharedSettings , Task<GlobalData>> LoadGlobalData;
-		public event Func<SharedSettings , String , Task<MatchData>> LoadMatchData;
-		public event Func<SharedSettings , String , Task<RoundData>> LoadRoundData;
+		public event Func<SharedSettings , Task<GlobalData>> LoadGlobalDataDelegate;
+		public event Func<SharedSettings , String , Task<MatchData>> LoadMatchDataDelegate;
+		public event Func<SharedSettings , String , Task<RoundData>> LoadRoundDataDelegate;
+
+		public event Func<SharedSettings , GlobalData , Task> SaveGlobalDataDelegate;
+		public event Func<SharedSettings , String , MatchData , Task> SaveMatchDataDelegate;
+		public event Func<SharedSettings , String , RoundData , Task> SaveRoundDataDelegate;
+
 
 		public GameDatabase()
 		{
@@ -33,11 +38,13 @@ namespace MatchTracker
 			{
 				foreach( String matchName in globalData.matches )
 				{
+					//await GetMatchData( matchName , true );
 					loadingTasks.Add( GetMatchData( matchName , true ) );
 				}
 
 				foreach( String roundName in globalData.rounds )
 				{
+					//await GetRoundData( roundName , true );
 					loadingTasks.Add( GetRoundData( roundName , true ) );
 				}
 			}
@@ -50,9 +57,16 @@ namespace MatchTracker
 			if( globalData == null )
 				forceRefresh = true;
 
-			if( forceRefresh && LoadGlobalData != null )
+			if( forceRefresh && LoadGlobalDataDelegate != null )
 			{
-				globalData = await LoadGlobalData( sharedSettings );
+				try
+				{
+					globalData = await LoadGlobalDataDelegate( sharedSettings );
+				}
+				catch( Exception e )
+				{
+					Console.WriteLine( e );
+				}
 			}
 
 			return globalData;
@@ -71,10 +85,18 @@ namespace MatchTracker
 				forceRefresh = true;
 			}
 
-			if( forceRefresh && LoadMatchData != null )
+			if( forceRefresh && LoadMatchDataDelegate != null )
 			{
-				matchData = await LoadMatchData( sharedSettings , matchName );
-				matchesData [matchName] = matchData;
+				try
+				{
+					matchData = await LoadMatchDataDelegate( sharedSettings , matchName );
+					if( matchData != null )
+						matchesData [matchName] = matchData;
+				}
+				catch( Exception e )
+				{
+					Console.WriteLine( e );
+				}
 			}
 
 			return matchData;
@@ -93,13 +115,53 @@ namespace MatchTracker
 				forceRefresh = true;
 			}
 
-			if( forceRefresh && LoadRoundData != null )
+			if( forceRefresh && LoadRoundDataDelegate != null )
 			{
-				roundData = await LoadRoundData( sharedSettings , roundName );
-				roundsData [roundName] = roundData;
+				try
+				{
+					roundData = await LoadRoundDataDelegate( sharedSettings , roundName );
+					if( roundData != null )
+						roundsData [roundName] = roundData;
+				}
+				catch( Exception e )
+				{
+					Console.WriteLine( e );
+				}
 			}
 
 			return roundData;
+		}
+
+		public async Task SaveGlobalData( GlobalData globalData )
+		{
+			await Task.CompletedTask;
+
+			this.globalData = globalData;
+
+			if( SaveGlobalDataDelegate != null )
+			{
+				await SaveGlobalDataDelegate( sharedSettings , globalData );
+			}
+		}
+
+		public async Task SaveMatchData( String matchName , MatchData matchData )
+		{
+			matchesData [matchName] = matchData;
+
+			if( SaveMatchDataDelegate != null )
+			{
+				await SaveMatchDataDelegate( sharedSettings , matchName , matchData );
+			}
+		}
+
+		public async Task SaveRoundData( String roundName , RoundData roundData )
+		{
+			roundsData [roundName] = roundData;
+
+			if( SaveRoundDataDelegate != null )
+			{
+				await SaveRoundDataDelegate( sharedSettings , roundName , roundData );
+			}
 		}
 
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )

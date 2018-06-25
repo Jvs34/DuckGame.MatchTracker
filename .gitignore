@@ -22,3 +22,5 @@ MatchBot/bin/
 MatchBot/obj/
 MatchBot/appsettings.json
 Settings/bot.json
+Shared/bin/
+Shared/obj/

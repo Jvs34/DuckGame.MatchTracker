@@ -10,10 +10,10 @@ namespace MatchUploader
 
 			try
 			{
-				mu.UpdateGlobalData();
+				mu.UpdateGlobalData().Wait();
 				mu.DoYoutubeLoginAsync().Wait();
 				mu.SaveSettings();
-				mu.CleanupVideos();
+				mu.CleanupVideos().Wait();
 				mu.CommitGitChanges();
 				mu.UpdatePlaylists().Wait();
 				mu.UploadAllRounds().Wait();

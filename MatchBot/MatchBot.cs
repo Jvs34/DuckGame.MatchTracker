@@ -18,6 +18,9 @@ using Microsoft.Cognitive.LUIS.Models;
 using System.Text;
 using System.Globalization;
 using System.Net.Http;
+using Flurl;
+using System.Net;
+using System.Web;
 
 namespace MatchBot
 {
@@ -55,7 +58,11 @@ namespace MatchBot
 
 		public MatchBot()
 		{
-			httpClient = new HttpClient();
+			httpClient = new HttpClient( new HttpClientHandler()
+			{
+				AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+				MaxConnectionsPerServer = 5, //this is not set to a good limit by default, which fucks up my connection apparently
+			});
 
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
@@ -64,12 +71,11 @@ namespace MatchBot
 			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 
 			//TODO: turn these into http calls instead
-			gameDatabase.LoadGlobalData += LoadDatabaseGlobalDataFile;
-			gameDatabase.LoadMatchData += LoadDatabaseMatchDataFile;
-			gameDatabase.LoadRoundData += LoadDatabaseRoundDataFile;
+			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
+			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
+			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
 
 			RefreshDatabase();
-			//loadDatabaseTask = gameDatabase.Load();
 			refreshTimer = new Timer( this.RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 )  );
 		}
 
@@ -83,29 +89,26 @@ namespace MatchBot
 
 			loadDatabaseTask = gameDatabase.Load();
 		}
-
-		//TODO: turn these asyncs
-		private async Task<GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
+		
+		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( SharedSettings sharedSettings )
 		{
-			await Task.CompletedTask;
+			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
 			Console.WriteLine( "Loading GlobalData" );
-			return sharedSettings.GetGlobalData();
+			return sharedSettings.DeserializeGlobalData( HttpUtility.HtmlDecode( response ) );
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataFile( SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataWeb( SharedSettings sharedSettings , string matchName )
 		{
-			await Task.CompletedTask;
+			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchUrl( matchName ) );
 			Console.WriteLine( $"Loading MatchData {matchName}" );
-
-			return sharedSettings.GetMatchData( matchName );
+			return sharedSettings.DeserializeMatchData( HttpUtility.HtmlDecode( response ) );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataFile( SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataWeb( SharedSettings sharedSettings , string roundName )
 		{
-			await Task.CompletedTask;
+			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
 			Console.WriteLine( $"Loading RoundData {roundName}" );
-
-			return sharedSettings.GetRoundData( roundName );
+			return sharedSettings.DeserializeRoundData( HttpUtility.HtmlDecode( response ) );
 		}
 
 		//if this is ever hosted on azure, this part would have to be added somewhere else, maybe on OnTurn

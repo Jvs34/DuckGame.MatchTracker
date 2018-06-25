@@ -15,6 +15,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Shared\Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\ThirdParty\0Harmony.dll</HintPath>
       <Private>true</Private>
@@ -36,13 +40,7 @@
       <Private>true</Private>
     </Reference>
   </ItemGroup>
-
-  <ItemGroup>
-    <Compile Include="..\Shared\GameData.cs" />
-    <Compile Include="..\Shared\SharedSettings.cs" />
-    <Compile Include="..\Shared\SharedSettingsFS.cs" />
-  </ItemGroup>
-
+  
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="$(ILRepack) /out:$(ProjectDir)\..\$(SolutionName).dll $(OutDir)\MatchRecorder.dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\obs-websocket-dotnet.dll $(OutDir)\websocket-sharp.dll" />
   </Target>
