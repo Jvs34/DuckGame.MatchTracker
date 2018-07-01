@@ -74,7 +74,6 @@ namespace MatchBot
 			gameDatabase = new GameDatabase();
 			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
 
-			//TODO: turn these into http calls instead
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
 			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
 			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
@@ -115,7 +114,6 @@ namespace MatchBot
 			return sharedSettings.DeserializeRoundData( HttpUtility.HtmlDecode( response ) );
 		}
 
-		//if this is ever hosted on azure, this part would have to be added somewhere else, maybe on OnTurn
 		public async Task Initialize()
 		{
 			await loadDatabaseTask;
@@ -150,7 +148,6 @@ namespace MatchBot
 					case "Help":
 						{
 							await HandleHelp( turnContext );
-
 							break;
 						}
 					default:
@@ -164,6 +161,7 @@ namespace MatchBot
 
 		private async Task HandleHelp( ITurnContext turnContext )
 		{
+			await turnContext.SendActivity( "You can ask me stuff like who won the most, last played or times played" );
 			await Task.CompletedTask;
 		}
 
