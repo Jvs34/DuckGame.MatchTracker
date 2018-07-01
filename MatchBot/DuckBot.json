@@ -6,6 +6,9 @@
   "culture": "en-us",
   "intents": [
     {
+      "name": "Help"
+    },
+    {
       "name": "LastPlayed"
     },
     {
@@ -57,6 +60,11 @@
       "entities": []
     },
     {
+      "text": "commands",
+      "intent": "Help",
+      "entities": []
+    },
+    {
       "text": "did i win the most?",
       "intent": "MostWins",
       "entities": [
@@ -69,6 +77,21 @@
     },
     {
       "text": "gay",
+      "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "help",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "help me",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "hh:mm:ss",
       "intent": "None",
       "entities": []
     },
@@ -184,6 +207,54 @@
       "intent": "TimesPlayed",
       "entities": [
         {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 26
+        }
+      ]
+    },
+    {
+      "text": "how many matches has twigletowns played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 31
+        }
+      ]
+    },
+    {
+      "text": "how many matches has willox played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 26
+        }
+      ]
+    },
+    {
+      "text": "how many matches has willox won",
+      "intent": "MostWins",
+      "entities": [
+        {
           "entity": "Player.Name",
           "startPos": 21,
           "endPos": 26
@@ -214,6 +285,43 @@
           "entity": "GameType::Match",
           "startPos": 9,
           "endPos": 15
+        }
+      ]
+    },
+    {
+      "text": "how many matches have me and raptor played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 22,
+          "endPos": 23
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 29,
+          "endPos": 34
+        }
+      ]
+    },
+    {
+      "text": "how many matches have we played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 9,
+          "endPos": 15
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 22,
+          "endPos": 23
         }
       ]
     },
@@ -252,6 +360,38 @@
     {
       "text": "how many rounds did willox win",
       "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "how many rounds has raptor palyed",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        }
+      ]
+    },
+    {
+      "text": "how many rounds has raptor played",
+      "intent": "TimesPlayed",
       "entities": [
         {
           "entity": "GameType::Round",
@@ -319,6 +459,22 @@
       ]
     },
     {
+      "text": "how many rounds has willox won",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 20,
+          "endPos": 25
+        }
+      ]
+    },
+    {
       "text": "how many rounds have i played",
       "intent": "TimesPlayed",
       "entities": [
@@ -352,6 +508,22 @@
           "entity": "Player.Name",
           "startPos": 28,
           "endPos": 33
+        }
+      ]
+    },
+    {
+      "text": "how many rounds have we played",
+      "intent": "TimesPlayed",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 9,
+          "endPos": 14
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 21,
+          "endPos": 22
         }
       ]
     },
@@ -498,6 +670,11 @@
       ]
     },
     {
+      "text": "how many times have i won",
+      "intent": "MostWins",
+      "entities": []
+    },
+    {
       "text": "how many times have we palyed",
       "intent": "TimesPlayed",
       "entities": [
@@ -567,8 +744,38 @@
       "entities": []
     },
     {
+      "text": "tell me what you can do",
+      "intent": "Help",
+      "entities": []
+    },
+    {
       "text": "test",
       "intent": "None",
+      "entities": []
+    },
+    {
+      "text": "what are your commands",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "what are your directives",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "what can you do",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "what can you say",
+      "intent": "Help",
+      "entities": []
+    },
+    {
+      "text": "what commands can you do",
+      "intent": "Help",
       "entities": []
     },
     {
@@ -650,6 +857,22 @@
           "entity": "Player.Name",
           "startPos": 23,
           "endPos": 29
+        }
+      ]
+    },
+    {
+      "text": "when was the last time raptor and metaman played",
+      "intent": "LastPlayed",
+      "entities": [
+        {
+          "entity": "Player.Name",
+          "startPos": 23,
+          "endPos": 28
+        },
+        {
+          "entity": "Player.Name",
+          "startPos": 34,
+          "endPos": 40
         }
       ]
     },
@@ -743,6 +966,33 @@
           "entity": "GameType::Round",
           "startPos": 17,
           "endPos": 21
+        }
+      ]
+    },
+    {
+      "text": "who has the most wins",
+      "intent": "MostWins",
+      "entities": []
+    },
+    {
+      "text": "who has won the most matches",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Match",
+          "startPos": 21,
+          "endPos": 27
+        }
+      ]
+    },
+    {
+      "text": "who won the most rounds",
+      "intent": "MostWins",
+      "entities": [
+        {
+          "entity": "GameType::Round",
+          "startPos": 17,
+          "endPos": 22
         }
       ]
     },
