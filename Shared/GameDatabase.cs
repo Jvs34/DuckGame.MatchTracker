@@ -8,6 +8,7 @@ namespace MatchTracker
 	{
 		public SharedSettings sharedSettings;
 		public GlobalData globalData;
+		private Object globalDataLock;
 		public Dictionary<string , MatchData> matchesData;
 		public Dictionary<string , RoundData> roundsData;
 		public event Func<SharedSettings , Task<GlobalData>> LoadGlobalDataDelegate;
@@ -23,6 +24,7 @@ namespace MatchTracker
 		{
 			sharedSettings = new SharedSettings();
 			globalData = null;
+			globalDataLock = new object();
 			matchesData = new Dictionary<string , MatchData>();
 			roundsData = new Dictionary<string , RoundData>();
 		}
@@ -61,7 +63,14 @@ namespace MatchTracker
 			{
 				try
 				{
-					globalData = await LoadGlobalDataDelegate( sharedSettings );
+					GlobalData globalDataResult = await LoadGlobalDataDelegate( sharedSettings );
+					if( globalDataResult != null )
+					{
+						lock( globalDataLock )
+						{
+							globalData = globalDataResult;
+						}
+					}
 				}
 				catch( Exception e )
 				{
@@ -91,7 +100,12 @@ namespace MatchTracker
 				{
 					matchData = await LoadMatchDataDelegate( sharedSettings , matchName );
 					if( matchData != null )
-						matchesData [matchName] = matchData;
+					{
+						lock( matchesData )
+						{
+							matchesData [matchName] = matchData;
+						}
+					}
 				}
 				catch( Exception e )
 				{
@@ -121,7 +135,12 @@ namespace MatchTracker
 				{
 					roundData = await LoadRoundDataDelegate( sharedSettings , roundName );
 					if( roundData != null )
-						roundsData [roundName] = roundData;
+					{
+						lock( roundsData )
+						{
+							roundsData [roundName] = roundData;
+						}
+					}
 				}
 				catch( Exception e )
 				{

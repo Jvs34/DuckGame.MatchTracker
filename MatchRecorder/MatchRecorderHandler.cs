@@ -26,6 +26,8 @@ namespace MatchRecorder
 		private string roundsFolder;
 		private string matchesFolder;
 
+		private DateTime nextObsCheck;
+
 		public bool IsRecording
 		{
 			get
@@ -85,14 +87,9 @@ namespace MatchRecorder
 			}
 
 			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
-			try
-			{
-				obsHandler.Connect( "ws://127.0.0.1:4444" , "imgay" );
-			}
-			catch( Exception )
-			{
-				HUD.AddCornerMessage( HUDCorner.BottomRight , "Could not connect to OBS!!!" );
-			}
+			TryConnect();
+
+			nextObsCheck = DateTime.MinValue;
 		}
 
 
@@ -117,7 +114,7 @@ namespace MatchRecorder
 		private async Task SaveDatabaseGlobalDataFile( SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
 		{
 			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData  ) );
+			File.WriteAllText( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
 		}
 
 		private async Task SaveDatabaseMatchDataFile( SharedSettings sharedSettings , String matchName , MatchData matchData )
@@ -137,6 +134,18 @@ namespace MatchRecorder
 
 
 
+		}
+
+		public void TryConnect()
+		{
+			try
+			{
+				obsHandler.Connect( "ws://127.0.0.1:4444" , "imgay" );
+			}
+			catch( Exception )
+			{
+				HUD.AddCornerMessage( HUDCorner.TopRight , "Could not connect to OBS!!!" );
+			}
 		}
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
@@ -165,6 +174,16 @@ namespace MatchRecorder
 		{
 			if( !obsHandler.IsConnected )
 			{
+				//try reconnecting
+
+				if( nextObsCheck < DateTime.Now )
+				{
+					TryConnect();
+
+					nextObsCheck = DateTime.Now.AddSeconds( 3 );
+				}
+
+
 				return;
 			}
 

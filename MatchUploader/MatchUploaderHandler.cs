@@ -307,10 +307,10 @@ namespace MatchUploader
 				{
 					ResourceId = new ResourceId()
 					{
-						Kind = "youtube#video",
+						Kind = "youtube#video" ,
 						VideoId = roundData.youtubeUrl
 					}
-				},
+				} ,
 			};
 		}
 
@@ -459,7 +459,7 @@ namespace MatchUploader
 				return;
 			}
 
-			
+
 
 			int roundIndex = matchData.rounds.IndexOf( roundName );
 
@@ -537,7 +537,7 @@ namespace MatchUploader
 							}
 						}
 					}
-					
+
 				}
 
 				//finally await it all at once

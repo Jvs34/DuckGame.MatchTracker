@@ -58,11 +58,15 @@ namespace MatchBot
 
 		public MatchBot()
 		{
-			httpClient = new HttpClient( new HttpClientHandler()
+			httpClient = new HttpClient( new SocketsHttpHandler()
 			{
-				AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-				MaxConnectionsPerServer = 5, //this is not set to a good limit by default, which fucks up my connection apparently
-			});
+				AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate ,
+				MaxConnectionsPerServer = 50 , //this is not set to a good limit by default, which fucks up my connection apparently
+				ConnectTimeout = TimeSpan.FromMinutes( 30 )
+			} )
+			{
+				Timeout = TimeSpan.FromMinutes( 30 )
+			};
 
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
