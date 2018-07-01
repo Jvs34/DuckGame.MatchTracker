@@ -4,9 +4,6 @@
     <TargetFramework>net471</TargetFramework>
     <Platforms>x86</Platforms>
     <DebugType>full</DebugType>
-    <Company>Jvs</Company>
-    <Version>1.0.0.0</Version>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
     <Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them to your desired repo</Description>
   </PropertyGroup>
 
@@ -47,6 +44,5 @@
     <Exec Command="$(ILRepack) /out:$(ProjectDir)\..\$(SolutionName).dll $(OutDir)\MatchRecorder.dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\obs-websocket-dotnet.dll $(OutDir)\websocket-sharp.dll $(OutDir)\Shared.dll $(OutDir)\Flurl.dll" />
   </Target>
 
-  <ProjectExtensions><VisualStudio><UserProperties /></VisualStudio></ProjectExtensions>
 
 </Project>

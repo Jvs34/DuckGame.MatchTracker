@@ -1,26 +1,14 @@
 /MatchTracker.dll
 /MatchTracker.pdb
 
-MatchRecorder/.vs
-MatchRecorder/bin/
-MatchRecorder/obj/
-MatchRecorder/Properties/launchSettings.json
-
-MatchUploader/bin/
-MatchUploader/obj/
-
-MatchViewer/bin/
-MatchViewer/obj/
+*/bin/*
+*/obj/*
+*launchSettings.json
 
 build/build_compiled.hash
-.vs/
 *.TMP
 ThirdParty/DuckGame.exe
-Settings/uploader.json
+Settings/*.json
 *.user
-MatchBot/bin/
-MatchBot/obj/
-MatchBot/appsettings.json
-Settings/bot.json
-Shared/bin/
-Shared/obj/
+*/appsettings.json
+.vs/*

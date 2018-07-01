@@ -1,0 +1,10 @@
+<Project>
+  <PropertyGroup>
+    <Authors>Jvs</Authors>
+    <Version>1.0</Version>
+    <Company>Jvs</Company>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/Jvs34/DuckGame.MatchTracker.git</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/Jvs34/DuckGame.MatchTracker</PackageProjectUrl>
+  </PropertyGroup>
+</Project>

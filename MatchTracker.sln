@@ -20,10 +20,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchBot", "MatchBot\MatchB
 		{14A7AEA1-81E7-4E0C-B887-7154B4581C6E} = {14A7AEA1-81E7-4E0C-B887-7154B4581C6E}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{14A7AEA1-81E7-4E0C-B887-7154B4581C6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{14A7AEA1-81E7-4E0C-B887-7154B4581C6E}"
 	ProjectSection(ProjectDependencies) = postProject
 		{39C12C40-5052-40AB-9BC7-69B1E35AA304} = {39C12C40-5052-40AB-9BC7-69B1E35AA304}
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchViewerOoui", "MatchViewerOoui\MatchViewerOoui.csproj", "{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,6 +74,14 @@ Global
 		{14A7AEA1-81E7-4E0C-B887-7154B4581C6E}.Release|Any CPU.Build.0 = Release|Any CPU
 		{14A7AEA1-81E7-4E0C-B887-7154B4581C6E}.Release|x86.ActiveCfg = Release|Any CPU
 		{14A7AEA1-81E7-4E0C-B887-7154B4581C6E}.Release|x86.Build.0 = Release|Any CPU
+		{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}.Debug|x86.Build.0 = Debug|Any CPU
+		{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}.Release|x86.ActiveCfg = Release|Any CPU
+		{C7E1B021-D1B5-4975-B1F1-593C9E5AFDAE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
