@@ -79,7 +79,7 @@ namespace MatchBot
 			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
 
 			RefreshDatabase();
-			refreshTimer = new Timer( this.RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 )  );
+			refreshTimer = new Timer( this.RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 ) );
 		}
 
 		public void RefreshDatabase( Object dontactuallycare = null )
@@ -92,7 +92,7 @@ namespace MatchBot
 
 			loadDatabaseTask = gameDatabase.Load();
 		}
-		
+
 		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( SharedSettings sharedSettings )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
@@ -368,17 +368,20 @@ namespace MatchBot
 			await gameDatabase.IterateOverAllRoundsOrMatches( ismatchOrRound , async ( matchOrRound ) =>
 			{
 				//even if it's team mode we consider it a win
-				List<PlayerData> matchOrRoundWinners = matchOrRound.GetWinners();
-
-				if( matchOrRoundWinners.Any( x => x.userId == player.userId ) )
+				//first off, only do this if the play is actually in the match
+				if( matchOrRound.players.Any( x => x.userId == player.userId ) )
 				{
-					Interlocked.Increment( ref wins );
-				}
-				else
-				{
-					Interlocked.Increment( ref losses );
-				}
+					List<PlayerData> matchOrRoundWinners = matchOrRound.GetWinners();
 
+					if( matchOrRoundWinners.Any( x => x.userId == player.userId ) )
+					{
+						Interlocked.Increment( ref wins );
+					}
+					else
+					{
+						Interlocked.Increment( ref losses );
+					}
+				}
 				await Task.CompletedTask;
 
 			} );
@@ -397,19 +400,18 @@ namespace MatchBot
 			{
 				int timesPlayed = 0;
 				TimeSpan durationPlayed = TimeSpan.Zero;
+				Object durationPlayedLock = new object();
 
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
 					GlobalData gd = await gameDatabase.GetGlobalData();
 					timesPlayed = gameType == GameType.Match ? gd.matches.Count : gd.rounds.Count;
 
-					Object locking = new object();
-
 					await gameDatabase.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
 						if( matchOrRound is IStartEnd duration )
 						{
-							lock( locking )
+							lock( durationPlayedLock )
 							{
 								durationPlayed = durationPlayed.Add( duration.GetDuration() );
 							}
@@ -421,7 +423,6 @@ namespace MatchBot
 				else if( recognizedPlayer.PlayerDataTarget != null )
 				{
 					GlobalData gd = await gameDatabase.GetGlobalData();
-					Object locking = new object();
 
 					await gameDatabase.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
@@ -430,7 +431,7 @@ namespace MatchBot
 							Interlocked.Increment( ref timesPlayed );
 							if( matchOrRound is IStartEnd duration )
 							{
-								lock( locking )
+								lock( durationPlayedLock )
 								{
 									durationPlayed = durationPlayed.Add( duration.GetDuration() );
 								}
