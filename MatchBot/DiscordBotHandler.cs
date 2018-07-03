@@ -32,7 +32,6 @@ namespace MatchBot
 
 			bot = new MatchBot();
 
-
 			botSettings = new BotSettings();
 
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
@@ -53,7 +52,6 @@ namespace MatchBot
 
 			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.luisModelId , botSettings.luisSubcriptionKey , botSettings.luisUri ) ) );
 		}
-
 
 		public async Task Initialize()
 		{

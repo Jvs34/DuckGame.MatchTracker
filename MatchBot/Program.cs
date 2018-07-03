@@ -11,7 +11,6 @@ namespace MatchBot
 		{
 			try
 			{
-
 				DiscordBotHandler handler = new DiscordBotHandler();
 				handler.Initialize().Wait();
 
@@ -23,7 +22,6 @@ namespace MatchBot
 				Console.WriteLine( e );
 			}
 		}
-
 
 	}
 }

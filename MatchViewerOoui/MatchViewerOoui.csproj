@@ -6,14 +6,15 @@
     <AssemblyName>MatchViewerOoui</AssemblyName>
     <RootNamespace>MatchViewerOoui</RootNamespace>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="Ooui.Forms" Version="0.10.222" />
     <PackageReference Include="Ooui.Wasm" Version="0.10.222" />
+    <PackageReference Include="Xamarin.Forms" Version="2.5.0.122203" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
-  
+
 </Project>

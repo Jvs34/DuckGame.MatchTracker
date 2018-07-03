@@ -47,7 +47,6 @@ namespace MatchRecorder
 			}
 		}
 
-
 		public MatchRecorderHandler( String modPath )
 		{
 			gameDatabase = new GameDatabase();
@@ -92,7 +91,6 @@ namespace MatchRecorder
 			nextObsCheck = DateTime.MinValue;
 		}
 
-
 		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
@@ -132,8 +130,6 @@ namespace MatchRecorder
 		public void Init()
 		{
 
-
-
 		}
 
 		public void TryConnect()
@@ -153,7 +149,6 @@ namespace MatchRecorder
 		{
 			return level is GameLevel;
 		}
-
 
 		private void OnConnected( object sender , EventArgs e )
 		{
@@ -182,7 +177,6 @@ namespace MatchRecorder
 
 					nextObsCheck = DateTime.Now.AddSeconds( 3 );
 				}
-
 
 				return;
 			}
@@ -235,9 +229,7 @@ namespace MatchRecorder
 						break;
 					}
 			}
-
 		}
-
 
 		public void StopRecording()
 		{
@@ -278,9 +270,7 @@ namespace MatchRecorder
 				currentMatch.rounds.Add( gameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) );
 			}
 
-
 		}
-
 
 		private void StopCollectingRoundData( DateTime endTime )
 		{
@@ -361,7 +351,6 @@ namespace MatchRecorder
 				currentMatch.players.Add( CreatePlayerDataFromProfile( pro ) );
 			}
 
-
 			gameDatabase.SaveMatchData( gameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted ) , currentMatch ).Wait();
 
 			//also add this match to the globaldata as well
@@ -377,12 +366,10 @@ namespace MatchRecorder
 					ply.team = null;
 
 					globalData.players.Add( ply );
-
 				}
 			}
 
 			gameDatabase.SaveGlobalData( globalData ).Wait();
-
 
 			currentMatch = null;
 		}
@@ -426,10 +413,8 @@ namespace MatchRecorder
 			}
 			*/
 
-
 			return pd;
 		}
-
 	}
 
 	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
@@ -444,7 +429,6 @@ namespace MatchRecorder
 		}
 	}
 
-
 	//start recording
 	[HarmonyPatch( typeof( VirtualTransition ) , nameof( VirtualTransition.GoUnVirtual ) )]
 	internal static class VirtualTransition_GoUnVirtual
@@ -456,10 +440,8 @@ namespace MatchRecorder
 			{
 				Mod.Recorder.StartRecording();
 			}
-
 		}
 	}
-
 
 	//save the video and stop recording
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
@@ -489,7 +471,6 @@ namespace MatchRecorder
 		}
 	}
 
-
 	//this is called once when a new match starts, but not if you're a client and in multiplayer and the host decides to continue from the endgame screen instead of going
 	//back to lobby first
 	[HarmonyPatch( typeof( Main ) , "ResetMatchStuff" )]
@@ -503,6 +484,5 @@ namespace MatchRecorder
 			}
 		}
 	}
-
 
 }

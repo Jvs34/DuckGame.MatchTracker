@@ -8,7 +8,7 @@ namespace MatchTracker
 	{
 		public SharedSettings sharedSettings;
 		public GlobalData globalData;
-		private Object globalDataLock;
+		private readonly Object globalDataLock;
 		public Dictionary<string , MatchData> matchesData;
 		public Dictionary<string , RoundData> roundsData;
 		public event Func<SharedSettings , Task<GlobalData>> LoadGlobalDataDelegate;
@@ -18,7 +18,6 @@ namespace MatchTracker
 		public event Func<SharedSettings , GlobalData , Task> SaveGlobalDataDelegate;
 		public event Func<SharedSettings , String , MatchData , Task> SaveMatchDataDelegate;
 		public event Func<SharedSettings , String , RoundData , Task> SaveRoundDataDelegate;
-
 
 		public GameDatabase()
 		{
@@ -201,7 +200,6 @@ namespace MatchTracker
 
 				callbackTasks.Add( callback( iterateItem ) );
 			}
-
 
 			await Task.WhenAll( callbackTasks );
 		}

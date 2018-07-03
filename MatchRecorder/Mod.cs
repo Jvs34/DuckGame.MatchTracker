@@ -5,7 +5,6 @@ namespace MatchRecorder
 {
 	public class Mod : DuckGame.Mod
 	{
-
 		public static MatchRecorderHandler Recorder { get; private set; }
 
 		protected override void OnPreInitialize()
@@ -17,9 +16,7 @@ namespace MatchRecorder
 
 			//HUD.AddInputChangeDisplay
 			HarmonyInstance.Create( "MatchRecorder" ).PatchAll( Assembly.GetExecutingAssembly() );
-
 		}
-
 
 		//TODO:uhhhhh find a better place to start this, there has to be hook for when the game is fully initialized
 		protected override void OnPostInitialize()

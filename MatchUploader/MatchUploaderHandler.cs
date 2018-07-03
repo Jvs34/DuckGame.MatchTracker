@@ -67,15 +67,12 @@ namespace MatchUploader
 				uploaderSettings.dataStore = new KeyValueDataStore();
 			}
 
-
 			if( Repository.IsValid( gameDatabase.sharedSettings.GetRecordingFolder() ) )
 			{
 				Console.WriteLine( "Loaded {0}" , gameDatabase.sharedSettings.GetRecordingFolder() );
 				databaseRepository = new Repository( gameDatabase.sharedSettings.GetRecordingFolder() );
 				currentBranch = databaseRepository.Branches.First( branch => branch.IsCurrentRepositoryHead );
-
 			}
-
 		}
 
 		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
@@ -145,16 +142,13 @@ namespace MatchUploader
 				GZipEnabled = true ,
 			} );
 
-
 			youtubeService.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
 		}
-
 
 		//updates the global data.json
 		public async Task UpdateGlobalData()
 		{
 			//
-
 
 			String roundsPath = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
 			String matchesPath = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.matchesFolder );
@@ -217,7 +211,6 @@ namespace MatchUploader
 						ply.team = null;
 
 						globalData.players.Add( toAdd );
-
 					}
 				}
 
@@ -231,9 +224,7 @@ namespace MatchUploader
 			}
 
 			await gameDatabase.SaveGlobalData( globalData );
-
 		}
-
 
 		public async Task<Video> GetVideoDataForRound( String roundName )
 		{
@@ -245,9 +236,7 @@ namespace MatchUploader
 				winner = "Nobody";
 			}
 
-
 			String description = String.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.sharedSettings.DateTimeToString( roundData.timeStarted ) , winner );
-
 
 			Video videoData = new Video()
 			{
@@ -281,7 +270,6 @@ namespace MatchUploader
 			{
 				winner = "Nobody";
 			}
-
 
 			return new Playlist()
 			{
@@ -459,8 +447,6 @@ namespace MatchUploader
 				return;
 			}
 
-
-
 			int roundIndex = matchData.rounds.IndexOf( roundName );
 
 			if( !playlistItems.Any( x => x.Snippet.ResourceId.VideoId == roundData.youtubeUrl ) )
@@ -475,7 +461,6 @@ namespace MatchUploader
 
 		public async Task UpdatePlaylists()
 		{
-
 			//TODO:I'm gonna regret writing this piece of shit tomorrow
 
 			//go through every match, then try to find the playlist on youtube that contains its name, if it doesn't exist, create it
@@ -537,18 +522,15 @@ namespace MatchUploader
 							}
 						}
 					}
-
 				}
 
 				//finally await it all at once
 				await Task.WhenAll( addrounds );
-
 			}
 			catch( Exception ex )
 			{
 				Console.WriteLine( ex );
 			}
-
 		}
 
 		public async Task CleanupVideos()
@@ -584,7 +566,6 @@ namespace MatchUploader
 					hasChanges = true;
 				}
 			}
-
 
 			if( hasChanges )
 			{
@@ -628,7 +609,6 @@ namespace MatchUploader
 			String roundsFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
 			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.sharedSettings.roundVideoFile );
 
-
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
 				currentVideo = roundName;
@@ -653,14 +633,11 @@ namespace MatchUploader
 					await videosInsertRequest.UploadAsync();
 				}
 				currentVideo = null;
-
 			}
 		}
 
-
 		private void OnStartUploading( IUploadSessionData resumable )
 		{
-
 			if( uploaderSettings.pendingUploads.TryGetValue( currentVideo , out Uri resumableUri ) )
 			{
 				Console.WriteLine( "Replacing resumable upload url for {0}" , currentVideo );

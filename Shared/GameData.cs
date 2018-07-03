@@ -3,7 +3,6 @@ using System.Collections.Generic;
 
 namespace MatchTracker
 {
-
 	//this is what accessed by the website, so it will list the name of the matches that were tracked
 	public class GlobalData : IPlayersList, IMatchesList, IRoundsList
 	{
@@ -86,7 +85,6 @@ namespace MatchTracker
 		public bool isCustomLevel;
 		public bool skipped;
 
-
 		public DateTime timeStarted { get; set; }
 		public DateTime timeEnded { get; set; }
 
@@ -123,7 +121,6 @@ namespace MatchTracker
 			return winnerName;
 		}
 	}
-
 
 	//duck game networked profiles aren't all that networked really, you only get the name and id
 	public class PlayerData

@@ -26,7 +26,7 @@ namespace MatchBot
 {
 	public class MatchBot : IBot
 	{
-		enum TargetType
+		private enum TargetType
 		{
 			Everyone, //targets everyone
 			Author, //targets the author of the message
@@ -42,19 +42,19 @@ namespace MatchBot
 			public String FancyTarget { get; set; } //the colloquial target
 		}
 
-		enum GameType
+		private enum GameType
 		{
 			Match,
 			Round
 		}
 
-		private GameDatabase gameDatabase;
+		private readonly GameDatabase gameDatabase;
 
 		private Task loadDatabaseTask;
 
-		private Timer refreshTimer;
+		private readonly Timer refreshTimer;
 
-		private HttpClient httpClient;
+		private readonly HttpClient httpClient;
 
 		public MatchBot()
 		{
@@ -71,8 +71,10 @@ namespace MatchBot
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
 			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
 
-			gameDatabase = new GameDatabase();
-			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+			gameDatabase = new GameDatabase
+			{
+				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) )
+			};
 
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
 			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
@@ -84,7 +86,7 @@ namespace MatchBot
 
 		public void RefreshDatabase( Object dontactuallycare = null )
 		{
-			if( loadDatabaseTask != null && !loadDatabaseTask.IsCompleted )
+			if( loadDatabaseTask?.IsCompleted == false )
 			{
 				Console.WriteLine( "Database hasn't finished loading, skipping refresh" );
 				return;
@@ -209,8 +211,8 @@ namespace MatchBot
 					//the target is already a special one, skip searching for the name
 					if( !recognizedPlayerData.IsSpecialTarget )
 					{
-						if( String.Equals( playerName , "i" , StringComparison.CurrentCultureIgnoreCase ) ||
-							String.Equals( playerName , "me" , StringComparison.CurrentCultureIgnoreCase ) )
+						if( String.Equals( playerName , "i" , StringComparison.CurrentCultureIgnoreCase )
+							|| String.Equals( playerName , "me" , StringComparison.CurrentCultureIgnoreCase ) )
 						{
 							playerName = turnContext.Activity.From.Name;
 							recognizedPlayerData.IsSpecialTarget = true;
@@ -218,12 +220,11 @@ namespace MatchBot
 							recognizedPlayerData.FancyTarget = "you";
 						}
 
-
 						//try to find the name of the player
 						PlayerData pd = globalData.players.Find( p =>
 						{
-							return String.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase ) ||
-												   String.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
+							return String.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase )
+												   || String.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
 						} );
 
 						recognizedPlayerData.PlayerDataTarget = pd;
@@ -238,9 +239,7 @@ namespace MatchBot
 					recognizedPlayerData.Target = playerName;
 
 					playerTargets.Add( recognizedPlayerData );
-
 				}
-
 			}
 
 			return playerTargets;
@@ -276,7 +275,6 @@ namespace MatchBot
 						lastPlayed = kv.Value.timeEnded;
 						foundLastPlayed = true;
 					}
-
 				}
 
 				if( foundLastPlayed )
@@ -290,7 +288,6 @@ namespace MatchBot
 					await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 				}
 			}
-
 		}
 
 		private async Task HandleMostWins( ITurnContext turnContext , RecognizerResult result )
@@ -336,10 +333,8 @@ namespace MatchBot
 			}
 			else
 			{
-
 				foreach( RecognizedPlayerData recognizedPlayer in recognizedPlayerEntities )
 				{
-
 					if( recognizedPlayer.PlayerDataTarget != null )
 					{
 						int wins = 0;
@@ -347,15 +342,12 @@ namespace MatchBot
 
 						(wins, losses) = await GetPlayerWinsAndLosses( recognizedPlayer.PlayerDataTarget , gameType == GameType.Match );
 
-
 						await turnContext.SendActivity( $"{recognizedPlayer.PlayerDataTarget.GetName()} won {wins} and lost {losses} {gameTypeString}" );
-
 					}
 					else
 					{
 						await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 					}
-
 				}
 			}
 		}
@@ -383,7 +375,6 @@ namespace MatchBot
 					}
 				}
 				await Task.CompletedTask;
-
 			} );
 
 			return (wins, losses);
@@ -418,7 +409,6 @@ namespace MatchBot
 						}
 						await Task.CompletedTask;
 					} );
-
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
 				{
@@ -451,6 +441,5 @@ namespace MatchBot
 				}
 			}
 		}
-
 	}
 }
