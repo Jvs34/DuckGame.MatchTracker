@@ -2,12 +2,10 @@
 using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
-using MatchTracker;
 using System.IO;
 using Newtonsoft.Json;
 using Microsoft.Bot.Schema;
 using Microsoft.Bot.Builder;
-using Microsoft.Bot;
 using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Builder.TraceExtensions;
 using Microsoft.Bot.Builder.Ai.LUIS;
@@ -55,7 +53,6 @@ namespace MatchBot
 
 		public async Task Initialize()
 		{
-			await bot.Initialize();
 			await discordClient.LoginAsync( TokenType.Bot , botSettings.discordToken );
 			await discordClient.StartAsync();
 			await discordClient.SetStatusAsync( UserStatus.Online );

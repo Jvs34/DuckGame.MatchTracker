@@ -479,11 +479,15 @@ namespace MatchUploader
 				foreach( var matchName in globalData.matches )
 				{
 					MatchData matchData = await gameDatabase.GetMatchData( matchName );
-					Playlist matchPlaylist = allplaylists.FirstOrDefault( x => x.Snippet.Title == matchName );
+
+					//this returns the youtubeurl if it's not null otherwise it tries to search for it in all of the playlists title
+					String matchPlaylist = String.IsNullOrEmpty( matchData.youtubeUrl )
+						? allplaylists.FirstOrDefault( x => x.Snippet.Title == matchName )?.Id
+						: matchData.youtubeUrl;
 
 					try
 					{
-						if( matchPlaylist == null )
+						if( String.IsNullOrEmpty( matchPlaylist ) )
 						{
 							Console.WriteLine( "Did not find playlist for {0}, creating" , matchName );
 							//create the playlist now, doesn't matter that it's empty
@@ -496,9 +500,9 @@ namespace MatchUploader
 						else
 						{
 							//add this playlist id to the youtubeurl of the matchdata
-							if( matchData.youtubeUrl == null )
+							if( String.IsNullOrEmpty( matchData.youtubeUrl ) )
 							{
-								matchData.youtubeUrl = matchPlaylist.Id;
+								matchData.youtubeUrl = matchPlaylist;
 								await gameDatabase.SaveMatchData( matchName , matchData );
 							}
 						}
@@ -508,7 +512,7 @@ namespace MatchUploader
 						Console.WriteLine( "Could not create playlist for {0}" , matchName , ex );
 					}
 
-					if( matchData.youtubeUrl != null )
+					if( !String.IsNullOrEmpty( matchData.youtubeUrl ) )
 					{
 						List<PlaylistItem> playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
 

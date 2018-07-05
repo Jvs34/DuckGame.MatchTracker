@@ -116,14 +116,9 @@ namespace MatchBot
 			return sharedSettings.DeserializeRoundData( HttpUtility.HtmlDecode( response ) );
 		}
 
-		public async Task Initialize()
-		{
-			await loadDatabaseTask;
-		}
-
 		public async Task OnTurn( ITurnContext turnContext )
 		{
-			await Initialize();
+			await loadDatabaseTask;
 
 			if( turnContext.Activity.Type == ActivityTypes.Message )
 			{
