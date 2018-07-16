@@ -631,6 +631,9 @@ namespace MatchUploader
 				if( currentVideo.errorCount > uploaderSettings.retryCount )
 				{
 					currentVideo.uploadUrl = null;
+					Console.WriteLine( "Replacing resumable upload url for {0} after too many errors" , currentVideo.videoName );
+					currentVideo.errorCount = 0;
+					currentVideo.lastException = String.Empty;
 				}
 
 				//TODO:Maybe it's possible to create a throttable request by extending the class of this one and initializing it with this one's values
@@ -669,12 +672,6 @@ namespace MatchUploader
 
 		private void OnStartUploading( IUploadSessionData resumable )
 		{
-			if( currentVideo.uploadUrl != null )
-			{
-				Console.WriteLine( "Replacing resumable upload url for {0}" , currentVideo.videoName );
-				currentVideo.errorCount = 0;
-				currentVideo.lastException = String.Empty;
-			}
 			currentVideo.uploadUrl = resumable.UploadUri;
 			SaveSettings();//save right away in case the program crashes or connection screws up
 		}
