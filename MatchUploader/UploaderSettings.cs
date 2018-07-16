@@ -9,12 +9,14 @@ namespace MatchUploader
 {
 	public class UploaderSettings
 	{
-		public Dictionary<String , Uri> pendingUploads = new Dictionary<String , Uri>();
+		public List<PendingUpload> pendingUploads = new List<PendingUpload>();
 
 		public float uploadSpeed = 0; //in kylobytes per seconds, 0 means no throttling
 		public ClientSecrets secrets;
 		public KeyValueDataStore dataStore;
 		public Uri discordWebhook;
+
+		public int retryCount = 5;
 
 		public String gitEmail;
 		public String gitUsername;
@@ -80,6 +82,22 @@ namespace MatchUploader
 				data.Add( key , JsonConvert.SerializeObject( value ) );
 			}
 			return CompletedTask;
+		}
+	}
+
+	public class PendingUpload
+	{
+		public String videoName;
+		public Uri uploadUrl;
+		public String lastException;
+		public int errorCount;
+
+		public PendingUpload()
+		{
+			videoName = String.Empty;
+			uploadUrl = null;
+			lastException = String.Empty;
+			errorCount = 0;
 		}
 	}
 }

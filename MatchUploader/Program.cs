@@ -1,22 +1,23 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace MatchUploader
 {
-	class Program
+	static class Program
 	{
-		static void Main( string [] args )
+		static async Task Main( string [] args )
 		{
 			MatchUploaderHandler mu = new MatchUploaderHandler();
 
 			try
 			{
-				mu.UpdateGlobalData().Wait();
-				mu.DoYoutubeLoginAsync().Wait();
+				await mu.UpdateGlobalData();
+				await mu.DoYoutubeLoginAsync();
 				mu.SaveSettings();
-				mu.CleanupVideos().Wait();
+				await mu.CleanupVideos();
 				mu.CommitGitChanges();
-				mu.UpdatePlaylists().Wait();
-				mu.UploadAllRounds().Wait();
+				await mu.UpdatePlaylists();
+				await mu.UploadAllRounds();
 			}
 			catch( Exception e )
 			{
