@@ -660,7 +660,7 @@ namespace MatchUploader
 				//save it to the uploader settings and increment the error count only if it's not the annoying too many videos error
 				if( uploadProgress.Status != UploadStatus.Completed
 					&& uploadProgress.Exception is Google.GoogleApiException googleException
-					&& googleException.Error.Code != 400 )
+					&& googleException.Error?.Code != 400 )
 				{
 					currentVideo.lastException = uploadProgress.Exception.Message;
 					currentVideo.errorCount++;
