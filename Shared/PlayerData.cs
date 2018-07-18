@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace MatchTracker
 {
 	//duck game networked profiles aren't all that networked really, you only get the name and id
-	public class PlayerData : IEquatable<PlayerData>, IComparable<PlayerData>
+	public sealed class PlayerData : IEquatable<PlayerData>, IComparable<PlayerData>
 	{
 		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
 		public String userId;
