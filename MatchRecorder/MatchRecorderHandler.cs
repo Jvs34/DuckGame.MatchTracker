@@ -269,7 +269,6 @@ namespace MatchRecorder
 			{
 				currentMatch.rounds.Add( gameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) );
 			}
-
 		}
 
 		private void StopCollectingRoundData( DateTime endTime )
@@ -484,5 +483,4 @@ namespace MatchRecorder
 			}
 		}
 	}
-
 }

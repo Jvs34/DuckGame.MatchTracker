@@ -17,8 +17,6 @@ namespace MatchRecorder
 				String levelid = Content.GetLevelID( level , LevelLocation.Content );
 				Tex2D rt = Content.GeneratePreview( level );
 				LevelData levelData = Content.GetLevel( levelid , LevelLocation.Content );
-
-
 			}
 		}
     }

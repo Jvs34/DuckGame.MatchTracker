@@ -22,6 +22,5 @@ namespace MatchBot
 				Console.WriteLine( e );
 			}
 		}
-
 	}
 }

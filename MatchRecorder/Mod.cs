@@ -3,7 +3,7 @@ using Harmony;
 
 namespace MatchRecorder
 {
-	public class Mod : DuckGame.Mod
+	public class Mod : DuckGame.DisabledMod
 	{
 		public static MatchRecorderHandler Recorder { get; private set; }
 
