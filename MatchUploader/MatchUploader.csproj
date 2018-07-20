@@ -21,5 +21,12 @@
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Lidgren.Network.MultiTarget">
+      <HintPath>..\ThirdParty\Lidgren.Network.MultiTarget.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
   
 </Project>
