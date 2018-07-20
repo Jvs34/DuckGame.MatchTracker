@@ -22,7 +22,7 @@ using LibGit2Sharp.Handlers;
 
 namespace MatchUploader
 {
-	public class MatchUploaderHandler
+	public sealed class MatchUploaderHandler : IModeHandler
 	{
 		private String settingsFolder;
 		private GameDatabase gameDatabase;
@@ -745,6 +745,17 @@ namespace MatchUploader
 
 			var content = new StringContent( JsonConvert.SerializeObject( message , Formatting.Indented ) , System.Text.Encoding.UTF8 , "application/json" );
 			youtubeService.HttpClient.PostAsync( webhookUrl , content );
+		}
+
+		public async Task Run()
+		{
+			await UpdateGlobalData();
+			await DoYoutubeLoginAsync();
+			SaveSettings();
+			await CleanupVideos();
+			CommitGitChanges();
+			await UpdatePlaylists();
+			await UploadAllRounds();
 		}
 	}
 }

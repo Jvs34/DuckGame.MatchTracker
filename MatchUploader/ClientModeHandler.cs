@@ -1,10 +1,17 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading.Tasks;
+using Lidgren;
 
 namespace MatchUploader
 {
-    class ClientModeHandler
-    {
-    }
+	public sealed class ClientModeHandler : IModeHandler
+	{
+
+		public async Task Run()
+		{
+			
+		}
+	}
 }

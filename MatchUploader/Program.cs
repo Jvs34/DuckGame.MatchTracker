@@ -3,21 +3,15 @@ using System.Threading.Tasks;
 
 namespace MatchUploader
 {
-	static class Program
+	internal static class Program
 	{
-		static async Task Main( string [] args )
+		private static async Task Main( string [] args )
 		{
 			MatchUploaderHandler mu = new MatchUploaderHandler();
 
 			try
 			{
-				await mu.UpdateGlobalData();
-				await mu.DoYoutubeLoginAsync();
-				mu.SaveSettings();
-				await mu.CleanupVideos();
-				mu.CommitGitChanges();
-				await mu.UpdatePlaylists();
-				await mu.UploadAllRounds();
+				await mu.Run();
 			}
 			catch( Exception e )
 			{
