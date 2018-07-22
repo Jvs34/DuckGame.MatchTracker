@@ -615,6 +615,7 @@ namespace MatchUploader
 
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
+
 				//get the pending upload for this roundName
 				currentVideo = uploaderSettings.pendingUploads.Find( x => x.videoName.Equals( roundName ) );
 
@@ -627,6 +628,8 @@ namespace MatchUploader
 
 					uploaderSettings.pendingUploads.Add( currentVideo );
 				}
+
+				currentVideo.fileSize = fileStream.Length;
 
 				if( currentVideo.errorCount > uploaderSettings.retryCount )
 				{
@@ -681,9 +684,11 @@ namespace MatchUploader
 			switch( progress.Status )
 			{
 				case UploadStatus.Uploading:
-					Console.WriteLine( "{0} bytes sent." , progress.BytesSent );
-					break;
-
+					{
+						double percentage = Math.Round( ( (double)progress.BytesSent / (double)currentVideo.fileSize ) * 100f , 2 );
+						Console.WriteLine( $"{currentVideo.videoName} : {percentage}%" );
+						break;
+					}
 				case UploadStatus.Failed:
 					Console.WriteLine( "An error prevented the upload from completing. {0}" , progress.Exception );
 					break;

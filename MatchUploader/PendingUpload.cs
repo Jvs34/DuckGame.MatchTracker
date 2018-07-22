@@ -14,6 +14,8 @@ namespace MatchUploader
 		public Uri uploadUrl;
 		public String lastException;
 		public int errorCount;
+		[JsonIgnore] public long fileSize;
+
 
 		public PendingUpload()
 		{
@@ -21,6 +23,7 @@ namespace MatchUploader
 			uploadUrl = null;
 			lastException = String.Empty;
 			errorCount = 0;
+			fileSize = 0;
 		}
 	}
 }
