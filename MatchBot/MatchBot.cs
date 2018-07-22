@@ -428,7 +428,7 @@ namespace MatchBot
 
 				if( timesPlayed > 0 )
 				{
-					await turnContext.SendActivity( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {durationPlayed.Hours} hours of playtime" );
+					await turnContext.SendActivity( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {Math.Round(durationPlayed.TotalHours)} hours of playtime" );
 				}
 				else
 				{
