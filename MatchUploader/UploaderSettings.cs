@@ -14,7 +14,10 @@ namespace MatchUploader
 		public float uploadSpeed = 0; //in kylobytes per seconds, 0 means no throttling
 		public ClientSecrets secrets;
 		public KeyValueDataStore dataStore;
+		public Uri youtubeChannel;
 		public Uri discordWebhook;
+		public String discordClientId;
+		public String discordToken;
 
 		public int retryCount = 5;
 

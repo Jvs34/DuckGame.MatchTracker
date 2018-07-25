@@ -15,9 +15,11 @@ using System.Reflection;
 using System.Net.Http;
 using LibGit2Sharp;
 using LibGit2Sharp.Handlers;
+using Discord;
+using Discord.WebSocket;
 /*
-	Goes through all the folders, puts all rounds and matches into data.json
-	Also returns match/round data from the timestamped name and whatnot
+Goes through all the folders, puts all rounds and matches into data.json
+Also returns match/round data from the timestamped name and whatnot
 */
 
 namespace MatchUploader
@@ -31,6 +33,7 @@ namespace MatchUploader
 		private PendingUpload currentVideo;
 		private Repository databaseRepository;
 		private Branch currentBranch;
+		private DiscordSocketClient discordClient;
 
 		public bool Initialized { get; }
 
@@ -46,11 +49,7 @@ namespace MatchUploader
 
 			Initialized = false;
 			gameDatabase.sharedSettings = new SharedSettings();
-			uploaderSettings = new UploaderSettings()
-			{
-				secrets = new ClientSecrets() ,
-				dataStore = new KeyValueDataStore() ,
-			};
+			uploaderSettings = new UploaderSettings();
 
 			//load the settings
 			//get the working directory
@@ -73,9 +72,14 @@ namespace MatchUploader
 				databaseRepository = new Repository( gameDatabase.sharedSettings.GetRecordingFolder() );
 				currentBranch = databaseRepository.Branches.First( branch => branch.IsCurrentRepositoryHead );
 			}
+
+			if( !String.IsNullOrEmpty( uploaderSettings.discordClientId ) && !String.IsNullOrEmpty( uploaderSettings.discordToken ) )
+			{
+				discordClient = new DiscordSocketClient();
+			}
 		}
 
-		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
+		private async Task<GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
 			return sharedSettings.DeserializeGlobalData( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
@@ -93,7 +97,7 @@ namespace MatchUploader
 			return sharedSettings.DeserializeRoundData( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
 		}
 
-		private async Task SaveDatabaseGlobalDataFile( SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
+		private async Task SaveDatabaseGlobalDataFile( SharedSettings sharedSettings , GlobalData globalData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
@@ -120,8 +124,14 @@ namespace MatchUploader
 			);
 		}
 
-		public async Task DoYoutubeLoginAsync()
+		public async Task DoLogin()
 		{
+			if( discordClient != null )
+			{
+				await discordClient.LoginAsync( TokenType.Bot , uploaderSettings.discordToken );
+				await discordClient.StartAsync();
+			}
+
 			UserCredential uc = null;
 
 			var permissions = new [] { YouTubeService.Scope.Youtube };
@@ -226,6 +236,11 @@ namespace MatchUploader
 			await gameDatabase.SaveGlobalData( globalData ).ConfigureAwait( false );
 		}
 
+		public async Task LoadDatabase()
+		{
+			await gameDatabase.Load();
+		}
+
 		public async Task<Video> GetVideoDataForRound( String roundName )
 		{
 			RoundData roundData = await gameDatabase.GetRoundData( roundName ).ConfigureAwait( false );
@@ -315,6 +330,8 @@ namespace MatchUploader
 
 			GlobalData globalData = await gameDatabase.GetGlobalData().ConfigureAwait( false );
 
+			int remaining = await GetRemainingFilesCount();
+
 			foreach( String matchName in globalData.matches )
 			{
 				MatchData matchData = await gameDatabase.GetMatchData( matchName ).ConfigureAwait( false );
@@ -322,6 +339,7 @@ namespace MatchUploader
 
 				foreach( String roundName in matchData.rounds )
 				{
+					await UpdateUploadProgress( remaining );
 					RoundData oldRoundData = await gameDatabase.GetRoundData( roundName ).ConfigureAwait( false );
 
 					bool isUploaded = oldRoundData.youtubeUrl != null;
@@ -333,6 +351,7 @@ namespace MatchUploader
 						await RemoveVideoFile( roundName );
 						if( !isUploaded && roundData.youtubeUrl != null )
 						{
+							remaining--;
 							await AddRoundToPlaylist( roundName , matchName , playlistItems ).ConfigureAwait( false );
 							CommitGitChanges();
 						}
@@ -535,6 +554,8 @@ namespace MatchUploader
 			{
 				Console.WriteLine( ex );
 			}
+
+			CommitGitChanges();
 		}
 
 		public async Task CleanupVideos()
@@ -615,7 +636,6 @@ namespace MatchUploader
 
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
-
 				//get the pending upload for this roundName
 				currentVideo = uploaderSettings.pendingUploads.Find( x => x.videoName.Equals( roundName ) );
 
@@ -685,7 +705,8 @@ namespace MatchUploader
 			{
 				case UploadStatus.Uploading:
 					{
-						double percentage = Math.Round( ( (double)progress.BytesSent / (double)currentVideo.fileSize ) * 100f , 2 );
+						double percentage = Math.Round( ( (double) progress.BytesSent / (double) currentVideo.fileSize ) * 100f , 2 );
+						UpdateUploadProgress( percentage , true );
 						Console.WriteLine( $"{currentVideo.videoName} : {percentage}%" );
 						break;
 					}
@@ -752,12 +773,49 @@ namespace MatchUploader
 			youtubeService.HttpClient.PostAsync( webhookUrl , content );
 		}
 
+		private async Task UpdateUploadProgress( double percentage , bool updateInProgress = false )
+		{
+			if( discordClient == null || discordClient.ConnectionState != ConnectionState.Connected )
+				return;
+
+			String gameString = String.Empty;
+			if( updateInProgress )
+			{
+				gameString = $"Uploading {currentVideo.videoName} : {percentage}%";
+			}
+			else
+			{
+				gameString = $"{Math.Round( percentage )} videos remaining";
+			}
+
+			if( discordClient.Activity != null && discordClient.Activity.Name == gameString )
+			{
+				return;
+			}
+
+			await discordClient.SetGameAsync( gameString , uploaderSettings.youtubeChannel.ToString() , ActivityType.Streaming );
+		}
+
+		private async Task<int> GetRemainingFilesCount()
+		{
+			int remainingFiles = 0;
+			await gameDatabase.IterateOverAllRoundsOrMatches( false , async ( matchOrRound ) =>
+			{
+				IYoutube youtube = (IYoutube) matchOrRound;
+				if( String.IsNullOrEmpty( youtube.youtubeUrl ) )
+				{
+					Interlocked.Increment( ref remainingFiles );
+				}
+			} );
+
+			return remainingFiles;
+		}
+
 		public async Task Run()
 		{
-			await UpdateGlobalData();
-			await DoYoutubeLoginAsync();
+			await DoLogin();
 			SaveSettings();
-			await CleanupVideos();
+			await LoadDatabase();
 			CommitGitChanges();
 			await UpdatePlaylists();
 			await UploadAllRounds();
