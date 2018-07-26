@@ -706,7 +706,7 @@ namespace MatchUploader
 				case UploadStatus.Uploading:
 					{
 						double percentage = Math.Round( ( (double) progress.BytesSent / (double) currentVideo.fileSize ) * 100f , 2 );
-						UpdateUploadProgress( percentage , true );
+						//UpdateUploadProgress( percentage , true );
 						Console.WriteLine( $"{currentVideo.videoName} : {percentage}%" );
 						break;
 					}
