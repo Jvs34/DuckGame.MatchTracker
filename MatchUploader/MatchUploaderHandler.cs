@@ -81,38 +81,32 @@ namespace MatchUploader
 
 		private async Task<GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
 		{
-			await Task.CompletedTask;
-			return sharedSettings.DeserializeGlobalData( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
+			return sharedSettings.DeserializeGlobalData( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataFile( SharedSettings sharedSettings , string matchName )
 		{
-			await Task.CompletedTask;
-			return sharedSettings.DeserializeMatchData( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) );
+			return sharedSettings.DeserializeMatchData( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataFile( SharedSettings sharedSettings , string roundName )
 		{
-			await Task.CompletedTask;
-			return sharedSettings.DeserializeRoundData( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
+			return sharedSettings.DeserializeRoundData( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) );
 		}
 
 		private async Task SaveDatabaseGlobalDataFile( SharedSettings sharedSettings , GlobalData globalData )
 		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
+			await File.WriteAllTextAsync( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
 		}
 
 		private async Task SaveDatabaseMatchDataFile( SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , sharedSettings.SerializeMatchData( matchData ) );
+			await File.WriteAllTextAsync( sharedSettings.GetMatchPath( matchName ) , sharedSettings.SerializeMatchData( matchData ) );
 		}
 
 		private async Task SaveDatabaseRoundataFile( SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );
+			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );
 		}
 
 		//in this context, settings are only the uploaderSettings
@@ -806,6 +800,7 @@ namespace MatchUploader
 				{
 					Interlocked.Increment( ref remainingFiles );
 				}
+				await Task.CompletedTask;
 			} );
 
 			return remainingFiles;
