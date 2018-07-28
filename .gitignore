@@ -12,3 +12,4 @@ Settings/*.json
 *.user
 */appsettings.json
 .vs/*
+ThirdParty/ffmpeg.exe
