@@ -1,6 +1,9 @@
 ﻿using DSharpPlus;
+using DSharpPlus.Entities;
+using DSharpPlus.VoiceNext;
+using DSharpPlus.VoiceNext.Codec;
 using System;
-
+using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
@@ -14,6 +17,11 @@ namespace MatchRecorder
 		private readonly MatchRecorderHandler mainHandler;
 
 		private readonly DiscordClient discordClient;
+		private readonly VoiceNextClient voiceClient;
+
+		private VoiceNextConnection voiceConnection;
+
+		private Task connectToVoiceChannelTask;
 
 		public ReplayRecorder( MatchRecorderHandler parent )
 		{
@@ -32,12 +40,33 @@ namespace MatchRecorder
 				Token = mainHandler.BotSettings.discordToken ,
 			} );
 
-			discordClient.Ready += async (eventArgs) =>
+			discordClient.Ready += async ( eventArgs ) =>
 			{
+				await discordClient.InitializeAsync();
 				DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Connected to discord!!!" );
 			};
 
+			voiceClient = discordClient.UseVoiceNext( new VoiceNextConfiguration()
+			{
+				EnableIncoming = false ,
+				VoiceApplication = VoiceApplication.Voice ,
+			} );
+
 			discordClient.ConnectAsync();
+		}
+
+		private async Task ConnectToVoiceChat()
+		{
+			var discordUserIDToStalk = mainHandler.BotSettings.discordUserToStalk;
+
+			foreach( var guildKV in discordClient.Guilds )
+			{
+				var stalked = await guildKV.Value.GetMemberAsync( discordUserIDToStalk );
+				if( stalked != null && stalked.VoiceState != null )
+				{
+					voiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
+				}
+			}
 		}
 
 		public void StartRecording()
@@ -50,6 +79,13 @@ namespace MatchRecorder
 
 		public void Update()
 		{
+			if( connectToVoiceChannelTask == null || connectToVoiceChannelTask.IsCompleted )
+			{
+				if( voiceConnection == null )
+				{
+					connectToVoiceChannelTask = ConnectToVoiceChat();
+				}
+			}
 		}
 	}
 }

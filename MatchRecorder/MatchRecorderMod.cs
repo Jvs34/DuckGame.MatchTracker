@@ -21,7 +21,7 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
-#if DEBUG
+#if RELEASE
 			System.Diagnostics.Debugger.Launch();
 #endif
 

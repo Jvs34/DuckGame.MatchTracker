@@ -11,6 +11,7 @@ using Microsoft.Bot.Builder.TraceExtensions;
 using Microsoft.Bot.Builder.Ai.LUIS;
 using System.Linq;
 using System.Collections.Generic;
+using MatchTracker;
 
 namespace MatchBot
 {
