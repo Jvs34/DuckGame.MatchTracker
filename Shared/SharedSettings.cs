@@ -20,6 +20,7 @@ namespace MatchTracker
 
 		public String roundDataFile = "rounddata.json";
 		public String roundVideoFile = "video.mp4";
+		public String roundVoiceFile = "voice.ogg";
 		public String globalDataFile = "data.json";
 
 		public String DateTimeToString( DateTime time )

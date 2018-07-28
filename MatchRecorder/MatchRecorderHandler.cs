@@ -56,37 +56,37 @@ namespace MatchRecorder
 
 		}
 
-		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
+		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
 			return sharedSettings.DeserializeGlobalData( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataFile( SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			await Task.CompletedTask;
 			return sharedSettings.DeserializeMatchData( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataFile( SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			await Task.CompletedTask;
 			return sharedSettings.DeserializeRoundData( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
 		}
 
-		private async Task SaveDatabaseGlobalDataFile( SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
+		private async Task SaveDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
 		}
 
-		private async Task SaveDatabaseMatchDataFile( SharedSettings sharedSettings , String matchName , MatchData matchData )
+		private async Task SaveDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , sharedSettings.SerializeMatchData( matchData ) );
 		}
 
-		private async Task SaveDatabaseRoundataFile( SharedSettings sharedSettings , String roundName , RoundData roundData )
+		private async Task SaveDatabaseRoundataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );

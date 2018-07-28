@@ -11,13 +11,13 @@ namespace MatchTracker
 		private readonly Object globalDataLock;
 		public Dictionary<string , MatchData> matchesData;
 		public Dictionary<string , RoundData> roundsData;
-		public event Func<SharedSettings , Task<GlobalData>> LoadGlobalDataDelegate;
-		public event Func<SharedSettings , String , Task<MatchData>> LoadMatchDataDelegate;
-		public event Func<SharedSettings , String , Task<RoundData>> LoadRoundDataDelegate;
+		public event Func<GameDatabase , SharedSettings , Task<GlobalData>> LoadGlobalDataDelegate;
+		public event Func<GameDatabase , SharedSettings , String , Task<MatchData>> LoadMatchDataDelegate;
+		public event Func<GameDatabase , SharedSettings , String , Task<RoundData>> LoadRoundDataDelegate;
 
-		public event Func<SharedSettings , GlobalData , Task> SaveGlobalDataDelegate;
-		public event Func<SharedSettings , String , MatchData , Task> SaveMatchDataDelegate;
-		public event Func<SharedSettings , String , RoundData , Task> SaveRoundDataDelegate;
+		public event Func<GameDatabase , SharedSettings , GlobalData , Task> SaveGlobalDataDelegate;
+		public event Func<GameDatabase , SharedSettings , String , MatchData , Task> SaveMatchDataDelegate;
+		public event Func<GameDatabase , SharedSettings , String , RoundData , Task> SaveRoundDataDelegate;
 
 		public GameDatabase()
 		{
@@ -62,7 +62,7 @@ namespace MatchTracker
 			{
 				try
 				{
-					GlobalData globalDataResult = await LoadGlobalDataDelegate( sharedSettings );
+					GlobalData globalDataResult = await LoadGlobalDataDelegate( this , sharedSettings );
 					if( globalDataResult != null )
 					{
 						lock( globalDataLock )
@@ -97,7 +97,7 @@ namespace MatchTracker
 			{
 				try
 				{
-					matchData = await LoadMatchDataDelegate( sharedSettings , matchName );
+					matchData = await LoadMatchDataDelegate( this , sharedSettings , matchName );
 					if( matchData != null )
 					{
 						lock( matchesData )
@@ -132,7 +132,7 @@ namespace MatchTracker
 			{
 				try
 				{
-					roundData = await LoadRoundDataDelegate( sharedSettings , roundName );
+					roundData = await LoadRoundDataDelegate( this , sharedSettings , roundName );
 					if( roundData != null )
 					{
 						lock( roundsData )
@@ -158,7 +158,7 @@ namespace MatchTracker
 
 			if( SaveGlobalDataDelegate != null )
 			{
-				await SaveGlobalDataDelegate( sharedSettings , globalData );
+				await SaveGlobalDataDelegate( this , sharedSettings , globalData );
 			}
 		}
 
@@ -168,7 +168,7 @@ namespace MatchTracker
 
 			if( SaveMatchDataDelegate != null )
 			{
-				await SaveMatchDataDelegate( sharedSettings , matchName , matchData );
+				await SaveMatchDataDelegate( this , sharedSettings , matchName , matchData );
 			}
 		}
 
@@ -178,7 +178,7 @@ namespace MatchTracker
 
 			if( SaveRoundDataDelegate != null )
 			{
-				await SaveRoundDataDelegate( sharedSettings , roundName , roundData );
+				await SaveRoundDataDelegate( this , sharedSettings , roundName , roundData );
 			}
 		}
 
