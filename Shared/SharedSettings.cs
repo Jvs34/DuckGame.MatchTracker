@@ -62,25 +62,6 @@ namespace MatchTracker
 			return JsonConvert.SerializeObject( roundData , Formatting.Indented );
 		}
 
-		//utility functions for saving, these will obviously not work on the blazor website so we're not going to include them
-		public GlobalData GetGlobalData()
-		{
-			String globalDataPath = GetGlobalPath();
-			return DeserializeGlobalData( File.ReadAllText( globalDataPath ) );
-		}
-
-		public MatchData GetMatchData( String matchName )
-		{
-			String matchPath = GetMatchPath( matchName );
-			return DeserializeMatchData( File.ReadAllText( matchPath ) );
-		}
-
-		public RoundData GetRoundData( String roundName )
-		{
-			String roundPath = GetRoundPath( roundName );
-			return DeserializeRoundData( File.ReadAllText( roundPath ) );
-		}
-
 		public String GetGlobalPath()
 		{
 			return Path.Combine( GetRecordingFolder() , globalDataFile );
@@ -107,7 +88,7 @@ namespace MatchTracker
 
 		public String GetGlobalUrl()
 		{
-			return Flurl.Url.Combine( GetRepositoryUrl() , globalDataFile );
+			return Url.Combine( GetRepositoryUrl() , globalDataFile );
 		}
 
 		public String GetMatchUrl( String matchName )

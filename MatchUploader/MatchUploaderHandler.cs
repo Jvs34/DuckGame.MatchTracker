@@ -168,7 +168,7 @@ namespace MatchUploader
 
 			if( File.Exists( globalDataPath ) )
 			{
-				globalData = gameDatabase.sharedSettings.GetGlobalData();
+				globalData = await gameDatabase.GetGlobalData();
 			}
 
 			var roundFolders = Directory.EnumerateDirectories( roundsPath );
@@ -571,9 +571,35 @@ namespace MatchUploader
 				return;
 
 			Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , uploaderSettings.gitEmail , DateTime.Now );
+			var credentialsHandler = new CredentialsHandler(
+				( url , usernameFromUrl , supportedCredentialTypes ) =>
+					new UsernamePasswordCredentials()
+					{
+						Username = uploaderSettings.gitUsername ,
+						Password = uploaderSettings.gitPassword ,
+					}
+			);
+
 			bool hasChanges = false;
 
 			Console.WriteLine( "Fetching repository status" );
+
+			var mergeResult = Commands.Pull( databaseRepository , us , new PullOptions()
+			{
+				FetchOptions = new FetchOptions()
+				{
+					CredentialsProvider = credentialsHandler ,
+				} ,
+				MergeOptions = new MergeOptions()
+				{
+					CommitOnSuccess = true ,
+				}
+			} );
+
+			if( mergeResult.Status == MergeStatus.Conflicts )
+			{
+				throw new Exception( "Could not complete a successful merge. " );
+			}
 
 			foreach( var item in databaseRepository.RetrieveStatus() )
 			{
@@ -597,12 +623,7 @@ namespace MatchUploader
 				//I guess you should always try to push regardless if there has been any changes
 				PushOptions pushOptions = new PushOptions
 				{
-					CredentialsProvider = new CredentialsHandler( ( url , usernameFromUrl , supportedCredentialTypes ) =>
-					new UsernamePasswordCredentials()
-					{
-						Username = uploaderSettings.gitUsername ,
-						Password = uploaderSettings.gitPassword ,
-					} )
+					CredentialsProvider = credentialsHandler ,
 				};
 				databaseRepository.Network.Push( currentBranch , pushOptions );
 				Console.WriteLine( "Commit pushed" );
@@ -810,8 +831,8 @@ namespace MatchUploader
 		{
 			await DoLogin();
 			SaveSettings();
-			await LoadDatabase();
 			CommitGitChanges();
+			await LoadDatabase();
 			await UpdatePlaylists();
 			await UploadAllRounds();
 		}

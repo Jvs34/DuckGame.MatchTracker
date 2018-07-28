@@ -5,10 +5,12 @@
     <Platforms>x86</Platforms>
     <DebugType>full</DebugType>
     <Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them to your desired repo</Description>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="ILRepack" Version="2.0.15" />
+    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,10 +27,6 @@
     <Reference Include="DuckGame">
       <HintPath>..\ThirdParty\DuckGame.exe</HintPath>
       <Private>false</Private>
-    </Reference>
-    <Reference Include="Newtonsoft.Json">
-      <HintPath>..\ThirdParty\Newtonsoft.Json.dll</HintPath>
-      <Private>true</Private>
     </Reference>
     <Reference Include="obs-websocket-dotnet">
       <HintPath>..\ThirdParty\obs-websocket-dotnet.dll</HintPath>
