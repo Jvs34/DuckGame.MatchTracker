@@ -1,8 +1,10 @@
 ﻿using DSharpPlus;
 using DSharpPlus.Entities;
+using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
 using DSharpPlus.VoiceNext.Codec;
 using System;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace MatchRecorder
@@ -65,16 +67,34 @@ namespace MatchRecorder
 				if( stalked != null && stalked.VoiceState != null )
 				{
 					voiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
+					
 				}
 			}
 		}
 
 		public void StartRecording()
 		{
+			IsRecording = true;
+			DateTime recordingTime = DateTime.Now;
+			String roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.sharedSettings.DateTimeToString( recordingTime ) );
+			Directory.CreateDirectory( roundPath );
+			mainHandler.StartCollectingRoundData( recordingTime );
+
+			if( voiceConnection != null )
+			{
+				voiceConnection.VoiceReceived += OnVoiceReceived;
+			}
 		}
 
 		public void StopRecording()
 		{
+			IsRecording = false;
+			mainHandler.StopCollectingRoundData( DateTime.Now );
+
+			if( voiceConnection != null )
+			{
+				voiceConnection.VoiceReceived -= OnVoiceReceived;
+			}
 		}
 
 		public void Update()
@@ -86,6 +106,11 @@ namespace MatchRecorder
 					connectToVoiceChannelTask = ConnectToVoiceChat();
 				}
 			}
+		}
+
+		private async Task OnVoiceReceived( VoiceReceiveEventArgs args )
+		{
+			
 		}
 	}
 }

@@ -79,32 +79,32 @@ namespace MatchUploader
 			}
 		}
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
+		private async Task<GlobalData> LoadDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			return sharedSettings.DeserializeGlobalData( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) );
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataFile( SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			return sharedSettings.DeserializeMatchData( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataFile( SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			return sharedSettings.DeserializeRoundData( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) );
 		}
 
-		private async Task SaveDatabaseGlobalDataFile( SharedSettings sharedSettings , GlobalData globalData )
+		private async Task SaveDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
 		}
 
-		private async Task SaveDatabaseMatchDataFile( SharedSettings sharedSettings , String matchName , MatchData matchData )
+		private async Task SaveDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetMatchPath( matchName ) , sharedSettings.SerializeMatchData( matchData ) );
 		}
 
-		private async Task SaveDatabaseRoundataFile( SharedSettings sharedSettings , String roundName , RoundData roundData )
+		private async Task SaveDatabaseRoundataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );
 		}
@@ -648,6 +648,11 @@ namespace MatchUploader
 
 			String roundsFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
 			String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.sharedSettings.roundVideoFile );
+
+			if( !File.Exists( filePath ) )
+			{
+				throw new ArgumentNullException( $"{roundName} does not contain a video!" );
+			}
 
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
