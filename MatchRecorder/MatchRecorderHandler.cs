@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Harmony;
 using DuckGame;
 using OBSWebsocketDotNet;
@@ -14,81 +13,44 @@ namespace MatchRecorder
 {
 	public class MatchRecorderHandler
 	{
-		private GameDatabase gameDatabase;
-		private OBSWebsocket obsHandler;
-		private OutputState recordingState;
-		private bool requestedRecordingStop;
-		private bool requestedRecordingStart;
-
+		private IRecorder recorderHandler;
 		private MatchData currentMatch;
 		private RoundData currentRound;
 
-		private string roundsFolder;
-		private string matchesFolder;
-
-		private DateTime nextObsCheck;
-
-		public bool IsRecording
-		{
-			get
-			{
-				switch( recordingState )
-				{
-					case OutputState.Started:
-					case OutputState.Starting:
-						return true;
-
-					case OutputState.Stopped:
-					case OutputState.Stopping:
-						return false;
-				}
-
-				return false;
-			}
-		}
+		public bool IsRecording => recorderHandler.IsRecording;
+		public string RoundsFolder { get; }
+		public string MatchesFolder { get; }
+		public GameDatabase GameDatabase { get; private set; }
 
 		public MatchRecorderHandler( String modPath )
 		{
-			gameDatabase = new GameDatabase();
-			gameDatabase.sharedSettings = new SharedSettings();
-			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
-			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
-			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
-			gameDatabase.SaveGlobalDataDelegate += SaveDatabaseGlobalDataFile;
-			gameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
-			gameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
+			GameDatabase = new GameDatabase();
+			GameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
+			GameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
+			GameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
+			GameDatabase.SaveGlobalDataDelegate += SaveDatabaseGlobalDataFile;
+			GameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
+			GameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
 
 			String sharedSettingsPath = Path.Combine( Path.Combine( modPath , "Settings" ) , "shared.json" );
 
-			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
-			recordingState = OutputState.Stopped;
-			obsHandler = new OBSWebsocket()
+			GameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+			RoundsFolder = Path.Combine( GameDatabase.sharedSettings.GetRecordingFolder() , GameDatabase.sharedSettings.roundsFolder );
+			MatchesFolder = Path.Combine( GameDatabase.sharedSettings.GetRecordingFolder() , GameDatabase.sharedSettings.matchesFolder );
+
+			if( !Directory.Exists( RoundsFolder ) )
+				Directory.CreateDirectory( RoundsFolder );
+
+			if( !Directory.Exists( MatchesFolder ) )
+				Directory.CreateDirectory( MatchesFolder );
+
+			if( !File.Exists( GameDatabase.sharedSettings.GetGlobalPath() ) )
 			{
-				WSTimeout = new TimeSpan( 0 , 0 , 1 , 0 , 0 ) ,
-			};
-
-			obsHandler.Connected += OnConnected;
-			obsHandler.Disconnected += OnDisconnected;
-			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
-
-			roundsFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
-			matchesFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.matchesFolder );
-
-			if( !Directory.Exists( roundsFolder ) )
-				Directory.CreateDirectory( roundsFolder );
-
-			if( !Directory.Exists( matchesFolder ) )
-				Directory.CreateDirectory( matchesFolder );
-
-			if( !File.Exists( gameDatabase.sharedSettings.GetGlobalPath() ) )
-			{
-				gameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
+				GameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
 			}
 
-			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
-			TryConnect();
+			recorderHandler = new ObsRecorder( this );
 
-			nextObsCheck = DateTime.MinValue;
 		}
 
 		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( SharedSettings sharedSettings )
@@ -132,18 +94,6 @@ namespace MatchRecorder
 
 		}
 
-		public void TryConnect()
-		{
-			try
-			{
-				obsHandler.Connect( "ws://127.0.0.1:4444" , "imgay" );
-			}
-			catch( Exception )
-			{
-				HUD.AddCornerMessage( HUDCorner.TopRight , "Could not connect to OBS!!!" );
-			}
-		}
-
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
 		public bool IsLevelRecordable( Level level )
 		{
@@ -160,88 +110,22 @@ namespace MatchRecorder
 			HUD.AddCornerMessage( HUDCorner.TopRight , "Disconnected from OBS!!!" );
 		}
 
-		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type )
-		{
-			recordingState = type;
-		}
-
 		public void Update()
 		{
-			if( !obsHandler.IsConnected )
-			{
-				//try reconnecting
-
-				if( nextObsCheck < DateTime.Now )
-				{
-					TryConnect();
-
-					nextObsCheck = DateTime.Now.AddSeconds( 3 );
-				}
-
-				return;
-			}
-
-			//localized the try catches so that the variables wouldn't be set if an exception occurs, so it may try again on the next call
-			switch( recordingState )
-			{
-				case OutputState.Started:
-					{
-						if( requestedRecordingStop )
-						{
-							try
-							{
-								DateTime endTime = DateTime.Now;
-								obsHandler.StopRecording();
-								requestedRecordingStop = false;
-								StopCollectingRoundData( endTime );
-							}
-							catch( Exception )
-							{
-
-							}
-						}
-
-						break;
-					}
-				case OutputState.Stopped:
-					{
-						if( requestedRecordingStart )
-						{
-							try
-							{
-								DateTime recordingTime = DateTime.Now;
-								String roundPath = Path.Combine( roundsFolder , gameDatabase.sharedSettings.DateTimeToString( recordingTime ) );
-								//try setting the recording folder first, then create it before we start recording
-
-								Directory.CreateDirectory( roundPath );
-
-								obsHandler.SetRecordingFolder( roundPath );
-
-								obsHandler.StartRecording();
-								requestedRecordingStart = false;
-								StartCollectingRoundData( recordingTime );
-							}
-							catch( Exception )
-							{
-
-							}
-						}
-						break;
-					}
-			}
-		}
-
-		public void StopRecording()
-		{
-			requestedRecordingStop = true;
+			recorderHandler?.Update();
 		}
 
 		public void StartRecording()
 		{
-			requestedRecordingStart = true;
+			recorderHandler?.StopRecording();
 		}
 
-		private void StartCollectingRoundData( DateTime startTime )
+		public void StopRecording()
+		{
+			recorderHandler?.StartRecording();
+		}
+
+		public void StartCollectingRoundData( DateTime startTime )
 		{
 			Level lvl = Level.current;
 
@@ -253,7 +137,7 @@ namespace MatchRecorder
 				isCustomLevel = false ,
 			};
 
-			currentRound.name = gameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted );
+			currentRound.name = GameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted );
 
 			foreach( Profile pro in Profiles.active )
 			{
@@ -267,11 +151,11 @@ namespace MatchRecorder
 
 			if( currentMatch != null )
 			{
-				currentMatch.rounds.Add( gameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) );
+				currentMatch.rounds.Add( GameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) );
 			}
 		}
 
-		private void StopCollectingRoundData( DateTime endTime )
+		public void StopCollectingRoundData( DateTime endTime )
 		{
 			if( currentRound == null )
 			{
@@ -292,11 +176,11 @@ namespace MatchRecorder
 
 			currentRound.timeEnded = endTime;
 
-			gameDatabase.SaveRoundData( gameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) , currentRound ).Wait();
+			GameDatabase.SaveRoundData( GameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) , currentRound ).Wait();
 
-			MatchTracker.GlobalData globalData = gameDatabase.GetGlobalData().Result;
+			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
 			globalData.rounds.Add( currentRound.name );
-			gameDatabase.SaveGlobalData( globalData ).Wait();
+			GameDatabase.SaveGlobalData( globalData ).Wait();
 
 			currentRound = null;
 		}
@@ -322,7 +206,7 @@ namespace MatchRecorder
 				players = new List<PlayerData>() ,
 			};
 
-			currentMatch.name = gameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted );
+			currentMatch.name = GameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted );
 		}
 
 		private void StopCollectingMatchData()
@@ -350,10 +234,10 @@ namespace MatchRecorder
 				currentMatch.players.Add( CreatePlayerDataFromProfile( pro ) );
 			}
 
-			gameDatabase.SaveMatchData( gameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted ) , currentMatch ).Wait();
+			GameDatabase.SaveMatchData( GameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted ) , currentMatch ).Wait();
 
 			//also add this match to the globaldata as well
-			MatchTracker.GlobalData globalData = gameDatabase.GetGlobalData().Result;
+			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
 			globalData.matches.Add( currentMatch.name );
 
 			//try adding the players from the matchdata into the globaldata
@@ -368,7 +252,7 @@ namespace MatchRecorder
 				}
 			}
 
-			gameDatabase.SaveGlobalData( globalData ).Wait();
+			GameDatabase.SaveGlobalData( globalData ).Wait();
 
 			currentMatch = null;
 		}
@@ -400,31 +284,18 @@ namespace MatchRecorder
 			{
 				pd.userId = profile.id;
 			}
-
-			//TODO: multiple local players made by the host have the same steamid, try to use a different method for those guys
-			//this does not actually work properly
-			/*
-			if( Network.isActive && profile.linkedProfile != null )
-			{
-				//try to convert the profile name into something like like PLAYER2
-				int netIndex = profile.networkIndex + 1;
-				pd.userId = "Profile" + netIndex;
-			}
-			*/
-
 			return pd;
 		}
 	}
 
+	#region HOOKS
 	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
 	internal static class UpdateLoop
 	{
 		private static void Prefix()
 		{
-			//if( Mod.Recorder != null )
-			{
-				Mod.Recorder?.Update();
-			}
+
+			Mod.Recorder?.Update();
 		}
 	}
 
@@ -477,10 +348,8 @@ namespace MatchRecorder
 	{
 		private static void Prefix()
 		{
-			//if( Mod.Recorder != null )
-			{
-				Mod.Recorder?.TryCollectingMatchData();
-			}
+			Mod.Recorder?.TryCollectingMatchData();
 		}
 	}
+	#endregion HOOKS
 }

@@ -1,0 +1,168 @@
+﻿using OBSWebsocketDotNet;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using MatchTracker;
+using System.IO;
+
+namespace MatchRecorder
+{
+	class ObsRecorder : IRecorder
+	{
+		private readonly MatchRecorderHandler mainHandler;
+		private OBSWebsocket obsHandler;
+		private OutputState recordingState;
+		private DateTime nextObsCheck;
+		private bool requestedRecordingStop;
+		private bool requestedRecordingStart;
+		public bool IsRecording
+		{
+			get
+			{
+				switch( recordingState )
+				{
+					case OutputState.Started:
+					case OutputState.Starting:
+						return true;
+
+					case OutputState.Stopped:
+					case OutputState.Stopping:
+						return false;
+				}
+
+				return false;
+			}
+			set
+			{
+
+			}
+		}
+
+
+		public ObsRecorder( MatchRecorderHandler parent )
+		{
+			mainHandler = parent;
+			recordingState = OutputState.Stopped;
+			obsHandler = new OBSWebsocket()
+			{
+				WSTimeout = TimeSpan.FromSeconds( 30 ) ,
+			};
+
+			obsHandler.Connected += OnConnected;
+			obsHandler.Disconnected += OnDisconnected;
+			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
+			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
+			TryConnect();
+			nextObsCheck = DateTime.MinValue;
+		}
+
+		public void Initialize()
+		{
+		}
+
+		public void StartRecording()
+		{
+			requestedRecordingStart = true;
+		}
+
+		public void StopRecording()
+		{
+			requestedRecordingStop = true;
+		}
+
+		public void TryConnect()
+		{
+			try
+			{
+				obsHandler.Connect( "ws://127.0.0.1:4444" , "imgay" );
+			}
+			catch( Exception )
+			{
+				DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Could not connect to OBS!!!" );
+			}
+		}
+
+		public void Update()
+		{
+			if( !obsHandler.IsConnected )
+			{
+				//try reconnecting
+
+				if( nextObsCheck < DateTime.Now )
+				{
+					TryConnect();
+
+					nextObsCheck = DateTime.Now.AddSeconds( 3 );
+				}
+
+				return;
+			}
+
+			switch( recordingState )
+			{
+				case OutputState.Started:
+					{
+						if( requestedRecordingStop )
+						{
+							try
+							{
+								DateTime endTime = DateTime.Now;
+								obsHandler.StopRecording();
+								requestedRecordingStop = false;
+								mainHandler.StopCollectingRoundData( endTime );
+							}
+							catch( Exception )
+							{
+
+							}
+						}
+
+						break;
+					}
+				case OutputState.Stopped:
+					{
+						if( requestedRecordingStart )
+						{
+							try
+							{
+								DateTime recordingTime = DateTime.Now;
+								String roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.sharedSettings.DateTimeToString( recordingTime ) );
+								//try setting the recording folder first, then create it before we start recording
+
+								Directory.CreateDirectory( roundPath );
+
+								obsHandler.SetRecordingFolder( roundPath );
+
+
+								obsHandler.StartRecording();
+								requestedRecordingStart = false;
+								mainHandler.StartCollectingRoundData( recordingTime );
+							}
+							catch( Exception )
+							{
+
+							}
+						}
+						break;
+					}
+			}
+		}
+
+		private void OnConnected( object sender , EventArgs e )
+		{
+			DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Connected to OBS!!!" );
+		}
+
+		private void OnDisconnected( object sender , EventArgs e )
+		{
+			DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Disconnected from OBS!!!" );
+		}
+
+		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type )
+		{
+			recordingState = type;
+		}
+	}
+}

@@ -18,10 +18,8 @@ namespace MatchRecorder
 			HarmonyInstance.Create( "MatchRecorder" ).PatchAll( Assembly.GetExecutingAssembly() );
 		}
 
-		//TODO:uhhhhh find a better place to start this, there has to be hook for when the game is fully initialized
 		protected override void OnPostInitialize()
 		{
-			Recorder?.Init();
 		}
 	}
 }
