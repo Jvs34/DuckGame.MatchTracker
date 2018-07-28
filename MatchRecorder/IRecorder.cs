@@ -2,9 +2,8 @@
 {
 	interface IRecorder
 	{
-		bool IsRecording { get; set; }
+		bool IsRecording { get; }
 
-		void Initialize();
 		void Update();
 		void StartRecording();
 		void StopRecording();

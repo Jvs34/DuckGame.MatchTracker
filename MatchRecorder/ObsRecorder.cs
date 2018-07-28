@@ -1,10 +1,5 @@
 ﻿using OBSWebsocketDotNet;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using MatchTracker;
 using System.IO;
 
 namespace MatchRecorder
@@ -34,7 +29,8 @@ namespace MatchRecorder
 
 				return false;
 			}
-			set
+			//do nothing
+			private set
 			{
 
 			}
@@ -56,10 +52,6 @@ namespace MatchRecorder
 			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
 			TryConnect();
 			nextObsCheck = DateTime.MinValue;
-		}
-
-		public void Initialize()
-		{
 		}
 
 		public void StartRecording()

@@ -9,17 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="DSharpPlus" Version="3.2.3" />
+    <PackageReference Include="DSharpPlus.VoiceNext" Version="3.2.3" />
     <PackageReference Include="ILRepack" Version="2.0.15" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-  </ItemGroup>
-
-  <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj">
       <Private>true</Private>
     </ProjectReference>
-  </ItemGroup>
-
-  <ItemGroup>
     <Reference Include="0Harmony">
       <HintPath>..\ThirdParty\0Harmony.dll</HintPath>
       <Private>true</Private>
@@ -37,9 +33,9 @@
       <Private>true</Private>
     </Reference>
   </ItemGroup>
-  
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="$(ILRepack) /out:$(ProjectDir)\..\$(SolutionName).dll $(OutDir)\MatchRecorder.dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\obs-websocket-dotnet.dll $(OutDir)\websocket-sharp.dll $(OutDir)\Shared.dll $(OutDir)\Flurl.dll" />
+    <Exec Command="copy /Y &quot;$(OutDir)\$(TargetName).dll&quot; &quot;$(SolutionDir)\$(SolutionName).dll&quot;&#xD;&#xA;copy /Y &quot;$(OutDir)\$(TargetName).pdb&quot; &quot;$(SolutionDir)\$(SolutionName).pdb&quot;" />
   </Target>
 
 

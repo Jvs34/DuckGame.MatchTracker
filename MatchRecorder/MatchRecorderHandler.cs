@@ -21,10 +21,11 @@ namespace MatchRecorder
 		public string RoundsFolder { get; }
 		public string MatchesFolder { get; }
 		public GameDatabase GameDatabase { get; private set; }
-
+		public BotSettings BotSettings { get; private set; }
 		public MatchRecorderHandler( String modPath )
 		{
 			GameDatabase = new GameDatabase();
+			BotSettings = new BotSettings();
 			GameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
 			GameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
 			GameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
@@ -33,8 +34,9 @@ namespace MatchRecorder
 			GameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
 
 			String sharedSettingsPath = Path.Combine( Path.Combine( modPath , "Settings" ) , "shared.json" );
-
+			String botSettingsPath = Path.Combine( Path.Combine( modPath , "Settings" ) , "bot.json" );
 			GameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
+			BotSettings = JsonConvert.DeserializeObject<BotSettings>( File.ReadAllText( botSettingsPath ) );
 			RoundsFolder = Path.Combine( GameDatabase.sharedSettings.GetRecordingFolder() , GameDatabase.sharedSettings.roundsFolder );
 			MatchesFolder = Path.Combine( GameDatabase.sharedSettings.GetRecordingFolder() , GameDatabase.sharedSettings.matchesFolder );
 
@@ -49,7 +51,8 @@ namespace MatchRecorder
 				GameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
 			}
 
-			recorderHandler = new ObsRecorder( this );
+			//recorderHandler = new ObsRecorder( this );
+			recorderHandler = new ReplayRecorder( this );
 
 		}
 
@@ -87,11 +90,6 @@ namespace MatchRecorder
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );
-		}
-
-		public void Init()
-		{
-
 		}
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
@@ -295,7 +293,7 @@ namespace MatchRecorder
 		private static void Prefix()
 		{
 
-			Mod.Recorder?.Update();
+			MatchRecorderMod.Recorder?.Update();
 		}
 	}
 
@@ -306,9 +304,9 @@ namespace MatchRecorder
 		private static void Postfix()
 		{
 			//only bother if the current level is something we care about
-			if( Mod.Recorder.IsLevelRecordable( Level.current ) )
+			if( MatchRecorderMod.Recorder.IsLevelRecordable( Level.current ) )
 			{
-				Mod.Recorder.StartRecording();
+				MatchRecorderMod.Recorder.StartRecording();
 			}
 		}
 	}
@@ -322,9 +320,9 @@ namespace MatchRecorder
 		private static void Prefix( Level value )
 		{
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
-			if( Mod.Recorder.IsRecording )
+			if( MatchRecorderMod.Recorder.IsRecording )
 			{
-				Mod.Recorder.StopRecording();
+				MatchRecorderMod.Recorder.StopRecording();
 			}
 
 			//only really useful in multiplayer, since continuing a match from the endgame screen doesn't trigger ResetMatchStuff on other clients
@@ -333,9 +331,9 @@ namespace MatchRecorder
 			{
 				Level oldValue = Level.current;
 				Level newValue = value;
-				if( oldValue is RockScoreboard && Mod.Recorder.IsLevelRecordable( newValue ) )
+				if( oldValue is RockScoreboard && MatchRecorderMod.Recorder.IsLevelRecordable( newValue ) )
 				{
-					Mod.Recorder?.TryCollectingMatchData();
+					MatchRecorderMod.Recorder?.TryCollectingMatchData();
 				}
 			}
 		}
@@ -348,7 +346,7 @@ namespace MatchRecorder
 	{
 		private static void Prefix()
 		{
-			Mod.Recorder?.TryCollectingMatchData();
+			MatchRecorderMod.Recorder?.TryCollectingMatchData();
 		}
 	}
 	#endregion HOOKS
