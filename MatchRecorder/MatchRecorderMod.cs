@@ -11,6 +11,7 @@ namespace MatchRecorder
 
 		public MatchRecorderMod()
 		{
+			System.Diagnostics.Debugger.Launch();
 			AppDomain.CurrentDomain.AssemblyResolve += ModResolve;
 		}
 
@@ -41,7 +42,10 @@ namespace MatchRecorder
 
 			String assemblyFolder = Path.Combine( configuration.directory , "MatchRecorder" , "bin" , "x86" , folder , "net471" );
 			String assemblyPath = Path.GetFullPath( Path.Combine( assemblyFolder , cleanName + ".dll" ) );
-			return Assembly.LoadFile( assemblyPath );
+
+			byte[] assemblyBytes = File.ReadAllBytes( assemblyPath );
+
+			return Assembly.Load( assemblyBytes );
 		}
 	}
 }

@@ -33,10 +33,14 @@ namespace MatchRecorder
 
 		private Task connectToVoiceChannelTask;
 
+		private readonly DuckRecordingListener eventListener;
+
 		public ReplayRecorder( MatchRecorderHandler parent )
 		{
 			mainHandler = parent;
 			//initialize the discord bot
+
+			eventListener = new DuckRecordingListener();
 
 			if( String.IsNullOrEmpty( mainHandler.BotSettings.discordToken ) )
 			{
@@ -74,7 +78,7 @@ namespace MatchRecorder
 				var stalked = await guildKV.Value.GetMemberAsync( discordUserIDToStalk );
 				if( stalked != null && stalked.VoiceState != null )
 				{
-					voiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
+					//voiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
 				}
 			}
 		}
@@ -113,6 +117,13 @@ namespace MatchRecorder
 					connectToVoiceChannelTask = ConnectToVoiceChat();
 				}
 			}
+
+			if( DuckGame.Recorder.currentRecording != eventListener )
+			{
+				DuckGame.Recorder.currentRecording = eventListener;
+			}
+
+			eventListener.UpdateEvents();
 		}
 
 		private async Task OnVoiceReceived( VoiceReceiveEventArgs args )

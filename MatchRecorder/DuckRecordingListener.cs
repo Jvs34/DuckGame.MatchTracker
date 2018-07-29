@@ -12,7 +12,13 @@ namespace MatchRecorder
 	/// </summary>
 	public class DuckRecordingListener : DuckGame.Recording
 	{
-		public DuckRecordingListener(): base()
+		public DuckRecordingListener()
+		{
+			
+		}
+
+		//this is called from Prefix-Level.UpdateCurrentLevel() so it will have a blank frame here I think 
+		public void UpdateEvents()
 		{
 
 		}
