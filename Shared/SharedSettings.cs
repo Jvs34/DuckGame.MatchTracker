@@ -51,6 +51,20 @@ namespace MatchTracker
 			return Path.Combine( roundFile , roundDataFile );
 		}
 
+		public String GetRoundVideoPath( String roundName )
+		{
+			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
+			String roundFile = Path.Combine( roundFolder , roundName );
+			return Path.Combine( roundFile , roundVideoFile );
+		}
+
+		public String GetRoundVoicePath( String roundName )
+		{
+			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
+			String roundFile = Path.Combine( roundFolder , roundName );
+			return Path.Combine( roundFile , roundVoiceFile );
+		}
+
 		public String GetRepositoryUrl()
 		{
 			return baseRepositoryUrl;
@@ -73,6 +87,20 @@ namespace MatchTracker
 			String roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
 			String roundFile = Url.Combine( roundFolder , roundName );
 			return Url.Combine( roundFile , roundDataFile );
+		}
+
+		public String GetRoundVideoUrl( String roundName )
+		{
+			String roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
+			String roundFile = Url.Combine( roundFolder , roundName );
+			return Url.Combine( roundFile , roundVideoFile );
+		}
+
+		public String GetRoundVoiceUrl( String roundName )
+		{
+			String roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
+			String roundFile = Url.Combine( roundFolder , roundName );
+			return Url.Combine( roundFile , roundVoiceFile );
 		}
 	}
 }

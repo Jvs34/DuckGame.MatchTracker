@@ -60,10 +60,9 @@ namespace MatchBot
 
 		public async Task Initialize()
 		{
-
 			await discordClient.ConnectAsync();
 			await discordClient.InitializeAsync();
-			await discordClient.UpdateStatusAsync( null , DSharpPlus.Entities.UserStatus.Online );
+			await discordClient.UpdateStatusAsync( null , UserStatus.Online );
 		}
 
 		private async Task OnDiscordConnected()

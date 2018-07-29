@@ -17,6 +17,8 @@ namespace MatchTracker
 		//yes a hat is a team
 		public TeamData team;
 
+		public ReplayData replay;
+
 		public String GetName()
 		{
 			return nickName ?? name;

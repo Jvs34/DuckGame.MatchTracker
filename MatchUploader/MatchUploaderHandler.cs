@@ -835,10 +835,10 @@ namespace MatchUploader
 
 		public async Task Run()
 		{
+			await LoadDatabase();
 			await DoLogin();
 			SaveSettings();
 			CommitGitChanges();
-			await LoadDatabase();
 			await UpdatePlaylists();
 			await UploadAllRounds();
 		}

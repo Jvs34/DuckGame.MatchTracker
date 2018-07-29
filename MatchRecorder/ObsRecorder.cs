@@ -4,7 +4,7 @@ using System.IO;
 
 namespace MatchRecorder
 {
-	class ObsRecorder : IRecorder
+	internal class ObsRecorder : IRecorder
 	{
 		private readonly MatchRecorderHandler mainHandler;
 		private OBSWebsocket obsHandler;

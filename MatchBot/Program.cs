@@ -1,6 +1,4 @@
 ﻿using System;
-using Microsoft.Rest;
-using System.Threading;
 
 namespace MatchBot
 {

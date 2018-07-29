@@ -12,7 +12,7 @@ namespace MatchRecorder
 	/// <summary>
 	/// Records much lighter replays along with discord voice data
 	/// </summary>
-	public sealed class ReplayRecorder : IRecorder
+	internal sealed class ReplayRecorder : IRecorder
 	{
 		public bool IsRecording { get; private set; }
 

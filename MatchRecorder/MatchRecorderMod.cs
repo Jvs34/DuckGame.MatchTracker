@@ -7,7 +7,7 @@ namespace MatchRecorder
 {
 	public class MatchRecorderMod : DuckGame.DisabledMod
 	{
-		public static MatchRecorderHandler Recorder { get; private set; }
+		public static MatchRecorderHandler Recorder { get; set; }
 
 		public MatchRecorderMod()
 		{
