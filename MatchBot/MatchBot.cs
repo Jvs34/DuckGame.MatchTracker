@@ -248,35 +248,49 @@ namespace MatchBot
 			{
 				//if this recognizedplayerdata has a null playertarget and is a special target then it's probably one that targets everyone
 				DateTime lastPlayed = DateTime.MinValue;
-				bool foundLastPlayed = false;
+				object lastPlayedLock = new object();
 
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
-					var lastRound = gameDatabase.roundsData.LastOrDefault();
-					if( lastRound.Value != null )
+					await gameDatabase.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
 					{
-						lastPlayed = lastRound.Value.timeEnded;
-						foundLastPlayed = true;
-					}
+
+						IStartEnd startEnd = (IStartEnd) matchOrRound;
+						if( startEnd.timeEnded > lastPlayed )
+						{
+							lock( lastPlayedLock )
+							{
+								lastPlayed = startEnd.timeEnded;
+							}
+						}
+						await Task.CompletedTask;
+					} );
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
 				{
 					//go through the last round the player came up on the search
 
-					var kv = gameDatabase.roundsData.LastOrDefault( x => x.Value.players.Any( p => p.userId == recognizedPlayer.PlayerDataTarget.userId ) );
-
-					if( kv.Value != null )
+					await gameDatabase.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
 					{
-						lastPlayed = kv.Value.timeEnded;
-						foundLastPlayed = true;
-					}
+						if( matchOrRound.players.Any( p => p.userId == recognizedPlayer.PlayerDataTarget.userId ) )
+						{
+							IStartEnd startEnd = (IStartEnd) matchOrRound;
+							if( startEnd.timeEnded > lastPlayed )
+							{
+								lock( lastPlayedLock )
+								{
+									lastPlayed = startEnd.timeEnded;
+								}
+							}
+						}
+						await Task.CompletedTask;
+					} );
 				}
 
-				if( foundLastPlayed )
+				if( lastPlayed != DateTime.MinValue )
 				{
 					CultureInfo ci = CultureInfo.CreateSpecificCulture( "en-US" );
-
-					await turnContext.SendActivity( $"The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed.ToString( "HH:mm:ss dddd d MMMM yyyy" , ci )}" );
+					await turnContext.SendActivity( $"Gay The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed.ToString( "HH:mm:ss dddd d MMMM yyyy" , ci )}" );
 				}
 				else
 				{
@@ -428,7 +442,7 @@ namespace MatchBot
 
 				if( timesPlayed > 0 )
 				{
-					await turnContext.SendActivity( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {Math.Round(durationPlayed.TotalHours)} hours of playtime" );
+					await turnContext.SendActivity( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {Math.Round( durationPlayed.TotalHours )} hours of playtime" );
 				}
 				else
 				{
