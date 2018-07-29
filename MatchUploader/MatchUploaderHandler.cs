@@ -81,32 +81,32 @@ namespace MatchUploader
 
 		private async Task<GlobalData> LoadDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
-			return sharedSettings.DeserializeGlobalData( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) );
+			return JsonConvert.DeserializeObject<GlobalData>( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
-			return sharedSettings.DeserializeMatchData( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) );
+			return JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
-			return sharedSettings.DeserializeRoundData( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) );
+			return JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) );
 		}
 
 		private async Task SaveDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
 		{
-			await File.WriteAllTextAsync( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
+			await File.WriteAllTextAsync( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
 		}
 
 		private async Task SaveDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
-			await File.WriteAllTextAsync( sharedSettings.GetMatchPath( matchName ) , sharedSettings.SerializeMatchData( matchData ) );
+			await File.WriteAllTextAsync( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
 		}
 
 		private async Task SaveDatabaseRoundataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
-			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );
+			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
 		}
 
 		//in this context, settings are only the uploaderSettings

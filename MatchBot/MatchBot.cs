@@ -81,7 +81,7 @@ namespace MatchBot
 			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
 
 			RefreshDatabase();
-			refreshTimer = new Timer( this.RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 ) );
+			refreshTimer = new Timer( RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 ) );
 		}
 
 		public void RefreshDatabase( Object dontactuallycare = null )
@@ -99,21 +99,21 @@ namespace MatchBot
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
 			Console.WriteLine( "Loading GlobalData" );
-			return sharedSettings.DeserializeGlobalData( HttpUtility.HtmlDecode( response ) );
+			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchUrl( matchName ) );
 			Console.WriteLine( $"Loading MatchData {matchName}" );
-			return sharedSettings.DeserializeMatchData( HttpUtility.HtmlDecode( response ) );
+			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
 			Console.WriteLine( $"Loading RoundData {roundName}" );
-			return sharedSettings.DeserializeRoundData( HttpUtility.HtmlDecode( response ) );
+			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) );
 		}
 
 		public async Task OnTurn( ITurnContext turnContext )

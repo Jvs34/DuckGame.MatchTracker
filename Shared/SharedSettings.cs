@@ -1,5 +1,4 @@
 using Flurl;
-using Newtonsoft.Json;
 using System;
 using System.IO;
 
@@ -31,36 +30,6 @@ namespace MatchTracker
 		public String GetRecordingFolder()
 		{
 			return baseRecordingFolder;
-		}
-
-		public GlobalData DeserializeGlobalData( String data )
-		{
-			return JsonConvert.DeserializeObject<GlobalData>( data );
-		}
-
-		public MatchData DeserializeMatchData( String data )
-		{
-			return JsonConvert.DeserializeObject<MatchData>( data );
-		}
-
-		public RoundData DeserializeRoundData( String data )
-		{
-			return JsonConvert.DeserializeObject<RoundData>( data );
-		}
-
-		public String SerializeGlobalData( GlobalData globalData )
-		{
-			return JsonConvert.SerializeObject( globalData , Formatting.Indented );
-		}
-
-		public String SerializeMatchData( MatchData matchData )
-		{
-			return JsonConvert.SerializeObject( matchData , Formatting.Indented );
-		}
-
-		public String SerializeRoundData( RoundData roundData )
-		{
-			return JsonConvert.SerializeObject( roundData , Formatting.Indented );
 		}
 
 		public String GetGlobalPath()
@@ -96,7 +65,7 @@ namespace MatchTracker
 		{
 			String matchFolder = Url.Combine( GetRepositoryUrl() , matchesFolder );
 			String matchPath = Url.Combine( matchFolder , matchName + ".json" );
-			return matchPath;//Url.Combine( matchPath , ".json" );//this would try to add /.json so don't do it here
+			return matchPath;
 		}
 
 		public String GetRoundUrl( String roundName )

@@ -21,9 +21,12 @@ namespace MatchRecorder
 		public string RoundsFolder { get; }
 		public string MatchesFolder { get; }
 		public GameDatabase GameDatabase { get; private set; }
-		public BotSettings BotSettings { get; private set; }
+		public BotSettings BotSettings { get; }
+		public String ModPath { get; }
+
 		public MatchRecorderHandler( String modPath )
 		{
+			ModPath = modPath;
 			GameDatabase = new GameDatabase();
 			BotSettings = new BotSettings();
 			GameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
@@ -59,37 +62,37 @@ namespace MatchRecorder
 		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
-			return sharedSettings.DeserializeGlobalData( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
+			return JsonConvert.DeserializeObject<MatchTracker.GlobalData>( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			await Task.CompletedTask;
-			return sharedSettings.DeserializeMatchData( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) );
+			return JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			await Task.CompletedTask;
-			return sharedSettings.DeserializeRoundData( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
+			return JsonConvert.DeserializeObject<RoundData>( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
 		}
 
 		private async Task SaveDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
 		{
 			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetGlobalPath() , sharedSettings.SerializeGlobalData( globalData ) );
+			File.WriteAllText( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
 		}
 
 		private async Task SaveDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
 			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , sharedSettings.SerializeMatchData( matchData ) );
+			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
 		}
 
 		private async Task SaveDatabaseRoundataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
 			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , sharedSettings.SerializeRoundData( roundData ) );
+			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
 		}
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff

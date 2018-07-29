@@ -16,6 +16,14 @@ namespace MatchRecorder
 	{
 		public bool IsRecording { get; private set; }
 
+		public String FFmpegPath
+		{
+			get
+			{
+				return Path.Combine( mainHandler.ModPath , "ThirdParty" , "ffmpeg.exe" );
+			}
+		}
+
 		private readonly MatchRecorderHandler mainHandler;
 
 		private readonly DiscordClient discordClient;
@@ -67,7 +75,6 @@ namespace MatchRecorder
 				if( stalked != null && stalked.VoiceState != null )
 				{
 					voiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
-					
 				}
 			}
 		}
@@ -110,7 +117,7 @@ namespace MatchRecorder
 
 		private async Task OnVoiceReceived( VoiceReceiveEventArgs args )
 		{
-			
+
 		}
 	}
 }
