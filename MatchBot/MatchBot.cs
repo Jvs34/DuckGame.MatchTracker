@@ -290,7 +290,7 @@ namespace MatchBot
 				if( lastPlayed != DateTime.MinValue )
 				{
 					CultureInfo ci = CultureInfo.CreateSpecificCulture( "en-US" );
-					await turnContext.SendActivity( $"Gay The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed.ToString( "HH:mm:ss dddd d MMMM yyyy" , ci )}" );
+					await turnContext.SendActivity( $"The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed.ToString( "HH:mm:ss dddd d MMMM yyyy" , ci )}" );
 				}
 				else
 				{

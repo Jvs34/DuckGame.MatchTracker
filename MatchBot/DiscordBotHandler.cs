@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using Discord;
-using Discord.WebSocket;
+using DSharpPlus;
 using System.IO;
 using Newtonsoft.Json;
 using Microsoft.Bot.Schema;
@@ -12,30 +11,37 @@ using Microsoft.Bot.Builder.Ai.LUIS;
 using System.Linq;
 using System.Collections.Generic;
 using MatchTracker;
+using DSharpPlus.EventArgs;
+using DSharpPlus.Entities;
 
 namespace MatchBot
 {
 	public class DiscordBotHandler : BotAdapter
 	{
-		private DiscordSocketClient discordClient;
+		private DiscordClient discordClient;
 		private BotSettings botSettings;
 		private MatchBot bot;
 
 		public DiscordBotHandler()
 		{
-			discordClient = new DiscordSocketClient();
-
-			discordClient.Connected += OnDiscordConnected;
-			discordClient.Disconnected += OnDiscordDisconnected;
-			discordClient.MessageReceived += OnDiscordMessage;
-
-			bot = new MatchBot();
-
 			botSettings = new BotSettings();
 
 			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
 			String botSettingsPath = Path.Combine( settingsFolder , "bot.json" );
 			botSettings = JsonConvert.DeserializeObject<BotSettings>( File.ReadAllText( botSettingsPath ) );
+
+			discordClient = new DiscordClient( new DiscordConfiguration()
+			{
+				AutoReconnect = true ,
+				TokenType = TokenType.Bot ,
+				Token = botSettings.discordToken ,
+			} );
+
+			discordClient.MessageCreated += OnDiscordMessage;
+
+			bot = new MatchBot();
+
+
 
 			//add middleware to our botadapter stuff
 			//TODO: we might need a json datastore for this later? who knows, maybe make it use the botSettings shit
@@ -54,9 +60,10 @@ namespace MatchBot
 
 		public async Task Initialize()
 		{
-			await discordClient.LoginAsync( TokenType.Bot , botSettings.discordToken );
-			await discordClient.StartAsync();
-			await discordClient.SetStatusAsync( UserStatus.Online );
+
+			await discordClient.ConnectAsync();
+			await discordClient.InitializeAsync();
+			await discordClient.UpdateStatusAsync( null , DSharpPlus.Entities.UserStatus.Online );
 		}
 
 		private async Task OnDiscordConnected()
@@ -71,11 +78,13 @@ namespace MatchBot
 			Console.WriteLine( "Disconnected from Discord {0}" , arg.ToString() );
 		}
 
-		private async Task OnDiscordMessage( SocketMessage msg )
+		private async Task OnDiscordMessage( MessageCreateEventArgs msg )
 		{
 			//there's no equality check on this class unfortunately
 			if( msg.Author.Id == discordClient.CurrentUser.Id )
 				return;
+
+
 
 			if( !msg.MentionedUsers.Any( x => x.Id == discordClient.CurrentUser.Id ) )
 				return;
@@ -84,11 +93,10 @@ namespace MatchBot
 		}
 
 		//message incoming from discord, ignoring the ones from the bot
-		private async Task HandleIncomingMessage( SocketMessage msg )
+		private async Task HandleIncomingMessage( MessageCreateEventArgs msg )
 		{
 			Activity act = GetActivityFromMessage( msg );
 			using( TurnContext context = new TurnContext( this , act ) )
-			using( IDisposable disposable = msg.Channel.EnterTypingState() )
 			{
 				await RunPipeline( context , BotCallback );
 			}
@@ -101,7 +109,8 @@ namespace MatchBot
 			ulong channelId = Convert.ToUInt64( context.Activity.ChannelId );
 
 			//shouldn't this already be an ISocketMessageChannel? why do I have to cast to it? 🤔
-			if( discordClient.GetChannel( channelId ) is ISocketMessageChannel channel )
+			var channel = await discordClient.GetChannelAsync( channelId );
+			if( channel != null )
 			{
 				await channel.SendMessageAsync( act.Text );
 			}
@@ -112,9 +121,9 @@ namespace MatchBot
 			await bot.OnTurn( context );
 		}
 
-		private Activity GetActivityFromMessage( SocketMessage msg )
+		private Activity GetActivityFromMessage( MessageCreateEventArgs msg )
 		{
-			String text = msg.Content;
+			String text = msg.Message.Content;
 
 			foreach( var mentionedUser in msg.MentionedUsers )
 			{
@@ -132,13 +141,13 @@ namespace MatchBot
 				From = DiscordUserToBotFrameworkAccount( msg.Author ) ,
 				Recipient = DiscordUserToBotFrameworkAccount( discordClient.CurrentUser ) ,
 				Conversation = new ConversationAccount( true , null , msg.Channel.Id.ToString() , msg.Channel.Name ) ,
-				Timestamp = msg.Timestamp ,
-				Id = msg.Id.ToString() ,
+				Timestamp = msg.Message.Timestamp ,
+				Id = msg.Message.Id.ToString() ,
 				Type = ActivityTypes.Message ,
 			};
 		}
 
-		public ChannelAccount DiscordUserToBotFrameworkAccount( SocketUser user )
+		public ChannelAccount DiscordUserToBotFrameworkAccount( DiscordUser user )
 		{
 			return new ChannelAccount()
 			{
