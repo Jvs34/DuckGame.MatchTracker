@@ -233,6 +233,7 @@ namespace MatchUploader
 		public async Task LoadDatabase()
 		{
 			await gameDatabase.Load();
+			Console.WriteLine( "Finished loading the database" );
 		}
 
 		public async Task<Video> GetVideoDataForRound( String roundName )

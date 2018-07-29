@@ -29,12 +29,12 @@ namespace MatchTracker
 
 		public int CompareTo( PlayerData other )
 		{
-			if( this.team == null || other.team == null )
+			if( team == null || other.team == null )
 			{
 				return userId.CompareTo( other.userId );
 			}
 
-			return this.team.score.CompareTo( other.team.score );
+			return team.score.CompareTo( other.team.score );
 		}
 	}
 }

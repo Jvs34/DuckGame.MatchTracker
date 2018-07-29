@@ -13,14 +13,14 @@ namespace MatchTracker
 		public String baseRepositoryUrl; //this has to be a github url for raw access
 
 		//local paths
-		public String roundsFolder = "rounds";
-		public String matchesFolder = "matches";
-		public String timestampFormat = "yyyy-MM-dd HH-mm-ss";
+		public String roundsFolder;
+		public String matchesFolder;
+		public String timestampFormat;
 
-		public String roundDataFile = "rounddata.json";
-		public String roundVideoFile = "video.mp4";
-		public String roundVoiceFile = "voice.ogg";
-		public String globalDataFile = "data.json";
+		public String roundDataFile;
+		public String roundVideoFile;
+		public String roundVoiceFile;
+		public String globalDataFile;
 
 		public String DateTimeToString( DateTime time )
 		{
