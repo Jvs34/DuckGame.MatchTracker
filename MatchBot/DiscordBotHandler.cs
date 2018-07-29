@@ -84,9 +84,7 @@ namespace MatchBot
 			if( msg.Author.Id == discordClient.CurrentUser.Id )
 				return;
 
-
-
-			if( !msg.MentionedUsers.Any( x => x.Id == discordClient.CurrentUser.Id ) )
+			if( msg.Channel.Type != ChannelType.Private && !msg.MentionedUsers.Any( x => x.Id == discordClient.CurrentUser.Id ) )
 				return;
 
 			await HandleIncomingMessage( msg );
