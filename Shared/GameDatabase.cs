@@ -7,10 +7,11 @@ namespace MatchTracker
 	public class GameDatabase
 	{
 		public SharedSettings sharedSettings;
-		public GlobalData globalData;
+		private GlobalData globalData;
 		private readonly Object globalDataLock;
-		public Dictionary<string , MatchData> matchesData;
-		public Dictionary<string , RoundData> roundsData;
+		private Dictionary<string , MatchData> matchesData;
+		private Dictionary<string , RoundData> roundsData;
+
 		public event Func<GameDatabase , SharedSettings , Task<GlobalData>> LoadGlobalDataDelegate;
 		public event Func<GameDatabase , SharedSettings , String , Task<MatchData>> LoadMatchDataDelegate;
 		public event Func<GameDatabase , SharedSettings , String , Task<RoundData>> LoadRoundDataDelegate;
