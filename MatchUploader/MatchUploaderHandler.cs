@@ -17,6 +17,7 @@ using LibGit2Sharp;
 using LibGit2Sharp.Handlers;
 using Discord;
 using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
 /*
 Goes through all the folders, puts all rounds and matches into data.json
 Also returns match/round data from the timestamped name and whatnot
@@ -26,6 +27,7 @@ namespace MatchUploader
 {
 	public sealed class MatchUploaderHandler : IModeHandler
 	{
+		IConfigurationRoot Configuration { get; }
 		private String settingsFolder;
 		private GameDatabase gameDatabase;
 		private UploaderSettings uploaderSettings;

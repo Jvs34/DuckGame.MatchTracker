@@ -120,12 +120,12 @@ namespace MatchRecorder
 
 		public void StartRecording()
 		{
-			recorderHandler?.StopRecording();
+			recorderHandler?.StartRecording();
 		}
 
 		public void StopRecording()
 		{
-			recorderHandler?.StartRecording();
+			recorderHandler?.StopRecording();
 		}
 
 		public void StartCollectingRoundData( DateTime startTime )
