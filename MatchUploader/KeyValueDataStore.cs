@@ -11,7 +11,7 @@ namespace MatchUploader
 	//this is kind of horrible atm since it's storing json string inside of json but I am following the IDataStore implementation correctly at least, for now
 	public class KeyValueDataStore : IDataStore
 	{
-		public Dictionary<String , String> data;
+		public Dictionary<String , String> data { get; set; }
 		private static readonly Task CompletedTask = Task.FromResult( 0 ); //FileDataStore does it
 
 		public KeyValueDataStore()

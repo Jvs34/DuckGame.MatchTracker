@@ -1,23 +1,22 @@
-﻿using System;
+﻿using DSharpPlus;
+using Google.Apis.Auth.OAuth2;
+using Google.Apis.Services;
+using Google.Apis.Upload;
+using Google.Apis.YouTube.v3;
+using Google.Apis.YouTube.v3.Data;
+using LibGit2Sharp;
+using LibGit2Sharp.Handlers;
+using MatchTracker;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Newtonsoft.Json;
-using MatchTracker;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.YouTube.v3;
-using System.Threading;
-using Google.Apis.Services;
-using Google.Apis.YouTube.v3.Data;
-using Google.Apis.Upload;
-using System.Threading.Tasks;
 using System.Reflection;
-using System.Net.Http;
-using LibGit2Sharp;
-using LibGit2Sharp.Handlers;
-using Discord;
-using Discord.WebSocket;
-using Microsoft.Extensions.Configuration;
+using System.Threading;
+using System.Threading.Tasks;
+using DSharpPlus;
 /*
 Goes through all the folders, puts all rounds and matches into data.json
 Also returns match/round data from the timestamped name and whatnot
@@ -27,17 +26,17 @@ namespace MatchUploader
 {
 	public sealed class MatchUploaderHandler : IModeHandler
 	{
-		IConfigurationRoot Configuration { get; }
+		private IConfigurationRoot Configuration { get; }
 		private String settingsFolder;
 		private GameDatabase gameDatabase;
 		private UploaderSettings uploaderSettings;
+		private BotSettings botSettings;
 		private YouTubeService youtubeService;
 		private PendingUpload currentVideo;
 		private Repository databaseRepository;
 		private Branch currentBranch;
-		private DiscordSocketClient discordClient;
+		private DiscordClient discordClient;
 
-		public bool Initialized { get; }
 
 		public MatchUploaderHandler()
 		{
@@ -49,24 +48,20 @@ namespace MatchUploader
 			gameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
 			gameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
 
-			Initialized = false;
-			gameDatabase.sharedSettings = new SharedSettings();
 			uploaderSettings = new UploaderSettings();
+			botSettings = new BotSettings();
 
-			//load the settings
-			//get the working directory
 			settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
-			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
-			String uploaderSettingsPath = Path.Combine( settingsFolder , "uploader.json" );
+			Configuration = new ConfigurationBuilder()
+				.SetBasePath( settingsFolder )
+				.AddJsonFile( "shared.json" )
+				.AddJsonFile( "uploader.json" )
+				.AddJsonFile( "bot.json" )
+			.Build();
 
-			gameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
-			uploaderSettings = JsonConvert.DeserializeObject<UploaderSettings>( File.ReadAllText( uploaderSettingsPath ) );
-			Initialized = true;
-
-			if( uploaderSettings.dataStore == null )
-			{
-				uploaderSettings.dataStore = new KeyValueDataStore();
-			}
+			Configuration.Bind( gameDatabase.sharedSettings );
+			Configuration.Bind( uploaderSettings );
+			Configuration.Bind( botSettings );
 
 			if( Repository.IsValid( gameDatabase.sharedSettings.GetRecordingFolder() ) )
 			{
@@ -75,9 +70,14 @@ namespace MatchUploader
 				currentBranch = databaseRepository.Branches.First( branch => branch.IsCurrentRepositoryHead );
 			}
 
-			if( !String.IsNullOrEmpty( uploaderSettings.discordClientId ) && !String.IsNullOrEmpty( uploaderSettings.discordToken ) )
+			if( !String.IsNullOrEmpty( botSettings.discordToken ) )
 			{
-				discordClient = new DiscordSocketClient();
+				discordClient = new DiscordClient( new DiscordConfiguration()
+				{
+					AutoReconnect = true,
+					TokenType = TokenType.Bot,
+					Token = botSettings.discordToken,
+				} );
 			}
 		}
 
@@ -124,8 +124,8 @@ namespace MatchUploader
 		{
 			if( discordClient != null )
 			{
-				await discordClient.LoginAsync( TokenType.Bot , uploaderSettings.discordToken );
-				await discordClient.StartAsync();
+				await discordClient.ConnectAsync();
+				await discordClient.InitializeAsync();
 			}
 
 			UserCredential uc = null;
@@ -134,12 +134,20 @@ namespace MatchUploader
 
 			//TODO: allow switching between users? is this needed?
 
-			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
+
+			ClientSecrets secrets = new ClientSecrets()
+			{
+				ClientId = uploaderSettings.secrets.client_id ,
+				ClientSecret = uploaderSettings.secrets.client_secret ,
+			};
+
+			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( secrets ,
 				permissions ,
 				"user" ,
 				CancellationToken.None ,
 				uploaderSettings.dataStore
 			);
+			
 
 			youtubeService = new YouTubeService( new BaseClientService.Initializer()
 			{
@@ -154,8 +162,6 @@ namespace MatchUploader
 		//updates the global data.json
 		public async Task UpdateGlobalData()
 		{
-			//
-
 			String roundsPath = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
 			String matchesPath = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.matchesFolder );
 
@@ -841,7 +847,6 @@ namespace MatchUploader
 			AddYoutubeIdToRound( currentVideo.videoName , video.Id ).Wait();
 
 			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , currentVideo.videoName , video.Id );
-			SendVideoWebHook( video.Id );
 		}
 
 		private async Task RemoveVideoFile( string roundName )
@@ -869,27 +874,10 @@ namespace MatchUploader
 			}
 		}
 
-		public void SendVideoWebHook( String videoId )
-		{
-			if( youtubeService == null || uploaderSettings.discordWebhook == null )
-			{
-				return;
-			}
-
-			Uri webhookUrl = uploaderSettings.discordWebhook;
-
-			var message = new
-			{
-				content = String.Format( "https://www.youtube.com/watch?v={0}" , videoId ) ,
-			};
-
-			var content = new StringContent( JsonConvert.SerializeObject( message , Formatting.Indented ) , System.Text.Encoding.UTF8 , "application/json" );
-			youtubeService.HttpClient.PostAsync( webhookUrl , content );
-		}
 
 		private async Task UpdateUploadProgress( double percentage , bool updateInProgress = false )
 		{
-			if( discordClient == null || discordClient.ConnectionState != ConnectionState.Connected )
+			if( discordClient == null )
 				return;
 
 			String gameString = String.Empty;
@@ -902,12 +890,12 @@ namespace MatchUploader
 				gameString = $"{Math.Round( percentage )} videos remaining";
 			}
 
-			if( discordClient.Activity != null && discordClient.Activity.Name == gameString )
+			if( discordClient.CurrentUser.Presence.Game != null && discordClient.CurrentUser.Presence.Game.Name == gameString )
 			{
 				return;
 			}
 
-			await discordClient.SetGameAsync( gameString , uploaderSettings.youtubeChannel.ToString() , ActivityType.Streaming );
+			await discordClient.UpdateStatusAsync( new DSharpPlus.Entities.DiscordGame( gameString ) );
 		}
 
 		private async Task<int> GetRemainingFilesCount()
@@ -930,8 +918,6 @@ namespace MatchUploader
 		{
 			await LoadDatabase();
 			await DoLogin();
-			//await UpdateGlobalData();
-			//await UpdatePlaylistsNames();
 
 			SaveSettings();
 			CommitGitChanges();

@@ -103,16 +103,6 @@ namespace MatchRecorder
 			return level is GameLevel;
 		}
 
-		private void OnConnected( object sender , EventArgs e )
-		{
-			HUD.AddCornerMessage( HUDCorner.TopRight , "Connected to OBS!!!" );
-		}
-
-		private void OnDisconnected( object sender , EventArgs e )
-		{
-			HUD.AddCornerMessage( HUDCorner.TopRight , "Disconnected from OBS!!!" );
-		}
-
 		public void Update()
 		{
 			recorderHandler?.Update();
