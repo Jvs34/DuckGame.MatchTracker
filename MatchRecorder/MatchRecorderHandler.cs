@@ -1,18 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using DuckGame;
 using Harmony;
-using DuckGame;
-using OBSWebsocketDotNet;
-using System.IO;
 using MatchTracker;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
 	public class MatchRecorderHandler
 	{
+		private IConfigurationRoot Configuration { get; }
 		private IRecorder recorderHandler;
 		private MatchData currentMatch;
 		private RoundData currentRound;
@@ -36,10 +37,15 @@ namespace MatchRecorder
 			GameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
 			GameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
 
-			String sharedSettingsPath = Path.Combine( Path.Combine( modPath , "Settings" ) , "shared.json" );
-			String botSettingsPath = Path.Combine( Path.Combine( modPath , "Settings" ) , "bot.json" );
-			GameDatabase.sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) );
-			BotSettings = JsonConvert.DeserializeObject<BotSettings>( File.ReadAllText( botSettingsPath ) );
+			Configuration = new ConfigurationBuilder()
+				.SetBasePath( Path.Combine( Path.Combine( modPath , "Settings" ) ) )
+				.AddJsonFile( "shared.json" )
+				.AddJsonFile( "bot.json" )
+			.Build();
+
+			Configuration.Bind( GameDatabase.sharedSettings );
+			Configuration.Bind( BotSettings );
+
 			RoundsFolder = Path.Combine( GameDatabase.sharedSettings.GetRecordingFolder() , GameDatabase.sharedSettings.roundsFolder );
 			MatchesFolder = Path.Combine( GameDatabase.sharedSettings.GetRecordingFolder() , GameDatabase.sharedSettings.matchesFolder );
 

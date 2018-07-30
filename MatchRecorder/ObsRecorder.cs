@@ -58,15 +58,9 @@ namespace MatchRecorder
 			nextObsCheck = DateTime.MinValue;
 		}
 
-		public void StartRecording()
-		{
-			requestedRecordingStart = true;
-		}
+		public void StartRecording() => requestedRecordingStart = true;
 
-		public void StopRecording()
-		{
-			requestedRecordingStop = true;
-		}
+		public void StopRecording() => requestedRecordingStop = true;
 
 		public void TryConnect()
 		{
