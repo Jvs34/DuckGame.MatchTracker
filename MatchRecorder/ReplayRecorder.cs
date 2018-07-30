@@ -3,6 +3,7 @@ using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
 using DSharpPlus.VoiceNext.Codec;
+using MatchTracker;
 using System;
 using System.IO;
 using System.Threading.Tasks;
@@ -15,6 +16,8 @@ namespace MatchRecorder
 	internal sealed class ReplayRecorder : IRecorder
 	{
 		public bool IsRecording { get; private set; }
+
+		public RecordingType ResultingRecordingType { get; set; }
 
 		public String FFmpegPath
 		{
@@ -37,6 +40,7 @@ namespace MatchRecorder
 
 		public ReplayRecorder( MatchRecorderHandler parent )
 		{
+			ResultingRecordingType = RecordingType.ReplayAndVoiceChat;
 			mainHandler = parent;
 			//initialize the discord bot
 
@@ -71,6 +75,7 @@ namespace MatchRecorder
 
 		private async Task ConnectToVoiceChat()
 		{
+			//TODO: use a discord rpc library or something to get the id of the user to stalk
 			var discordUserIDToStalk = mainHandler.BotSettings.discordUserToStalk;
 
 			foreach( var guildKV in discordClient.Guilds )
@@ -78,7 +83,7 @@ namespace MatchRecorder
 				var stalked = await guildKV.Value.GetMemberAsync( discordUserIDToStalk );
 				if( stalked != null && stalked.VoiceState != null )
 				{
-					//voiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
+					voiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
 				}
 			}
 		}

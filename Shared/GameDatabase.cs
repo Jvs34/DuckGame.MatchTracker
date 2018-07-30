@@ -155,8 +155,10 @@ namespace MatchTracker
 		{
 			await Task.CompletedTask;
 
-			this.globalData = globalData;
-
+			lock( globalDataLock )
+			{
+				this.globalData = globalData;
+			}
 			if( SaveGlobalDataDelegate != null )
 			{
 				await SaveGlobalDataDelegate( this , sharedSettings , globalData );
@@ -165,8 +167,10 @@ namespace MatchTracker
 
 		public async Task SaveMatchData( String matchName , MatchData matchData )
 		{
-			matchesData [matchName] = matchData;
-
+			lock( matchesData )
+			{
+				matchesData [matchName] = matchData;
+			}
 			if( SaveMatchDataDelegate != null )
 			{
 				await SaveMatchDataDelegate( this , sharedSettings , matchName , matchData );
@@ -175,8 +179,10 @@ namespace MatchTracker
 
 		public async Task SaveRoundData( String roundName , RoundData roundData )
 		{
-			roundsData [roundName] = roundData;
-
+			lock( roundsData )
+			{
+				roundsData [roundName] = roundData;
+			}
 			if( SaveRoundDataDelegate != null )
 			{
 				await SaveRoundDataDelegate( this , sharedSettings , roundName , roundData );

@@ -24,6 +24,8 @@ namespace MatchTracker
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
 		public String youtubeUrl { get; set; }
 
+		public RecordingType recordingType;
+
 		public RoundData()
 		{
 			players = new List<PlayerData>();

@@ -17,7 +17,7 @@ namespace MatchTracker
 		//yes a hat is a team
 		public TeamData team;
 
-		public ReplayData replay;
+		public ulong discordId;
 
 		public String GetName()
 		{

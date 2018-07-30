@@ -1,4 +1,5 @@
-﻿using OBSWebsocketDotNet;
+﻿using MatchTracker;
+using OBSWebsocketDotNet;
 using System;
 using System.IO;
 
@@ -36,9 +37,12 @@ namespace MatchRecorder
 			}
 		}
 
+		public RecordingType ResultingRecordingType { get; set; }
+
 
 		public ObsRecorder( MatchRecorderHandler parent )
 		{
+			ResultingRecordingType = RecordingType.Video;
 			mainHandler = parent;
 			recordingState = OutputState.Stopped;
 			obsHandler = new OBSWebsocket()

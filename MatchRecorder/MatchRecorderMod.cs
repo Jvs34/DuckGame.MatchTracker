@@ -11,7 +11,6 @@ namespace MatchRecorder
 
 		public MatchRecorderMod()
 		{
-			System.Diagnostics.Debugger.Launch();
 			AppDomain.CurrentDomain.AssemblyResolve += ModResolve;
 		}
 
@@ -22,7 +21,7 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
-#if RELEASE
+#if DEBUG
 			System.Diagnostics.Debugger.Launch();
 #endif
 
@@ -39,7 +38,7 @@ namespace MatchRecorder
 #if DEBUG
 			folder = "Debug";
 #endif
-
+			//TODO: find a better way to output this stuff
 			String assemblyFolder = Path.Combine( configuration.directory , "MatchRecorder" , "bin" , "x86" , folder , "net471" );
 			String assemblyPath = Path.GetFullPath( Path.Combine( assemblyFolder , cleanName + ".dll" ) );
 

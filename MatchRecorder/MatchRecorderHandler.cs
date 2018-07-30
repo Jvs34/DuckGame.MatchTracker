@@ -54,11 +54,12 @@ namespace MatchRecorder
 				GameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
 			}
 
-			//recorderHandler = new ObsRecorder( this );
-			recorderHandler = new ReplayRecorder( this );
+			recorderHandler = new ObsRecorder( this );
+			//recorderHandler = new ReplayRecorder( this );
 
 		}
 
+		#region DATABASEDELEGATES
 		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
@@ -94,6 +95,7 @@ namespace MatchRecorder
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
 		}
+		#endregion
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
 		public bool IsLevelRecordable( Level level )
@@ -136,6 +138,7 @@ namespace MatchRecorder
 				players = new List<PlayerData>() ,
 				timeStarted = startTime ,
 				isCustomLevel = false ,
+				recordingType = recorderHandler.ResultingRecordingType,
 			};
 
 			currentRound.name = GameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted );
@@ -279,12 +282,24 @@ namespace MatchRecorder
 				name = profile.name ,
 				team = CreateTeamDataFromTeam( profile.team )
 			};
-
 			//I could've done this with an inlined check but I had other shit to call in here so not yet
 			if( !Network.isActive )
 			{
 				pd.userId = profile.id;
 			}
+
+			//search for this profile on the globaldata, if it's there fill in the rest of the info
+			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
+
+			foreach( var ply in globalData.players )
+			{
+				if( pd.Equals( ply ) )
+				{
+					pd.discordId = ply.discordId;
+					pd.nickName = ply.nickName;
+				}
+			}
+
 			return pd;
 		}
 	}
@@ -352,5 +367,5 @@ namespace MatchRecorder
 			MatchRecorderMod.Recorder?.TryCollectingMatchData();
 		}
 	}
-	#endregion HOOKS
+	#endregion
 }
