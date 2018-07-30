@@ -74,9 +74,9 @@ namespace MatchUploader
 			{
 				discordClient = new DiscordClient( new DiscordConfiguration()
 				{
-					AutoReconnect = true,
-					TokenType = TokenType.Bot,
-					Token = botSettings.discordToken,
+					AutoReconnect = true ,
+					TokenType = TokenType.Bot ,
+					Token = botSettings.discordToken ,
 				} );
 			}
 		}
@@ -112,9 +112,9 @@ namespace MatchUploader
 		}
 
 		//in this context, settings are only the uploaderSettings
-		public void SaveSettings()
+		public async Task SaveSettings()
 		{
-			File.WriteAllText(
+			File.WriteAllTextAsync(
 				Path.Combine( settingsFolder , "uploader.json" ) ,
 				JsonConvert.SerializeObject( uploaderSettings , Formatting.Indented )
 			);
@@ -147,7 +147,7 @@ namespace MatchUploader
 				CancellationToken.None ,
 				uploaderSettings.dataStore
 			);
-			
+
 
 			youtubeService = new YouTubeService( new BaseClientService.Initializer()
 			{
@@ -285,9 +285,9 @@ namespace MatchUploader
 			Console.WriteLine( "Finished loading the database" );
 		}
 
-		public async Task<Video> GetVideoDataForRound( String roundName )
+		public async Task<Video> GetVideoDataForRound( RoundData roundData )
 		{
-			RoundData roundData = await gameDatabase.GetRoundData( roundName );
+			await Task.CompletedTask;
 			String winner = roundData.GetWinnerName();
 
 			if( String.IsNullOrEmpty( winner ) )
@@ -301,7 +301,7 @@ namespace MatchUploader
 			{
 				Snippet = new VideoSnippet()
 				{
-					Title = $"{roundName} {winner}" ,
+					Title = $"{roundData.name} {winner}" ,
 					Tags = new List<String>() { "duckgame" , "peniscorp" } ,
 					CategoryId = "20" , // See https://developers.google.com/youtube/v3/docs/videoCategories/list
 					Description = description ,
@@ -319,9 +319,9 @@ namespace MatchUploader
 			return videoData;
 		}
 
-		public async Task<Playlist> GetPlaylistDataForMatch( String matchName )
+		public async Task<Playlist> GetPlaylistDataForMatch( MatchData matchData )
 		{
-			MatchData matchData = await gameDatabase.GetMatchData( matchName );
+			await Task.CompletedTask;
 
 			String winner = matchData.GetWinnerName();
 
@@ -334,7 +334,7 @@ namespace MatchUploader
 			{
 				Snippet = new PlaylistSnippet()
 				{
-					Title = $"{matchName} {winner}" ,
+					Title = $"{matchData.name} {winner}" ,
 					Description = String.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.sharedSettings.DateTimeToString( matchData.timeStarted ) , winner ) ,
 					Tags = new List<String>() { "duckgame" , "peniscorp" }
 				} ,
@@ -345,9 +345,9 @@ namespace MatchUploader
 			};
 		}
 
-		public async Task<PlaylistItem> GetPlaylistItemForRound( String roundName )
+		public async Task<PlaylistItem> GetPlaylistItemForRound( RoundData roundData )
 		{
-			RoundData roundData = await gameDatabase.GetRoundData( roundName );
+			await Task.CompletedTask;
 			return new PlaylistItem()
 			{
 				Snippet = new PlaylistItemSnippet()
@@ -384,27 +384,22 @@ namespace MatchUploader
 				foreach( String roundName in matchData.rounds )
 				{
 					await UpdateUploadProgress( remaining );
-					RoundData oldRoundData = await gameDatabase.GetRoundData( roundName );
+					RoundData roundData = await gameDatabase.GetRoundData( roundName );
 
-					if( oldRoundData.recordingType != RecordingType.Video )
+					if( roundData.recordingType != RecordingType.Video )
 					{
-						Console.WriteLine( $"Skipping {oldRoundData.name} as it's not a video" );
+						Console.WriteLine( $"Skipping {roundData.name} as it's not a video" );
 						continue;
 					}
 
-					bool isUploaded = oldRoundData.youtubeUrl != null;
+					bool isUploaded = await UploadRoundToYoutubeAsync( roundData );
 
-					if( !isUploaded )
+					if( isUploaded )
 					{
-						await UploadRoundToYoutubeAsync( roundName );
-						RoundData roundData = await gameDatabase.GetRoundData( roundName );
 						await RemoveVideoFile( roundName );
-						if( !isUploaded && roundData.youtubeUrl != null )
-						{
-							remaining--;
-							await AddRoundToPlaylist( roundName , matchName , playlistItems );
-							CommitGitChanges();
-						}
+						remaining--;
+						await AddRoundToPlaylist( roundName , matchName , playlistItems );
+						CommitGitChanges();
 					}
 				}
 			}
@@ -487,10 +482,10 @@ namespace MatchUploader
 		{
 			try
 			{
-				
+
 
 				GlobalData globalData = await gameDatabase.GetGlobalData();
-				
+
 				foreach( String matchName in globalData.matches )
 				{
 					List<Task> matchTasks = new List<Task>();
@@ -499,7 +494,7 @@ namespace MatchUploader
 
 					if( matchData.youtubeUrl != null )
 					{
-						var playlistData = await GetPlaylistDataForMatch( matchName );
+						var playlistData = await GetPlaylistDataForMatch( matchData );
 						playlistData.Id = matchData.youtubeUrl;
 						matchTasks.Add( youtubeService.Playlists.Update( playlistData , "snippet,status" ).ExecuteAsync() );
 					}
@@ -510,7 +505,7 @@ namespace MatchUploader
 						RoundData roundData = await gameDatabase.GetRoundData( roundName );
 						if( roundData.youtubeUrl != null )
 						{
-							Video videoData = await GetVideoDataForRound( roundName );
+							Video videoData = await GetVideoDataForRound( roundData );
 							videoData.Id = roundData.youtubeUrl;
 							matchTasks.Add( youtubeService.Videos.Update( videoData , "snippet,status,recordingDetails" ).ExecuteAsync() );
 						}
@@ -519,7 +514,7 @@ namespace MatchUploader
 					await Task.WhenAll( matchTasks );
 				}
 
-				
+
 			}
 			catch( Exception ex )
 			{
@@ -527,11 +522,11 @@ namespace MatchUploader
 			}
 		}
 
-		public async Task<Playlist> CreatePlaylist( String matchName , MatchData matchData )
+		public async Task<Playlist> CreatePlaylist( MatchData matchData )
 		{
 			try
 			{
-				Playlist pl = await GetPlaylistDataForMatch( matchName );
+				Playlist pl = await GetPlaylistDataForMatch( matchData );
 				var createPlaylistRequest = youtubeService.Playlists.Insert( pl , "snippet,status" );
 				Playlist matchPlaylist = await createPlaylistRequest.ExecuteAsync();
 				if( matchPlaylist != null )
@@ -566,7 +561,7 @@ namespace MatchUploader
 			if( !playlistItems.Any( x => x.Snippet.ResourceId.VideoId == roundData.youtubeUrl ) )
 			{
 				Console.WriteLine( $"Could not find {roundName} on playlist {matchName}, adding" );
-				PlaylistItem roundPlaylistItem = await GetPlaylistItemForRound( roundName );
+				PlaylistItem roundPlaylistItem = await GetPlaylistItemForRound( roundData );
 				roundPlaylistItem.Snippet.Position = roundIndex + 1;
 				roundPlaylistItem.Snippet.PlaylistId = matchData.youtubeUrl;
 				await youtubeService.PlaylistItems.Insert( roundPlaylistItem , "snippet" ).ExecuteAsync();
@@ -605,7 +600,7 @@ namespace MatchUploader
 						{
 							Console.WriteLine( "Did not find playlist for {0}, creating" , matchName );
 							//create the playlist now, doesn't matter that it's empty
-							Playlist pl = await CreatePlaylist( matchName , matchData );
+							Playlist pl = await CreatePlaylist( matchData );
 							if( pl != null )
 							{
 								await gameDatabase.SaveMatchData( matchName , matchData );
@@ -731,38 +726,36 @@ namespace MatchUploader
 			}
 		}
 
-		public async Task<bool> UploadRoundToYoutubeAsync( String roundName )
+		public async Task<bool> UploadRoundToYoutubeAsync( RoundData roundData )
 		{
 			if( youtubeService == null )
 			{
 				throw new NullReferenceException( "Youtube service is not initialized!!!" );
 			}
 
-			RoundData roundData = await gameDatabase.GetRoundData( roundName );
-
 			if( roundData.youtubeUrl != null )
 			{
 				return false;
 			}
 
-			Video videoData = await GetVideoDataForRound( roundName );
-			String filePath = gameDatabase.sharedSettings.GetRoundVideoPath( roundName );
+			Video videoData = await GetVideoDataForRound( roundData );
+			String filePath = gameDatabase.sharedSettings.GetRoundVideoPath( roundData.name );
 
 			if( !File.Exists( filePath ) )
 			{
-				throw new ArgumentNullException( $"{roundName} does not contain a video!" );
+				throw new ArgumentNullException( $"{roundData.name} does not contain a video!" );
 			}
 
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
 				//get the pending upload for this roundName
-				currentVideo = uploaderSettings.pendingUploads.Find( x => x.videoName.Equals( roundName ) );
+				currentVideo = uploaderSettings.pendingUploads.Find( x => x.videoName.Equals( roundData.name ) );
 
 				if( currentVideo == null )
 				{
 					currentVideo = new PendingUpload()
 					{
-						videoName = roundName
+						videoName = roundData.name
 					};
 
 					uploaderSettings.pendingUploads.Add( currentVideo );
@@ -806,7 +799,7 @@ namespace MatchUploader
 				{
 					currentVideo.lastException = uploadProgress.Exception.Message;
 					currentVideo.errorCount++;
-					SaveSettings();
+					await SaveSettings();
 				}
 				currentVideo = null;
 				return uploadProgress.Status == UploadStatus.Completed;
@@ -816,7 +809,7 @@ namespace MatchUploader
 		private void OnStartUploading( IUploadSessionData resumable )
 		{
 			currentVideo.uploadUrl = resumable.UploadUri;
-			SaveSettings();//save right away in case the program crashes or connection screws up
+			SaveSettings().Wait();//save right away in case the program crashes or connection screws up
 		}
 
 		private void OnUploadProgress( IUploadProgress progress )
@@ -843,7 +836,7 @@ namespace MatchUploader
 				uploaderSettings.pendingUploads.Remove( currentVideo );
 			}
 
-			SaveSettings();
+			SaveSettings().Wait();
 			AddYoutubeIdToRound( currentVideo.videoName , video.Id ).Wait();
 
 			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , currentVideo.videoName , video.Id );
@@ -919,11 +912,11 @@ namespace MatchUploader
 			await LoadDatabase();
 			await DoLogin();
 
-			SaveSettings();
+			await SaveSettings();
 			CommitGitChanges();
 			await UpdatePlaylists();
 			await UploadAllRounds();
-			
+
 		}
 	}
 }
