@@ -10,12 +10,11 @@ namespace MatchUploader
 
 	public class PendingUpload
 	{
-		public String videoName;
-		public Uri uploadUrl;
-		public String lastException;
-		public int errorCount;
-		[JsonIgnore] public long fileSize;
-
+		public String videoName { get; set; }
+		public Uri uploadUrl { get; set; }
+		public String lastException { get; set; }
+		public int errorCount { get; set; }
+		public long fileSize { get; set; }
 
 		public PendingUpload()
 		{

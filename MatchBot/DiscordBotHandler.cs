@@ -13,11 +13,14 @@ using System.Collections.Generic;
 using MatchTracker;
 using DSharpPlus.EventArgs;
 using DSharpPlus.Entities;
+using Microsoft.Extensions.Configuration;
+
 
 namespace MatchBot
 {
 	public class DiscordBotHandler : BotAdapter
 	{
+		IConfigurationRoot Configuration { get; }
 		private DiscordClient discordClient;
 		private BotSettings botSettings;
 		private MatchBot bot;
@@ -25,10 +28,12 @@ namespace MatchBot
 		public DiscordBotHandler()
 		{
 			botSettings = new BotSettings();
+			Configuration = new ConfigurationBuilder()
+				.SetBasePath( Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" ) )
+				.AddJsonFile( "bot.json" )
+			.Build();
 
-			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
-			String botSettingsPath = Path.Combine( settingsFolder , "bot.json" );
-			botSettings = JsonConvert.DeserializeObject<BotSettings>( File.ReadAllText( botSettingsPath ) );
+			Configuration.Bind( botSettings );
 
 			discordClient = new DiscordClient( new DiscordConfiguration()
 			{
@@ -41,19 +46,11 @@ namespace MatchBot
 
 			bot = new MatchBot();
 
-
-
-			//add middleware to our botadapter stuff
-			//TODO: we might need a json datastore for this later? who knows, maybe make it use the botSettings shit
-			//MemoryStorage dataStore = new MemoryStorage();
-
 			Use( new CatchExceptionMiddleware<Exception>( async ( context , exception ) =>
 			{
 				await context.TraceActivity( "MatchBot Exception" , exception );
 				await context.SendActivity( "Sorry, it looks like something went wrong!" );
 			} ) );
-
-			//Use( new ConversationState<GameDatabase>( dataStore ) ); //don't actually need this I think
 
 			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.luisModelId , botSettings.luisSubcriptionKey , botSettings.luisUri ) ) );
 		}

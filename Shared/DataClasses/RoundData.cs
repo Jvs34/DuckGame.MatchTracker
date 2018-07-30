@@ -11,10 +11,10 @@ namespace MatchTracker
 
 		//id of the level this round was played on
 		//unfortunately the actual path of the level is already gone by the time this is available
-		public String levelName;
+		public String levelName { get; set; }
 
-		public bool isCustomLevel;
-		public bool skipped;
+		public bool isCustomLevel { get; set; }
+		public bool skipped { get; set; }
 
 		public DateTime timeStarted { get; set; }
 		public DateTime timeEnded { get; set; }

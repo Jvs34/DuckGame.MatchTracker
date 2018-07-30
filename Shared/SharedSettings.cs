@@ -9,18 +9,18 @@ namespace MatchTracker
 	public class SharedSettings
 	{
 		//global paths
-		public String baseRecordingFolder;
-		public String baseRepositoryUrl; //this has to be a github url for raw access
+		public String baseRecordingFolder { get; set; }
+		public String baseRepositoryUrl { get; set; } //this has to be a github url for raw access
 
 		//local paths
-		public String roundsFolder;
-		public String matchesFolder;
-		public String timestampFormat;
+		public String roundsFolder { get; set; }
+		public String matchesFolder { get; set; }
+		public String timestampFormat { get; set; }
 
-		public String roundDataFile;
-		public String roundVideoFile;
-		public String roundVoiceFile;
-		public String globalDataFile;
+		public String roundDataFile { get; set; }
+		public String roundVideoFile { get; set; }
+		public String roundVoiceFile { get; set; }
+		public String globalDataFile { get; set; }
 
 		public String DateTimeToString( DateTime time )
 		{

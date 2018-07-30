@@ -1,25 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using MatchTracker;
 using Microsoft.Bot;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Ai.LUIS;
 using Microsoft.Bot.Builder.Core.Extensions;
 using Microsoft.Bot.Schema;
-
-using System.Linq;
-using Newtonsoft.Json.Linq;
-
-using MatchTracker;
-using System.IO;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
-using Microsoft.Cognitive.LUIS.Models;
-using System.Text;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
 using System.Globalization;
-using System.Net.Http;
-using Flurl;
+using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web;
 
 namespace MatchBot
@@ -56,8 +52,15 @@ namespace MatchBot
 
 		private readonly HttpClient httpClient;
 
+		IConfigurationRoot Configuration { get; }
+
 		public MatchBot()
 		{
+			Configuration = new ConfigurationBuilder()
+				.SetBasePath( Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" ) )
+				.AddJsonFile( "shared.json" )
+			.Build();
+
 			httpClient = new HttpClient( new SocketsHttpHandler()
 			{
 				AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate ,
@@ -68,13 +71,9 @@ namespace MatchBot
 				Timeout = TimeSpan.FromMinutes( 30 )
 			};
 
-			String settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
-			String sharedSettingsPath = Path.Combine( settingsFolder , "shared.json" );
+			gameDatabase = new GameDatabase();
 
-			gameDatabase = new GameDatabase
-			{
-				sharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( sharedSettingsPath ) )
-			};
+			Configuration.Bind( gameDatabase.sharedSettings );
 
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
 			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;

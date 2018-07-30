@@ -7,17 +7,17 @@ namespace MatchTracker
 	public sealed class PlayerData : IEquatable<PlayerData>, IComparable<PlayerData>
 	{
 		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
-		public String userId;
+		public String userId { get; set; }
 
-		public String name;
+		public String name { get; set; }
 
 		//custom nickname for the player, this will be set manually on another json
-		public String nickName;
+		public String nickName { get; set; }
 
 		//yes a hat is a team
-		public TeamData team;
+		public TeamData team { get; set; }
 
-		public ulong discordId;
+		public ulong discordId { get; set; }
 
 		public String GetName()
 		{
