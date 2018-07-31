@@ -16,7 +16,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using DSharpPlus;
 /*
 Goes through all the folders, puts all rounds and matches into data.json
 Also returns match/round data from the timestamped name and whatnot
@@ -114,7 +113,7 @@ namespace MatchUploader
 		//in this context, settings are only the uploaderSettings
 		public async Task SaveSettings()
 		{
-			File.WriteAllTextAsync(
+			await File.WriteAllTextAsync(
 				Path.Combine( settingsFolder , "uploader.json" ) ,
 				JsonConvert.SerializeObject( uploaderSettings , Formatting.Indented )
 			);
@@ -134,14 +133,7 @@ namespace MatchUploader
 
 			//TODO: allow switching between users? is this needed?
 
-
-			ClientSecrets secrets = new ClientSecrets()
-			{
-				ClientId = uploaderSettings.secrets.client_id ,
-				ClientSecret = uploaderSettings.secrets.client_secret ,
-			};
-
-			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( secrets ,
+			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
 				permissions ,
 				"user" ,
 				CancellationToken.None ,
