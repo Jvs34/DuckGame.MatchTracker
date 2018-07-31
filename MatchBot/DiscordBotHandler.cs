@@ -25,12 +25,13 @@ namespace MatchBot
 		private BotSettings botSettings;
 		private MatchBot bot;
 
-		public DiscordBotHandler()
+		public DiscordBotHandler( string [] args )
 		{
 			botSettings = new BotSettings();
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" ) )
 				.AddJsonFile( "bot.json" )
+				.AddCommandLine( args )
 			.Build();
 
 			Configuration.Bind( botSettings );

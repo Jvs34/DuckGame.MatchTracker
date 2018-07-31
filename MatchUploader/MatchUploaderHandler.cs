@@ -23,7 +23,7 @@ Also returns match/round data from the timestamped name and whatnot
 
 namespace MatchUploader
 {
-	public sealed class MatchUploaderHandler : IModeHandler
+	public sealed class MatchUploaderHandler : ModeHandler
 	{
 		private IConfigurationRoot Configuration { get; }
 		private String settingsFolder;
@@ -37,7 +37,7 @@ namespace MatchUploader
 		private DiscordClient discordClient;
 
 
-		public MatchUploaderHandler()
+		public MatchUploaderHandler( string [] args ) : base( args )
 		{
 			gameDatabase = new GameDatabase();
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
@@ -56,6 +56,7 @@ namespace MatchUploader
 				.AddJsonFile( "shared.json" )
 				.AddJsonFile( "uploader.json" )
 				.AddJsonFile( "bot.json" )
+				.AddCommandLine( args )
 			.Build();
 
 			Configuration.Bind( gameDatabase.sharedSettings );
@@ -899,7 +900,7 @@ namespace MatchUploader
 			return remainingFiles;
 		}
 
-		public async Task Run()
+		public override async Task Run()
 		{
 			await LoadDatabase();
 			await DoLogin();

@@ -16,10 +16,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.2.1" />
     <PackageReference Include="DSharpPlus" Version="3.2.3" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.34.0.1226" />
     <PackageReference Include="LibGit2Sharp" Version="0.25.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.1.1" />
     <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
@@ -27,13 +27,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Shared\Shared.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Lidgren.Network.MultiTarget">
-      <HintPath>..\ThirdParty\Lidgren.Network.MultiTarget.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
   </ItemGroup>
   
 </Project>

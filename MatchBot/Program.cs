@@ -8,10 +8,10 @@ namespace MatchBot
 		{
 			try
 			{
-				DiscordBotHandler handler = new DiscordBotHandler();
+				DiscordBotHandler handler = new DiscordBotHandler( args );
 				handler.Initialize().Wait();
 
-				Console.WriteLine( "Press a key to fucking stop" );
+				Console.WriteLine( "Press a key to stop" );
 				Console.ReadKey();
 			}
 			catch( Exception e )
