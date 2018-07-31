@@ -57,7 +57,7 @@ namespace MatchBot
 		public MatchBot()
 		{
 			Configuration = new ConfigurationBuilder()
-				.SetBasePath( Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" ) )
+				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
 				.AddJsonFile( "shared.json" )
 			.Build();
 

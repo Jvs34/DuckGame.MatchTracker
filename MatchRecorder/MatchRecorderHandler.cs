@@ -38,7 +38,7 @@ namespace MatchRecorder
 			GameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
 
 			Configuration = new ConfigurationBuilder()
-				.SetBasePath( Path.Combine( Path.Combine( modPath , "Settings" ) ) )
+				.SetBasePath( Path.Combine( modPath , "Settings" ) )
 				.AddJsonFile( "shared.json" )
 				.AddJsonFile( "bot.json" )
 			.Build();

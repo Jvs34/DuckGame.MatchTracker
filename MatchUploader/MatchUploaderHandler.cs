@@ -50,7 +50,7 @@ namespace MatchUploader
 			uploaderSettings = new UploaderSettings();
 			botSettings = new BotSettings();
 
-			settingsFolder = Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" );
+			settingsFolder = Path.Combine( Directory.GetCurrentDirectory() , "Settings" );
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( settingsFolder )
 				.AddJsonFile( "shared.json" )

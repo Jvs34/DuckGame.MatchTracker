@@ -29,7 +29,7 @@ namespace MatchBot
 		{
 			botSettings = new BotSettings();
 			Configuration = new ConfigurationBuilder()
-				.SetBasePath( Path.Combine( Path.GetFullPath( Directory.GetCurrentDirectory() ) , "Settings" ) )
+				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
 				.AddJsonFile( "bot.json" )
 				.AddCommandLine( args )
 			.Build();
