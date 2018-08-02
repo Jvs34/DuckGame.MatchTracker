@@ -5,7 +5,11 @@ using DSharpPlus.VoiceNext;
 using DSharpPlus.VoiceNext.Codec;
 using MatchTracker;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Pipes;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MatchRecorder
@@ -30,13 +34,21 @@ namespace MatchRecorder
 		private readonly MatchRecorderHandler mainHandler;
 
 		private readonly DiscordClient discordClient;
-		private readonly VoiceNextClient voiceClient;
+		private readonly VoiceNextExtension voiceClient;
 
 		private VoiceNextConnection voiceConnection;
 
 		private Task connectToVoiceChannelTask;
 
 		private readonly DuckRecordingListener eventListener;
+
+		private Process ffmpegProcess;
+
+		/// <summary>
+		/// Used to lookup the named pipes per discord user, the key in the dictionary is the discord user id
+		/// if one is present then we'll write to that one when that user is talking
+		/// </summary>
+		private Dictionary<ulong , NamedPipeServerStream> ffmpegChannels;
 
 		public ReplayRecorder( MatchRecorderHandler parent )
 		{
@@ -45,6 +57,7 @@ namespace MatchRecorder
 			//initialize the discord bot
 
 			eventListener = new DuckRecordingListener();
+			ffmpegChannels = new Dictionary<ulong , NamedPipeServerStream>();
 
 			if( String.IsNullOrEmpty( mainHandler.BotSettings.discordToken ) )
 			{
@@ -83,7 +96,26 @@ namespace MatchRecorder
 				var stalked = await guildKV.Value.GetMemberAsync( discordUserIDToStalk );
 				if( stalked != null && stalked.VoiceState != null )
 				{
-					voiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
+					//see if we can get the connection again first
+					try
+					{
+						var newVoiceConnection = voiceClient.GetConnection( stalked.Guild );
+
+						//otherwise try connecting
+						if( newVoiceConnection == null )
+						{
+							newVoiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
+						}
+
+						if( newVoiceConnection != null )
+						{
+							voiceConnection = newVoiceConnection;
+						}
+					}
+					catch( Exception e )
+					{
+						Debugger.Log( 1 , "Duck" , e.Message );
+					}
 				}
 			}
 		}
@@ -100,6 +132,8 @@ namespace MatchRecorder
 			{
 				voiceConnection.VoiceReceived += OnVoiceReceived;
 			}
+
+			StartFFmpeg();
 		}
 
 		public void StopRecording()
@@ -111,16 +145,15 @@ namespace MatchRecorder
 			{
 				voiceConnection.VoiceReceived -= OnVoiceReceived;
 			}
+
+			StopFFmpeg();
 		}
 
 		public void Update()
 		{
-			if( connectToVoiceChannelTask == null || connectToVoiceChannelTask.IsCompleted )
+			if( voiceConnection == null && ( connectToVoiceChannelTask == null || connectToVoiceChannelTask.IsCompleted ) )
 			{
-				if( voiceConnection == null )
-				{
-					connectToVoiceChannelTask = ConnectToVoiceChat();
-				}
+				connectToVoiceChannelTask = ConnectToVoiceChat();
 			}
 
 			if( DuckGame.Recorder.currentRecording != eventListener )
@@ -131,9 +164,93 @@ namespace MatchRecorder
 			eventListener.UpdateEvents();
 		}
 
+		private bool StartFFmpeg()
+		{
+			if( voiceConnection == null )
+				return false;
+
+			String inputArg = "";
+
+
+			var channelMembers = voiceConnection.Channel.Users;
+
+			//make a pipe for each user by using their discord id
+			foreach( var member in channelMembers )
+			{
+				if( member == discordClient.CurrentUser )
+				{
+					continue;
+				}
+
+				//TODO: check if the user is actually in the game so we can skip people that aren't
+				var namedPipe = new NamedPipeServerStream( $"{member.Id}" , PipeDirection.Out , 1 , PipeTransmissionMode.Byte , PipeOptions.Asynchronous , 10000 , 10000 );
+
+				ffmpegChannels.Add( member.Id , namedPipe );
+				//add this named pipe to the input
+				String pipe = $@"\\.\pipe\{member.Id}";
+
+				inputArg += $" -i {pipe}";
+			}
+
+
+			String outputArg = $@"-codec:a libopus -q:a 0 -filter_complex amix=inputs={ffmpegChannels.Count} {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
+
+			var process = new Process()
+			{
+				StartInfo = new ProcessStartInfo()
+				{
+					FileName = FFmpegPath ,
+					UseShellExecute = false ,
+					CreateNoWindow = false ,
+					RedirectStandardInput = true ,
+					Arguments = $"{inputArg} {outputArg}" ,
+				}
+			};
+
+			if( process.Start() )
+			{
+				ffmpegProcess = process;
+				return true;
+			}
+
+			return false;
+		}
+
+		private void StopFFmpeg()
+		{
+			foreach( var channelskv in ffmpegChannels )
+			{
+				var pipe = channelskv.Value;
+
+				if( pipe.IsConnected )
+				{
+					pipe.Flush();
+				}
+
+				pipe.Dispose();
+			}
+
+			ffmpegChannels.Clear();
+
+			if( ffmpegProcess != null && !ffmpegProcess.HasExited )
+			{
+				ffmpegProcess.StandardInput.BaseStream.Close();
+				ffmpegProcess.WaitForExit();
+			}
+		}
+
+		private bool HasNamedPipe( DiscordUser user )
+		{
+			return ffmpegChannels.ContainsKey( user.Id );
+		}
+
 		private async Task OnVoiceReceived( VoiceReceiveEventArgs args )
 		{
-
+			if( ffmpegChannels.TryGetValue( args.User.Id , out NamedPipeServerStream stream ) )
+			{
+				await stream.WaitForConnectionAsync();
+				await stream.WriteAsync( args.Voice.ToArray() , 0 , args.VoiceLength );
+			}
 		}
 	}
 }

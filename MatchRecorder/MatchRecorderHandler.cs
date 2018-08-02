@@ -15,15 +15,15 @@ namespace MatchRecorder
 	{
 		private IConfigurationRoot Configuration { get; }
 		private IRecorder recorderHandler;
-		private MatchData currentMatch;
-		private RoundData currentRound;
-
+		public MatchData CurrentMatch { get; private set; }
+		public RoundData CurrentRound { get; private set; }
 		public bool IsRecording => recorderHandler.IsRecording;
 		public string RoundsFolder { get; }
 		public string MatchesFolder { get; }
 		public GameDatabase GameDatabase { get; private set; }
 		public BotSettings BotSettings { get; }
 		public String ModPath { get; }
+
 
 		public MatchRecorderHandler( String modPath )
 		{
@@ -124,11 +124,11 @@ namespace MatchRecorder
 			recorderHandler?.StopRecording();
 		}
 
-		public void StartCollectingRoundData( DateTime startTime )
+		public RoundData StartCollectingRoundData( DateTime startTime )
 		{
 			Level lvl = Level.current;
 
-			currentRound = new RoundData()
+			CurrentRound = new RoundData()
 			{
 				levelName = lvl.level ,
 				players = new List<PlayerData>() ,
@@ -137,29 +137,31 @@ namespace MatchRecorder
 				recordingType = recorderHandler.ResultingRecordingType,
 			};
 
-			currentRound.name = GameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted );
+			CurrentRound.name = GameDatabase.sharedSettings.DateTimeToString( CurrentRound.timeStarted );
 
 			foreach( Profile pro in Profiles.active )
 			{
-				currentRound.players.Add( CreatePlayerDataFromProfile( pro ) );
+				CurrentRound.players.Add( CreatePlayerDataFromProfile( pro ) );
 			}
 
 			if( lvl is GameLevel gl )
 			{
-				currentRound.isCustomLevel = gl.isCustomLevel;
+				CurrentRound.isCustomLevel = gl.isCustomLevel;
 			}
 
-			if( currentMatch != null )
+			if( CurrentMatch != null )
 			{
-				currentMatch.rounds.Add( GameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) );
+				CurrentMatch.rounds.Add( GameDatabase.sharedSettings.DateTimeToString( CurrentRound.timeStarted ) );
 			}
+
+			return CurrentRound;
 		}
 
-		public void StopCollectingRoundData( DateTime endTime )
+		public RoundData StopCollectingRoundData( DateTime endTime )
 		{
-			if( currentRound == null )
+			if( CurrentRound == null )
 			{
-				return;
+				return null;
 			}
 
 			Team winner = null;
@@ -171,24 +173,28 @@ namespace MatchRecorder
 
 			if( winner != null )
 			{
-				currentRound.winner = CreateTeamDataFromTeam( winner );
+				CurrentRound.winner = CreateTeamDataFromTeam( winner );
 			}
 
-			currentRound.timeEnded = endTime;
+			CurrentRound.timeEnded = endTime;
 
-			GameDatabase.SaveRoundData( GameDatabase.sharedSettings.DateTimeToString( currentRound.timeStarted ) , currentRound ).Wait();
+			GameDatabase.SaveRoundData( GameDatabase.sharedSettings.DateTimeToString( CurrentRound.timeStarted ) , CurrentRound ).Wait();
 
 			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
-			globalData.rounds.Add( currentRound.name );
+			globalData.rounds.Add( CurrentRound.name );
 			GameDatabase.SaveGlobalData( globalData ).Wait();
 
-			currentRound = null;
+			RoundData newRoundData = CurrentRound;
+
+			CurrentRound = null;
+
+			return newRoundData;
 		}
 
 		public void TryCollectingMatchData()
 		{
 			//try saving the match if there's one and it's got at least one round
-			if( currentMatch != null && currentMatch.rounds.Count > 0 )
+			if( CurrentMatch != null && CurrentMatch.rounds.Count > 0 )
 			{
 				StopCollectingMatchData();
 			}
@@ -197,26 +203,28 @@ namespace MatchRecorder
 			StartCollectingMatchData();
 		}
 
-		private void StartCollectingMatchData()
+		private MatchData StartCollectingMatchData()
 		{
-			currentMatch = new MatchData
+			CurrentMatch = new MatchData
 			{
 				timeStarted = DateTime.Now ,
 				rounds = new List<string>() ,
 				players = new List<PlayerData>() ,
 			};
 
-			currentMatch.name = GameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted );
+			CurrentMatch.name = GameDatabase.sharedSettings.DateTimeToString( CurrentMatch.timeStarted );
+
+			return CurrentMatch;
 		}
 
-		private void StopCollectingMatchData()
+		private MatchData StopCollectingMatchData()
 		{
-			if( currentMatch == null )
+			if( CurrentMatch == null )
 			{
-				return;
+				return null;
 			}
 
-			currentMatch.timeEnded = DateTime.Now;
+			CurrentMatch.timeEnded = DateTime.Now;
 			Team winner = null;
 
 			if( Teams.winning.Count > 0 )
@@ -226,23 +234,23 @@ namespace MatchRecorder
 
 			if( winner != null )
 			{
-				currentMatch.winner = CreateTeamDataFromTeam( winner );
+				CurrentMatch.winner = CreateTeamDataFromTeam( winner );
 			}
 
 			foreach( Profile pro in Profiles.active )
 			{
-				currentMatch.players.Add( CreatePlayerDataFromProfile( pro ) );
+				CurrentMatch.players.Add( CreatePlayerDataFromProfile( pro ) );
 			}
 
-			GameDatabase.SaveMatchData( GameDatabase.sharedSettings.DateTimeToString( currentMatch.timeStarted ) , currentMatch ).Wait();
+			GameDatabase.SaveMatchData( GameDatabase.sharedSettings.DateTimeToString( CurrentMatch.timeStarted ) , CurrentMatch ).Wait();
 
 			//also add this match to the globaldata as well
 			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
-			globalData.matches.Add( currentMatch.name );
+			globalData.matches.Add( CurrentMatch.name );
 
 			//try adding the players from the matchdata into the globaldata
 
-			foreach( PlayerData ply in currentMatch.players )
+			foreach( PlayerData ply in CurrentMatch.players )
 			{
 				if( !globalData.players.Any( p => p.userId == ply.userId ) )
 				{
@@ -254,7 +262,11 @@ namespace MatchRecorder
 
 			GameDatabase.SaveGlobalData( globalData ).Wait();
 
-			currentMatch = null;
+			MatchData newMatchData = CurrentMatch;
+
+			CurrentMatch = null;
+			
+			return newMatchData;
 		}
 
 		private TeamData CreateTeamDataFromTeam( Team team )

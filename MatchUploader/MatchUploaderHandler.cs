@@ -372,7 +372,12 @@ namespace MatchUploader
 			foreach( String matchName in globalData.matches )
 			{
 				MatchData matchData = await gameDatabase.GetMatchData( matchName );
-				List<PlaylistItem> playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
+				List<PlaylistItem> playlistItems = null;
+
+				if( matchData.youtubeUrl != null )
+				{
+					await GetAllPlaylistItems( matchData.youtubeUrl );
+				}
 
 				foreach( String roundName in matchData.rounds )
 				{
@@ -391,11 +396,17 @@ namespace MatchUploader
 					{
 						await RemoveVideoFile( roundName );
 						remaining--;
-						await AddRoundToPlaylist( roundName , matchName , playlistItems );
-						CommitGitChanges();
+
+						if( playlistItems != null )
+						{
+							await AddRoundToPlaylist( roundName , matchName , playlistItems );
+						}
+						
 					}
 				}
 			}
+
+			CommitGitChanges();
 		}
 
 		public async Task<List<Playlist>> GetAllPlaylists()
