@@ -8,7 +8,9 @@ namespace MatchTracker
 	public interface IWinner : IPlayersList
 	{
 		TeamData winner { get; set; }
-		List<PlayerData> GetWinners();
+
 		String GetWinnerName();
+
+		List<PlayerData> GetWinners();
 	}
 }

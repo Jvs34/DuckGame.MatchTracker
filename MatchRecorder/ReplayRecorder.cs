@@ -19,9 +19,20 @@ namespace MatchRecorder
 	/// </summary>
 	internal sealed class ReplayRecorder : IRecorder
 	{
-		public bool IsRecording { get; private set; }
+		private readonly DiscordClient discordClient;
+		private readonly DuckRecordingListener eventListener;
+		private readonly MatchRecorderHandler mainHandler;
+		private readonly VoiceNextExtension voiceClient;
+		private Task connectToVoiceChannelTask;
 
-		public RecordingType ResultingRecordingType { get; set; }
+		/// <summary>
+		/// Used to lookup the named pipes per discord user, the key in the dictionary is the discord user id
+		/// if one is present then we'll write to that one when that user is talking
+		/// </summary>
+		private Dictionary<ulong , NamedPipeServerStream> ffmpegChannels;
+
+		private Process ffmpegProcess;
+		private VoiceNextConnection voiceConnection;
 
 		public String FFmpegPath
 		{
@@ -31,24 +42,9 @@ namespace MatchRecorder
 			}
 		}
 
-		private readonly MatchRecorderHandler mainHandler;
+		public bool IsRecording { get; private set; }
 
-		private readonly DiscordClient discordClient;
-		private readonly VoiceNextExtension voiceClient;
-
-		private VoiceNextConnection voiceConnection;
-
-		private Task connectToVoiceChannelTask;
-
-		private readonly DuckRecordingListener eventListener;
-
-		private Process ffmpegProcess;
-
-		/// <summary>
-		/// Used to lookup the named pipes per discord user, the key in the dictionary is the discord user id
-		/// if one is present then we'll write to that one when that user is talking
-		/// </summary>
-		private Dictionary<ulong , NamedPipeServerStream> ffmpegChannels;
+		public RecordingType ResultingRecordingType { get; set; }
 
 		public ReplayRecorder( MatchRecorderHandler parent )
 		{
@@ -84,35 +80,6 @@ namespace MatchRecorder
 			} );
 
 			discordClient.ConnectAsync();
-		}
-
-		private async Task ConnectToVoiceChat()
-		{
-			//TODO: use a discord rpc library or something to get the id of the user to stalk
-			var discordUserIDToStalk = mainHandler.BotSettings.discordUserToStalk;
-
-			foreach( var guildKV in discordClient.Guilds )
-			{
-				var stalked = await guildKV.Value.GetMemberAsync( discordUserIDToStalk );
-				if( stalked != null && stalked.VoiceState != null )
-				{
-					//see if we can get the connection again first
-
-					var newVoiceConnection = voiceClient.GetConnection( stalked.Guild );
-
-					//otherwise try connecting
-					if( newVoiceConnection == null )
-					{
-						newVoiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
-					}
-
-					if( newVoiceConnection != null )
-					{
-						voiceConnection = newVoiceConnection;
-					}
-
-				}
-			}
 		}
 
 		public void StartRecording()
@@ -159,13 +126,65 @@ namespace MatchRecorder
 			eventListener.UpdateEvents();
 		}
 
+		private async Task ConnectToVoiceChat()
+		{
+			//TODO: use a discord rpc library or something to get the id of the user to stalk
+			var discordUserIDToStalk = mainHandler.BotSettings.discordUserToStalk;
+
+			foreach( var guildKV in discordClient.Guilds )
+			{
+				var stalked = await guildKV.Value.GetMemberAsync( discordUserIDToStalk );
+				if( stalked != null && stalked.VoiceState != null )
+				{
+					//see if we can get the connection again first
+
+					var newVoiceConnection = voiceClient.GetConnection( stalked.Guild );
+
+					//otherwise try connecting
+					if( newVoiceConnection == null )
+					{
+						newVoiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
+					}
+
+					if( newVoiceConnection != null )
+					{
+						voiceConnection = newVoiceConnection;
+					}
+				}
+			}
+		}
+
+		private bool HasNamedPipe( DiscordUser user )
+		{
+			return ffmpegChannels.ContainsKey( user.Id );
+		}
+
+		private async Task OnVoiceReceived( VoiceReceiveEventArgs args )
+		{
+			try
+			{
+				if( ffmpegChannels.TryGetValue( args.User.Id , out NamedPipeServerStream stream ) )
+				{
+					if( !stream.IsConnected )
+					{
+						await stream.WaitForConnectionAsync();
+					}
+
+					await stream.WriteAsync( args.Voice.ToArray() , 0 , args.VoiceLength );
+				}
+			}
+			catch( Exception e )
+			{
+				Debug.WriteLine( e );
+			}
+		}
+
 		private bool StartFFmpeg()
 		{
 			if( voiceConnection == null )
 				return false;
 
 			String inputArg = "";
-
 
 			var channelMembers = voiceConnection.Channel.Users;
 
@@ -186,7 +205,6 @@ namespace MatchRecorder
 
 				inputArg += $" -i {pipe}";
 			}
-
 
 			String outputArg = $"-codec:a libopus -filter_complex amix=inputs={ffmpegChannels.Count} {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
 
@@ -236,31 +254,6 @@ namespace MatchRecorder
 			{
 				ffmpegProcess.StandardInput.BaseStream.Close();
 				ffmpegProcess.WaitForExit();
-			}
-		}
-
-		private bool HasNamedPipe( DiscordUser user )
-		{
-			return ffmpegChannels.ContainsKey( user.Id );
-		}
-
-		private async Task OnVoiceReceived( VoiceReceiveEventArgs args )
-		{
-			try
-			{
-				if( ffmpegChannels.TryGetValue( args.User.Id , out NamedPipeServerStream stream ) )
-				{
-					if( !stream.IsConnected )
-					{
-						await stream.WaitForConnectionAsync();
-					}
-
-					await stream.WriteAsync( args.Voice.ToArray() , 0 , args.VoiceLength );
-				}
-			}
-			catch( Exception e )
-			{
-				Debug.WriteLine( e );
 			}
 		}
 	}

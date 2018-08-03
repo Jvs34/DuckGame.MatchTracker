@@ -14,9 +14,8 @@ namespace MatchTracker
 
 		public List<String> rounds { get; set; }
 
-		public DateTime timeStarted { get; set; }
 		public DateTime timeEnded { get; set; }
-
+		public DateTime timeStarted { get; set; }
 		public TeamData winner { get; set; }
 
 		public String youtubeUrl { get; set; }
@@ -27,14 +26,19 @@ namespace MatchTracker
 			rounds = new List<string>();
 		}
 
+		public int CompareTo( MatchData other )
+		{
+			return timeStarted.CompareTo( other.timeStarted );
+		}
+
+		public bool Equals( MatchData other )
+		{
+			return name == other.name && youtubeUrl == other.youtubeUrl;
+		}
+
 		public TimeSpan GetDuration()
 		{
 			return timeEnded.Subtract( timeStarted );
-		}
-
-		public List<PlayerData> GetWinners()
-		{
-			return winner != null ? players.FindAll( p => p.team.hatName == winner.hatName ) : new List<PlayerData>();
 		}
 
 		public String GetWinnerName()
@@ -50,14 +54,9 @@ namespace MatchTracker
 			return winnerName;
 		}
 
-		public bool Equals( MatchData other )
+		public List<PlayerData> GetWinners()
 		{
-			return name == other.name && youtubeUrl == other.youtubeUrl;
-		}
-
-		public int CompareTo( MatchData other )
-		{
-			return timeStarted.CompareTo( other.timeStarted );
+			return winner != null ? players.FindAll( p => p.team.hatName == winner.hatName ) : new List<PlayerData>();
 		}
 	}
 }

@@ -7,7 +7,6 @@ namespace MatchUploader
 	{
 		private static async Task Main( string [] args )
 		{
-
 			MatchUploaderHandler mu = new MatchUploaderHandler( args );
 
 			try
@@ -22,6 +21,5 @@ namespace MatchUploader
 			Console.WriteLine( "Press a key to stop" );
 			Console.ReadKey();
 		}
-
 	}
 }

@@ -6,7 +6,6 @@ namespace MatchUploader
 	{
 		public ModeHandler( string [] args )
 		{
-
 		}
 
 		public abstract Task Run();

@@ -1,18 +1,17 @@
-﻿using System;
+﻿using Google.Apis.Util.Store;
+using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Util.Store;
-using Newtonsoft.Json;
 
 namespace MatchUploader
 {
-
 	//this is kind of horrible atm since it's storing json string inside of json but I am following the IDataStore implementation correctly at least, for now
 	public class KeyValueDataStore : IDataStore
 	{
+		private static readonly Task CompletedTask = Task.FromResult( 0 );
 		public Dictionary<String , String> data { get; set; }
-		private static readonly Task CompletedTask = Task.FromResult( 0 ); //FileDataStore does it
+		//FileDataStore does it
 
 		public KeyValueDataStore()
 		{

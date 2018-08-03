@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MatchTracker
 {
@@ -8,8 +6,8 @@ namespace MatchTracker
 	{
 		public String name { get; set; }
 
-		public DateTime timeStarted { get; set; }
 		public DateTime timeEnded { get; set; }
+		public DateTime timeStarted { get; set; }
 
 		public TimeSpan GetDuration()
 		{

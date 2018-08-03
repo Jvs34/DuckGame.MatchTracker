@@ -1,7 +1,7 @@
-﻿using System;
+﻿using Harmony;
+using System;
 using System.IO;
 using System.Reflection;
-using Harmony;
 
 namespace MatchRecorder
 {
@@ -42,7 +42,7 @@ namespace MatchRecorder
 			String assemblyFolder = Path.Combine( configuration.directory , "MatchRecorder" , "bin" , "x86" , folder , "net471" );
 			String assemblyPath = Path.GetFullPath( Path.Combine( assemblyFolder , cleanName + ".dll" ) );
 
-			byte[] assemblyBytes = File.ReadAllBytes( assemblyPath );
+			byte [] assemblyBytes = File.ReadAllBytes( assemblyPath );
 
 			return Assembly.Load( assemblyBytes );
 		}

@@ -8,11 +8,12 @@ namespace MatchRecorder
 	internal class ObsRecorder : IRecorder
 	{
 		private readonly MatchRecorderHandler mainHandler;
+		private DateTime nextObsCheck;
 		private OBSWebsocket obsHandler;
 		private OutputState recordingState;
-		private DateTime nextObsCheck;
-		private bool requestedRecordingStop;
 		private bool requestedRecordingStart;
+		private bool requestedRecordingStop;
+
 		public bool IsRecording
 		{
 			get
@@ -33,12 +34,10 @@ namespace MatchRecorder
 			//do nothing
 			private set
 			{
-
 			}
 		}
 
 		public RecordingType ResultingRecordingType { get; set; }
-
 
 		public ObsRecorder( MatchRecorderHandler parent )
 		{
@@ -105,7 +104,6 @@ namespace MatchRecorder
 							}
 							catch( Exception )
 							{
-
 							}
 						}
 
@@ -125,14 +123,12 @@ namespace MatchRecorder
 
 								obsHandler.SetRecordingFolder( roundPath );
 
-
 								obsHandler.StartRecording();
 								requestedRecordingStart = false;
 								mainHandler.StartCollectingRoundData( recordingTime );
 							}
 							catch( Exception )
 							{
-
 							}
 						}
 						break;

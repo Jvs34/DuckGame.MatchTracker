@@ -10,15 +10,14 @@ namespace MatchTracker
 		public bool isCustomHat { get; set; }
 		public int score { get; set; }
 
-		public bool Equals( TeamData other )
-		{
-			return hatName == other.hatName;
-		}
-
 		public int CompareTo( TeamData other )
 		{
 			return score.CompareTo( other.score );
 		}
 
+		public bool Equals( TeamData other )
+		{
+			return hatName == other.hatName;
+		}
 	}
 }

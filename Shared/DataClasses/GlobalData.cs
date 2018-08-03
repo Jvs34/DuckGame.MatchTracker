@@ -8,12 +8,11 @@ namespace MatchTracker
 	{
 		public List<String> matches { get; set; }
 
-		public List<String> rounds { get; set; }
-
 		//all the players that have ever played any rounds, even local players
 		//these player profiles will not have teamdata
 		public List<PlayerData> players { get; set; }
 
+		public List<String> rounds { get; set; }
 		//TODO: level shit
 
 		public GlobalData()

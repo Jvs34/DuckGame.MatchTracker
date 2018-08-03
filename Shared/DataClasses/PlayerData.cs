@@ -1,13 +1,11 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace MatchTracker
 {
 	//duck game networked profiles aren't all that networked really, you only get the name and id
 	public sealed class PlayerData : IEquatable<PlayerData>, IComparable<PlayerData>
 	{
-		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
-		public String userId { get; set; }
+		public ulong discordId { get; set; }
 
 		public String name { get; set; }
 
@@ -17,17 +15,8 @@ namespace MatchTracker
 		//yes a hat is a team
 		public TeamData team { get; set; }
 
-		public ulong discordId { get; set; }
-
-		public String GetName()
-		{
-			return nickName ?? name;
-		}
-
-		public bool Equals( PlayerData other )
-		{
-			return userId == other.userId;
-		}
+		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
+		public String userId { get; set; }
 
 		public int CompareTo( PlayerData other )
 		{
@@ -37,6 +26,16 @@ namespace MatchTracker
 			}
 
 			return team.score.CompareTo( other.team.score );
+		}
+
+		public bool Equals( PlayerData other )
+		{
+			return userId == other.userId;
+		}
+
+		public String GetName()
+		{
+			return nickName ?? name;
 		}
 	}
 }

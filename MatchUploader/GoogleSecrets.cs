@@ -12,7 +12,7 @@ namespace MatchUploader
 		{
 			return new ClientSecrets()
 			{
-				ClientSecret = secrets.client_secret,
+				ClientSecret = secrets.client_secret ,
 				ClientId = secrets.client_id
 			};
 		}

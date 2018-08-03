@@ -10,31 +10,35 @@ namespace MatchTracker
 	{
 		//global paths
 		public String baseRecordingFolder { get; set; }
+
 		public String baseRepositoryUrl { get; set; } //this has to be a github url for raw access
+
+		public String globalDataFile { get; set; }
+
+		public String matchesFolder { get; set; }
+
+		public String roundDataFile { get; set; }
 
 		//local paths
 		public String roundsFolder { get; set; }
-		public String matchesFolder { get; set; }
-		public String timestampFormat { get; set; }
 
-		public String roundDataFile { get; set; }
 		public String roundVideoFile { get; set; }
 		public String roundVoiceFile { get; set; }
-		public String globalDataFile { get; set; }
+		public String timestampFormat { get; set; }
 
 		public String DateTimeToString( DateTime time )
 		{
 			return time.ToString( timestampFormat );
 		}
 
-		public String GetRecordingFolder()
-		{
-			return baseRecordingFolder;
-		}
-
 		public String GetGlobalPath()
 		{
 			return Path.Combine( GetRecordingFolder() , globalDataFile );
+		}
+
+		public String GetGlobalUrl()
+		{
+			return Url.Combine( GetRepositoryUrl() , globalDataFile );
 		}
 
 		public String GetMatchPath( String matchName )
@@ -44,25 +48,16 @@ namespace MatchTracker
 			return Path.ChangeExtension( matchPath , "json" );
 		}
 
-		public String GetRoundPath( String roundName )
+		public String GetMatchUrl( String matchName )
 		{
-			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
-			String roundFile = Path.Combine( roundFolder , roundName );
-			return Path.Combine( roundFile , roundDataFile );
+			String matchFolder = Url.Combine( GetRepositoryUrl() , matchesFolder );
+			String matchPath = Url.Combine( matchFolder , matchName + ".json" );
+			return matchPath;
 		}
 
-		public String GetRoundVideoPath( String roundName )
+		public String GetRecordingFolder()
 		{
-			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
-			String roundFile = Path.Combine( roundFolder , roundName );
-			return Path.Combine( roundFile , roundVideoFile );
-		}
-
-		public String GetRoundVoicePath( String roundName )
-		{
-			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
-			String roundFile = Path.Combine( roundFolder , roundName );
-			return Path.Combine( roundFile , roundVoiceFile );
+			return baseRecordingFolder;
 		}
 
 		public String GetRepositoryUrl()
@@ -70,16 +65,11 @@ namespace MatchTracker
 			return baseRepositoryUrl;
 		}
 
-		public String GetGlobalUrl()
+		public String GetRoundPath( String roundName )
 		{
-			return Url.Combine( GetRepositoryUrl() , globalDataFile );
-		}
-
-		public String GetMatchUrl( String matchName )
-		{
-			String matchFolder = Url.Combine( GetRepositoryUrl() , matchesFolder );
-			String matchPath = Url.Combine( matchFolder , matchName + ".json" );
-			return matchPath;
+			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
+			String roundFile = Path.Combine( roundFolder , roundName );
+			return Path.Combine( roundFile , roundDataFile );
 		}
 
 		public String GetRoundUrl( String roundName )
@@ -89,11 +79,25 @@ namespace MatchTracker
 			return Url.Combine( roundFile , roundDataFile );
 		}
 
+		public String GetRoundVideoPath( String roundName )
+		{
+			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
+			String roundFile = Path.Combine( roundFolder , roundName );
+			return Path.Combine( roundFile , roundVideoFile );
+		}
+
 		public String GetRoundVideoUrl( String roundName )
 		{
 			String roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
 			String roundFile = Url.Combine( roundFolder , roundName );
 			return Url.Combine( roundFile , roundVideoFile );
+		}
+
+		public String GetRoundVoicePath( String roundName )
+		{
+			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
+			String roundFile = Path.Combine( roundFolder , roundName );
+			return Path.Combine( roundFile , roundVoiceFile );
 		}
 
 		public String GetRoundVoiceUrl( String roundName )

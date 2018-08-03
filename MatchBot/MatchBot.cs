@@ -22,37 +22,42 @@ namespace MatchBot
 {
 	public class MatchBot : IBot
 	{
-		private enum TargetType
-		{
-			Everyone, //targets everyone
-			Author, //targets the author of the message
-			Other //targets someone else
-		}
-		//class used to store info about the recognized Luis entity
-		private class RecognizedPlayerData
-		{
-			public String Target { get; set; } //"we" , "i" , "me" , "Jvs" these are the kind of targets we can expect
-			public bool IsSpecialTarget { get; set; } //if this target is a special one, it means the target and what the PlayerDataTarget might be set by code instead of a normal name search
-			public PlayerData PlayerDataTarget { get; set; } //the target of this, might be null if not found
-			public TargetType TargetType { get; set; } //the kind of target of this entity
-			public String FancyTarget { get; set; } //the colloquial target
-		}
-
 		private enum GameType
 		{
 			Match,
 			Round
 		}
 
+		private enum TargetType
+		{
+			Everyone, //targets everyone
+			Author, //targets the author of the message
+			Other //targets someone else
+		}
+
+		//class used to store info about the recognized Luis entity
+		private class RecognizedPlayerData
+		{
+			public String FancyTarget { get; set; }
+			public bool IsSpecialTarget { get; set; }
+
+			//if this target is a special one, it means the target and what the PlayerDataTarget might be set by code instead of a normal name search
+			public PlayerData PlayerDataTarget { get; set; }
+
+			public String Target { get; set; } //"we" , "i" , "me" , "Jvs" these are the kind of targets we can expect
+
+											   //the target of this, might be null if not found
+			public TargetType TargetType { get; set; } //the kind of target of this entity
+
+													   //the colloquial target
+		}
+
 		private readonly GameDatabase gameDatabase;
 
-		private Task loadDatabaseTask;
-
-		private readonly Timer refreshTimer;
-
 		private readonly HttpClient httpClient;
-
-		IConfigurationRoot Configuration { get; }
+		private readonly Timer refreshTimer;
+		private Task loadDatabaseTask;
+		private IConfigurationRoot Configuration { get; }
 
 		public MatchBot()
 		{
@@ -81,38 +86,6 @@ namespace MatchBot
 
 			RefreshDatabase();
 			refreshTimer = new Timer( RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 ) );
-		}
-
-		public void RefreshDatabase( Object dontactuallycare = null )
-		{
-			if( loadDatabaseTask?.IsCompleted == false )
-			{
-				Console.WriteLine( "Database hasn't finished loading, skipping refresh" );
-				return;
-			}
-
-			loadDatabaseTask = gameDatabase.Load();
-		}
-
-		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings )
-		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
-			Console.WriteLine( "Loading GlobalData" );
-			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) );
-		}
-
-		private async Task<MatchData> LoadDatabaseMatchDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
-		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchUrl( matchName ) );
-			Console.WriteLine( $"Loading MatchData {matchName}" );
-			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) );
-		}
-
-		private async Task<RoundData> LoadDatabaseRoundDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
-		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
-			Console.WriteLine( $"Loading RoundData {roundName}" );
-			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) );
 		}
 
 		public async Task OnTurn( ITurnContext turnContext )
@@ -155,10 +128,15 @@ namespace MatchBot
 			}
 		}
 
-		private async Task HandleHelp( ITurnContext turnContext )
+		public void RefreshDatabase( Object dontactuallycare = null )
 		{
-			await turnContext.SendActivity( "You can ask me stuff like who won the most, last played or times played" );
-			await Task.CompletedTask;
+			if( loadDatabaseTask?.IsCompleted == false )
+			{
+				Console.WriteLine( "Database hasn't finished loading, skipping refresh" );
+				return;
+			}
+
+			loadDatabaseTask = gameDatabase.Load();
 		}
 
 		private Dictionary<String , List<string>> GetEntities( IDictionary<String , JToken> results )
@@ -239,6 +217,40 @@ namespace MatchBot
 			return playerTargets;
 		}
 
+		private async Task<(int, int)> GetPlayerWinsAndLosses( PlayerData player , bool ismatchOrRound )
+		{
+			int wins = 0;
+			int losses = 0;
+
+			await gameDatabase.IterateOverAllRoundsOrMatches( ismatchOrRound , async ( matchOrRound ) =>
+			{
+				//even if it's team mode we consider it a win
+				//first off, only do this if the play is actually in the match
+				if( matchOrRound.players.Any( x => x.userId == player.userId ) )
+				{
+					List<PlayerData> matchOrRoundWinners = matchOrRound.GetWinners();
+
+					if( matchOrRoundWinners.Any( x => x.userId == player.userId ) )
+					{
+						Interlocked.Increment( ref wins );
+					}
+					else
+					{
+						Interlocked.Increment( ref losses );
+					}
+				}
+				await Task.CompletedTask;
+			} );
+
+			return (wins, losses);
+		}
+
+		private async Task HandleHelp( ITurnContext turnContext )
+		{
+			await turnContext.SendActivity( "You can ask me stuff like who won the most, last played or times played" );
+			await Task.CompletedTask;
+		}
+
 		private async Task HandleLastPlayed( ITurnContext turnContext , RecognizerResult result )
 		{
 			List<RecognizedPlayerData> recognizedPlayerEntities = await GetPlayerDataEntities( turnContext , GetEntities( result.Entities ) );
@@ -253,7 +265,6 @@ namespace MatchBot
 				{
 					await gameDatabase.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
 					{
-
 						IStartEnd startEnd = (IStartEnd) matchOrRound;
 						if( startEnd.timeEnded > lastPlayed )
 						{
@@ -360,34 +371,6 @@ namespace MatchBot
 			}
 		}
 
-		private async Task<(int, int)> GetPlayerWinsAndLosses( PlayerData player , bool ismatchOrRound )
-		{
-			int wins = 0;
-			int losses = 0;
-
-			await gameDatabase.IterateOverAllRoundsOrMatches( ismatchOrRound , async ( matchOrRound ) =>
-			{
-				//even if it's team mode we consider it a win
-				//first off, only do this if the play is actually in the match
-				if( matchOrRound.players.Any( x => x.userId == player.userId ) )
-				{
-					List<PlayerData> matchOrRoundWinners = matchOrRound.GetWinners();
-
-					if( matchOrRoundWinners.Any( x => x.userId == player.userId ) )
-					{
-						Interlocked.Increment( ref wins );
-					}
-					else
-					{
-						Interlocked.Increment( ref losses );
-					}
-				}
-				await Task.CompletedTask;
-			} );
-
-			return (wins, losses);
-		}
-
 		private async Task HandleTimesPlayed( ITurnContext turnContext , RecognizerResult result )
 		{
 			var entities = GetEntities( result.Entities );
@@ -448,6 +431,27 @@ namespace MatchBot
 					await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 				}
 			}
+		}
+
+		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings )
+		{
+			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
+			Console.WriteLine( "Loading GlobalData" );
+			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) );
+		}
+
+		private async Task<MatchData> LoadDatabaseMatchDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
+		{
+			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchUrl( matchName ) );
+			Console.WriteLine( $"Loading MatchData {matchName}" );
+			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) );
+		}
+
+		private async Task<RoundData> LoadDatabaseRoundDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
+		{
+			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
+			Console.WriteLine( $"Loading RoundData {roundName}" );
+			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) );
 		}
 	}
 }

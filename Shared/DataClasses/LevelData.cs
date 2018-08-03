@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MatchTracker
+﻿namespace MatchTracker
 {
 	//TODO
-    public sealed class LevelData
-    {
-    }
+	public sealed class LevelData
+	{
+	}
 }

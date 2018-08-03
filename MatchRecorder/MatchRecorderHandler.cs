@@ -13,17 +13,16 @@ namespace MatchRecorder
 {
 	public class MatchRecorderHandler
 	{
-		private IConfigurationRoot Configuration { get; }
 		private IRecorder recorderHandler;
+		public BotSettings BotSettings { get; }
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
-		public bool IsRecording => recorderHandler.IsRecording;
-		public string RoundsFolder { get; }
-		public string MatchesFolder { get; }
 		public GameDatabase GameDatabase { get; private set; }
-		public BotSettings BotSettings { get; }
+		public bool IsRecording => recorderHandler.IsRecording;
+		public string MatchesFolder { get; }
 		public String ModPath { get; }
-
+		public string RoundsFolder { get; }
+		private IConfigurationRoot Configuration { get; }
 
 		public MatchRecorderHandler( String modPath )
 		{
@@ -62,10 +61,10 @@ namespace MatchRecorder
 
 			recorderHandler = new ObsRecorder( this );
 			//recorderHandler = new ReplayRecorder( this );
-
 		}
 
 		#region DATABASEDELEGATES
+
 		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
@@ -101,27 +100,13 @@ namespace MatchRecorder
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
 		}
-		#endregion
+
+		#endregion DATABASEDELEGATES
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
 		public bool IsLevelRecordable( Level level )
 		{
 			return level is GameLevel;
-		}
-
-		public void Update()
-		{
-			recorderHandler?.Update();
-		}
-
-		public void StartRecording()
-		{
-			recorderHandler?.StartRecording();
-		}
-
-		public void StopRecording()
-		{
-			recorderHandler?.StopRecording();
 		}
 
 		public RoundData StartCollectingRoundData( DateTime startTime )
@@ -134,7 +119,7 @@ namespace MatchRecorder
 				players = new List<PlayerData>() ,
 				timeStarted = startTime ,
 				isCustomLevel = false ,
-				recordingType = recorderHandler.ResultingRecordingType,
+				recordingType = recorderHandler.ResultingRecordingType ,
 			};
 
 			CurrentRound.name = GameDatabase.sharedSettings.DateTimeToString( CurrentRound.timeStarted );
@@ -155,6 +140,11 @@ namespace MatchRecorder
 			}
 
 			return CurrentRound;
+		}
+
+		public void StartRecording()
+		{
+			recorderHandler?.StartRecording();
 		}
 
 		public RoundData StopCollectingRoundData( DateTime endTime )
@@ -191,6 +181,11 @@ namespace MatchRecorder
 			return newRoundData;
 		}
 
+		public void StopRecording()
+		{
+			recorderHandler?.StopRecording();
+		}
+
 		public void TryCollectingMatchData()
 		{
 			//try saving the match if there's one and it's got at least one round
@@ -201,6 +196,53 @@ namespace MatchRecorder
 
 			//try starting to collect match data regardless, it'll only be saved if there's at least one round later on
 			StartCollectingMatchData();
+		}
+
+		public void Update()
+		{
+			recorderHandler?.Update();
+		}
+
+		private PlayerData CreatePlayerDataFromProfile( Profile profile )
+		{
+			PlayerData pd = new PlayerData
+			{
+				userId = profile.steamID.ToString() ,
+				name = profile.name ,
+				team = CreateTeamDataFromTeam( profile.team )
+			};
+			//I could've done this with an inlined check but I had other shit to call in here so not yet
+			if( !Network.isActive )
+			{
+				pd.userId = profile.id;
+			}
+
+			//search for this profile on the globaldata, if it's there fill in the rest of the info
+			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
+
+			foreach( var ply in globalData.players )
+			{
+				if( pd.Equals( ply ) )
+				{
+					pd.discordId = ply.discordId;
+					pd.nickName = ply.nickName;
+				}
+			}
+
+			return pd;
+		}
+
+		private TeamData CreateTeamDataFromTeam( Team team )
+		{
+			TeamData td = new TeamData()
+			{
+				hasHat = team.hasHat ,
+				score = team.score ,
+				hatName = team.name ,
+				isCustomHat = team.customData != null ,
+			};
+
+			return td;
 		}
 
 		private MatchData StartCollectingMatchData()
@@ -265,77 +307,12 @@ namespace MatchRecorder
 			MatchData newMatchData = CurrentMatch;
 
 			CurrentMatch = null;
-			
+
 			return newMatchData;
-		}
-
-		private TeamData CreateTeamDataFromTeam( Team team )
-		{
-			TeamData td = new TeamData()
-			{
-				hasHat = team.hasHat ,
-				score = team.score ,
-				hatName = team.name ,
-				isCustomHat = team.customData != null ,
-			};
-
-			return td;
-		}
-
-		private PlayerData CreatePlayerDataFromProfile( Profile profile )
-		{
-			PlayerData pd = new PlayerData
-			{
-				userId = profile.steamID.ToString() ,
-				name = profile.name ,
-				team = CreateTeamDataFromTeam( profile.team )
-			};
-			//I could've done this with an inlined check but I had other shit to call in here so not yet
-			if( !Network.isActive )
-			{
-				pd.userId = profile.id;
-			}
-
-			//search for this profile on the globaldata, if it's there fill in the rest of the info
-			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
-
-			foreach( var ply in globalData.players )
-			{
-				if( pd.Equals( ply ) )
-				{
-					pd.discordId = ply.discordId;
-					pd.nickName = ply.nickName;
-				}
-			}
-
-			return pd;
 		}
 	}
 
 	#region HOOKS
-	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
-	internal static class UpdateLoop
-	{
-		private static void Prefix()
-		{
-
-			MatchRecorderMod.Recorder?.Update();
-		}
-	}
-
-	//start recording
-	[HarmonyPatch( typeof( VirtualTransition ) , nameof( VirtualTransition.GoUnVirtual ) )]
-	internal static class VirtualTransition_GoUnVirtual
-	{
-		private static void Postfix()
-		{
-			//only bother if the current level is something we care about
-			if( MatchRecorderMod.Recorder.IsLevelRecordable( Level.current ) )
-			{
-				MatchRecorderMod.Recorder.StartRecording();
-			}
-		}
-	}
 
 	//save the video and stop recording
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
@@ -375,5 +352,29 @@ namespace MatchRecorder
 			MatchRecorderMod.Recorder?.TryCollectingMatchData();
 		}
 	}
-	#endregion
+
+	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
+	internal static class UpdateLoop
+	{
+		private static void Prefix()
+		{
+			MatchRecorderMod.Recorder?.Update();
+		}
+	}
+
+	//start recording
+	[HarmonyPatch( typeof( VirtualTransition ) , nameof( VirtualTransition.GoUnVirtual ) )]
+	internal static class VirtualTransition_GoUnVirtual
+	{
+		private static void Postfix()
+		{
+			//only bother if the current level is something we care about
+			if( MatchRecorderMod.Recorder.IsLevelRecordable( Level.current ) )
+			{
+				MatchRecorderMod.Recorder.StartRecording();
+			}
+		}
+	}
+
+	#endregion HOOKS
 }

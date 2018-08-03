@@ -2,13 +2,15 @@
 
 namespace MatchRecorder
 {
-	interface IRecorder
+	internal interface IRecorder
 	{
-		RecordingType ResultingRecordingType { get; set; }
 		bool IsRecording { get; }
+		RecordingType ResultingRecordingType { get; set; }
+
+		void StartRecording();
+
+		void StopRecording();
 
 		void Update();
-		void StartRecording();
-		void StopRecording();
 	}
 }
