@@ -26,15 +26,15 @@ namespace MatchUploader
 	public sealed class MatchUploaderHandler : ModeHandler
 	{
 		private IConfigurationRoot Configuration { get; }
-		private String settingsFolder;
-		private GameDatabase gameDatabase;
-		private UploaderSettings uploaderSettings;
-		private BotSettings botSettings;
+		private readonly String settingsFolder;
+		private readonly GameDatabase gameDatabase;
+		private readonly UploaderSettings uploaderSettings;
+		private readonly BotSettings botSettings;
 		private YouTubeService youtubeService;
 		private PendingUpload currentVideo;
-		private Repository databaseRepository;
-		private Branch currentBranch;
-		private DiscordClient discordClient;
+		private readonly Repository databaseRepository;
+		private readonly Branch currentBranch;
+		private readonly DiscordClient discordClient;
 
 
 		public MatchUploaderHandler( string [] args ) : base( args )
@@ -376,7 +376,7 @@ namespace MatchUploader
 
 				if( matchData.youtubeUrl != null )
 				{
-					await GetAllPlaylistItems( matchData.youtubeUrl );
+					playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
 				}
 
 				foreach( String roundName in matchData.rounds )
@@ -399,9 +399,9 @@ namespace MatchUploader
 
 						if( playlistItems != null )
 						{
-							await AddRoundToPlaylist( roundName , matchName , playlistItems );
+							await AddRoundToPlaylist( roundData , matchData , playlistItems );
 						}
-						
+
 					}
 				}
 			}
@@ -449,7 +449,7 @@ namespace MatchUploader
 				playlistItemListResponse = await playlistItemsRequest.ExecuteAsync();
 				foreach( var plitem in playlistItemListResponse.Items )
 				{
-					if( !allplaylistitems.Contains( plitem ) )
+					if( !allplaylistitems.Any( x => x.Id == plitem.Id ) )
 					{
 						allplaylistitems.Add( plitem );
 					}
@@ -463,22 +463,41 @@ namespace MatchUploader
 
 		public async Task CleanPlaylists()
 		{
-			try
+
+			var allplaylists = await GetAllPlaylists();
+			foreach( var playlist in allplaylists )
 			{
-				var allplaylists = await GetAllPlaylists();
-				foreach( var playlist in allplaylists )
+				List<Task> playlistTasks = new List<Task>();
+
+				var allvideos = await GetAllPlaylistItems( playlist.Id );
+				foreach( var item in allvideos )
 				{
-					var allvideos = await GetAllPlaylistItems( playlist.Id );
-					foreach( var item in allvideos )
+					//playlistTasks.Add( youtubeService.PlaylistItems.Delete( item.Id ).ExecuteAsync() );
+
+					try
 					{
 						await youtubeService.PlaylistItems.Delete( item.Id ).ExecuteAsync();
 					}
+					catch( Exception )
+					{
+						Console.WriteLine( $"Could not delete {item.Snippet.Title} from {playlist.Snippet.Title}" );
+					}
+
+				}
+
+				if( playlistTasks.Count > 0 )
+				{
+					try
+					{
+						await Task.WhenAll( playlistTasks );
+					}
+					catch( Exception ex )
+					{
+						Console.WriteLine( ex );
+					}
 				}
 			}
-			catch( Exception ex )
-			{
-				Console.WriteLine( ex );
-			}
+
 		}
 
 		//go through every match that has a playlist id, then update the name of it to reflect the new one
@@ -548,23 +567,21 @@ namespace MatchUploader
 			return null;
 		}
 
-		public async Task AddRoundToPlaylist( String roundName , String matchName , List<PlaylistItem> playlistItems )
+		public async Task AddRoundToPlaylist( RoundData roundData , MatchData matchData , List<PlaylistItem> playlistItems )
 		{
-			MatchData matchData = await gameDatabase.GetMatchData( matchName );
-			RoundData roundData = await gameDatabase.GetRoundData( roundName );
 
 			if( matchData.youtubeUrl == null || roundData.youtubeUrl == null )
 			{
-				Console.WriteLine( $"Could not add round {roundName} to playlist because either match url or round url are missing" );
+				Console.WriteLine( $"Could not add round {roundData.name} to playlist because either match url or round url are missing" );
 				await Task.CompletedTask;
 				return;
 			}
 
-			int roundIndex = matchData.rounds.IndexOf( roundName );
+			int roundIndex = matchData.rounds.IndexOf( roundData.name );
 
 			if( !playlistItems.Any( x => x.Snippet.ResourceId.VideoId == roundData.youtubeUrl ) )
 			{
-				Console.WriteLine( $"Could not find {roundName} on playlist {matchName}, adding" );
+				Console.WriteLine( $"Could not find {roundData.name} on playlist {matchData.name}, adding" );
 				PlaylistItem roundPlaylistItem = await GetPlaylistItemForRound( roundData );
 				roundPlaylistItem.Snippet.Position = roundIndex + 1;
 				roundPlaylistItem.Snippet.PlaylistId = matchData.youtubeUrl;
@@ -619,6 +636,8 @@ namespace MatchUploader
 								await gameDatabase.SaveMatchData( matchName , matchData );
 							}
 						}
+
+
 					}
 					catch( Exception ex )
 					{
@@ -635,7 +654,7 @@ namespace MatchUploader
 							RoundData roundData = await gameDatabase.GetRoundData( roundName );
 							if( roundData.youtubeUrl != null )
 							{
-								addrounds.Add( AddRoundToPlaylist( roundName , matchName , playlistItems ) );
+								addrounds.Add( AddRoundToPlaylist( roundData , matchData , playlistItems ) );
 							}
 						}
 					}
@@ -782,7 +801,7 @@ namespace MatchUploader
 				videosInsertRequest.ResponseReceived += OnResponseReceived;
 				videosInsertRequest.UploadSessionData += OnStartUploading;
 
-				IUploadProgress uploadProgress = null;
+				IUploadProgress uploadProgress;
 
 
 				if( currentVideo.uploadUrl != null )
@@ -798,8 +817,9 @@ namespace MatchUploader
 
 				//save it to the uploader settings and increment the error count only if it's not the annoying too many videos error
 				if( uploadProgress.Status != UploadStatus.Completed
-					&& uploadProgress.Exception is Google.GoogleApiException googleException
-					&& googleException.Error?.Code != 400 )
+					&& !( uploadProgress.Exception is Google.GoogleApiException )
+					|| ( uploadProgress.Exception is Google.GoogleApiException googleException
+					&& googleException.Error?.Code != 400 ) )
 				{
 					currentVideo.lastException = uploadProgress.Exception.Message;
 					currentVideo.errorCount++;
@@ -877,7 +897,7 @@ namespace MatchUploader
 			if( discordClient == null )
 				return;
 
-			String gameString = String.Empty;
+			String gameString;
 			if( updateInProgress )
 			{
 				gameString = $"Uploading {currentVideo.videoName} : {percentage}%";

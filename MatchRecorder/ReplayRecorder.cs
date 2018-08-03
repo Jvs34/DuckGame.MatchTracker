@@ -79,7 +79,7 @@ namespace MatchRecorder
 
 			voiceClient = discordClient.UseVoiceNext( new VoiceNextConfiguration()
 			{
-				EnableIncoming = false ,
+				EnableIncoming = true ,
 				VoiceApplication = VoiceApplication.Voice ,
 			} );
 
@@ -97,25 +97,20 @@ namespace MatchRecorder
 				if( stalked != null && stalked.VoiceState != null )
 				{
 					//see if we can get the connection again first
-					try
-					{
-						var newVoiceConnection = voiceClient.GetConnection( stalked.Guild );
 
-						//otherwise try connecting
-						if( newVoiceConnection == null )
-						{
-							newVoiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
-						}
+					var newVoiceConnection = voiceClient.GetConnection( stalked.Guild );
 
-						if( newVoiceConnection != null )
-						{
-							voiceConnection = newVoiceConnection;
-						}
-					}
-					catch( Exception e )
+					//otherwise try connecting
+					if( newVoiceConnection == null )
 					{
-						Debugger.Log( 1 , "Duck" , e.Message );
+						newVoiceConnection = await voiceClient.ConnectAsync( stalked.VoiceState.Channel );
 					}
+
+					if( newVoiceConnection != null )
+					{
+						voiceConnection = newVoiceConnection;
+					}
+
 				}
 			}
 		}
@@ -193,7 +188,7 @@ namespace MatchRecorder
 			}
 
 
-			String outputArg = $@"-codec:a libopus -q:a 0 -filter_complex amix=inputs={ffmpegChannels.Count} {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
+			String outputArg = $"-codec:a libopus -filter_complex amix=inputs={ffmpegChannels.Count} {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
 
 			var process = new Process()
 			{
@@ -204,12 +199,17 @@ namespace MatchRecorder
 					CreateNoWindow = false ,
 					RedirectStandardInput = true ,
 					Arguments = $"{inputArg} {outputArg}" ,
+					//RedirectStandardError = true ,
 				}
 			};
 
 			if( process.Start() )
 			{
 				ffmpegProcess = process;
+				process.ErrorDataReceived += ( s , e ) =>
+				{
+					Debug.WriteLine( e );
+				};
 				return true;
 			}
 
@@ -225,8 +225,8 @@ namespace MatchRecorder
 				if( pipe.IsConnected )
 				{
 					pipe.Flush();
+					pipe.WaitForPipeDrain();
 				}
-
 				pipe.Dispose();
 			}
 
@@ -246,10 +246,21 @@ namespace MatchRecorder
 
 		private async Task OnVoiceReceived( VoiceReceiveEventArgs args )
 		{
-			if( ffmpegChannels.TryGetValue( args.User.Id , out NamedPipeServerStream stream ) )
+			try
 			{
-				await stream.WaitForConnectionAsync();
-				await stream.WriteAsync( args.Voice.ToArray() , 0 , args.VoiceLength );
+				if( ffmpegChannels.TryGetValue( args.User.Id , out NamedPipeServerStream stream ) )
+				{
+					if( !stream.IsConnected )
+					{
+						await stream.WaitForConnectionAsync();
+					}
+
+					await stream.WriteAsync( args.Voice.ToArray() , 0 , args.VoiceLength );
+				}
+			}
+			catch( Exception e )
+			{
+				Debug.WriteLine( e );
 			}
 		}
 	}
