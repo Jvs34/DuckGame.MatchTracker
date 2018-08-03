@@ -116,7 +116,7 @@ namespace MatchRecorder
 							try
 							{
 								DateTime recordingTime = DateTime.Now;
-								String roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.sharedSettings.DateTimeToString( recordingTime ) );
+								String roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime ) );
 								//try setting the recording folder first, then create it before we start recording
 
 								Directory.CreateDirectory( roundPath );

@@ -86,7 +86,7 @@ namespace MatchRecorder
 		{
 			IsRecording = true;
 			DateTime recordingTime = DateTime.Now;
-			String roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.sharedSettings.DateTimeToString( recordingTime ) );
+			String roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime ) );
 			Directory.CreateDirectory( roundPath );
 			mainHandler.StartCollectingRoundData( recordingTime );
 

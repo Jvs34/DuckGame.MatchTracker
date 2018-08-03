@@ -59,14 +59,14 @@ namespace MatchUploader
 				.AddCommandLine( args )
 			.Build();
 
-			Configuration.Bind( gameDatabase.sharedSettings );
+			Configuration.Bind( gameDatabase.SharedSettings );
 			Configuration.Bind( uploaderSettings );
 			Configuration.Bind( botSettings );
 
-			if( Repository.IsValid( gameDatabase.sharedSettings.GetRecordingFolder() ) )
+			if( Repository.IsValid( gameDatabase.SharedSettings.GetRecordingFolder() ) )
 			{
-				Console.WriteLine( "Loaded {0}" , gameDatabase.sharedSettings.GetRecordingFolder() );
-				databaseRepository = new Repository( gameDatabase.sharedSettings.GetRecordingFolder() );
+				Console.WriteLine( "Loaded {0}" , gameDatabase.SharedSettings.GetRecordingFolder() );
+				databaseRepository = new Repository( gameDatabase.SharedSettings.GetRecordingFolder() );
 				currentBranch = databaseRepository.Branches.First( branch => branch.IsCurrentRepositoryHead );
 			}
 
@@ -337,7 +337,7 @@ namespace MatchUploader
 				Snippet = new PlaylistSnippet()
 				{
 					Title = $"{matchData.name} {winner}" ,
-					Description = String.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.sharedSettings.DateTimeToString( matchData.timeStarted ) , winner ) ,
+					Description = String.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.SharedSettings.DateTimeToString( matchData.timeStarted ) , winner ) ,
 					Tags = new List<String>() { "duckgame" , "peniscorp" }
 				} ,
 				Status = new PlaylistStatus()
@@ -373,7 +373,7 @@ namespace MatchUploader
 				winner = "Nobody";
 			}
 
-			String description = String.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.sharedSettings.DateTimeToString( roundData.timeStarted ) , winner );
+			String description = String.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.SharedSettings.DateTimeToString( roundData.timeStarted ) , winner );
 
 			Video videoData = new Video()
 			{
@@ -426,15 +426,15 @@ namespace MatchUploader
 		//updates the global data.json
 		public async Task UpdateGlobalData()
 		{
-			String roundsPath = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
-			String matchesPath = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.matchesFolder );
+			String roundsPath = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.roundsFolder );
+			String matchesPath = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.matchesFolder );
 
-			if( !Directory.Exists( gameDatabase.sharedSettings.GetRecordingFolder() ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
+			if( !Directory.Exists( gameDatabase.SharedSettings.GetRecordingFolder() ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
 			{
 				throw new DirectoryNotFoundException( "Folders do not exist" );
 			}
 
-			String globalDataPath = gameDatabase.sharedSettings.GetGlobalPath();
+			String globalDataPath = gameDatabase.SharedSettings.GetGlobalPath();
 
 			GlobalData globalData = new GlobalData();
 
@@ -458,7 +458,7 @@ namespace MatchUploader
 				RoundData roundData = await gameDatabase.GetRoundData( folderName );
 				if( String.IsNullOrEmpty( roundData.name ) )
 				{
-					roundData.name = gameDatabase.sharedSettings.DateTimeToString( roundData.timeStarted );
+					roundData.name = gameDatabase.SharedSettings.DateTimeToString( roundData.timeStarted );
 					Console.WriteLine( $"Adding roundName to roundData {roundData.name}" );
 
 					await gameDatabase.SaveRoundData( roundData.name , roundData );
@@ -466,7 +466,7 @@ namespace MatchUploader
 
 				if( roundData.recordingType == RecordingType.None )
 				{
-					if( roundData.youtubeUrl != null || File.Exists( gameDatabase.sharedSettings.GetRoundVideoPath( roundData.name ) ) )
+					if( roundData.youtubeUrl != null || File.Exists( gameDatabase.SharedSettings.GetRoundVideoPath( roundData.name ) ) )
 					{
 						roundData.recordingType = RecordingType.Video;
 						await gameDatabase.SaveRoundData( roundData.name , roundData );
@@ -531,7 +531,7 @@ namespace MatchUploader
 
 				if( String.IsNullOrEmpty( matchData.name ) )
 				{
-					matchData.name = gameDatabase.sharedSettings.DateTimeToString( matchData.timeStarted );
+					matchData.name = gameDatabase.SharedSettings.DateTimeToString( matchData.timeStarted );
 					Console.WriteLine( $"Adding matchName to matchData {matchData.name}" );
 				}
 
@@ -721,7 +721,7 @@ namespace MatchUploader
 			}
 
 			Video videoData = await GetVideoDataForRound( roundData );
-			String filePath = gameDatabase.sharedSettings.GetRoundVideoPath( roundData.name );
+			String filePath = gameDatabase.SharedSettings.GetRoundVideoPath( roundData.name );
 
 			if( !File.Exists( filePath ) )
 			{
@@ -811,17 +811,17 @@ namespace MatchUploader
 			return remainingFiles;
 		}
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings )
+		private async Task<GlobalData> LoadDatabaseGlobalDataFile( IDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			return JsonConvert.DeserializeObject<GlobalData>( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) );
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			return JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			return JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) );
 		}
@@ -872,8 +872,8 @@ namespace MatchUploader
 
 			try
 			{
-				String roundsFolder = Path.Combine( gameDatabase.sharedSettings.GetRecordingFolder() , gameDatabase.sharedSettings.roundsFolder );
-				String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.sharedSettings.roundVideoFile );
+				String roundsFolder = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.roundsFolder );
+				String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.SharedSettings.roundVideoFile );
 
 				if( File.Exists( filePath ) )
 				{
@@ -887,44 +887,44 @@ namespace MatchUploader
 			}
 		}
 
-		private async Task SaveDatabaseGlobalDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
+		private async Task SaveDatabaseGlobalDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
 		}
 
-		private async Task SaveDatabaseMatchDataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
+		private async Task SaveDatabaseMatchDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
 		}
 
-		private async Task SaveDatabaseRoundataFile( GameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
+		private async Task SaveDatabaseRoundataFile( IDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
 		}
 
-		private async Task UpdateUploadProgress( double percentage , bool updateInProgress = false )
+		private async Task SetPresence( String str )
 		{
 			if( discordClient == null )
 			{
 				return;
 			}
 
-			String gameString;
-			if( updateInProgress )
-			{
-				gameString = $"Uploading {currentVideo.videoName} : {percentage}%";
-			}
-			else
-			{
-				gameString = $"{Math.Round( percentage )} videos remaining";
-			}
-
-			if( discordClient.CurrentUser.Presence.Game != null && discordClient.CurrentUser.Presence.Game.Name == gameString )
+			if( discordClient.CurrentUser.Presence.Game != null && discordClient.CurrentUser.Presence.Game.Name == str )
 			{
 				return;
 			}
 
-			await discordClient.UpdateStatusAsync( new DSharpPlus.Entities.DiscordGame( gameString ) );
+			await discordClient.UpdateStatusAsync( new DSharpPlus.Entities.DiscordGame( str ) );
+		}
+
+		private async Task UpdateUploadProgress( double percentage )
+		{
+			await SetPresence( $"Uploading {currentVideo.videoName} : {percentage}%" );
+		}
+
+		private async Task UpdateUploadProgress( int remaining )
+		{
+			await SetPresence( $"{remaining} videos remaining" );
 		}
 	}
 }

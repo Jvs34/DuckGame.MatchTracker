@@ -46,13 +46,13 @@ namespace MatchBot
 
 			public String Target { get; set; } //"we" , "i" , "me" , "Jvs" these are the kind of targets we can expect
 
-											   //the target of this, might be null if not found
+			//the target of this, might be null if not found
 			public TargetType TargetType { get; set; } //the kind of target of this entity
 
-													   //the colloquial target
+			//the colloquial target
 		}
 
-		private readonly GameDatabase gameDatabase;
+		private readonly IDatabase gameDatabase;
 
 		private readonly HttpClient httpClient;
 		private readonly Timer refreshTimer;
@@ -78,7 +78,7 @@ namespace MatchBot
 
 			gameDatabase = new GameDatabase();
 
-			Configuration.Bind( gameDatabase.sharedSettings );
+			Configuration.Bind( gameDatabase.SharedSettings );
 
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
 			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
@@ -433,21 +433,21 @@ namespace MatchBot
 			}
 		}
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings )
+		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( IDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
 			Console.WriteLine( "Loading GlobalData" );
 			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) );
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataWeb( IDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchUrl( matchName ) );
 			Console.WriteLine( $"Loading MatchData {matchName}" );
 			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataWeb( GameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataWeb( IDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
 			Console.WriteLine( $"Loading RoundData {roundName}" );

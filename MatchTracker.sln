@@ -18,7 +18,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchBot", "MatchBot\MatchB
 		{14A7AEA1-81E7-4E0C-B887-7154B4581C6E} = {14A7AEA1-81E7-4E0C-B887-7154B4581C6E}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared", "Shared\Shared.csproj", "{14A7AEA1-81E7-4E0C-B887-7154B4581C6E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchShared", "MatchShared\MatchShared.csproj", "{14A7AEA1-81E7-4E0C-B887-7154B4581C6E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
