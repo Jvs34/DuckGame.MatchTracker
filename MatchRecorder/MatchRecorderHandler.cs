@@ -17,7 +17,7 @@ namespace MatchRecorder
 		public BotSettings BotSettings { get; }
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
-		public IDatabase GameDatabase { get; private set; }
+		public IGameDatabase GameDatabase { get; private set; }
 		public bool IsRecording => recorderHandler.IsRecording;
 		public string MatchesFolder { get; }
 		public String ModPath { get; }
@@ -38,7 +38,11 @@ namespace MatchRecorder
 
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( modPath , "Settings" ) )
+#if DEBUG
+				.AddJsonFile( "shared_debug.json" )
+#else
 				.AddJsonFile( "shared.json" )
+#endif
 				.AddJsonFile( "bot.json" )
 			.Build();
 
@@ -59,43 +63,46 @@ namespace MatchRecorder
 				GameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
 			}
 
+#if DEBUG
+			recorderHandler = new ReplayRecorder( this );
+#else
 			recorderHandler = new ObsRecorder( this );
-			//recorderHandler = new ReplayRecorder( this );
+#endif
 		}
 
 		#region DATABASEDELEGATES
 
-		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( IDatabase gameDatabase , SharedSettings sharedSettings )
+		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
 			return JsonConvert.DeserializeObject<MatchTracker.GlobalData>( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			await Task.CompletedTask;
 			return JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			await Task.CompletedTask;
 			return JsonConvert.DeserializeObject<RoundData>( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
 		}
 
-		private async Task SaveDatabaseGlobalDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
+		private async Task SaveDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
 		}
 
-		private async Task SaveDatabaseMatchDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
+		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
 		}
 
-		private async Task SaveDatabaseRoundataFile( IDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
+		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );

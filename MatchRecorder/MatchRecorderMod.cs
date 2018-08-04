@@ -11,6 +11,9 @@ namespace MatchRecorder
 
 		public MatchRecorderMod()
 		{
+#if DEBUG
+			System.Diagnostics.Debugger.Launch();
+#endif
 			AppDomain.CurrentDomain.AssemblyResolve += ModResolve;
 		}
 
@@ -21,10 +24,6 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
-#if DEBUG
-			System.Diagnostics.Debugger.Launch();
-#endif
-
 			Recorder = new MatchRecorderHandler( configuration.directory );
 			HarmonyInstance.Create( "MatchRecorder" ).PatchAll( Assembly.GetExecutingAssembly() );
 		}

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public class GameDatabase : IDatabase
+	public class GameDatabase : IGameDatabase
 	{
 		private readonly Object globalDataLock;
 		private GlobalData globalData;

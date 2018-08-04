@@ -163,6 +163,11 @@ namespace MatchRecorder
 		{
 			try
 			{
+				if( IsRecording && ffmpegProcess != null && !ffmpegProcess.HasExited )
+				{
+					await ffmpegProcess.StandardInput.BaseStream.WriteAsync( args.Voice.ToArray() , 0 , args.VoiceLength );
+				}
+				/*
 				if( ffmpegChannels.TryGetValue( args.User.Id , out NamedPipeServerStream stream ) )
 				{
 					if( !stream.IsConnected )
@@ -172,6 +177,7 @@ namespace MatchRecorder
 
 					await stream.WriteAsync( args.Voice.ToArray() , 0 , args.VoiceLength );
 				}
+				*/
 			}
 			catch( Exception e )
 			{
@@ -184,11 +190,12 @@ namespace MatchRecorder
 			if( voiceConnection == null )
 				return false;
 
-			String inputArg = "";
+			String inputArg = @"-ac 1 -f s16le -ar 48000";
 
 			var channelMembers = voiceConnection.Channel.Users;
 
 			//make a pipe for each user by using their discord id
+			/*
 			foreach( var member in channelMembers )
 			{
 				if( member == discordClient.CurrentUser )
@@ -205,8 +212,12 @@ namespace MatchRecorder
 
 				inputArg += $" -i {pipe}";
 			}
+			*/
+			inputArg += @"-i pipe:0";
 
-			String outputArg = $"-codec:a libopus -filter_complex amix=inputs={ffmpegChannels.Count} {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
+			//String outputArg = $"-codec:a libopus -filter_complex amix=inputs={ffmpegChannels.Count} {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
+			//String outputArg = $"-codec:a libopus {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
+			String outputArg = $@"-ac 1 -ar 44100 {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.wav" )}";
 
 			var process = new Process()
 			{
@@ -215,20 +226,22 @@ namespace MatchRecorder
 					FileName = FFmpegPath ,
 					UseShellExecute = false ,
 					CreateNoWindow = false ,
-					RedirectStandardInput = true ,
 					Arguments = $"{inputArg} {outputArg}" ,
-					//RedirectStandardError = true ,
+					RedirectStandardInput = true ,
 				}
 			};
 
-			if( process.Start() )
+			try
 			{
-				ffmpegProcess = process;
-				process.ErrorDataReceived += ( s , e ) =>
+				if( process.Start() )
 				{
-					Debug.WriteLine( e );
-				};
-				return true;
+					ffmpegProcess = process;
+					return true;
+				}
+			}
+			catch( Exception e )
+			{
+				Debug.WriteLine( e );
 			}
 
 			return false;
@@ -236,6 +249,7 @@ namespace MatchRecorder
 
 		private void StopFFmpeg()
 		{
+			/*
 			foreach( var channelskv in ffmpegChannels )
 			{
 				var pipe = channelskv.Value;
@@ -249,9 +263,11 @@ namespace MatchRecorder
 			}
 
 			ffmpegChannels.Clear();
+			*/
 
 			if( ffmpegProcess != null && !ffmpegProcess.HasExited )
 			{
+				ffmpegProcess.StandardInput.BaseStream.Flush();
 				ffmpegProcess.StandardInput.BaseStream.Close();
 				ffmpegProcess.WaitForExit();
 			}

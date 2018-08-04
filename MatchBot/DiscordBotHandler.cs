@@ -2,6 +2,7 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using MatchTracker;
+using Microsoft.Bot;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Ai.LUIS;
 using Microsoft.Bot.Builder.Core.Extensions;
@@ -18,7 +19,7 @@ namespace MatchBot
 {
 	public class DiscordBotHandler : BotAdapter
 	{
-		private MatchBot bot;
+		private IBot bot;
 		private BotSettings botSettings;
 		private DiscordClient discordClient;
 		private IConfigurationRoot Configuration { get; }

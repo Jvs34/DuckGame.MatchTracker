@@ -52,7 +52,7 @@ namespace MatchBot
 			//the colloquial target
 		}
 
-		private readonly IDatabase gameDatabase;
+		private readonly IGameDatabase gameDatabase;
 
 		private readonly HttpClient httpClient;
 		private readonly Timer refreshTimer;
@@ -433,21 +433,21 @@ namespace MatchBot
 			}
 		}
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( IDatabase gameDatabase , SharedSettings sharedSettings )
+		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
 			Console.WriteLine( "Loading GlobalData" );
 			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) );
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataWeb( IDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchUrl( matchName ) );
 			Console.WriteLine( $"Loading MatchData {matchName}" );
 			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataWeb( IDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
 			Console.WriteLine( $"Loading RoundData {roundName}" );

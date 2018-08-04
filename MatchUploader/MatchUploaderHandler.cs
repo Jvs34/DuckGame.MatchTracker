@@ -30,7 +30,7 @@ namespace MatchUploader
 		private readonly Branch currentBranch;
 		private readonly Repository databaseRepository;
 		private readonly DiscordClient discordClient;
-		private readonly GameDatabase gameDatabase;
+		private readonly IGameDatabase gameDatabase;
 		private readonly String settingsFolder;
 		private readonly UploaderSettings uploaderSettings;
 		private PendingUpload currentVideo;
@@ -92,13 +92,20 @@ namespace MatchUploader
 
 			int roundIndex = matchData.rounds.IndexOf( roundData.name );
 
-			if( !playlistItems.Any( x => x.Snippet.ResourceId.VideoId == roundData.youtubeUrl ) )
+			try
 			{
-				Console.WriteLine( $"Could not find {roundData.name} on playlist {matchData.name}, adding" );
-				PlaylistItem roundPlaylistItem = await GetPlaylistItemForRound( roundData );
-				roundPlaylistItem.Snippet.Position = roundIndex + 1;
-				roundPlaylistItem.Snippet.PlaylistId = matchData.youtubeUrl;
-				await youtubeService.PlaylistItems.Insert( roundPlaylistItem , "snippet" ).ExecuteAsync();
+				if( !playlistItems.Any( x => x.Snippet.ResourceId.VideoId == roundData.youtubeUrl ) )
+				{
+					Console.WriteLine( $"Could not find {roundData.name} on playlist {matchData.name}, adding" );
+					PlaylistItem roundPlaylistItem = await GetPlaylistItemForRound( roundData );
+					roundPlaylistItem.Snippet.Position = roundIndex + 1;
+					roundPlaylistItem.Snippet.PlaylistId = matchData.youtubeUrl;
+					await youtubeService.PlaylistItems.Insert( roundPlaylistItem , "snippet" ).ExecuteAsync();
+				}
+			}
+			catch( Google.GoogleApiException e )
+			{
+				Console.WriteLine( e.Message );
 			}
 		}
 
@@ -614,7 +621,7 @@ namespace MatchUploader
 			}
 			catch( Exception ex )
 			{
-				Console.WriteLine( ex );
+				Console.WriteLine( ex.Message );
 			}
 
 			CommitGitChanges();
@@ -676,7 +683,14 @@ namespace MatchUploader
 
 				if( matchData.youtubeUrl != null )
 				{
-					playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
+					try
+					{
+						playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
+					}
+					catch( Exception )
+					{
+						playlistItems = null;
+					}
 				}
 
 				foreach( String roundName in matchData.rounds )
@@ -811,17 +825,17 @@ namespace MatchUploader
 			return remainingFiles;
 		}
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataFile( IDatabase gameDatabase , SharedSettings sharedSettings )
+		private async Task<GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			return JsonConvert.DeserializeObject<GlobalData>( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) );
 		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
+		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			return JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) );
 		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
+		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			return JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) );
 		}
@@ -887,17 +901,17 @@ namespace MatchUploader
 			}
 		}
 
-		private async Task SaveDatabaseGlobalDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
+		private async Task SaveDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
 		}
 
-		private async Task SaveDatabaseMatchDataFile( IDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
+		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
 		}
 
-		private async Task SaveDatabaseRoundataFile( IDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
+		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
 			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
 		}

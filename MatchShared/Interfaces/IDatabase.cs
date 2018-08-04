@@ -3,14 +3,14 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public delegate Task<GlobalData> LoadGlobalDataDelegate( IDatabase database , SharedSettings settings );
-	public delegate Task<MatchData> LoadMatchDataDelegate( IDatabase database , SharedSettings settings , String matchName );
-	public delegate Task<RoundData> LoadRoundDataDelegate( IDatabase database , SharedSettings settings , String roundName );
-	public delegate Task SaveGlobalDataDelegate( IDatabase database , SharedSettings settings , GlobalData globalData );
-	public delegate Task SaveMatchDataDelegate( IDatabase database , SharedSettings settings , String matchName , MatchData matchData );
-	public delegate Task SaveRoundDataDelegate( IDatabase database , SharedSettings settings , String roundName , RoundData roundData );
+	public delegate Task<GlobalData> LoadGlobalDataDelegate( IGameDatabase database , SharedSettings settings );
+	public delegate Task<MatchData> LoadMatchDataDelegate( IGameDatabase database , SharedSettings settings , String matchName );
+	public delegate Task<RoundData> LoadRoundDataDelegate( IGameDatabase database , SharedSettings settings , String roundName );
+	public delegate Task SaveGlobalDataDelegate( IGameDatabase database , SharedSettings settings , GlobalData globalData );
+	public delegate Task SaveMatchDataDelegate( IGameDatabase database , SharedSettings settings , String matchName , MatchData matchData );
+	public delegate Task SaveRoundDataDelegate( IGameDatabase database , SharedSettings settings , String roundName , RoundData roundData );
 
-	public interface IDatabase
+	public interface IGameDatabase
 	{
 		SharedSettings SharedSettings { get; set; }
 

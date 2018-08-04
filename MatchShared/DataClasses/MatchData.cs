@@ -8,23 +8,17 @@ namespace MatchTracker
 	public sealed class MatchData : IPlayersList, IRoundsList, IStartEnd, IWinner, IYoutube, IEquatable<MatchData>, IComparable<MatchData>
 	{
 		//name of the match
-		public String name { get; set; }
+		public String name { get; set; } = String.Empty;
 
-		public List<PlayerData> players { get; set; }
+		public List<PlayerData> players { get; set; } = new List<PlayerData>();
 
-		public List<String> rounds { get; set; }
+		public List<String> rounds { get; set; } = new List<string>();
 
 		public DateTime timeEnded { get; set; }
 		public DateTime timeStarted { get; set; }
 		public TeamData winner { get; set; }
 
-		public String youtubeUrl { get; set; }
-
-		public MatchData()
-		{
-			players = new List<PlayerData>();
-			rounds = new List<string>();
-		}
+		public String youtubeUrl { get; set; } = String.Empty;
 
 		public int CompareTo( MatchData other )
 		{
@@ -33,7 +27,7 @@ namespace MatchTracker
 
 		public bool Equals( MatchData other )
 		{
-			return name == other.name && youtubeUrl == other.youtubeUrl;
+			return name == other.name;
 		}
 
 		public TimeSpan GetDuration()

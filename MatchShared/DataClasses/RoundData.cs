@@ -14,7 +14,7 @@ namespace MatchTracker
 
 		public String name { get; set; }
 
-		public List<PlayerData> players { get; set; }
+		public List<PlayerData> players { get; set; } = new List<PlayerData>();
 		public bool skipped { get; set; }
 
 		public DateTime timeEnded { get; set; }
@@ -24,11 +24,6 @@ namespace MatchTracker
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
 		public String youtubeUrl { get; set; }
 
-		public RoundData()
-		{
-			players = new List<PlayerData>();
-		}
-
 		public int CompareTo( RoundData other )
 		{
 			return timeStarted.CompareTo( other.timeStarted );
@@ -36,7 +31,7 @@ namespace MatchTracker
 
 		public bool Equals( RoundData other )
 		{
-			return name == other.name && youtubeUrl == other.youtubeUrl;
+			return name == other.name;
 		}
 
 		public TimeSpan GetDuration()
