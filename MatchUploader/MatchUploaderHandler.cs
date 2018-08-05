@@ -610,14 +610,18 @@ namespace MatchUploader
 							RoundData roundData = await gameDatabase.GetRoundData( roundName );
 							if( roundData.youtubeUrl != null )
 							{
-								addrounds.Add( AddRoundToPlaylist( roundData , matchData , playlistItems ) );
+								await AddRoundToPlaylist( roundData , matchData , playlistItems );
+								//addrounds.Add( AddRoundToPlaylist( roundData , matchData , playlistItems ) );
 							}
 						}
 					}
 				}
 
 				//finally await it all at once
-				await Task.WhenAll( addrounds );
+				if( addrounds.Count > 0 )
+				{
+					await Task.WhenAll( addrounds );
+				}
 			}
 			catch( Exception ex )
 			{
