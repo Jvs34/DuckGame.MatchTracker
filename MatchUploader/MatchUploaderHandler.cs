@@ -364,7 +364,7 @@ namespace MatchUploader
 					ResourceId = new ResourceId()
 					{
 						Kind = "youtube#video" ,
-						VideoId = roundData.youtubeUrl
+						VideoId = roundData.youtubeUrl ,
 					}
 				} ,
 			};
@@ -417,7 +417,6 @@ namespace MatchUploader
 
 			await SaveSettings();
 			CommitGitChanges();
-			await UpdatePlaylists();
 			await UploadAllRounds();
 		}
 
@@ -685,6 +684,15 @@ namespace MatchUploader
 				MatchData matchData = await gameDatabase.GetMatchData( matchName );
 				List<PlaylistItem> playlistItems = null;
 
+				if( String.IsNullOrEmpty( matchData.youtubeUrl ) )
+				{
+					Playlist playlist = await CreatePlaylist( matchData );
+					if( playlist != null )
+					{
+						await gameDatabase.SaveMatchData( matchName , matchData );
+					}
+				}
+
 				if( matchData.youtubeUrl != null )
 				{
 					try
@@ -714,11 +722,11 @@ namespace MatchUploader
 					{
 						await RemoveVideoFile( roundName );
 						remaining--;
+					}
 
-						if( playlistItems != null )
-						{
-							await AddRoundToPlaylist( roundData , matchData , playlistItems );
-						}
+					if( !String.IsNullOrEmpty( roundData.youtubeUrl ) && playlistItems != null )
+					{
+						await AddRoundToPlaylist( roundData , matchData , playlistItems );
 					}
 				}
 			}

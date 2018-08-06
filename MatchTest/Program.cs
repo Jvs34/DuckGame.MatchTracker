@@ -41,7 +41,8 @@ namespace MatchTest
 
 			Configuration.Bind( gameDatabase.SharedSettings );
 
-			GlobalData globalData = await gameDatabase.GetGlobalData();
+			RoundData roundData = await gameDatabase.GetRoundData( "2018-08-02 15-22-38" );
+			//GlobalData globalData = await gameDatabase.GetGlobalData();
 
 			Console.ReadLine();
 		}

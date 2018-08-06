@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MatchTracker
@@ -25,11 +26,54 @@ namespace MatchTracker
 		public EFGameDatabase()
 		{
 			databaseContextOptions = new DbContextOptionsBuilder<GameDatabaseContext>().Options;
+
+			RoundData roundData = new RoundData()
+			{
+				recordingType = RecordingType.ReplayAndVoiceChat ,
+				players = new List<PlayerData>()
+				{
+					new PlayerData()
+					{
+						userId = "PLAYER1",
+						name = "Player1",
+						team = new TeamData()
+						{
+							hatName = "Player 1",
+						}
+					},
+					new PlayerData()
+					{
+						userId = "PLAYER2",
+						name = "Player2",
+						team = new TeamData()
+						{
+							hatName = "Player 2",
+						}
+					},
+				} ,
+				levelName = "96af28ba-c1ba-4527-90ae-d393931ca0c3" ,
+				timeStarted = DateTime.Parse( "2018-08-02T15:22:38.6115392+02:00" ) ,
+				timeEnded = DateTime.Parse( "2018-08-02T15:23:11.7635398+02:00" ) ,
+				winner = new TeamData()
+				{
+					hatName = "Player 2" ,
+					score = 1 ,
+				} ,
+				name = "2018-08-02 15-22-38" ,
+				isCustomLevel = false ,
+			};
+
+			using( var databaseContext = new GameDatabaseContext( databaseContextOptions ) )
+			{
+				databaseContext.Add( roundData );
+				databaseContext.SaveChanges();
+			}
 		}
 
 		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
 		{
 			GlobalData globalData = null;
+			/*
 			using( var databaseContext = new GameDatabaseContext( databaseContextOptions ) )
 			{
 				//try to get the first globaldata
@@ -53,6 +97,7 @@ namespace MatchTracker
 					await databaseContext.SaveChangesAsync();
 				}
 			}
+			*/
 			return globalData;
 		}
 
@@ -63,7 +108,17 @@ namespace MatchTracker
 
 		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
 		{
-			throw new NotImplementedException();
+			RoundData roundData = null;
+			using( var databaseContext = new GameDatabaseContext( databaseContextOptions ) )
+			{
+				roundData = await databaseContext.RoundDataSet
+
+					.Include( round => round.winner )
+					.Include( round => round.players ).ThenInclude( plys => plys.team )
+
+					.FirstOrDefaultAsync( x => x.name.Equals( roundName ) );
+			}
+			return roundData;
 		}
 
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
