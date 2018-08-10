@@ -52,7 +52,7 @@ namespace MatchTracker
 
 		public List<PlayerData> GetWinners()
 		{
-			return winner != null ? players.FindAll( p => p.team.hatName == winner.hatName ) : new List<PlayerData>();
+			return winner?.players ?? new List<PlayerData>();
 		}
 	}
 }
