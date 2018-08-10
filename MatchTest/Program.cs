@@ -1,9 +1,9 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using MatchTracker;
+﻿using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace MatchTest
 {
@@ -41,8 +41,14 @@ namespace MatchTest
 
 			Configuration.Bind( gameDatabase.SharedSettings );
 
-			RoundData roundData = await gameDatabase.GetRoundData( "2018-08-02 15-22-38" );
+			//RoundData roundData = await gameDatabase.GetRoundData( "2018-08-02 15-22-38" );
+			RoundData roundData = await gameDatabase.GetRoundData( "2018-08-10 18-12-33" );
+
+			Console.WriteLine( JsonConvert.SerializeObject( roundData , Formatting.Indented , new JsonSerializerSettings { PreserveReferencesHandling = PreserveReferencesHandling.Objects } ) );
+
 			//GlobalData globalData = await gameDatabase.GetGlobalData();
+
+			//Console.WriteLine( roundData.players.First()?.name );
 
 			Console.ReadLine();
 		}

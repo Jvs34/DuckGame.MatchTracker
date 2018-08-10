@@ -115,7 +115,7 @@ namespace MatchRecorder
 		{
 			if( voiceConnection == null && ( connectToVoiceChannelTask == null || connectToVoiceChannelTask.IsCompleted ) )
 			{
-				connectToVoiceChannelTask = ConnectToVoiceChat();
+				//connectToVoiceChannelTask = ConnectToVoiceChat();
 			}
 
 			if( DuckGame.Recorder.currentRecording != eventListener )

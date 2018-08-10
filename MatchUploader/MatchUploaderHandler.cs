@@ -36,6 +36,7 @@ namespace MatchUploader
 		private PendingUpload currentVideo;
 		private YouTubeService youtubeService;
 		private IConfigurationRoot Configuration { get; }
+		private JsonSerializerSettings JsonSettings { get; }
 
 		public MatchUploaderHandler( string [] args ) : base( args )
 		{
@@ -46,6 +47,11 @@ namespace MatchUploader
 			gameDatabase.SaveGlobalDataDelegate += SaveDatabaseGlobalDataFile;
 			gameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
 			gameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
+
+			JsonSettings = new JsonSerializerSettings()
+			{
+				PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
+			};
 
 			uploaderSettings = new UploaderSettings();
 			botSettings = new BotSettings();
@@ -274,6 +280,26 @@ namespace MatchUploader
 			} );
 
 			youtubeService.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
+		}
+
+		public async Task FixupTeams()
+		{
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+			foreach( String matchName in globalData.matches )
+			{
+				MatchData matchData = await gameDatabase.GetMatchData( matchName );
+				DoFixupTeams( matchData );
+				await gameDatabase.SaveMatchData( matchName , matchData );
+			}
+
+			foreach( String roundName in globalData.rounds )
+			{
+				RoundData roundData = await gameDatabase.GetRoundData( roundName );
+				DoFixupTeams( roundData );
+				await gameDatabase.SaveRoundData( roundName , roundData );
+			}
+
+			await gameDatabase.SaveGlobalData( globalData );
 		}
 
 		public async Task<List<PlaylistItem>> GetAllPlaylistItems( String playlistId )
@@ -846,6 +872,40 @@ namespace MatchUploader
 			await gameDatabase.SaveRoundData( roundName , roundData );
 		}
 
+		private void DoFixupTeams( IWinner winnerObject )
+		{
+			//first things first, get the teamdata entity of each player and add it to winnerObject.teams if it's not on there
+			foreach( PlayerData playerData in winnerObject.players )
+			{
+				TeamData teamData = playerData.team;
+
+				//if the player of that team is not in that team list then add it to it first
+				
+				if( !teamData.players.Any( x=>x.Equals( playerData ) ) )
+				{
+					teamData.players.Add( playerData );
+				}
+
+
+				//if the team is not in the teamlist then add it too
+				if( !winnerObject.teams.Any( x=> x.Equals( teamData ) ) )
+				{
+					winnerObject.teams.Add( teamData );
+				}
+			}
+
+			//if the team object is the same as the one in the teamlist but with the wrong reference, replace it
+			
+			if( winnerObject.winner != null )
+			{
+				TeamData foundList = winnerObject.teams.Find( x => x.Equals( winnerObject.winner ) );
+				if( foundList != null && !ReferenceEquals( winnerObject.winner , foundList ) )
+				{
+					winnerObject.winner = foundList;
+				}
+			}
+		}
+
 		private async Task<int> GetRemainingFilesCount()
 		{
 			int remainingFiles = 0;
@@ -864,17 +924,17 @@ namespace MatchUploader
 
 		private async Task<GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
-			return JsonConvert.DeserializeObject<GlobalData>( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) );
+			return JsonConvert.DeserializeObject<GlobalData>( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) , JsonSettings );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
-			return JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) );
+			return JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) , JsonSettings );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
-			return JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) );
+			return JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) , JsonSettings );
 		}
 
 		private void OnResponseReceived( Video video )
@@ -940,17 +1000,17 @@ namespace MatchUploader
 
 		private async Task SaveDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
 		{
-			await File.WriteAllTextAsync( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
+			await File.WriteAllTextAsync( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented , JsonSettings ) );
 		}
 
 		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
-			await File.WriteAllTextAsync( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
+			await File.WriteAllTextAsync( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented , JsonSettings ) );
 		}
 
 		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
-			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
+			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented , JsonSettings ) );
 		}
 
 		private async Task SetPresence( String str )

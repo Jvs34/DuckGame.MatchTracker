@@ -58,6 +58,7 @@ namespace MatchBot
 		private readonly Timer refreshTimer;
 		private Task loadDatabaseTask;
 		private IConfigurationRoot Configuration { get; }
+		private JsonSerializerSettings JsonSettings { get; }
 
 		public MatchBot()
 		{
@@ -65,6 +66,11 @@ namespace MatchBot
 				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
 				.AddJsonFile( "shared.json" )
 			.Build();
+
+			JsonSettings = new JsonSerializerSettings()
+			{
+				PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
+			};
 
 			httpClient = new HttpClient( new SocketsHttpHandler()
 			{
@@ -437,21 +443,21 @@ namespace MatchBot
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
 			Console.WriteLine( "Loading GlobalData" );
-			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) );
+			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchUrl( matchName ) );
 			Console.WriteLine( $"Loading MatchData {matchName}" );
-			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) );
+			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
 			Console.WriteLine( $"Loading RoundData {roundName}" );
-			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) );
+			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
 		}
 	}
 }

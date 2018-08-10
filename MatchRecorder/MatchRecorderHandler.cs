@@ -155,6 +155,32 @@ namespace MatchRecorder
 			recorderHandler?.StartRecording();
 		}
 
+		public void AddTeamAndPlayerData( IWinner winnerObject )
+		{
+			foreach( Team team in Teams.active )
+			{
+				winnerObject.teams.Add( CreateTeamDataFromTeam( team , winnerObject ) );
+			}
+
+			foreach( Profile pro in Profiles.active )
+			{
+				PlayerData ply = CreatePlayerDataFromProfile( pro , winnerObject );
+				winnerObject.players.Add( ply );
+			}
+
+			foreach( TeamData teamData in winnerObject.teams )
+			{
+				Team team = Teams.active.Find( x => x.name == teamData.hatName );
+				if( team != null )
+				{
+					foreach( Profile pro in team.activeProfiles )
+					{
+						teamData.players.Add( CreatePlayerDataFromProfile( pro , winnerObject ) );
+					}
+				}
+			}
+		}
+
 		public RoundData StopCollectingRoundData( DateTime endTime )
 		{
 			if( CurrentRound == null )
@@ -162,15 +188,7 @@ namespace MatchRecorder
 				return null;
 			}
 
-			foreach( Team team in Teams.active )
-			{
-				CurrentRound.teams.Add( CreateTeamDataFromTeam( team ) );
-			}
-
-			foreach( Profile pro in Profiles.active )
-			{
-				CurrentRound.players.Add( CreatePlayerDataFromProfile( pro ) );
-			}
+			AddTeamAndPlayerData( CurrentRound );
 
 			Team winner = null;
 
@@ -181,7 +199,7 @@ namespace MatchRecorder
 
 			if( winner != null )
 			{
-				CurrentRound.winner = CreateTeamDataFromTeam( winner );
+				CurrentRound.winner = CreateTeamDataFromTeam( winner , CurrentRound );
 			}
 
 			CurrentRound.timeEnded = endTime;
@@ -221,44 +239,59 @@ namespace MatchRecorder
 			recorderHandler?.Update();
 		}
 
-		private PlayerData CreatePlayerDataFromProfile( Profile profile )
+		private PlayerData CreatePlayerDataFromProfile( Profile profile , IWinner winnerObject )
 		{
-			PlayerData pd = new PlayerData
-			{
-				userId = profile.steamID.ToString() ,
-				name = profile.name ,
-				team = CreateTeamDataFromTeam( profile.team )
-			};
-			//I could've done this with an inlined check but I had other shit to call in here so not yet
-			if( !Network.isActive )
-			{
-				pd.userId = profile.id;
-			}
+			String userId = Network.isActive ? profile.steamID.ToString() : profile.id;
 
-			//search for this profile on the globaldata, if it's there fill in the rest of the info
 			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
 
-			foreach( var ply in globalData.players )
+			PlayerData pd = globalData.players.Find( x => x.userId == userId );
+
+			if( pd == null )
 			{
-				if( pd.Equals( ply ) )
+				pd = new PlayerData
 				{
-					pd.discordId = ply.discordId;
-					pd.nickName = ply.nickName;
+					userId = userId ,
+					name = profile.name ,
+				};
+
+				//search for this profile on the globaldata, if it's there fill in the rest of the info
+				foreach( var ply in globalData.players )
+				{
+					if( pd.Equals( ply ) )
+					{
+						pd.discordId = ply.discordId;
+						pd.nickName = ply.nickName;
+						break;
+					}
 				}
 			}
+
+			pd.team = CreateTeamDataFromTeam( profile.team , winnerObject );
 
 			return pd;
 		}
 
-		private TeamData CreateTeamDataFromTeam( Team team )
+		private TeamData CreateTeamDataFromTeam( Team team , IWinner winnerObject )
 		{
-			TeamData td = new TeamData()
+			//try to find a teamobject that's already there
+			TeamData td = null;
+
+			if( winnerObject != null )
 			{
-				hasHat = team.hasHat ,
-				score = team.score ,
-				hatName = team.name ,
-				isCustomHat = team.customData != null ,
-			};
+				td = winnerObject.teams.Find( x => x.hatName == team.name );
+			}
+
+			if( td == null )
+			{
+				td = new TeamData()
+				{
+					hasHat = team.hasHat ,
+					score = team.score ,
+					hatName = team.name ,
+					isCustomHat = team.customData != null ,
+				};
+			}
 
 			return td;
 		}
@@ -283,6 +316,9 @@ namespace MatchRecorder
 			}
 
 			CurrentMatch.timeEnded = DateTime.Now;
+
+			AddTeamAndPlayerData( CurrentMatch );
+
 			Team winner = null;
 
 			if( Teams.winning.Count > 0 )
@@ -292,17 +328,7 @@ namespace MatchRecorder
 
 			if( winner != null )
 			{
-				CurrentMatch.winner = CreateTeamDataFromTeam( winner );
-			}
-
-			foreach( Team team in Teams.active )
-			{
-				CurrentMatch.teams.Add( CreateTeamDataFromTeam( team ) );
-			}
-
-			foreach( Profile pro in Profiles.active )
-			{
-				CurrentMatch.players.Add( CreatePlayerDataFromProfile( pro ) );
+				CurrentMatch.winner = CreateTeamDataFromTeam( winner , CurrentMatch );
 			}
 
 			GameDatabase.SaveMatchData( GameDatabase.SharedSettings.DateTimeToString( CurrentMatch.timeStarted ) , CurrentMatch ).Wait();

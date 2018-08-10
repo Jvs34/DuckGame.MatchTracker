@@ -5,7 +5,7 @@ namespace MatchTracker
 {
 	//a match is kind of hard to keep track of in a sense, reconnections might throw stats off and create duplicate matches
 	//which in theory is fine until you want to link multiple matches together later on, gotta think about this
-	public class MatchData : IPlayersList, ITeamsList, IRoundsList, IStartEnd, IWinner, IYoutube, IEquatable<MatchData>, IComparable<MatchData>
+	public class MatchData : IPlayersList, IRoundsList, IStartEnd, IWinner, IYoutube, IEquatable<MatchData>, IComparable<MatchData>
 	{
 		//name of the match
 		public String name { get; set; } = String.Empty;

@@ -35,6 +35,10 @@ namespace MatchTracker
 			modelBuilder.Entity<TeamData>()
 				.HasKey( key => new { key.hatName , key.isCustomHat , key.score } );
 
+			modelBuilder.Entity<TeamData>()
+				.HasMany( prop => prop.players )
+				.WithOne( prop => prop.team );
+
 			modelBuilder.Entity<PlayerData>()
 				.HasKey( key => new { key.userId , key.team } );
 
