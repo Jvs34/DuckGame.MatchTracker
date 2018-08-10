@@ -2,7 +2,7 @@
 
 namespace MatchTracker
 {
-	public sealed class VoiceData
+	public class VoiceData
 	{
 	}
 }

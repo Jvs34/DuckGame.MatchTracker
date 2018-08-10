@@ -2,7 +2,7 @@
 
 namespace MatchTracker
 {
-	public sealed class ReplayData : IStartEnd
+	public class ReplayData : IStartEnd
 	{
 		public String name { get; set; }
 

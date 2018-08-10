@@ -410,6 +410,30 @@ namespace MatchUploader
 			Console.WriteLine( "Finished loading the database" );
 		}
 
+		public async Task LookForOrphanedItems()
+		{
+			Console.WriteLine( "Looking for orphaned items" );
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+			//go through all the rounds defined in globaldata then check if that match contains that round, otherwise it's orphaned
+			foreach( String roundName in globalData.rounds )
+			{
+				bool foundParent = false;
+				foreach( String matchName in globalData.matches )
+				{
+					MatchData matchData = await gameDatabase.GetMatchData( matchName );
+					if( matchData.rounds.Contains( roundName ) )
+					{
+						foundParent = true;
+					}
+				}
+
+				if( !foundParent )
+				{
+					Console.WriteLine( $"{roundName} is an orphaned item!!!" );
+				}
+			}
+		}
+
 		public override async Task Run()
 		{
 			await LoadDatabase();
@@ -708,6 +732,7 @@ namespace MatchUploader
 				foreach( String roundName in matchData.rounds )
 				{
 					await UpdateUploadProgress( remaining );
+
 					RoundData roundData = await gameDatabase.GetRoundData( roundName );
 
 					if( roundData.recordingType != RecordingType.Video )

@@ -26,23 +26,24 @@ namespace MatchTracker
 
 			optionsBuilder
 				.UseInMemoryDatabase( "DuckGameRecordings" )
+				.UseLazyLoadingProxies()
 				.EnableSensitiveDataLogging();
 		}
 
 		protected override void OnModelCreating( ModelBuilder modelBuilder )
 		{
+			modelBuilder.Entity<TeamData>()
+				.HasKey( key => new { key.hatName , key.isCustomHat , key.score } );
+
+			modelBuilder.Entity<PlayerData>()
+				.HasKey( key => new { key.userId , key.team } );
+
 			modelBuilder.Entity<RoundData>()
 				.HasKey( key => key.name );
 
 			modelBuilder.Entity<RoundData>()
 				.HasMany( prop => prop.players )
 				.WithOne();
-
-			modelBuilder.Entity<PlayerData>()
-				.HasKey( key => key.userId );
-
-			modelBuilder.Entity<TeamData>()
-				.HasKey( key => new { key.hatName , key.isCustomHat , key.score } );
 
 			/*
 			modelBuilder.Entity<MatchData>()

@@ -1,7 +1,7 @@
 ﻿namespace MatchTracker
 {
 	//TODO
-	public sealed class LevelData
+	public class LevelData
 	{
 	}
 }

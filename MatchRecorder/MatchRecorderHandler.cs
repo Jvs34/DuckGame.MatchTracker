@@ -23,6 +23,7 @@ namespace MatchRecorder
 		public String ModPath { get; }
 		public string RoundsFolder { get; }
 		private IConfigurationRoot Configuration { get; }
+		private JsonSerializerSettings JsonSettings { get; }
 
 		public MatchRecorderHandler( String modPath )
 		{
@@ -35,6 +36,11 @@ namespace MatchRecorder
 			GameDatabase.SaveGlobalDataDelegate += SaveDatabaseGlobalDataFile;
 			GameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
 			GameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
+
+			JsonSettings = new JsonSerializerSettings()
+			{
+				PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
+			};
 
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( modPath , "Settings" ) )
@@ -75,37 +81,37 @@ namespace MatchRecorder
 		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
 			await Task.CompletedTask;
-			return JsonConvert.DeserializeObject<MatchTracker.GlobalData>( File.ReadAllText( sharedSettings.GetGlobalPath() ) );
+			return JsonConvert.DeserializeObject<MatchTracker.GlobalData>( File.ReadAllText( sharedSettings.GetGlobalPath() ) , JsonSettings );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
 			await Task.CompletedTask;
-			return JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) );
+			return JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) , JsonSettings );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
 			await Task.CompletedTask;
-			return JsonConvert.DeserializeObject<RoundData>( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) );
+			return JsonConvert.DeserializeObject<RoundData>( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) , JsonSettings );
 		}
 
 		private async Task SaveDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
 		{
 			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented ) );
+			File.WriteAllText( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented , JsonSettings ) );
 		}
 
 		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
 		{
 			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented ) );
+			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented , JsonSettings ) );
 		}
 
 		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
 		{
 			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented ) );
+			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented , JsonSettings ) );
 		}
 
 		#endregion DATABASEDELEGATES
@@ -131,11 +137,6 @@ namespace MatchRecorder
 
 			CurrentRound.name = GameDatabase.SharedSettings.DateTimeToString( CurrentRound.timeStarted );
 
-			foreach( Profile pro in Profiles.active )
-			{
-				CurrentRound.players.Add( CreatePlayerDataFromProfile( pro ) );
-			}
-
 			if( lvl is GameLevel gl )
 			{
 				CurrentRound.isCustomLevel = gl.isCustomLevel;
@@ -159,6 +160,16 @@ namespace MatchRecorder
 			if( CurrentRound == null )
 			{
 				return null;
+			}
+
+			foreach( Team team in Teams.active )
+			{
+				CurrentRound.teams.Add( CreateTeamDataFromTeam( team ) );
+			}
+
+			foreach( Profile pro in Profiles.active )
+			{
+				CurrentRound.players.Add( CreatePlayerDataFromProfile( pro ) );
 			}
 
 			Team winner = null;
@@ -257,8 +268,6 @@ namespace MatchRecorder
 			CurrentMatch = new MatchData
 			{
 				timeStarted = DateTime.Now ,
-				rounds = new List<string>() ,
-				players = new List<PlayerData>() ,
 			};
 
 			CurrentMatch.name = GameDatabase.SharedSettings.DateTimeToString( CurrentMatch.timeStarted );
@@ -284,6 +293,11 @@ namespace MatchRecorder
 			if( winner != null )
 			{
 				CurrentMatch.winner = CreateTeamDataFromTeam( winner );
+			}
+
+			foreach( Team team in Teams.active )
+			{
+				CurrentMatch.teams.Add( CreateTeamDataFromTeam( team ) );
 			}
 
 			foreach( Profile pro in Profiles.active )

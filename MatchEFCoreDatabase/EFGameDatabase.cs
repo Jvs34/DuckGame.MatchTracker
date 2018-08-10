@@ -9,6 +9,7 @@ namespace MatchTracker
 	public class EFGameDatabase : IGameDatabase
 	{
 		private readonly DbContextOptions<GameDatabaseContext> databaseContextOptions;
+		private GameDatabaseContext databaseContext;
 		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
 
 		public event LoadGlobalDataDelegate LoadGlobalDataDelegate;
@@ -26,6 +27,7 @@ namespace MatchTracker
 		public EFGameDatabase()
 		{
 			databaseContextOptions = new DbContextOptionsBuilder<GameDatabaseContext>().Options;
+			databaseContext = new GameDatabaseContext( databaseContextOptions );
 
 			RoundData roundData = new RoundData()
 			{
@@ -63,11 +65,8 @@ namespace MatchTracker
 				isCustomLevel = false ,
 			};
 
-			using( var databaseContext = new GameDatabaseContext( databaseContextOptions ) )
-			{
-				databaseContext.Add( roundData );
-				databaseContext.SaveChanges();
-			}
+			databaseContext.Add( roundData );
+			databaseContext.SaveChanges();
 		}
 
 		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
@@ -109,15 +108,30 @@ namespace MatchTracker
 		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
 		{
 			RoundData roundData = null;
-			using( var databaseContext = new GameDatabaseContext( databaseContextOptions ) )
+
+			if( !forceRefresh )
 			{
-				roundData = await databaseContext.RoundDataSet
-
-					.Include( round => round.winner )
-					.Include( round => round.players ).ThenInclude( plys => plys.team )
-
-					.FirstOrDefaultAsync( x => x.name.Equals( roundName ) );
+				//TODO: find a better way to include everything automatically
+				roundData = await databaseContext.RoundDataSet.FirstOrDefaultAsync( round => round.name.Equals( roundName ) );
 			}
+
+			if( roundData == null )
+			{
+				forceRefresh = true;
+			}
+
+			if( forceRefresh && LoadRoundDataDelegate != null )
+			{
+				roundData = await LoadRoundDataDelegate( this , SharedSettings , roundName );
+
+				if( roundData != null )
+				{
+					//gotta track this one now
+					await databaseContext.AddAsync( roundData );
+					await databaseContext.SaveChangesAsync();
+				}
+			}
+
 			return roundData;
 		}
 

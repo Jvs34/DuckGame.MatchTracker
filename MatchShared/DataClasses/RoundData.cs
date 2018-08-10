@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MatchTracker
 {
-	public sealed class RoundData : IPlayersList, IStartEnd, IWinner, IYoutube, IEquatable<RoundData>, IComparable<RoundData>
+	public class RoundData : IPlayersList, ITeamsList, IStartEnd, IWinner, IYoutube, IEquatable<RoundData>, IComparable<RoundData>
 	{
 		public RecordingType recordingType;
 		public bool isCustomLevel { get; set; }
@@ -13,13 +13,12 @@ namespace MatchTracker
 		public String levelName { get; set; }
 
 		public String name { get; set; }
-
-		public List<PlayerData> players { get; set; } = new List<PlayerData>();
+		public virtual List<PlayerData> players { get; set; } = new List<PlayerData>();
 		public bool skipped { get; set; }
-
+		public List<TeamData> teams { get; set; } = new List<TeamData>();
 		public DateTime timeEnded { get; set; }
 		public DateTime timeStarted { get; set; }
-		public TeamData winner { get; set; }
+		public virtual TeamData winner { get; set; }
 
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
 		public String youtubeUrl { get; set; }

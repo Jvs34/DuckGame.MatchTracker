@@ -3,7 +3,7 @@
 namespace MatchTracker
 {
 	//duck game networked profiles aren't all that networked really, you only get the name and id
-	public sealed class PlayerData : IEquatable<PlayerData>, IComparable<PlayerData>
+	public class PlayerData : IEquatable<PlayerData>, IComparable<PlayerData>
 	{
 		public ulong discordId { get; set; }
 
@@ -13,7 +13,7 @@ namespace MatchTracker
 		public String nickName { get; set; }
 
 		//yes a hat is a team
-		public TeamData team { get; set; }
+		public virtual TeamData team { get; set; }
 
 		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
 		public String userId { get; set; }
