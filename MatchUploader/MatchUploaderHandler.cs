@@ -16,6 +16,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using Xabe.FFmpeg;
+using Xabe.FFmpeg.Enums;
 
 /*
 Goes through all the folders, puts all rounds and matches into data.json
@@ -805,6 +807,13 @@ namespace MatchUploader
 				throw new ArgumentNullException( $"{roundData.name} does not contain a video!" );
 			}
 
+			string reEncodedVideoPath = Path.ChangeExtension( filePath , "converted.mp4" );
+
+			if( File.Exists( reEncodedVideoPath ) )
+			{
+				filePath = reEncodedVideoPath;
+			}
+
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
 				//get the pending upload for this roundName
@@ -851,10 +860,7 @@ namespace MatchUploader
 				}
 
 				//save it to the uploader settings and increment the error count only if it's not the annoying too many videos error
-				if( uploadProgress.Status != UploadStatus.Completed
-					&& !( uploadProgress.Exception is Google.GoogleApiException )
-					|| ( uploadProgress.Exception is Google.GoogleApiException googleException
-					&& googleException.Error?.Code != 400 ) )
+				if( uploadProgress.Status != UploadStatus.Completed && currentVideo.uploadUrl != null )
 				{
 					currentVideo.lastException = uploadProgress.Exception.Message;
 					currentVideo.errorCount++;
@@ -880,22 +886,22 @@ namespace MatchUploader
 				TeamData teamData = playerData.team;
 
 				//if the player of that team is not in that team list then add it to it first
-				
-				if( !teamData.players.Any( x=>x.Equals( playerData ) ) )
+
+				if( !teamData.players.Any( x => x.Equals( playerData ) ) )
 				{
 					teamData.players.Add( playerData );
 				}
 
 
 				//if the team is not in the teamlist then add it too
-				if( !winnerObject.teams.Any( x=> x.Equals( teamData ) ) )
+				if( !winnerObject.teams.Any( x => x.Equals( teamData ) ) )
 				{
 					winnerObject.teams.Add( teamData );
 				}
 			}
 
 			//if the team object is the same as the one in the teamlist but with the wrong reference, replace it
-			
+
 			if( winnerObject.winner != null )
 			{
 				TeamData foundList = winnerObject.teams.Find( x => x.Equals( winnerObject.winner ) );
@@ -985,11 +991,18 @@ namespace MatchUploader
 			{
 				String roundsFolder = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.roundsFolder );
 				String filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.SharedSettings.roundVideoFile );
+				string reEncodedFilePath = Path.ChangeExtension( filePath , "converted.mp4" );
 
 				if( File.Exists( filePath ) )
 				{
 					Console.WriteLine( "Removed video file for {0}" , roundName );
 					File.Delete( filePath );
+				}
+
+				if( File.Exists( reEncodedFilePath ) )
+				{
+					Console.WriteLine( "Also removing the reencoded version {0}" , roundName );
+					File.Delete( reEncodedFilePath );
 				}
 			}
 			catch( Exception e )
@@ -1036,6 +1049,78 @@ namespace MatchUploader
 		private async Task UpdateUploadProgress( int remaining )
 		{
 			await SetPresence( $"{remaining} videos remaining" );
+		}
+
+		private async Task ProcessVideo( string roundName )
+		{
+			RoundData roundData = await gameDatabase.GetRoundData( roundName );
+
+			string videoPath = gameDatabase.SharedSettings.GetRoundVideoPath( roundName );
+
+			string outputPath = Path.ChangeExtension( videoPath , "converted.mp4" );
+
+			if( roundData.recordingType == RecordingType.Video && File.Exists( videoPath ) && !File.Exists( outputPath ) )
+			{
+				Console.WriteLine( $"Converting {roundName}" );
+
+				IMediaInfo mediaInfo = await MediaInfo.Get( videoPath );
+				IConversion newConversion = Conversion.New();
+
+				bool abortConversion = mediaInfo.VideoStreams.Any( vid => vid.Bitrate < 6000000 );
+
+				//only continue if these are videos with 6 megabits of bitrate
+				if( abortConversion )
+				{
+					return;
+				}
+
+				foreach( var videostream in mediaInfo.VideoStreams )
+				{
+					newConversion.AddStream( videostream.SetCodec( VideoCodec.H264_nvenc ) );
+				}
+
+				foreach( var audiostream in mediaInfo.AudioStreams )
+				{
+					newConversion.AddStream( audiostream );
+				}
+
+				newConversion.SetOverwriteOutput( true );
+
+				newConversion.SetOutput( outputPath );
+
+				newConversion.AddParameter( "-crf 23 -maxrate 2000k -bufsize 4000k" );
+
+				newConversion.SetPreset( ConversionPreset.Slow );
+				Console.WriteLine( newConversion.Build() );
+				await newConversion.Start();
+
+				Console.WriteLine( outputPath );
+			}
+		}
+		private async Task ProcessVideoFiles()
+		{
+			string tempFFmpegFolder = Path.Combine( Path.GetTempPath() , "ffmpeg" );
+
+			if( !Directory.Exists( tempFFmpegFolder ) )
+			{
+				Directory.CreateDirectory( tempFFmpegFolder );
+				Console.WriteLine( $"Created directory {tempFFmpegFolder}" );
+			}
+
+			FFmpeg.ExecutablesPath = tempFFmpegFolder;
+			await FFmpeg.GetLatestVersion();
+
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+
+
+			List<Task> processingTasks = new List<Task>();
+
+			foreach( string roundName in globalData.rounds )
+			{
+				processingTasks.Add( ProcessVideo( roundName ) );
+			}
+
+			await Task.WhenAll( processingTasks );
 		}
 	}
 }
