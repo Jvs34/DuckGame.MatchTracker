@@ -1,5 +1,7 @@
 ﻿using DSharpPlus;
 using Google.Apis.Auth.OAuth2;
+using Google.Apis.Calendar.v3;
+using Google.Apis.Calendar.v3.Data;
 using Google.Apis.Services;
 using Google.Apis.Upload;
 using Google.Apis.YouTube.v3;
@@ -11,6 +13,7 @@ using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -37,6 +40,8 @@ namespace MatchUploader
 		private readonly UploaderSettings uploaderSettings;
 		private PendingUpload currentVideo;
 		private YouTubeService youtubeService;
+		private CalendarService calendarService;
+
 		private IConfigurationRoot Configuration { get; }
 		private JsonSerializerSettings JsonSettings { get; }
 
@@ -261,27 +266,109 @@ namespace MatchUploader
 				await discordClient.InitializeAsync();
 			}
 
-			UserCredential uc = null;
+			string appName = Assembly.GetEntryAssembly().GetName().Name;
 
-			var permissions = new [] { YouTubeService.Scope.Youtube };
-
-			//TODO: allow switching between users? is this needed?
-
-			uc = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
-				permissions ,
-				"user" ,
-				CancellationToken.None ,
-				uploaderSettings.dataStore
-			);
-
+			//youtube stuff
 			youtubeService = new YouTubeService( new BaseClientService.Initializer()
 			{
-				HttpClientInitializer = uc ,
-				ApplicationName = Assembly.GetEntryAssembly().GetName().Name ,
+				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
+					new [] { YouTubeService.Scope.Youtube } ,
+					"youtube" ,
+					CancellationToken.None ,
+					uploaderSettings.dataStore
+				) ,
+				ApplicationName = appName ,
 				GZipEnabled = true ,
 			} );
-
 			youtubeService.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
+
+			//calendar stuff
+
+			calendarService = new CalendarService( new BaseClientService.Initializer()
+			{
+				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
+					new [] { CalendarService.Scope.Calendar } ,
+					"calendar" ,
+					CancellationToken.None ,
+					uploaderSettings.dataStore
+				) ,
+				ApplicationName = appName ,
+				GZipEnabled = true ,
+			} );
+		}
+
+		public async Task HandleCalendar()
+		{
+			if( calendarService is null )
+			{
+				return;
+			}
+
+			string calendarID = uploaderSettings.calendarID;
+
+			var allEvents = await calendarService.Events.List( calendarID ).ExecuteAsync();
+
+
+
+
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+
+			List<Task<Event>> matchTasks = new List<Task<Event>>();
+
+			foreach( string matchName in globalData.matches )
+			{
+				string strippedName = GetStrippedMatchName( await gameDatabase.GetMatchData( matchName ) );
+
+				//if this event is already added, don't even call this
+
+				if( allEvents.Items.Any( x=> x.Id.Equals( strippedName ) ) )
+				{
+					continue;
+				}
+
+				matchTasks.Add( GetCalendarEventForMatch( matchName ) );
+			}
+
+			await Task.WhenAll( matchTasks );
+
+			//only get the first one and try using it
+
+			List<Task<Event>> eventTasks = new List<Task<Event>>();
+
+			foreach( var matchTask in matchTasks )
+			{
+				eventTasks.Add( calendarService.Events.Insert( matchTask.Result , calendarID ).ExecuteAsync() );
+			}
+
+			//now create one for each one
+			await Task.WhenAll( eventTasks );
+		}
+
+		private string GetStrippedMatchName( MatchData matchData )
+		{
+			return matchData.timeStarted.ToString( "yyyyMMddHHmmss" );
+		}
+
+		public async Task<Event> GetCalendarEventForMatch( string matchName )
+		{
+			MatchData matchData = await gameDatabase.GetMatchData( matchName );
+
+			var youtubeSnippet = await GetPlaylistDataForMatch( matchData );
+
+			return new Event()
+			{
+				Id = GetStrippedMatchName( matchData ) ,
+				Start = new EventDateTime()
+				{
+					DateTime = matchData.timeStarted
+				} ,
+				End = new EventDateTime()
+				{
+					DateTime = matchData.timeEnded
+				} ,
+				Summary = youtubeSnippet.Snippet.Title ,
+				Description = youtubeSnippet.Snippet.Description ,
+			};
 		}
 
 		public async Task FixupTeams()
@@ -421,7 +508,7 @@ namespace MatchUploader
 				} ,
 				Status = new VideoStatus()
 				{
-					PrivacyStatus = "unlisted" ,
+					PrivacyStatus = "unlisted" , 
 				} ,
 				RecordingDetails = new VideoRecordingDetails()
 				{
@@ -467,7 +554,18 @@ namespace MatchUploader
 			await LoadDatabase();
 			await DoLogin();
 
+			try
+			{
+				await HandleCalendar();
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e );
+			}
+
 			await SaveSettings();
+
+			
 			CommitGitChanges();
 			await UploadAllRounds();
 		}
@@ -869,6 +967,24 @@ namespace MatchUploader
 				currentVideo = null;
 				return uploadProgress.Status == UploadStatus.Completed;
 			}
+		}
+
+		private async Task SearchMap( string mapGuid )
+		{
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+			await gameDatabase.IterateOverAllRoundsOrMatches( false , async ( round ) =>
+			{
+				RoundData roundData = (RoundData) round;
+
+				if( !string.IsNullOrEmpty( roundData.youtubeUrl ) && roundData.levelName == mapGuid )
+				{
+					string youtubeUrl = $"https://www.youtube.com/watch?v={roundData.youtubeUrl}";
+					Process.Start( "cmd" , $"/c start {youtubeUrl}" );
+				}
+
+
+				await Task.CompletedTask;
+			} );
 		}
 
 		private async Task AddYoutubeIdToRound( String roundName , String videoId )

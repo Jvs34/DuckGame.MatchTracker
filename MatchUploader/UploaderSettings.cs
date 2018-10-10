@@ -15,5 +15,7 @@ namespace MatchUploader
 		public GoogleSecrets secrets { get; set; }
 		public float uploadSpeed { get; set; } = 0; //in kylobytes per seconds, 0 means no throttling
 		public Uri youtubeChannel { get; set; }
+
+		public string calendarID { get; set; }
 	}
 }
