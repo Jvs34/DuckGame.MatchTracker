@@ -13,6 +13,7 @@ namespace MatchTracker
 		public String levelName { get; set; }
 
 		public String name { get; set; }
+		public String matchName { get; set; }
 		public virtual List<PlayerData> players { get; set; } = new List<PlayerData>();
 		public bool skipped { get; set; }
 		public List<TeamData> teams { get; set; } = new List<TeamData>();
@@ -22,6 +23,7 @@ namespace MatchTracker
 
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
 		public String youtubeUrl { get; set; }
+		public VideoType videoType { get; set; } = VideoType.VideoLink;
 
 		public int CompareTo( RoundData other )
 		{

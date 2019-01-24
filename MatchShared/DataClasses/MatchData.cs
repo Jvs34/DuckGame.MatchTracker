@@ -21,6 +21,7 @@ namespace MatchTracker
 		public TeamData winner { get; set; }
 
 		public String youtubeUrl { get; set; } = String.Empty;
+		public VideoType videoType { get; set; } = VideoType.PlaylistLink;
 
 		public int CompareTo( MatchData other )
 		{

@@ -128,6 +128,7 @@ namespace MatchRecorder
 
 			CurrentRound = new RoundData()
 			{
+				matchName = CurrentMatch?.name,
 				levelName = lvl.level ,
 				players = new List<PlayerData>() ,
 				timeStarted = startTime ,

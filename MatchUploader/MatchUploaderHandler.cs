@@ -12,6 +12,7 @@ using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -306,10 +307,10 @@ namespace MatchUploader
 
 			string calendarID = uploaderSettings.calendarID;
 
-			var allEvents = await calendarService.Events.List( calendarID ).ExecuteAsync();
+			var eventGet = calendarService.Events.List( calendarID );
+			eventGet.MaxResults = 2500;
 
-
-
+			var allEvents = await eventGet.ExecuteAsync();
 
 			GlobalData globalData = await gameDatabase.GetGlobalData();
 
@@ -321,7 +322,7 @@ namespace MatchUploader
 
 				//if this event is already added, don't even call this
 
-				if( allEvents.Items.Any( x=> x.Id.Equals( strippedName ) ) )
+				if( allEvents.Items.Any( x => x.Id.Equals( strippedName ) ) )
 				{
 					continue;
 				}
@@ -508,7 +509,7 @@ namespace MatchUploader
 				} ,
 				Status = new VideoStatus()
 				{
-					PrivacyStatus = "unlisted" , 
+					PrivacyStatus = "unlisted" ,
 				} ,
 				RecordingDetails = new VideoRecordingDetails()
 				{
@@ -565,7 +566,6 @@ namespace MatchUploader
 
 			await SaveSettings();
 
-			
 			CommitGitChanges();
 			await UploadAllRounds();
 		}
@@ -682,6 +682,16 @@ namespace MatchUploader
 							matchPlayer.discordId = globalPly.discordId;
 							matchPlayer.nickName = globalPly.nickName;
 						}
+					}
+				}
+
+				foreach( var roundName in matchData.rounds )
+				{
+					RoundData roundData = await gameDatabase.GetRoundData( roundName );
+					if( string.IsNullOrEmpty( roundData.matchName ) )
+					{
+						roundData.matchName = matchData.name;
+						await gameDatabase.SaveRoundData( roundData.name , roundData );
 					}
 				}
 
@@ -821,12 +831,87 @@ namespace MatchUploader
 			}
 		}
 
+		private async Task<IEnumerable<string>> GetUploadableRounds()
+		{
+			ConcurrentBag<string> uploadableRounds = new ConcurrentBag<string>();
+
+			await gameDatabase.IterateOverAllRoundsOrMatches( false , async ( round ) =>
+			{
+				if( uploadableRounds.Count >= 100 )
+				{
+					await Task.CompletedTask;
+					return;
+				}
+
+				RoundData roundData = (RoundData) round;
+
+				if( roundData.recordingType == RecordingType.Video && string.IsNullOrEmpty( roundData.youtubeUrl ) )
+				{
+					uploadableRounds.Add( roundData.name );
+				}
+
+				await Task.CompletedTask;
+			} );
+
+			return uploadableRounds;
+		}
+
 		public async Task UploadAllRounds()
 		{
 			Console.WriteLine( "Starting youtube uploads" );
 
 			GlobalData globalData = await gameDatabase.GetGlobalData();
 
+			var roundsToUpload = await GetUploadableRounds();
+
+			int remaining = roundsToUpload.Count();
+
+			foreach( string roundName in roundsToUpload )
+			{
+				await UpdateUploadProgress( remaining );
+
+				RoundData roundData = await gameDatabase.GetRoundData( roundName );
+
+
+				MatchData matchData = await gameDatabase.GetMatchData( roundData.matchName );
+				List<PlaylistItem> playlistItems = null;
+
+				if( String.IsNullOrEmpty( matchData.youtubeUrl ) )
+				{
+					Playlist playlist = await CreatePlaylist( matchData );
+					if( playlist != null )
+					{
+						await gameDatabase.SaveMatchData( roundData.matchName , matchData );
+					}
+				}
+
+				if( matchData.youtubeUrl != null )
+				{
+					try
+					{
+						playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
+					}
+					catch( Exception )
+					{
+						playlistItems = null;
+					}
+				}
+
+				bool isUploaded = await UploadRoundToYoutubeAsync( roundData );
+
+				if( isUploaded )
+				{
+					await RemoveVideoFile( roundName );
+					remaining--;
+
+					if( playlistItems != null )
+					{
+						await AddRoundToPlaylist( roundData , matchData , playlistItems );
+					}
+				}
+			}
+
+			/*
 			int remaining = await GetRemainingFilesCount();
 
 			foreach( String matchName in globalData.matches )
@@ -881,9 +966,11 @@ namespace MatchUploader
 					}
 				}
 			}
+			*/
 
 			CommitGitChanges();
 		}
+
 
 		public async Task<bool> UploadRoundToYoutubeAsync( RoundData roundData )
 		{
