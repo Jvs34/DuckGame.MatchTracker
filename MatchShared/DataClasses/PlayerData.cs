@@ -7,16 +7,16 @@ namespace MatchTracker
 	{
 		public ulong discordId { get; set; }
 
-		public String name { get; set; }
+		public string name { get; set; }
 
 		//custom nickname for the player, this will be set manually on another json
-		public String nickName { get; set; }
+		public string nickName { get; set; }
 
 		//yes a hat is a team
 		public virtual TeamData team { get; set; }
 
 		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
-		public String userId { get; set; }
+		public string userId { get; set; }
 
 		public int CompareTo( PlayerData other )
 		{
@@ -33,7 +33,7 @@ namespace MatchTracker
 			return userId == other.userId;
 		}
 
-		public String GetName()
+		public string GetName()
 		{
 			return nickName ?? name;
 		}

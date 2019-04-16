@@ -4,7 +4,7 @@ namespace MatchTracker
 {
 	public interface IStartEnd
 	{
-		String name { get; set; }
+		string name { get; set; }
 
 		DateTime timeEnded { get; set; }
 		DateTime timeStarted { get; set; }

@@ -8,11 +8,11 @@ namespace MatchTracker
 	public class MatchData : IPlayersList, IRoundsList, IStartEnd, IWinner, IYoutube, IEquatable<MatchData>, IComparable<MatchData>
 	{
 		//name of the match
-		public String name { get; set; } = String.Empty;
+		public string name { get; set; } = string.Empty;
 
 		public List<PlayerData> players { get; set; } = new List<PlayerData>();
 
-		public List<String> rounds { get; set; } = new List<string>();
+		public List<string> rounds { get; set; } = new List<string>();
 
 		public List<TeamData> teams { get; set; } = new List<TeamData>();
 
@@ -20,7 +20,7 @@ namespace MatchTracker
 		public DateTime timeStarted { get; set; }
 		public TeamData winner { get; set; }
 
-		public String youtubeUrl { get; set; } = String.Empty;
+		public string youtubeUrl { get; set; } = string.Empty;
 		public VideoType videoType { get; set; } = VideoType.PlaylistLink;
 
 		public int CompareTo( MatchData other )
@@ -38,9 +38,9 @@ namespace MatchTracker
 			return timeEnded.Subtract( timeStarted );
 		}
 
-		public String GetWinnerName()
+		public string GetWinnerName()
 		{
-			String winnerName = "";
+			string winnerName = "";
 			var winners = GetWinners();
 			//check if anyone actually won
 			if( winners.Count != 0 )

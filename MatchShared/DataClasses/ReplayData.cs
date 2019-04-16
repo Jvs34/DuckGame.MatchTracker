@@ -4,7 +4,7 @@ namespace MatchTracker
 {
 	public class ReplayData : IStartEnd
 	{
-		public String name { get; set; }
+		public string name { get; set; }
 
 		public DateTime timeEnded { get; set; }
 		public DateTime timeStarted { get; set; }

@@ -20,12 +20,12 @@ namespace MatchRecorder
 		public IGameDatabase GameDatabase { get; private set; }
 		public bool IsRecording => recorderHandler.IsRecording;
 		public string MatchesFolder { get; }
-		public String ModPath { get; }
+		public string ModPath { get; }
 		public string RoundsFolder { get; }
 		private IConfigurationRoot Configuration { get; }
 		private JsonSerializerSettings JsonSettings { get; }
 
-		public MatchRecorderHandler( String modPath )
+		public MatchRecorderHandler( string modPath )
 		{
 			ModPath = modPath;
 			GameDatabase = new GameDatabase();
@@ -102,13 +102,13 @@ namespace MatchRecorder
 			File.WriteAllText( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented , JsonSettings ) );
 		}
 
-		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String matchName , MatchData matchData )
+		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName , MatchData matchData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented , JsonSettings ) );
 		}
 
-		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , String roundName , RoundData roundData )
+		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName , RoundData roundData )
 		{
 			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented , JsonSettings ) );
@@ -242,7 +242,7 @@ namespace MatchRecorder
 
 		private PlayerData CreatePlayerDataFromProfile( Profile profile , IWinner winnerObject )
 		{
-			String userId = Network.isActive ? profile.steamID.ToString() : profile.id;
+			string userId = Network.isActive ? profile.steamID.ToString() : profile.id;
 
 			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
 

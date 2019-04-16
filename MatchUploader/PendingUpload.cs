@@ -6,15 +6,15 @@ namespace MatchUploader
 	{
 		public int errorCount { get; set; }
 		public long fileSize { get; set; }
-		public String lastException { get; set; }
+		public string lastException { get; set; }
 		public Uri uploadUrl { get; set; }
-		public String videoName { get; set; }
+		public string videoName { get; set; }
 
 		public PendingUpload()
 		{
-			videoName = String.Empty;
+			videoName = string.Empty;
 			uploadUrl = null;
-			lastException = String.Empty;
+			lastException = string.Empty;
 			errorCount = 0;
 			fileSize = 0;
 		}

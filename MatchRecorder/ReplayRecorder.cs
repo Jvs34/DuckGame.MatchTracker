@@ -34,7 +34,7 @@ namespace MatchRecorder
 		private Process ffmpegProcess;
 		private VoiceNextConnection voiceConnection;
 
-		public String FFmpegPath
+		public string FFmpegPath
 		{
 			get
 			{
@@ -55,7 +55,7 @@ namespace MatchRecorder
 			eventListener = new DuckRecordingListener();
 			ffmpegChannels = new Dictionary<ulong , NamedPipeServerStream>();
 
-			if( String.IsNullOrEmpty( mainHandler.BotSettings.discordToken ) )
+			if( string.IsNullOrEmpty( mainHandler.BotSettings.discordToken ) )
 			{
 				throw new ArgumentNullException( "discordToken is null!" );
 			}
@@ -86,7 +86,7 @@ namespace MatchRecorder
 		{
 			IsRecording = true;
 			DateTime recordingTime = DateTime.Now;
-			String roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime ) );
+			string roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime ) );
 			Directory.CreateDirectory( roundPath );
 			mainHandler.StartCollectingRoundData( recordingTime );
 
@@ -190,7 +190,7 @@ namespace MatchRecorder
 			if( voiceConnection == null )
 				return false;
 
-			String inputArg = @"-ac 1 -f s16le -ar 48000";
+			string inputArg = @"-ac 1 -f s16le -ar 48000";
 
 			var channelMembers = voiceConnection.Channel.Users;
 
@@ -217,7 +217,7 @@ namespace MatchRecorder
 
 			//String outputArg = $"-codec:a libopus -filter_complex amix=inputs={ffmpegChannels.Count} {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
 			//String outputArg = $"-codec:a libopus {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.ogg" )}";
-			String outputArg = $@"-ac 1 -ar 44100 {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.wav" )}";
+			string outputArg = $@"-ac 1 -ar 44100 {Path.Combine( mainHandler.ModPath , "ThirdParty" , "test.wav" )}";
 
 			var process = new Process()
 			{

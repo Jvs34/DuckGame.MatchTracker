@@ -6,7 +6,7 @@ namespace MatchTracker
 {
 	public class GameDatabase : IGameDatabase
 	{
-		private readonly Object globalDataLock;
+		private readonly object globalDataLock;
 		private GlobalData globalData;
 		private Dictionary<string , MatchData> matchesData;
 		private Dictionary<string , RoundData> roundsData;
@@ -60,7 +60,7 @@ namespace MatchTracker
 			return globalData;
 		}
 
-		public async Task<MatchData> GetMatchData( String matchName , bool forceRefresh = false )
+		public async Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false )
 		{
 			MatchData matchData = null;
 
@@ -95,7 +95,7 @@ namespace MatchTracker
 			return matchData;
 		}
 
-		public async Task<RoundData> GetRoundData( String roundName , bool forceRefresh = false )
+		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
 		{
 			RoundData roundData = null;
 
@@ -137,10 +137,10 @@ namespace MatchTracker
 
 			GlobalData globalData = await GetGlobalData();
 
-			List<String> matchesOrRounds = matchOrRound ? globalData.matches : globalData.rounds;
+			List<string> matchesOrRounds = matchOrRound ? globalData.matches : globalData.rounds;
 
 			List<Task> callbackTasks = new List<Task>();
-			foreach( String matchOrRoundName in matchesOrRounds )
+			foreach( string matchOrRoundName in matchesOrRounds )
 			{
 				IWinner iterateItem = matchOrRound ?
 					await GetMatchData( matchOrRoundName ) as IWinner :
@@ -161,13 +161,13 @@ namespace MatchTracker
 
 			if( globalData != null )
 			{
-				foreach( String matchName in globalData.matches )
+				foreach( string matchName in globalData.matches )
 				{
 					//await GetMatchData( matchName , true );
 					loadingTasks.Add( GetMatchData( matchName , true ) );
 				}
 
-				foreach( String roundName in globalData.rounds )
+				foreach( string roundName in globalData.rounds )
 				{
 					//await GetRoundData( roundName , true );
 					loadingTasks.Add( GetRoundData( roundName , true ) );
@@ -191,7 +191,7 @@ namespace MatchTracker
 			}
 		}
 
-		public async Task SaveMatchData( String matchName , MatchData matchData )
+		public async Task SaveMatchData( string matchName , MatchData matchData )
 		{
 			lock( matchesData )
 			{
@@ -203,7 +203,7 @@ namespace MatchTracker
 			}
 		}
 
-		public async Task SaveRoundData( String roundName , RoundData roundData )
+		public async Task SaveRoundData( string roundName , RoundData roundData )
 		{
 			lock( roundsData )
 			{

@@ -38,13 +38,13 @@ namespace MatchBot
 		//class used to store info about the recognized Luis entity
 		private class RecognizedPlayerData
 		{
-			public String FancyTarget { get; set; }
+			public string FancyTarget { get; set; }
 			public bool IsSpecialTarget { get; set; }
 
 			//if this target is a special one, it means the target and what the PlayerDataTarget might be set by code instead of a normal name search
 			public PlayerData PlayerDataTarget { get; set; }
 
-			public String Target { get; set; } //"we" , "i" , "me" , "Jvs" these are the kind of targets we can expect
+			public string Target { get; set; } //"we" , "i" , "me" , "Jvs" these are the kind of targets we can expect
 
 			//the target of this, might be null if not found
 			public TargetType TargetType { get; set; } //the kind of target of this entity
@@ -154,7 +154,7 @@ namespace MatchBot
 			}
 		}
 
-		public void RefreshDatabase( Object dontactuallycare = null )
+		public void RefreshDatabase( object dontactuallycare = null )
 		{
 			if( loadDatabaseTask?.IsCompleted == false )
 			{
@@ -165,9 +165,9 @@ namespace MatchBot
 			loadDatabaseTask = Database.Load();
 		}
 
-		private Dictionary<String , List<string>> GetEntities( IDictionary<String , JToken> results )
+		private Dictionary<string , List<string>> GetEntities( IDictionary<string , JToken> results )
 		{
-			Dictionary<String , List<string>> list = new Dictionary<string , List<string>>();
+			Dictionary<string , List<string>> list = new Dictionary<string , List<string>>();
 			foreach( var it in results )
 			{
 				if( it.Key == "$instance" )
@@ -177,25 +177,25 @@ namespace MatchBot
 			return list;
 		}
 
-		private async Task<List<RecognizedPlayerData>> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<String , List<string>> entities )
+		private async Task<List<RecognizedPlayerData>> GetPlayerDataEntities( ITurnContext turnContext , Dictionary<string , List<string>> entities )
 		{
 			List<RecognizedPlayerData> playerTargets = new List<RecognizedPlayerData>();
 			//List<PlayerData> players = new List<PlayerData>();
 
 			GlobalData globalData = await Database.GetGlobalData();
 
-			if( entities.TryGetValue( "Player_Name" , out List<String> playerNames ) )
+			if( entities.TryGetValue( "Player_Name" , out List<string> playerNames ) )
 			{
 				//"me" and "i" should be turned into the user that sent the message
 
 				//TODO: it would be nice if I was able to use fuzzy search here so I'm gonna keep this TODO here
-				foreach( String name in playerNames )
+				foreach( string name in playerNames )
 				{
 					RecognizedPlayerData recognizedPlayerData = new RecognizedPlayerData();
-					String playerName = name;
+					string playerName = name;
 					//if there's a "we"
 
-					if( String.Equals( playerName , "we" , StringComparison.CurrentCultureIgnoreCase ) )
+					if( string.Equals( playerName , "we" , StringComparison.CurrentCultureIgnoreCase ) )
 					{
 						recognizedPlayerData.IsSpecialTarget = true;
 						recognizedPlayerData.PlayerDataTarget = null;
@@ -209,8 +209,8 @@ namespace MatchBot
 					//the target is already a special one, skip searching for the name
 					if( !recognizedPlayerData.IsSpecialTarget )
 					{
-						if( String.Equals( playerName , "i" , StringComparison.CurrentCultureIgnoreCase )
-							|| String.Equals( playerName , "me" , StringComparison.CurrentCultureIgnoreCase ) )
+						if( string.Equals( playerName , "i" , StringComparison.CurrentCultureIgnoreCase )
+							|| string.Equals( playerName , "me" , StringComparison.CurrentCultureIgnoreCase ) )
 						{
 							playerName = turnContext.Activity.From.Name;
 							recognizedPlayerData.IsSpecialTarget = true;
@@ -221,8 +221,8 @@ namespace MatchBot
 						//try to find the name of the player
 						PlayerData pd = globalData.players.Find( p =>
 						{
-							return String.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase )
-												   || String.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
+							return string.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase )
+												   || string.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
 						} );
 
 						recognizedPlayerData.PlayerDataTarget = pd;
@@ -340,7 +340,7 @@ namespace MatchBot
 			var entities = GetEntities( result.Entities );
 			List<RecognizedPlayerData> recognizedPlayerEntities = await GetPlayerDataEntities( turnContext , entities );
 			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
-			String gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
+			string gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
 
 			GlobalData globalData = await Database.GetGlobalData();
 
@@ -402,13 +402,13 @@ namespace MatchBot
 			var entities = GetEntities( result.Entities );
 			List<RecognizedPlayerData> recognizedPlayerEntities = await GetPlayerDataEntities( turnContext , entities );
 			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
-			String gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
+			string gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
 
 			foreach( RecognizedPlayerData recognizedPlayer in recognizedPlayerEntities )
 			{
 				int timesPlayed = 0;
 				TimeSpan durationPlayed = TimeSpan.Zero;
-				Object durationPlayedLock = new object();
+				object durationPlayedLock = new object();
 
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{

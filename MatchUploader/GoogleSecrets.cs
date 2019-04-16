@@ -5,8 +5,8 @@ namespace MatchUploader
 {
 	public class GoogleSecrets
 	{
-		public String client_id { get; set; }
-		public String client_secret { get; set; }
+		public string client_id { get; set; }
+		public string client_secret { get; set; }
 
 		public static implicit operator ClientSecrets( GoogleSecrets secrets )
 		{

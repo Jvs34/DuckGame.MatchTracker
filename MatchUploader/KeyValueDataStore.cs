@@ -10,7 +10,7 @@ namespace MatchUploader
 	public class KeyValueDataStore : IDataStore
 	{
 		private static readonly Task CompletedTask = Task.FromResult( 0 );
-		public Dictionary<String , String> data { get; set; }
+		public Dictionary<string , string> data { get; set; }
 		//FileDataStore does it
 
 		public KeyValueDataStore()

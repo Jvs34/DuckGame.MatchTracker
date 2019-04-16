@@ -7,7 +7,7 @@ namespace MatchTracker
 	public class TeamData : IPlayersList, IEquatable<TeamData>, IComparable<TeamData>
 	{
 		public bool hasHat { get; set; }
-		public String hatName { get; set; }
+		public string hatName { get; set; }
 		public bool isCustomHat { get; set; }
 		public List<PlayerData> players { get; set; } = new List<PlayerData>();
 		public int score { get; set; }

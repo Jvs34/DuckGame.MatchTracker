@@ -30,16 +30,16 @@ namespace MatchRecorder
 
 		private Assembly ModResolve( object sender , ResolveEventArgs args )
 		{
-			String cleanName = args.Name.Split( ',' ) [0];
+			string cleanName = args.Name.Split( ',' ) [0];
 			//now try to load the requested assembly
 
-			String folder = "Release";
+			string folder = "Release";
 #if DEBUG
 			folder = "Debug";
 #endif
 			//TODO: find a better way to output this stuff
-			String assemblyFolder = Path.Combine( configuration.directory , "MatchRecorder" , "bin" , "x86" , folder , "net471" );
-			String assemblyPath = Path.GetFullPath( Path.Combine( assemblyFolder , cleanName + ".dll" ) );
+			string assemblyFolder = Path.Combine( configuration.directory , "MatchRecorder" , "bin" , "x86" , folder , "net471" );
+			string assemblyPath = Path.GetFullPath( Path.Combine( assemblyFolder , cleanName + ".dll" ) );
 
 			byte [] assemblyBytes = File.ReadAllBytes( assemblyPath );
 

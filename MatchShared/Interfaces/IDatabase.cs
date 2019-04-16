@@ -4,11 +4,11 @@ using System.Threading.Tasks;
 namespace MatchTracker
 {
 	public delegate Task<GlobalData> LoadGlobalDataDelegate( IGameDatabase database , SharedSettings settings );
-	public delegate Task<MatchData> LoadMatchDataDelegate( IGameDatabase database , SharedSettings settings , String matchName );
-	public delegate Task<RoundData> LoadRoundDataDelegate( IGameDatabase database , SharedSettings settings , String roundName );
+	public delegate Task<MatchData> LoadMatchDataDelegate( IGameDatabase database , SharedSettings settings , string matchName );
+	public delegate Task<RoundData> LoadRoundDataDelegate( IGameDatabase database , SharedSettings settings , string roundName );
 	public delegate Task SaveGlobalDataDelegate( IGameDatabase database , SharedSettings settings , GlobalData globalData );
-	public delegate Task SaveMatchDataDelegate( IGameDatabase database , SharedSettings settings , String matchName , MatchData matchData );
-	public delegate Task SaveRoundDataDelegate( IGameDatabase database , SharedSettings settings , String roundName , RoundData roundData );
+	public delegate Task SaveMatchDataDelegate( IGameDatabase database , SharedSettings settings , string matchName , MatchData matchData );
+	public delegate Task SaveRoundDataDelegate( IGameDatabase database , SharedSettings settings , string roundName , RoundData roundData );
 
 	public interface IGameDatabase
 	{
@@ -28,9 +28,9 @@ namespace MatchTracker
 
 		Task<GlobalData> GetGlobalData( bool forceRefresh = false );
 
-		Task<MatchData> GetMatchData( String matchName , bool forceRefresh = false );
+		Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false );
 
-		Task<RoundData> GetRoundData( String roundName , bool forceRefresh = false );
+		Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false );
 
 		Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback );
 
@@ -38,8 +38,8 @@ namespace MatchTracker
 
 		Task SaveGlobalData( GlobalData globalData );
 
-		Task SaveMatchData( String matchName , MatchData matchData );
+		Task SaveMatchData( string matchName , MatchData matchData );
 
-		Task SaveRoundData( String roundName , RoundData roundData );
+		Task SaveRoundData( string roundName , RoundData roundData );
 	}
 }

@@ -10,10 +10,10 @@ namespace MatchTracker
 
 		//id of the level this round was played on
 		//unfortunately the actual path of the level is already gone by the time this is available
-		public String levelName { get; set; }
+		public string levelName { get; set; }
 
-		public String name { get; set; }
-		public String matchName { get; set; }
+		public string name { get; set; }
+		public string matchName { get; set; }
 		public virtual List<PlayerData> players { get; set; } = new List<PlayerData>();
 		public bool skipped { get; set; }
 		public List<TeamData> teams { get; set; } = new List<TeamData>();
@@ -22,7 +22,7 @@ namespace MatchTracker
 		public virtual TeamData winner { get; set; }
 
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
-		public String youtubeUrl { get; set; }
+		public string youtubeUrl { get; set; }
 		public VideoType videoType { get; set; } = VideoType.VideoLink;
 
 		public int CompareTo( RoundData other )
@@ -40,9 +40,9 @@ namespace MatchTracker
 			return timeEnded.Subtract( timeStarted );
 		}
 
-		public String GetWinnerName()
+		public string GetWinnerName()
 		{
-			String winnerName = "";
+			string winnerName = "";
 			var winners = GetWinners();
 			//check if anyone actually won
 			if( winners.Count != 0 )

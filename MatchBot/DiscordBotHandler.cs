@@ -105,15 +105,15 @@ namespace MatchBot
 
 		private Activity GetActivityFromMessage( MessageCreateEventArgs msg )
 		{
-			String text = msg.Message.Content;
+			string text = msg.Message.Content;
 
 			foreach( var mentionedUser in msg.MentionedUsers )
 			{
 				//the string that's used to mention this user, we need to remove the exclamation mark here tho
-				String mentionString = mentionedUser.Mention.Replace( "!" , String.Empty );
+				string mentionString = mentionedUser.Mention.Replace( "!" , string.Empty );
 
 				//the bot doesn't need to see "DuckBot" at the start of the message everytime, so remove that specifically
-				text = text.Replace( mentionString , mentionedUser.Id == discordClient.CurrentUser.Id ? String.Empty : mentionedUser.Username );
+				text = text.Replace( mentionString , mentionedUser.Id == discordClient.CurrentUser.Id ? string.Empty : mentionedUser.Username );
 			}
 
 			return new Activity()

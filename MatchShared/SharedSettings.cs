@@ -9,101 +9,101 @@ namespace MatchTracker
 	public class SharedSettings
 	{
 		//global paths
-		public String baseRecordingFolder { get; set; }
+		public string baseRecordingFolder { get; set; }
 
-		public String baseRepositoryUrl { get; set; } //this has to be a github url for raw access
+		public string baseRepositoryUrl { get; set; } //this has to be a github url for raw access
 
-		public String globalDataFile { get; set; }
+		public string globalDataFile { get; set; }
 
-		public String matchesFolder { get; set; }
+		public string matchesFolder { get; set; }
 
-		public String roundDataFile { get; set; }
+		public string roundDataFile { get; set; }
 
 		//local paths
-		public String roundsFolder { get; set; }
+		public string roundsFolder { get; set; }
 
-		public String roundVideoFile { get; set; }
-		public String roundVoiceFile { get; set; }
-		public String timestampFormat { get; set; }
+		public string roundVideoFile { get; set; }
+		public string roundVoiceFile { get; set; }
+		public string timestampFormat { get; set; }
 
-		public String DateTimeToString( DateTime time )
+		public string DateTimeToString( DateTime time )
 		{
 			return time.ToString( timestampFormat );
 		}
 
-		public String GetGlobalPath()
+		public string GetGlobalPath()
 		{
 			return Path.Combine( GetRecordingFolder() , globalDataFile );
 		}
 
-		public String GetGlobalUrl()
+		public string GetGlobalUrl()
 		{
 			return Url.Combine( GetRepositoryUrl() , globalDataFile );
 		}
 
-		public String GetMatchPath( String matchName )
+		public string GetMatchPath( string matchName )
 		{
-			String matchFolder = Path.Combine( GetRecordingFolder() , matchesFolder );
-			String matchPath = Path.Combine( matchFolder , matchName );
+			string matchFolder = Path.Combine( GetRecordingFolder() , matchesFolder );
+			string matchPath = Path.Combine( matchFolder , matchName );
 			return Path.ChangeExtension( matchPath , "json" );
 		}
 
-		public String GetMatchUrl( String matchName )
+		public string GetMatchUrl( string matchName )
 		{
-			String matchFolder = Url.Combine( GetRepositoryUrl() , matchesFolder );
-			String matchPath = Url.Combine( matchFolder , matchName + ".json" );
+			string matchFolder = Url.Combine( GetRepositoryUrl() , matchesFolder );
+			string matchPath = Url.Combine( matchFolder , matchName + ".json" );
 			return matchPath;
 		}
 
-		public String GetRecordingFolder()
+		public string GetRecordingFolder()
 		{
 			return baseRecordingFolder;
 		}
 
-		public String GetRepositoryUrl()
+		public string GetRepositoryUrl()
 		{
 			return baseRepositoryUrl;
 		}
 
-		public String GetRoundPath( String roundName )
+		public string GetRoundPath( string roundName )
 		{
-			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
-			String roundFile = Path.Combine( roundFolder , roundName );
+			string roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
+			string roundFile = Path.Combine( roundFolder , roundName );
 			return Path.Combine( roundFile , roundDataFile );
 		}
 
-		public String GetRoundUrl( String roundName )
+		public string GetRoundUrl( string roundName )
 		{
-			String roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
-			String roundFile = Url.Combine( roundFolder , roundName );
+			string roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
+			string roundFile = Url.Combine( roundFolder , roundName );
 			return Url.Combine( roundFile , roundDataFile );
 		}
 
-		public String GetRoundVideoPath( String roundName )
+		public string GetRoundVideoPath( string roundName )
 		{
-			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
-			String roundFile = Path.Combine( roundFolder , roundName );
+			string roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
+			string roundFile = Path.Combine( roundFolder , roundName );
 			return Path.Combine( roundFile , roundVideoFile );
 		}
 
-		public String GetRoundVideoUrl( String roundName )
+		public string GetRoundVideoUrl( string roundName )
 		{
-			String roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
-			String roundFile = Url.Combine( roundFolder , roundName );
+			string roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
+			string roundFile = Url.Combine( roundFolder , roundName );
 			return Url.Combine( roundFile , roundVideoFile );
 		}
 
-		public String GetRoundVoicePath( String roundName )
+		public string GetRoundVoicePath( string roundName )
 		{
-			String roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
-			String roundFile = Path.Combine( roundFolder , roundName );
+			string roundFolder = Path.Combine( GetRecordingFolder() , roundsFolder );
+			string roundFile = Path.Combine( roundFolder , roundName );
 			return Path.Combine( roundFile , roundVoiceFile );
 		}
 
-		public String GetRoundVoiceUrl( String roundName )
+		public string GetRoundVoiceUrl( string roundName )
 		{
-			String roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
-			String roundFile = Url.Combine( roundFolder , roundName );
+			string roundFolder = Url.Combine( GetRepositoryUrl() , roundsFolder );
+			string roundFile = Url.Combine( roundFolder , roundName );
 			return Url.Combine( roundFile , roundVoiceFile );
 		}
 	}
