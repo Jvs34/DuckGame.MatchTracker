@@ -298,6 +298,33 @@ namespace MatchUploader
 			} );
 		}
 
+		public async Task<List<Event>> GetAllCalendarEvents()
+		{
+			var allEvents = new List<Event>();
+
+
+			var eventRequest = calendarService.Events.List( uploaderSettings.calendarID );
+			Events eventResponse;
+
+			do
+			{
+				eventResponse = await eventRequest.ExecuteAsync();
+
+				foreach( var eventItem in eventResponse.Items )
+				{
+					if( !allEvents.Contains( eventItem ) )
+					{
+						allEvents.Add( eventItem );
+					}
+				}
+
+				eventRequest.PageToken = eventResponse.NextPageToken;
+			}
+			while( eventResponse.Items.Count > 0 && eventResponse.NextPageToken != null );
+
+			return allEvents;
+		}
+
 		public async Task HandleCalendar()
 		{
 			if( calendarService is null )
@@ -307,10 +334,7 @@ namespace MatchUploader
 
 			string calendarID = uploaderSettings.calendarID;
 
-			var eventGet = calendarService.Events.List( calendarID );
-			eventGet.MaxResults = 2500;
-
-			var allEvents = await eventGet.ExecuteAsync();
+			var allEvents = await GetAllCalendarEvents();
 
 			GlobalData globalData = await gameDatabase.GetGlobalData();
 
@@ -322,7 +346,7 @@ namespace MatchUploader
 
 				//if this event is already added, don't even call this
 
-				if( allEvents.Items.Any( x => x.Id.Equals( strippedName ) ) )
+				if( allEvents.Any( x => x.Id.Equals( strippedName ) ) )
 				{
 					continue;
 				}
@@ -424,8 +448,7 @@ namespace MatchUploader
 			var playlistsRequest = youtubeService.Playlists.List( "snippet" );
 			playlistsRequest.Mine = true;
 			playlistsRequest.MaxResults = 50;
-
-			PlaylistListResponse playlistResponse = null;
+			PlaylistListResponse playlistResponse;
 			do
 			{
 				playlistResponse = await playlistsRequest.ExecuteAsync();
@@ -871,12 +894,10 @@ namespace MatchUploader
 				await UpdateUploadProgress( remaining );
 
 				RoundData roundData = await gameDatabase.GetRoundData( roundName );
-
-
-				MatchData matchData = await gameDatabase.GetMatchData( roundData.matchName );
+				MatchData matchData = ( !string.IsNullOrEmpty( roundData.matchName ) ) ? await gameDatabase.GetMatchData( roundData.matchName ) : null;
 				List<PlaylistItem> playlistItems = null;
 
-				if( String.IsNullOrEmpty( matchData.youtubeUrl ) )
+				if( matchData != null && string.IsNullOrEmpty( matchData.youtubeUrl ) )
 				{
 					Playlist playlist = await CreatePlaylist( matchData );
 					if( playlist != null )
@@ -885,7 +906,7 @@ namespace MatchUploader
 					}
 				}
 
-				if( matchData.youtubeUrl != null )
+				if( matchData != null && matchData.youtubeUrl != null )
 				{
 					try
 					{
@@ -904,7 +925,7 @@ namespace MatchUploader
 					await RemoveVideoFile( roundName );
 					remaining--;
 
-					if( playlistItems != null )
+					if( matchData != null && playlistItems != null )
 					{
 						await AddRoundToPlaylist( roundData , matchData , playlistItems );
 					}

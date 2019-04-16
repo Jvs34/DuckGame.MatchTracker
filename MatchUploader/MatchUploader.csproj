@@ -17,14 +17,14 @@
 
   <ItemGroup>
     <PackageReference Include="DSharpPlus" Version="3.2.3" />
-    <PackageReference Include="Google.Apis.Calendar.v3" Version="1.35.2.1356" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.35.2.1226" />
-    <PackageReference Include="LibGit2Sharp" Version="0.25.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.1.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="11.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.1.1" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.1.1" />
-    <PackageReference Include="Xabe.FFmpeg" Version="3.1.4" />
+    <PackageReference Include="Google.Apis.Calendar.v3" Version="1.38.2.1559" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.38.2.1488" />
+    <PackageReference Include="LibGit2Sharp" Version="0.26.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.2.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.4" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
+    <PackageReference Include="Xabe.FFmpeg" Version="3.1.6" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
   </ItemGroup>
   

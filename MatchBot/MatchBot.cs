@@ -53,12 +53,23 @@ namespace MatchBot
 		}
 
 		private readonly IGameDatabase gameDatabase;
+		private readonly IGameDatabase localGameDatabase;
 
 		private readonly HttpClient httpClient;
 		private readonly Timer refreshTimer;
 		private Task loadDatabaseTask;
 		private IConfigurationRoot Configuration { get; }
 		private JsonSerializerSettings JsonSettings { get; }
+
+		public bool IsLocal { get; set; } = true;
+
+		private IGameDatabase Database
+		{
+			get
+			{
+				return IsLocal ? localGameDatabase : gameDatabase;
+			}
+		}
 
 		public MatchBot()
 		{
@@ -83,12 +94,21 @@ namespace MatchBot
 			};
 
 			gameDatabase = new GameDatabase();
+			localGameDatabase = new GameDatabase();
 
 			Configuration.Bind( gameDatabase.SharedSettings );
+
+			
 
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
 			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
 			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
+
+			localGameDatabase.SharedSettings = gameDatabase.SharedSettings;
+			localGameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
+			localGameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
+			localGameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
+
 
 			RefreshDatabase();
 			refreshTimer = new Timer( RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 ) );
@@ -142,7 +162,7 @@ namespace MatchBot
 				return;
 			}
 
-			loadDatabaseTask = gameDatabase.Load();
+			loadDatabaseTask = Database.Load();
 		}
 
 		private Dictionary<String , List<string>> GetEntities( IDictionary<String , JToken> results )
@@ -162,7 +182,7 @@ namespace MatchBot
 			List<RecognizedPlayerData> playerTargets = new List<RecognizedPlayerData>();
 			//List<PlayerData> players = new List<PlayerData>();
 
-			GlobalData globalData = await gameDatabase.GetGlobalData();
+			GlobalData globalData = await Database.GetGlobalData();
 
 			if( entities.TryGetValue( "Player_Name" , out List<String> playerNames ) )
 			{
@@ -228,7 +248,7 @@ namespace MatchBot
 			int wins = 0;
 			int losses = 0;
 
-			await gameDatabase.IterateOverAllRoundsOrMatches( ismatchOrRound , async ( matchOrRound ) =>
+			await Database.IterateOverAllRoundsOrMatches( ismatchOrRound , async ( matchOrRound ) =>
 			{
 				//even if it's team mode we consider it a win
 				//first off, only do this if the play is actually in the match
@@ -269,7 +289,7 @@ namespace MatchBot
 
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
-					await gameDatabase.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
+					await Database.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
 					{
 						IStartEnd startEnd = (IStartEnd) matchOrRound;
 						if( startEnd.timeEnded > lastPlayed )
@@ -286,7 +306,7 @@ namespace MatchBot
 				{
 					//go through the last round the player came up on the search
 
-					await gameDatabase.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
+					await Database.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
 					{
 						if( matchOrRound.players.Any( p => p.userId == recognizedPlayer.PlayerDataTarget.userId ) )
 						{
@@ -322,7 +342,7 @@ namespace MatchBot
 			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
 			String gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
 
-			GlobalData globalData = await gameDatabase.GetGlobalData();
+			GlobalData globalData = await Database.GetGlobalData();
 
 			//if there's 0 recognized player objects that means that the user wants to know who won the most, hopefully
 			if( recognizedPlayerEntities.Count == 0 )
@@ -392,10 +412,10 @@ namespace MatchBot
 
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
-					GlobalData gd = await gameDatabase.GetGlobalData();
+					GlobalData gd = await Database.GetGlobalData();
 					timesPlayed = gameType == GameType.Match ? gd.matches.Count : gd.rounds.Count;
 
-					await gameDatabase.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
+					await Database.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
 						if( matchOrRound is IStartEnd duration )
 						{
@@ -409,9 +429,9 @@ namespace MatchBot
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
 				{
-					GlobalData gd = await gameDatabase.GetGlobalData();
+					GlobalData gd = await Database.GetGlobalData();
 
-					await gameDatabase.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
+					await Database.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
 						if( matchOrRound.players.Any( x => x.userId == recognizedPlayer.PlayerDataTarget.userId ) )
 						{
@@ -458,6 +478,24 @@ namespace MatchBot
 			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
 			Console.WriteLine( $"Loading RoundData {roundName}" );
 			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
+		}
+
+		private async Task<GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
+		{
+			Console.WriteLine( "Loading GlobalData" );
+			return JsonConvert.DeserializeObject<GlobalData>( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) , JsonSettings );
+		}
+
+		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
+		{
+			Console.WriteLine( $"Loading MatchData {matchName}" );
+			return JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) , JsonSettings );
+		}
+
+		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
+		{
+			Console.WriteLine( $"Loading RoundData {roundName}" );
+			return JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) , JsonSettings );
 		}
 	}
 }
