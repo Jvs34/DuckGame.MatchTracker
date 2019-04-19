@@ -30,7 +30,7 @@ Also returns match/round data from the timestamped name and whatnot
 
 namespace MatchUploader
 {
-	public sealed class MatchUploaderHandler : ModeHandler
+	public sealed class MatchUploaderHandler
 	{
 		private readonly BotSettings botSettings;
 		private readonly Branch currentBranch;
@@ -46,7 +46,7 @@ namespace MatchUploader
 		private IConfigurationRoot Configuration { get; }
 		private JsonSerializerSettings JsonSettings { get; }
 
-		public MatchUploaderHandler( string [] args ) : base( args )
+		public MatchUploaderHandler( string [] args )
 		{
 			gameDatabase = new GameDatabase();
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
@@ -573,7 +573,7 @@ namespace MatchUploader
 			}
 		}
 
-		public override async Task Run()
+		public async Task Run()
 		{
 			await LoadDatabase();
 			await DoLogin();
@@ -932,62 +932,6 @@ namespace MatchUploader
 				}
 			}
 
-			/*
-			int remaining = await GetRemainingFilesCount();
-
-			foreach( String matchName in globalData.matches )
-			{
-				MatchData matchData = await gameDatabase.GetMatchData( matchName );
-				List<PlaylistItem> playlistItems = null;
-
-				if( String.IsNullOrEmpty( matchData.youtubeUrl ) )
-				{
-					Playlist playlist = await CreatePlaylist( matchData );
-					if( playlist != null )
-					{
-						await gameDatabase.SaveMatchData( matchName , matchData );
-					}
-				}
-
-				if( matchData.youtubeUrl != null )
-				{
-					try
-					{
-						playlistItems = await GetAllPlaylistItems( matchData.youtubeUrl );
-					}
-					catch( Exception )
-					{
-						playlistItems = null;
-					}
-				}
-
-				foreach( String roundName in matchData.rounds )
-				{
-					await UpdateUploadProgress( remaining );
-
-					RoundData roundData = await gameDatabase.GetRoundData( roundName );
-
-					if( roundData.recordingType != RecordingType.Video )
-					{
-						Console.WriteLine( $"Skipping {roundData.name} as it's not a video" );
-						continue;
-					}
-
-					bool isUploaded = await UploadRoundToYoutubeAsync( roundData );
-
-					if( isUploaded )
-					{
-						await RemoveVideoFile( roundName );
-						remaining--;
-					}
-
-					if( !String.IsNullOrEmpty( roundData.youtubeUrl ) && playlistItems != null )
-					{
-						await AddRoundToPlaylist( roundData , matchData , playlistItems );
-					}
-				}
-			}
-			*/
 
 			CommitGitChanges();
 		}

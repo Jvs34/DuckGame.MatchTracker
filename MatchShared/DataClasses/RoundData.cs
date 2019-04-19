@@ -15,7 +15,6 @@ namespace MatchTracker
 		public string name { get; set; }
 		public string matchName { get; set; }
 		public virtual List<PlayerData> players { get; set; } = new List<PlayerData>();
-		public bool skipped { get; set; }
 		public List<TeamData> teams { get; set; } = new List<TeamData>();
 		public DateTime timeEnded { get; set; }
 		public DateTime timeStarted { get; set; }
@@ -24,6 +23,8 @@ namespace MatchTracker
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
 		public string youtubeUrl { get; set; }
 		public VideoType videoType { get; set; } = VideoType.VideoLink;
+
+		public virtual List<TagData> tags { get; set; } = new List<TagData>();
 
 		public int CompareTo( RoundData other )
 		{
