@@ -52,7 +52,7 @@ namespace MatchBot
 			//the colloquial target
 		}
 
-		private readonly IGameDatabase gameDatabase;
+		private readonly IGameDatabase remoteGameDatabase;
 		private readonly IGameDatabase localGameDatabase;
 
 		private readonly HttpClient httpClient;
@@ -66,7 +66,7 @@ namespace MatchBot
 		{
 			get
 			{
-				return botSettings.UseRemoteDatabase ? gameDatabase : localGameDatabase;
+				return botSettings.UseRemoteDatabase ? remoteGameDatabase : localGameDatabase;
 			}
 		}
 
@@ -90,18 +90,18 @@ namespace MatchBot
 				Timeout = TimeSpan.FromMinutes( 30 )
 			};
 
-			gameDatabase = new GameDatabase();
+			remoteGameDatabase = new GameDatabase();
 			localGameDatabase = new GameDatabase();
 
-			Configuration.Bind( gameDatabase.SharedSettings );
+			Configuration.Bind( remoteGameDatabase.SharedSettings );
 			Configuration.Bind( botSettings );
 			
 
-			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
-			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
-			gameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
+			remoteGameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
+			remoteGameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
+			remoteGameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
 
-			localGameDatabase.SharedSettings = gameDatabase.SharedSettings;
+			localGameDatabase.SharedSettings = remoteGameDatabase.SharedSettings;
 			localGameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
 			localGameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
 			localGameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
