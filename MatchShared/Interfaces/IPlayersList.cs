@@ -4,6 +4,6 @@ namespace MatchTracker
 {
 	public interface IPlayersList
 	{
-		List<PlayerData> players { get; set; }
+		List<PlayerData> Players { get; set; }
 	}
 }

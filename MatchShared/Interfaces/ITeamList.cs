@@ -6,6 +6,6 @@ namespace MatchTracker
 {
 	public interface ITeamsList
 	{
-		List<TeamData> teams { get; set; }
+		List<TeamData> Teams { get; set; }
 	}
 }

@@ -137,7 +137,7 @@ namespace MatchTracker
 
 			GlobalData globalData = await GetGlobalData();
 
-			List<string> matchesOrRounds = matchOrRound ? globalData.matches : globalData.rounds;
+			List<string> matchesOrRounds = matchOrRound ? globalData.Matches : globalData.Rounds;
 
 			List<Task> callbackTasks = new List<Task>();
 			foreach( string matchOrRoundName in matchesOrRounds )
@@ -161,13 +161,13 @@ namespace MatchTracker
 
 			if( globalData != null )
 			{
-				foreach( string matchName in globalData.matches )
+				foreach( string matchName in globalData.Matches )
 				{
 					//await GetMatchData( matchName , true );
 					loadingTasks.Add( GetMatchData( matchName , true ) );
 				}
 
-				foreach( string roundName in globalData.rounds )
+				foreach( string roundName in globalData.Rounds )
 				{
 					//await GetRoundData( roundName , true );
 					loadingTasks.Add( GetRoundData( roundName , true ) );

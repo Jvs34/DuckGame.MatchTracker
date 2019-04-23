@@ -4,10 +4,10 @@ namespace MatchTracker
 {
 	public interface IStartEnd
 	{
-		string name { get; set; }
+		string Name { get; set; }
 
-		DateTime timeEnded { get; set; }
-		DateTime timeStarted { get; set; }
+		DateTime TimeEnded { get; set; }
+		DateTime TimeStarted { get; set; }
 
 		TimeSpan GetDuration();
 	}

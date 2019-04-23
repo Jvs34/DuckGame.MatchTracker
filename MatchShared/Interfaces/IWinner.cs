@@ -7,7 +7,7 @@ namespace MatchTracker
 	//this'll probably be more useful once we get interface traits in c# 8.0
 	public interface IWinner : IPlayersList, ITeamsList
 	{
-		TeamData winner { get; set; }
+		TeamData Winner { get; set; }
 
 		string GetWinnerName();
 

@@ -8,34 +8,34 @@ namespace MatchTracker
 	public class MatchData : IPlayersList, IRoundsList, IStartEnd, IWinner, IYoutube, IEquatable<MatchData>, IComparable<MatchData>
 	{
 		//name of the match
-		public string name { get; set; } = string.Empty;
+		public string Name { get; set; } = string.Empty;
 
-		public List<PlayerData> players { get; set; } = new List<PlayerData>();
+		public List<PlayerData> Players { get; set; } = new List<PlayerData>();
 
-		public List<string> rounds { get; set; } = new List<string>();
+		public List<string> Rounds { get; set; } = new List<string>();
 
-		public List<TeamData> teams { get; set; } = new List<TeamData>();
+		public List<TeamData> Teams { get; set; } = new List<TeamData>();
 
-		public DateTime timeEnded { get; set; }
-		public DateTime timeStarted { get; set; }
-		public TeamData winner { get; set; }
+		public DateTime TimeEnded { get; set; }
+		public DateTime TimeStarted { get; set; }
+		public TeamData Winner { get; set; }
 
-		public string youtubeUrl { get; set; } = string.Empty;
-		public VideoType videoType { get; set; } = VideoType.PlaylistLink;
+		public string YoutubeUrl { get; set; } = string.Empty;
+		public VideoType VideoType { get; set; } = VideoType.PlaylistLink;
 
 		public int CompareTo( MatchData other )
 		{
-			return timeStarted.CompareTo( other.timeStarted );
+			return TimeStarted.CompareTo( other.TimeStarted );
 		}
 
 		public bool Equals( MatchData other )
 		{
-			return name == other.name;
+			return Name == other.Name;
 		}
 
 		public TimeSpan GetDuration()
 		{
-			return timeEnded.Subtract( timeStarted );
+			return TimeEnded.Subtract( TimeStarted );
 		}
 
 		public string GetWinnerName()
@@ -45,7 +45,7 @@ namespace MatchTracker
 			//check if anyone actually won
 			if( winners.Count != 0 )
 			{
-				winnerName = winners.Count > 1 ? winner.hatName : winners [0].GetName();
+				winnerName = winners.Count > 1 ? Winner.hatName : winners [0].GetName();
 			}
 
 			return winnerName;
@@ -53,7 +53,7 @@ namespace MatchTracker
 
 		public List<PlayerData> GetWinners()
 		{
-			return winner?.players ?? new List<PlayerData>();
+			return Winner?.Players ?? new List<PlayerData>();
 		}
 	}
 }

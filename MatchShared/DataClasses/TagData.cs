@@ -6,6 +6,7 @@ namespace MatchTracker
 {
 	public class TagData
 	{
-
+		public string Name { get; set; }
+		public string Emoji { get; set; }
 	}
 }

@@ -4,7 +4,7 @@ namespace MatchTracker
 {
 	public interface IYoutube
 	{
-		string youtubeUrl { get; set; }
-		VideoType videoType { get; set; }
+		string YoutubeUrl { get; set; }
+		VideoType VideoType { get; set; }
 	}
 }

@@ -5,40 +5,38 @@ namespace MatchTracker
 {
 	public class RoundData : IPlayersList, IStartEnd, IWinner, IYoutube, IEquatable<RoundData>, IComparable<RoundData>
 	{
-		public RecordingType recordingType;
-		public bool isCustomLevel { get; set; }
+		public RecordingType RecordingType { get; set; }
+		public bool IsCustomLevel { get; set; }
 
 		//id of the level this round was played on
 		//unfortunately the actual path of the level is already gone by the time this is available
-		public string levelName { get; set; }
+		public string LevelName { get; set; }
 
-		public string name { get; set; }
-		public string matchName { get; set; }
-		public virtual List<PlayerData> players { get; set; } = new List<PlayerData>();
-		public List<TeamData> teams { get; set; } = new List<TeamData>();
-		public DateTime timeEnded { get; set; }
-		public DateTime timeStarted { get; set; }
-		public virtual TeamData winner { get; set; }
+		public string Name { get; set; }
+		public string MatchName { get; set; }
+		public virtual List<PlayerData> Players { get; set; } = new List<PlayerData>();
+		public List<TeamData> Teams { get; set; } = new List<TeamData>();
+		public DateTime TimeEnded { get; set; }
+		public DateTime TimeStarted { get; set; }
+		public virtual TeamData Winner { get; set; }
 
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
-		public string youtubeUrl { get; set; }
-		public VideoType videoType { get; set; } = VideoType.VideoLink;
-
-		public virtual List<TagData> tags { get; set; } = new List<TagData>();
+		public string YoutubeUrl { get; set; }
+		public VideoType VideoType { get; set; } = VideoType.VideoLink;
 
 		public int CompareTo( RoundData other )
 		{
-			return timeStarted.CompareTo( other.timeStarted );
+			return TimeStarted.CompareTo( other.TimeStarted );
 		}
 
 		public bool Equals( RoundData other )
 		{
-			return name == other.name;
+			return Name == other.Name;
 		}
 
 		public TimeSpan GetDuration()
 		{
-			return timeEnded.Subtract( timeStarted );
+			return TimeEnded.Subtract( TimeStarted );
 		}
 
 		public string GetWinnerName()
@@ -48,7 +46,7 @@ namespace MatchTracker
 			//check if anyone actually won
 			if( winners.Count != 0 )
 			{
-				winnerName = winners.Count > 1 ? winner.hatName : winners [0].GetName();
+				winnerName = winners.Count > 1 ? Winner.hatName : winners [0].GetName();
 			}
 
 			return winnerName;
@@ -56,7 +54,7 @@ namespace MatchTracker
 
 		public List<PlayerData> GetWinners()
 		{
-			return winner?.players ?? new List<PlayerData>();
+			return Winner?.Players ?? new List<PlayerData>();
 		}
 	}
 }

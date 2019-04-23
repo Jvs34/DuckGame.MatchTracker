@@ -128,24 +128,24 @@ namespace MatchRecorder
 
 			CurrentRound = new RoundData()
 			{
-				matchName = CurrentMatch?.name,
-				levelName = lvl.level ,
-				players = new List<PlayerData>() ,
-				timeStarted = startTime ,
-				isCustomLevel = false ,
-				recordingType = recorderHandler.ResultingRecordingType ,
+				MatchName = CurrentMatch?.Name,
+				LevelName = lvl.level ,
+				Players = new List<PlayerData>() ,
+				TimeStarted = startTime ,
+				IsCustomLevel = false ,
+				RecordingType = recorderHandler.ResultingRecordingType ,
 			};
 
-			CurrentRound.name = GameDatabase.SharedSettings.DateTimeToString( CurrentRound.timeStarted );
+			CurrentRound.Name = GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted );
 
 			if( lvl is GameLevel gl )
 			{
-				CurrentRound.isCustomLevel = gl.isCustomLevel;
+				CurrentRound.IsCustomLevel = gl.isCustomLevel;
 			}
 
 			if( CurrentMatch != null )
 			{
-				CurrentMatch.rounds.Add( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.timeStarted ) );
+				CurrentMatch.Rounds.Add( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted ) );
 			}
 
 			return CurrentRound;
@@ -160,23 +160,23 @@ namespace MatchRecorder
 		{
 			foreach( Team team in Teams.active )
 			{
-				winnerObject.teams.Add( CreateTeamDataFromTeam( team , winnerObject ) );
+				winnerObject.Teams.Add( CreateTeamDataFromTeam( team , winnerObject ) );
 			}
 
 			foreach( Profile pro in Profiles.active )
 			{
 				PlayerData ply = CreatePlayerDataFromProfile( pro , winnerObject );
-				winnerObject.players.Add( ply );
+				winnerObject.Players.Add( ply );
 			}
 
-			foreach( TeamData teamData in winnerObject.teams )
+			foreach( TeamData teamData in winnerObject.Teams )
 			{
 				Team team = Teams.active.Find( x => x.name == teamData.hatName );
 				if( team != null )
 				{
 					foreach( Profile pro in team.activeProfiles )
 					{
-						teamData.players.Add( CreatePlayerDataFromProfile( pro , winnerObject ) );
+						teamData.Players.Add( CreatePlayerDataFromProfile( pro , winnerObject ) );
 					}
 				}
 			}
@@ -200,15 +200,15 @@ namespace MatchRecorder
 
 			if( winner != null )
 			{
-				CurrentRound.winner = CreateTeamDataFromTeam( winner , CurrentRound );
+				CurrentRound.Winner = CreateTeamDataFromTeam( winner , CurrentRound );
 			}
 
-			CurrentRound.timeEnded = endTime;
+			CurrentRound.TimeEnded = endTime;
 
-			GameDatabase.SaveRoundData( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.timeStarted ) , CurrentRound ).Wait();
+			GameDatabase.SaveRoundData( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted ) , CurrentRound ).Wait();
 
 			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
-			globalData.rounds.Add( CurrentRound.name );
+			globalData.Rounds.Add( CurrentRound.Name );
 			GameDatabase.SaveGlobalData( globalData ).Wait();
 
 			RoundData newRoundData = CurrentRound;
@@ -226,7 +226,7 @@ namespace MatchRecorder
 		public void TryCollectingMatchData()
 		{
 			//try saving the match if there's one and it's got at least one round
-			if( CurrentMatch != null && CurrentMatch.rounds.Count > 0 )
+			if( CurrentMatch != null && CurrentMatch.Rounds.Count > 0 )
 			{
 				StopCollectingMatchData();
 			}
@@ -246,29 +246,29 @@ namespace MatchRecorder
 
 			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
 
-			PlayerData pd = globalData.players.Find( x => x.userId == userId );
+			PlayerData pd = globalData.Players.Find( x => x.UserId == userId );
 
 			if( pd == null )
 			{
 				pd = new PlayerData
 				{
-					userId = userId ,
-					name = profile.name ,
+					UserId = userId ,
+					Name = profile.name ,
 				};
 
 				//search for this profile on the globaldata, if it's there fill in the rest of the info
-				foreach( var ply in globalData.players )
+				foreach( var ply in globalData.Players )
 				{
 					if( pd.Equals( ply ) )
 					{
-						pd.discordId = ply.discordId;
-						pd.nickName = ply.nickName;
+						pd.DiscordId = ply.DiscordId;
+						pd.NickName = ply.NickName;
 						break;
 					}
 				}
 			}
 
-			pd.team = CreateTeamDataFromTeam( profile.team , winnerObject );
+			pd.Team = CreateTeamDataFromTeam( profile.team , winnerObject );
 
 			return pd;
 		}
@@ -280,7 +280,7 @@ namespace MatchRecorder
 
 			if( winnerObject != null )
 			{
-				td = winnerObject.teams.Find( x => x.hatName == team.name );
+				td = winnerObject.Teams.Find( x => x.hatName == team.name );
 			}
 
 			if( td == null )
@@ -301,10 +301,10 @@ namespace MatchRecorder
 		{
 			CurrentMatch = new MatchData
 			{
-				timeStarted = DateTime.Now ,
+				TimeStarted = DateTime.Now ,
 			};
 
-			CurrentMatch.name = GameDatabase.SharedSettings.DateTimeToString( CurrentMatch.timeStarted );
+			CurrentMatch.Name = GameDatabase.SharedSettings.DateTimeToString( CurrentMatch.TimeStarted );
 
 			return CurrentMatch;
 		}
@@ -316,7 +316,7 @@ namespace MatchRecorder
 				return null;
 			}
 
-			CurrentMatch.timeEnded = DateTime.Now;
+			CurrentMatch.TimeEnded = DateTime.Now;
 
 			AddTeamAndPlayerData( CurrentMatch );
 
@@ -329,24 +329,24 @@ namespace MatchRecorder
 
 			if( winner != null )
 			{
-				CurrentMatch.winner = CreateTeamDataFromTeam( winner , CurrentMatch );
+				CurrentMatch.Winner = CreateTeamDataFromTeam( winner , CurrentMatch );
 			}
 
-			GameDatabase.SaveMatchData( GameDatabase.SharedSettings.DateTimeToString( CurrentMatch.timeStarted ) , CurrentMatch ).Wait();
+			GameDatabase.SaveMatchData( GameDatabase.SharedSettings.DateTimeToString( CurrentMatch.TimeStarted ) , CurrentMatch ).Wait();
 
 			//also add this match to the globaldata as well
 			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
-			globalData.matches.Add( CurrentMatch.name );
+			globalData.Matches.Add( CurrentMatch.Name );
 
 			//try adding the players from the matchdata into the globaldata
 
-			foreach( PlayerData ply in CurrentMatch.players )
+			foreach( PlayerData ply in CurrentMatch.Players )
 			{
-				if( !globalData.players.Any( p => p.userId == ply.userId ) )
+				if( !globalData.Players.Any( p => p.UserId == ply.UserId ) )
 				{
-					ply.team = null;
+					ply.Team = null;
 
-					globalData.players.Add( ply );
+					globalData.Players.Add( ply );
 				}
 			}
 

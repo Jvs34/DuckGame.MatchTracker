@@ -219,10 +219,10 @@ namespace MatchBot
 						}
 
 						//try to find the name of the player
-						PlayerData pd = globalData.players.Find( p =>
+						PlayerData pd = globalData.Players.Find( p =>
 						{
-							return string.Equals( p.nickName , playerName , StringComparison.CurrentCultureIgnoreCase )
-												   || string.Equals( p.name , playerName , StringComparison.CurrentCultureIgnoreCase );
+							return string.Equals( p.NickName , playerName , StringComparison.CurrentCultureIgnoreCase )
+												   || string.Equals( p.Name , playerName , StringComparison.CurrentCultureIgnoreCase );
 						} );
 
 						recognizedPlayerData.PlayerDataTarget = pd;
@@ -252,11 +252,11 @@ namespace MatchBot
 			{
 				//even if it's team mode we consider it a win
 				//first off, only do this if the play is actually in the match
-				if( matchOrRound.players.Any( x => x.userId == player.userId ) )
+				if( matchOrRound.Players.Any( x => x.UserId == player.UserId ) )
 				{
 					List<PlayerData> matchOrRoundWinners = matchOrRound.GetWinners();
 
-					if( matchOrRoundWinners.Any( x => x.userId == player.userId ) )
+					if( matchOrRoundWinners.Any( x => x.UserId == player.UserId ) )
 					{
 						Interlocked.Increment( ref wins );
 					}
@@ -292,11 +292,11 @@ namespace MatchBot
 					await Database.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
 					{
 						IStartEnd startEnd = (IStartEnd) matchOrRound;
-						if( startEnd.timeEnded > lastPlayed )
+						if( startEnd.TimeEnded > lastPlayed )
 						{
 							lock( lastPlayedLock )
 							{
-								lastPlayed = startEnd.timeEnded;
+								lastPlayed = startEnd.TimeEnded;
 							}
 						}
 						await Task.CompletedTask;
@@ -308,14 +308,14 @@ namespace MatchBot
 
 					await Database.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
 					{
-						if( matchOrRound.players.Any( p => p.userId == recognizedPlayer.PlayerDataTarget.userId ) )
+						if( matchOrRound.Players.Any( p => p.UserId == recognizedPlayer.PlayerDataTarget.UserId ) )
 						{
 							IStartEnd startEnd = (IStartEnd) matchOrRound;
-							if( startEnd.timeEnded > lastPlayed )
+							if( startEnd.TimeEnded > lastPlayed )
 							{
 								lock( lastPlayedLock )
 								{
-									lastPlayed = startEnd.timeEnded;
+									lastPlayed = startEnd.TimeEnded;
 								}
 							}
 						}
@@ -352,7 +352,7 @@ namespace MatchBot
 				int mostWins = 0;
 				int mostWinsLosses = 0;
 
-				foreach( PlayerData player in globalData.players )
+				foreach( PlayerData player in globalData.Players )
 				{
 					int wins = 0;
 					int losses = 0;
@@ -413,7 +413,7 @@ namespace MatchBot
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
 					GlobalData gd = await Database.GetGlobalData();
-					timesPlayed = gameType == GameType.Match ? gd.matches.Count : gd.rounds.Count;
+					timesPlayed = gameType == GameType.Match ? gd.Matches.Count : gd.Rounds.Count;
 
 					await Database.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
@@ -433,7 +433,7 @@ namespace MatchBot
 
 					await Database.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
-						if( matchOrRound.players.Any( x => x.userId == recognizedPlayer.PlayerDataTarget.userId ) )
+						if( matchOrRound.Players.Any( x => x.UserId == recognizedPlayer.PlayerDataTarget.UserId ) )
 						{
 							Interlocked.Increment( ref timesPlayed );
 							if( matchOrRound is IStartEnd duration )
