@@ -854,15 +854,14 @@ namespace MatchUploader
 			}
 		}
 
-		private async Task<IEnumerable<string>> GetUploadableRounds()
+		private async Task<IEnumerable<RoundData>> GetUploadableRounds()
 		{
-			ConcurrentBag<string> uploadableRounds = new ConcurrentBag<string>();
+			ConcurrentBag<RoundData> uploadableRounds = new ConcurrentBag<RoundData>();
 
 			await gameDatabase.IterateOverAllRoundsOrMatches( false , async ( round ) =>
 			{
 				if( uploadableRounds.Count >= 100 )
 				{
-					await Task.CompletedTask;
 					return;
 				}
 
@@ -870,30 +869,27 @@ namespace MatchUploader
 
 				if( roundData.recordingType == RecordingType.Video && string.IsNullOrEmpty( roundData.youtubeUrl ) )
 				{
-					uploadableRounds.Add( roundData.name );
+					uploadableRounds.Add( roundData );
 				}
 
 				await Task.CompletedTask;
 			} );
 
-			return uploadableRounds;
+			return uploadableRounds.OrderBy( roundData => roundData.timeStarted );
 		}
 
 		public async Task UploadAllRounds()
 		{
 			Console.WriteLine( "Starting youtube uploads" );
 
-			GlobalData globalData = await gameDatabase.GetGlobalData();
-
 			var roundsToUpload = await GetUploadableRounds();
 
 			int remaining = roundsToUpload.Count();
 
-			foreach( string roundName in roundsToUpload )
+			foreach( RoundData roundData in roundsToUpload )
 			{
 				await UpdateUploadProgress( remaining );
 
-				RoundData roundData = await gameDatabase.GetRoundData( roundName );
 				MatchData matchData = ( !string.IsNullOrEmpty( roundData.matchName ) ) ? await gameDatabase.GetMatchData( roundData.matchName ) : null;
 				List<PlaylistItem> playlistItems = null;
 
@@ -922,7 +918,7 @@ namespace MatchUploader
 
 				if( isUploaded )
 				{
-					await RemoveVideoFile( roundName );
+					await RemoveVideoFile( roundData.name );
 					remaining--;
 
 					if( matchData != null && playlistItems != null )
