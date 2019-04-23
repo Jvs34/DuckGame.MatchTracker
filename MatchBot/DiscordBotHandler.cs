@@ -29,6 +29,7 @@ namespace MatchBot
 			botSettings = new BotSettings();
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
+				.AddJsonFile( "shared.json" )
 				.AddJsonFile( "bot.json" )
 				.AddCommandLine( args )
 			.Build();
@@ -39,12 +40,12 @@ namespace MatchBot
 			{
 				AutoReconnect = true ,
 				TokenType = TokenType.Bot ,
-				Token = botSettings.discordToken ,
+				Token = botSettings.DiscordToken ,
 			} );
 
 			discordClient.MessageCreated += OnDiscordMessage;
 
-			bot = new MatchBot();
+			bot = new MatchBot( Configuration );
 
 			Use( new CatchExceptionMiddleware<Exception>( async ( context , exception ) =>
 			{
@@ -52,7 +53,7 @@ namespace MatchBot
 				await context.SendActivity( "Sorry, it looks like something went wrong!" );
 			} ) );
 
-			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.luisModelId , botSettings.luisSubcriptionKey , botSettings.luisUri ) ) );
+			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.LuisModelId , botSettings.LuisSubcriptionKey , botSettings.LuisUri ) ) );
 		}
 
 		public override async Task DeleteActivity( ITurnContext context , ConversationReference reference )

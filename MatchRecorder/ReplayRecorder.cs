@@ -55,7 +55,7 @@ namespace MatchRecorder
 			eventListener = new DuckRecordingListener();
 			ffmpegChannels = new Dictionary<ulong , NamedPipeServerStream>();
 
-			if( string.IsNullOrEmpty( mainHandler.BotSettings.discordToken ) )
+			if( string.IsNullOrEmpty( mainHandler.BotSettings.DiscordToken ) )
 			{
 				throw new ArgumentNullException( "discordToken is null!" );
 			}
@@ -64,7 +64,7 @@ namespace MatchRecorder
 			{
 				AutoReconnect = true ,
 				TokenType = TokenType.Bot ,
-				Token = mainHandler.BotSettings.discordToken ,
+				Token = mainHandler.BotSettings.DiscordToken ,
 			} );
 
 			discordClient.Ready += async ( eventArgs ) =>
@@ -129,7 +129,7 @@ namespace MatchRecorder
 		private async Task ConnectToVoiceChat()
 		{
 			//TODO: use a discord rpc library or something to get the id of the user to stalk
-			var discordUserIDToStalk = mainHandler.BotSettings.discordUserToStalk;
+			var discordUserIDToStalk = mainHandler.BotSettings.DiscordUserToStalk;
 
 			foreach( var guildKV in discordClient.Guilds )
 			{

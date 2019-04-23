@@ -84,13 +84,13 @@ namespace MatchUploader
 				currentBranch = databaseRepository.Branches.First( branch => branch.IsCurrentRepositoryHead );
 			}
 
-			if( !string.IsNullOrEmpty( botSettings.discordToken ) )
+			if( !string.IsNullOrEmpty( botSettings.DiscordToken ) )
 			{
 				discordClient = new DiscordClient( new DiscordConfiguration()
 				{
 					AutoReconnect = true ,
 					TokenType = TokenType.Bot ,
-					Token = botSettings.discordToken ,
+					Token = botSettings.DiscordToken ,
 				} );
 			}
 		}
@@ -177,13 +177,13 @@ namespace MatchUploader
 			if( databaseRepository == null )
 				return;
 
-			Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , uploaderSettings.gitEmail , DateTime.Now );
+			Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , uploaderSettings.GitEmail , DateTime.Now );
 			var credentialsHandler = new CredentialsHandler(
 				( url , usernameFromUrl , supportedCredentialTypes ) =>
 					new UsernamePasswordCredentials()
 					{
-						Username = uploaderSettings.gitUsername ,
-						Password = uploaderSettings.gitPassword ,
+						Username = uploaderSettings.GitUsername ,
+						Password = uploaderSettings.GitPassword ,
 					}
 			);
 
@@ -272,11 +272,11 @@ namespace MatchUploader
 			//youtube stuff
 			youtubeService = new YouTubeService( new BaseClientService.Initializer()
 			{
-				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
+				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.Secrets ,
 					new [] { YouTubeService.Scope.Youtube } ,
 					"youtube" ,
 					CancellationToken.None ,
-					uploaderSettings.dataStore
+					uploaderSettings.DataStore
 				) ,
 				ApplicationName = appName ,
 				GZipEnabled = true ,
@@ -287,11 +287,11 @@ namespace MatchUploader
 
 			calendarService = new CalendarService( new BaseClientService.Initializer()
 			{
-				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.secrets ,
+				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.Secrets ,
 					new [] { CalendarService.Scope.Calendar } ,
 					"calendar" ,
 					CancellationToken.None ,
-					uploaderSettings.dataStore
+					uploaderSettings.DataStore
 				) ,
 				ApplicationName = appName ,
 				GZipEnabled = true ,
@@ -303,7 +303,7 @@ namespace MatchUploader
 			var allEvents = new List<Event>();
 
 
-			var eventRequest = calendarService.Events.List( uploaderSettings.calendarID );
+			var eventRequest = calendarService.Events.List( uploaderSettings.CalendarID );
 			Events eventResponse;
 
 			do
@@ -332,7 +332,7 @@ namespace MatchUploader
 				return;
 			}
 
-			string calendarID = uploaderSettings.calendarID;
+			string calendarID = uploaderSettings.CalendarID;
 
 			var allEvents = await GetAllCalendarEvents();
 
@@ -605,8 +605,8 @@ namespace MatchUploader
 		//updates the global data.json
 		public async Task UpdateGlobalData()
 		{
-			string roundsPath = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.roundsFolder );
-			string matchesPath = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.matchesFolder );
+			string roundsPath = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.RoundsFolder );
+			string matchesPath = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.MatchesFolder );
 
 			if( !Directory.Exists( gameDatabase.SharedSettings.GetRecordingFolder() ) || !Directory.Exists( roundsPath ) || !Directory.Exists( matchesPath ) )
 			{
@@ -963,26 +963,26 @@ namespace MatchUploader
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
 				//get the pending upload for this roundName
-				currentVideo = uploaderSettings.pendingUploads.Find( x => x.videoName.Equals( roundData.Name ) );
+				currentVideo = uploaderSettings.PendingUploads.Find( x => x.VideoName.Equals( roundData.Name ) );
 
 				if( currentVideo == null )
 				{
 					currentVideo = new PendingUpload()
 					{
-						videoName = roundData.Name
+						VideoName = roundData.Name
 					};
 
-					uploaderSettings.pendingUploads.Add( currentVideo );
+					uploaderSettings.PendingUploads.Add( currentVideo );
 				}
 
-				currentVideo.fileSize = fileStream.Length;
+				currentVideo.FileSize = fileStream.Length;
 
-				if( currentVideo.errorCount > uploaderSettings.retryCount )
+				if( currentVideo.ErrorCount > uploaderSettings.RetryCount )
 				{
-					currentVideo.uploadUrl = null;
-					Console.WriteLine( "Replacing resumable upload url for {0} after too many errors" , currentVideo.videoName );
-					currentVideo.errorCount = 0;
-					currentVideo.lastException = string.Empty;
+					currentVideo.UploadUrl = null;
+					Console.WriteLine( "Replacing resumable upload url for {0} after too many errors" , currentVideo.VideoName );
+					currentVideo.ErrorCount = 0;
+					currentVideo.LastException = string.Empty;
 				}
 
 				//TODO:Maybe it's possible to create a throttable request by extending the class of this one and initializing it with this one's values
@@ -994,22 +994,22 @@ namespace MatchUploader
 
 				IUploadProgress uploadProgress;
 
-				if( currentVideo.uploadUrl != null )
+				if( currentVideo.UploadUrl != null )
 				{
-					Console.WriteLine( "Resuming upload {0}" , currentVideo.videoName );
-					uploadProgress = await videosInsertRequest.ResumeAsync( currentVideo.uploadUrl );
+					Console.WriteLine( "Resuming upload {0}" , currentVideo.VideoName );
+					uploadProgress = await videosInsertRequest.ResumeAsync( currentVideo.UploadUrl );
 				}
 				else
 				{
-					Console.WriteLine( "Beginning to upload {0}" , currentVideo.videoName );
+					Console.WriteLine( "Beginning to upload {0}" , currentVideo.VideoName );
 					uploadProgress = await videosInsertRequest.UploadAsync();
 				}
 
 				//save it to the uploader settings and increment the error count only if it's not the annoying too many videos error
-				if( uploadProgress.Status != UploadStatus.Completed && currentVideo.uploadUrl != null )
+				if( uploadProgress.Status != UploadStatus.Completed && currentVideo.UploadUrl != null )
 				{
-					currentVideo.lastException = uploadProgress.Exception.Message;
-					currentVideo.errorCount++;
+					currentVideo.LastException = uploadProgress.Exception.Message;
+					currentVideo.ErrorCount++;
 					await SaveSettings();
 				}
 				currentVideo = null;
@@ -1081,7 +1081,7 @@ namespace MatchUploader
 			int remainingFiles = 0;
 			await gameDatabase.IterateOverAllRoundsOrMatches( false , async ( matchOrRound ) =>
 			{
-				IYoutube youtube = (IYoutube) matchOrRound;
+				IVideoUpload youtube = (IVideoUpload) matchOrRound;
 				if( string.IsNullOrEmpty( youtube.YoutubeUrl ) )
 				{
 					Interlocked.Increment( ref remainingFiles );
@@ -1109,20 +1109,20 @@ namespace MatchUploader
 
 		private void OnResponseReceived( Video video )
 		{
-			if( uploaderSettings.pendingUploads.Contains( currentVideo ) )
+			if( uploaderSettings.PendingUploads.Contains( currentVideo ) )
 			{
-				uploaderSettings.pendingUploads.Remove( currentVideo );
+				uploaderSettings.PendingUploads.Remove( currentVideo );
 			}
 
 			SaveSettings().Wait();
-			AddYoutubeIdToRound( currentVideo.videoName , video.Id ).Wait();
+			AddYoutubeIdToRound( currentVideo.VideoName , video.Id ).Wait();
 
-			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , currentVideo.videoName , video.Id );
+			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , currentVideo.VideoName , video.Id );
 		}
 
 		private void OnStartUploading( IUploadSessionData resumable )
 		{
-			currentVideo.uploadUrl = resumable.UploadUri;
+			currentVideo.UploadUrl = resumable.UploadUri;
 			SaveSettings().Wait();//save right away in case the program crashes or connection screws up
 		}
 
@@ -1132,9 +1132,9 @@ namespace MatchUploader
 			{
 				case UploadStatus.Uploading:
 					{
-						double percentage = Math.Round( ( (double) progress.BytesSent / (double) currentVideo.fileSize ) * 100f , 2 );
+						double percentage = Math.Round( ( (double) progress.BytesSent / (double) currentVideo.FileSize ) * 100f , 2 );
 						//UpdateUploadProgress( percentage , true );
-						Console.WriteLine( $"{currentVideo.videoName} : {percentage}%" );
+						Console.WriteLine( $"{currentVideo.VideoName} : {percentage}%" );
 						break;
 					}
 				case UploadStatus.Failed:
@@ -1153,8 +1153,8 @@ namespace MatchUploader
 
 			try
 			{
-				string roundsFolder = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.roundsFolder );
-				string filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.SharedSettings.roundVideoFile );
+				string roundsFolder = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.RoundsFolder );
+				string filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.SharedSettings.RoundVideoFile );
 				string reEncodedFilePath = Path.ChangeExtension( filePath , "converted.mp4" );
 
 				if( File.Exists( filePath ) )
@@ -1207,7 +1207,7 @@ namespace MatchUploader
 
 		private async Task UpdateUploadProgress( double percentage )
 		{
-			await SetPresence( $"Uploading {currentVideo.videoName} : {percentage}%" );
+			await SetPresence( $"Uploading {currentVideo.VideoName} : {percentage}%" );
 		}
 
 		private async Task UpdateUploadProgress( int remaining )

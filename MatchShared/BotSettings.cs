@@ -4,16 +4,18 @@ namespace MatchTracker
 {
 	public class BotSettings
 	{
-		public string discordClientId { get; set; }
-		public string discordToken { get; set; }
+		public string DiscordClientId { get; set; }
+		public string DiscordToken { get; set; }
 
 		/// <summary>
 		/// The user to join the channel of for audio recording purposes
 		/// </summary>
-		public ulong discordUserToStalk { get; set; }
+		public ulong DiscordUserToStalk { get; set; }
 
-		public string luisModelId { get; set; }
-		public string luisSubcriptionKey { get; set; }
-		public Uri luisUri { get; set; }
+		public string LuisModelId { get; set; }
+		public string LuisSubcriptionKey { get; set; }
+		public Uri LuisUri { get; set; }
+
+		public bool UseRemoteDatabase { get; set; }
 	}
 }

@@ -4,19 +4,19 @@ namespace MatchUploader
 {
 	public class PendingUpload
 	{
-		public int errorCount { get; set; }
-		public long fileSize { get; set; }
-		public string lastException { get; set; }
-		public Uri uploadUrl { get; set; }
-		public string videoName { get; set; }
+		public int ErrorCount { get; set; }
+		public long FileSize { get; set; }
+		public string LastException { get; set; }
+		public Uri UploadUrl { get; set; }
+		public string VideoName { get; set; }
 
 		public PendingUpload()
 		{
-			videoName = string.Empty;
-			uploadUrl = null;
-			lastException = string.Empty;
-			errorCount = 0;
-			fileSize = 0;
+			VideoName = string.Empty;
+			UploadUrl = null;
+			LastException = string.Empty;
+			ErrorCount = 0;
+			FileSize = 0;
 		}
 	}
 }

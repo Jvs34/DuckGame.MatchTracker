@@ -60,23 +60,20 @@ namespace MatchBot
 		private Task loadDatabaseTask;
 		private IConfigurationRoot Configuration { get; }
 		private JsonSerializerSettings JsonSettings { get; }
-
-		public bool IsLocal { get; set; } = true;
+		private BotSettings botSettings;
 
 		private IGameDatabase Database
 		{
 			get
 			{
-				return IsLocal ? localGameDatabase : gameDatabase;
+				return botSettings.UseRemoteDatabase ? gameDatabase : localGameDatabase;
 			}
 		}
 
-		public MatchBot()
+		public MatchBot( IConfigurationRoot configuration )
 		{
-			Configuration = new ConfigurationBuilder()
-				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
-				.AddJsonFile( "shared.json" )
-			.Build();
+			botSettings = new BotSettings();
+			Configuration = configuration;
 
 			JsonSettings = new JsonSerializerSettings()
 			{
@@ -97,7 +94,7 @@ namespace MatchBot
 			localGameDatabase = new GameDatabase();
 
 			Configuration.Bind( gameDatabase.SharedSettings );
-
+			Configuration.Bind( botSettings );
 			
 
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;

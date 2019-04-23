@@ -55,8 +55,8 @@ namespace MatchRecorder
 			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( BotSettings );
 
-			RoundsFolder = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.roundsFolder );
-			MatchesFolder = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.matchesFolder );
+			RoundsFolder = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.RoundsFolder );
+			MatchesFolder = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.MatchesFolder );
 
 			if( !Directory.Exists( RoundsFolder ) )
 				Directory.CreateDirectory( RoundsFolder );
