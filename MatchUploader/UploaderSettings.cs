@@ -17,5 +17,12 @@ namespace MatchUploader
 		public Uri YoutubeChannel { get; set; }
 
 		public string CalendarID { get; set; }
+
+		/// <summary>
+		/// Default to the youtube upload behaviour
+		/// </summary>
+		public MatchTracker.VideoMirrorType VideoMirrorUpload { get; set; } = MatchTracker.VideoMirrorType.Youtube;
+		public int DiscordMaxUploadSize { get; set; } = 8388608;
+		public ulong DiscordUploadChannel { get; set; }
 	}
 }

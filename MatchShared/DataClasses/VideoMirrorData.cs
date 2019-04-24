@@ -6,7 +6,7 @@ namespace MatchTracker
 {
 	public class VideoMirrorData
 	{
-		public string ServiceName { get; set; }
+		public VideoMirrorType MirrorType { get; set; } = VideoMirrorType.Youtube;
 		public string URL { get; set; }
 	}
 }

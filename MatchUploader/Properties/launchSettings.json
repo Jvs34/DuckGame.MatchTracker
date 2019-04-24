@@ -2,6 +2,7 @@
   "profiles": {
     "MatchUploader": {
       "commandName": "Project",
+      "commandLineArgs": "--VideoMirrorUpload=1",
       "workingDirectory": "..\\"
     }
   }

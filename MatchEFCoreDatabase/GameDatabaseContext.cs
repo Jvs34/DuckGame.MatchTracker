@@ -36,17 +36,17 @@ namespace MatchTracker
 				.HasKey( key => new { key.hatName , key.isCustomHat , key.score } );
 
 			modelBuilder.Entity<TeamData>()
-				.HasMany( prop => prop.players )
-				.WithOne( prop => prop.team );
+				.HasMany( prop => prop.Players )
+				.WithOne( prop => prop.Team );
 
 			modelBuilder.Entity<PlayerData>()
-				.HasKey( key => new { key.userId , key.team } );
+				.HasKey( key => new { key.UserId , key.Team } );
 
 			modelBuilder.Entity<RoundData>()
-				.HasKey( key => key.name );
+				.HasKey( key => key.Name );
 
 			modelBuilder.Entity<RoundData>()
-				.HasMany( prop => prop.players )
+				.HasMany( prop => prop.Players )
 				.WithOne();
 
 			/*

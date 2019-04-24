@@ -11,7 +11,6 @@ namespace MatchTracker
 		//id of the level this round was played on
 		//unfortunately the actual path of the level is already gone by the time this is available
 		public string LevelName { get; set; }
-
 		public string Name { get; set; }
 		public string MatchName { get; set; }
 		public virtual List<PlayerData> Players { get; set; } = new List<PlayerData>();

@@ -31,38 +31,38 @@ namespace MatchTracker
 
 			RoundData roundData = new RoundData()
 			{
-				recordingType = RecordingType.ReplayAndVoiceChat ,
-				players = new List<PlayerData>()
+				RecordingType = RecordingType.ReplayAndVoiceChat ,
+				Players = new List<PlayerData>()
 				{
 					new PlayerData()
 					{
-						userId = "PLAYER1",
-						name = "Player1",
-						team = new TeamData()
+						UserId = "PLAYER1",
+						Name = "Player1",
+						Team = new TeamData()
 						{
 							hatName = "Player 1",
 						}
 					},
 					new PlayerData()
 					{
-						userId = "PLAYER2",
-						name = "Player2",
-						team = new TeamData()
+						UserId = "PLAYER2",
+						Name = "Player2",
+						Team = new TeamData()
 						{
 							hatName = "Player 2",
 						}
 					},
 				} ,
-				levelName = "96af28ba-c1ba-4527-90ae-d393931ca0c3" ,
-				timeStarted = DateTime.Parse( "2018-08-02T15:22:38.6115392+02:00" ) ,
-				timeEnded = DateTime.Parse( "2018-08-02T15:23:11.7635398+02:00" ) ,
-				winner = new TeamData()
+				LevelName = "96af28ba-c1ba-4527-90ae-d393931ca0c3" ,
+				TimeStarted = DateTime.Parse( "2018-08-02T15:22:38.6115392+02:00" ) ,
+				TimeEnded = DateTime.Parse( "2018-08-02T15:23:11.7635398+02:00" ) ,
+				Winner = new TeamData()
 				{
 					hatName = "Player 2" ,
 					score = 1 ,
 				} ,
-				name = "2018-08-02 15-22-38" ,
-				isCustomLevel = false ,
+				Name = "2018-08-02 15-22-38" ,
+				IsCustomLevel = false ,
 			};
 
 			databaseContext.Add( roundData );
@@ -71,6 +71,7 @@ namespace MatchTracker
 
 		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
 		{
+			await Task.CompletedTask;
 			GlobalData globalData = null;
 			/*
 			using( var databaseContext = new GameDatabaseContext( databaseContextOptions ) )
@@ -102,6 +103,7 @@ namespace MatchTracker
 
 		public async Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false )
 		{
+			await Task.CompletedTask;
 			throw new NotImplementedException();
 		}
 
@@ -112,7 +114,7 @@ namespace MatchTracker
 			if( !forceRefresh )
 			{
 				//TODO: find a better way to include everything automatically
-				roundData = await databaseContext.RoundDataSet.FirstOrDefaultAsync( round => round.name.Equals( roundName ) );
+				roundData = await databaseContext.RoundDataSet.FirstOrDefaultAsync( round => round.Name.Equals( roundName ) );
 			}
 
 			if( roundData == null )
@@ -137,6 +139,7 @@ namespace MatchTracker
 
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
 		{
+			await Task.CompletedTask;
 			throw new NotImplementedException();
 		}
 
@@ -149,12 +152,12 @@ namespace MatchTracker
 
 			if( globalData != null )
 			{
-				foreach( String matchName in globalData.matches )
+				foreach( String matchName in globalData.Matches )
 				{
 					loadingTasks.Add( GetMatchData( matchName , true ) );
 				}
 
-				foreach( String roundName in globalData.rounds )
+				foreach( String roundName in globalData.Rounds )
 				{
 					loadingTasks.Add( GetRoundData( roundName , true ) );
 				}
@@ -165,16 +168,19 @@ namespace MatchTracker
 
 		public async Task SaveGlobalData( GlobalData globalData )
 		{
+			await Task.CompletedTask;
 			throw new NotImplementedException();
 		}
 
 		public async Task SaveMatchData( string matchName , MatchData matchData )
 		{
+			await Task.CompletedTask;
 			throw new NotImplementedException();
 		}
 
 		public async Task SaveRoundData( string roundName , RoundData roundData )
 		{
+			await Task.CompletedTask;
 			throw new NotImplementedException();
 		}
 	}

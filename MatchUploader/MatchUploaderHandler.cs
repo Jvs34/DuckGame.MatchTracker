@@ -22,6 +22,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Enums;
+using YoutubeExplode.Models.MediaStreams;
 
 /*
 Goes through all the folders, puts all rounds and matches into data.json
@@ -880,8 +881,96 @@ namespace MatchUploader
 
 		public async Task UploadAllRounds()
 		{
-			Console.WriteLine( "Starting youtube uploads" );
+			Console.WriteLine( "Starting {0} uploads" , uploaderSettings.VideoMirrorUpload.ToString() );
 
+			switch( uploaderSettings.VideoMirrorUpload )
+			{
+				//default youtube upload
+				case VideoMirrorType.Youtube:
+					{
+						await UploadToYoutubeAsync();
+						break;
+					}
+				case VideoMirrorType.Discord:
+					{
+						await UploadToDiscordAsync();
+						break;
+					}
+				default:
+					break;
+			}
+			CommitGitChanges();
+		}
+
+		public async Task UploadToDiscordAsync()
+		{
+			var uploadChannel = await discordClient.GetChannelAsync( uploaderSettings.DiscordUploadChannel );
+
+			if( uploadChannel == null )
+			{
+				Console.WriteLine( "Discord Upload channel is null" );
+				return;
+			}
+
+			var ytClient = new YoutubeExplode.YoutubeClient();
+
+			//just test with the first one for now
+			GlobalData globalData = await gameDatabase.GetGlobalData();
+
+			//go through each round, see if they already have a discord mirror, otherwise reupload
+
+			foreach( string roundName in globalData.Rounds )
+			{
+				RoundData roundData = await gameDatabase.GetRoundData( roundName );
+				if( !string.IsNullOrWhiteSpace( roundData.YoutubeUrl ) && roundData.VideoType == VideoType.VideoLink )
+				{
+					VideoMirrorData discordMirror = roundData.VideoMirrors.FirstOrDefault( mirror => mirror.MirrorType == VideoMirrorType.Discord );
+
+					//see if it already has a discord mirror
+					if( discordMirror != null ) //TODO: check if url is still valid?
+					{
+						continue;
+					}
+
+
+					//if it was successfull, save the data
+					string discordMirrorUrl;
+
+					var mediaStreamInfo = await ytClient.GetVideoMediaStreamInfosAsync( roundData.YoutubeUrl );
+					//get the quality that actually fits into 8 mb
+					var chosenQuality = mediaStreamInfo.Muxed.FirstOrDefault( quality => quality.Size <= uploaderSettings.DiscordMaxUploadSize );
+
+					if( chosenQuality == null )
+					{
+						Console.WriteLine( $"Could not find a quality that fits into {uploaderSettings.DiscordMaxUploadSize} for {roundName}" );
+						continue;
+					}
+
+					using( MemoryStream videoStream = new MemoryStream() )
+					{
+						await ytClient.DownloadMediaStreamAsync( chosenQuality , videoStream );
+						videoStream.Position = 0;
+						var message = await uploadChannel.SendFileAsync( videoStream , $"{roundName}.mp4" );
+						discordMirrorUrl = message.Attachments.First().Url;
+					}
+
+					if( !string.IsNullOrEmpty( discordMirrorUrl ) )
+					{
+						discordMirror = new VideoMirrorData()
+						{
+							MirrorType = VideoMirrorType.Discord ,
+							URL = discordMirrorUrl ,
+						};
+
+						roundData.VideoMirrors.Add( discordMirror );
+						await gameDatabase.SaveRoundData( roundName , roundData );
+					}
+				}
+			}
+		}
+
+		public async Task UploadToYoutubeAsync()
+		{
 			var roundsToUpload = await GetUploadableRounds();
 
 			int remaining = roundsToUpload.Count();
@@ -927,9 +1016,6 @@ namespace MatchUploader
 					}
 				}
 			}
-
-
-			CommitGitChanges();
 		}
 
 
