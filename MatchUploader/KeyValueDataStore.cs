@@ -10,7 +10,6 @@ namespace MatchUploader
 	public class KeyValueDataStore : IDataStore
 	{
 		public Dictionary<string , string> Data { get; set; } = new Dictionary<string , string>();
-		//FileDataStore does it
 
 		public async Task ClearAsync()
 		{
@@ -27,34 +26,13 @@ namespace MatchUploader
 		public async Task<T> GetAsync<T>( string key )
 		{
 			await Task.CompletedTask;
-
-			if( string.IsNullOrEmpty( key ) )
-			{
-				throw new ArgumentException( "Key MUST have a value" );
-			}
-
-			if( Data.ContainsKey( key ) )
-			{
-				return JsonConvert.DeserializeObject<T>( Data.GetValueOrDefault( key ) );
-			}
-
-			return default;
+			return Data.ContainsKey( key ) ? JsonConvert.DeserializeObject<T>( Data [key] ) : default;
 		}
 
 		public async Task StoreAsync<T>( string key , T value )
 		{
 			await Task.CompletedTask;
-
-			var convertedValue = JsonConvert.SerializeObject( value );
-
-			if( Data.ContainsKey( key ) )
-			{
-				Data [key] = convertedValue;
-			}
-			else
-			{
-				Data.Add( key , convertedValue );
-			}
+			Data [key] = JsonConvert.SerializeObject( value );
 		}
 	}
 }
