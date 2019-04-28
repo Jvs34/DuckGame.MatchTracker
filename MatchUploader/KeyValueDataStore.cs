@@ -1,5 +1,6 @@
 ﻿using Google.Apis.Util.Store;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -9,63 +10,53 @@ namespace MatchUploader
 	//this is kind of horrible atm since it's storing json string inside of json but I am following the IDataStore implementation correctly at least, for now
 	public class KeyValueDataStore : IDataStore
 	{
-		private static readonly Task CompletedTask = Task.FromResult( 0 );
-		public Dictionary<string , string> data { get; set; }
+		public Dictionary<string , string> Data { get; set; } = new Dictionary<string , string>();
 		//FileDataStore does it
 
-		public KeyValueDataStore()
+		public async Task ClearAsync()
 		{
-			data = new Dictionary<string , string>();
+			await Task.CompletedTask;
+			Data.Clear();
+
 		}
 
-		public Task ClearAsync()
+		public async Task DeleteAsync<T>( string key )
 		{
-			data.Clear();
-
-			return CompletedTask;
+			await Task.CompletedTask;
+			Data.Remove( key );
 		}
 
-		public Task DeleteAsync<T>( string key )
+		public async Task<T> GetAsync<T>( string key )
 		{
-			data.Remove( key );
+			await Task.CompletedTask;
 
-			return CompletedTask;
-		}
-
-		public Task<T> GetAsync<T>( string key )
-		{
 			if( string.IsNullOrEmpty( key ) )
 			{
 				throw new ArgumentException( "Key MUST have a value" );
 			}
 
-			TaskCompletionSource<T> tcs = new TaskCompletionSource<T>();
-
-			bool contains = data.ContainsKey( key );
-
-			if( contains )
+			if( Data.ContainsKey( key ) )
 			{
-				var value = data;
-				tcs.SetResult( JsonConvert.DeserializeObject<T>( data.GetValueOrDefault( key ) ) );
+				return JsonConvert.DeserializeObject<T>( Data.GetValueOrDefault( key ) );
 			}
-			else
-			{
-				tcs.SetResult( default( T ) );
-			}
-			return tcs.Task;
+
+			return default;
 		}
 
-		public Task StoreAsync<T>( string key , T value )
+		public async Task StoreAsync<T>( string key , T value )
 		{
-			if( data.ContainsKey( key ) )
+			await Task.CompletedTask;
+
+			var convertedValue = JsonConvert.SerializeObject( value );
+
+			if( Data.ContainsKey( key ) )
 			{
-				data [key] = JsonConvert.SerializeObject( value );
+				Data [key] = convertedValue;
 			}
 			else
 			{
-				data.Add( key , JsonConvert.SerializeObject( value ) );
+				Data.Add( key , convertedValue );
 			}
-			return CompletedTask;
 		}
 	}
 }

@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -47,8 +48,12 @@ namespace MatchUploader
 		private IConfigurationRoot Configuration { get; }
 		private JsonSerializerSettings JsonSettings { get; }
 
+		private HttpClient youtubeDownloaderHttpClient { get; }
+
 		public MatchUploaderHandler( string [] args )
 		{
+			youtubeDownloaderHttpClient = new HttpClient( new HttpClientHandler() );
+
 			gameDatabase = new GameDatabase();
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
 			gameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
@@ -372,7 +377,7 @@ namespace MatchUploader
 
 		private string GetStrippedMatchName( MatchData matchData )
 		{
-			return matchData.TimeStarted.ToString( "yyyyMMddHHmmss" );
+			return matchData.Name.Replace( "-" , string.Empty ).Replace( " " , string.Empty );//matchData.TimeStarted.ToString( "yyyyMMddHHmmss" );
 		}
 
 		public async Task<Event> GetCalendarEventForMatch( string matchName )
@@ -932,6 +937,7 @@ namespace MatchUploader
 						continue;
 					}
 
+					Console.WriteLine( $"Uploading {roundName}" );
 
 					//if it was successfull, save the data
 					string discordMirrorUrl;
@@ -964,6 +970,7 @@ namespace MatchUploader
 
 						roundData.VideoMirrors.Add( discordMirror );
 						await gameDatabase.SaveRoundData( roundName , roundData );
+						Console.WriteLine( $"Uploaded {roundName}" );
 					}
 				}
 			}

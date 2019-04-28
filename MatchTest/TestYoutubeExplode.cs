@@ -12,10 +12,19 @@ namespace MatchTest
 		YoutubeClient YTClient { get; } = new YoutubeClient();
 		public async Task Test()
 		{
-			var video = await YTClient.GetVideoMediaStreamInfosAsync( "j_fkmRJKIpc" );
-			var highestQuality = video.Muxed.WithHighestVideoQuality();
+			//this is the first one
+			
+			var video = await YTClient.GetVideoMediaStreamInfosAsync( "SwsisBp6Qaw" );
 
-			//YTClient.DownloadMediaStreamAsync()
+			foreach( var vid in video.Muxed )
+			{
+				Console.WriteLine( vid.Url );
+				Console.WriteLine();
+			}
+
+
+
+
 			await Task.CompletedTask;
 		}
 	}

@@ -5,7 +5,7 @@ namespace MatchUploader
 {
 	public class UploaderSettings
 	{
-		public KeyValueDataStore DataStore { get; set; }
+		public KeyValueDataStore DataStore { get; set; } = new KeyValueDataStore();
 		public string GitEmail { get; set; }
 		public string GitPassword { get; set; }
 		public string GitUsername { get; set; }
@@ -13,15 +13,13 @@ namespace MatchUploader
 
 		public int RetryCount { get; set; } = 5;
 		public GoogleSecrets Secrets { get; set; }
-		public float UploadSpeed { get; set; } = 0; //in kylobytes per seconds, 0 means no throttling
 		public Uri YoutubeChannel { get; set; }
-
 		public string CalendarID { get; set; }
 
 		/// <summary>
 		/// Default to the youtube upload behaviour
 		/// </summary>
-		public MatchTracker.VideoMirrorType VideoMirrorUpload { get; set; } = MatchTracker.VideoMirrorType.Youtube;
+		public MatchTracker.VideoMirrorType VideoMirrorUpload { get; set; }
 		public int DiscordMaxUploadSize { get; set; } = 8388608;
 		public ulong DiscordUploadChannel { get; set; }
 	}
