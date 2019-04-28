@@ -21,7 +21,9 @@ namespace MatchTest
 			defaultDatabase.LoadRoundDataDelegate += async ( _ , ss , roundName ) => JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( ss.GetRoundPath( roundName ) ) );
 
 
-			IGameDatabase liteDb = new LiteDBGameDatabase();
+			LiteDBGameDatabase liteDb = new LiteDBGameDatabase();
+			liteDb.FilePath = @"E:\Test\duckgame.db";
+
 
 			var Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )

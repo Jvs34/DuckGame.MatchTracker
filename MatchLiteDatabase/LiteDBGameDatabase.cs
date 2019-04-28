@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using LiteDB;
@@ -20,6 +21,9 @@ namespace MatchTracker
 
 		private LiteDatabase Database { get; set; }
 
+		public Stream DatabaseStream { get; set; }
+		public string FilePath { get; set; }
+
 		public LiteDBGameDatabase()
 		{
 			OnModelCreating();
@@ -27,7 +31,9 @@ namespace MatchTracker
 
 		private void OnModelCreating()
 		{
+			//TODO: figure out how to add data that we don't add manually to the other collections in an automatic way
 
+			//enable the dbrefs when that's over with
 			Mapper.Entity<GlobalData>()
 				.Id( x => x.Name )
 				//.DbRef( x => x.Players )
@@ -105,69 +111,33 @@ namespace MatchTracker
 				return;
 			}
 
-			Database = new LiteDatabase( @"E:\Test\duckgame.db" , Mapper );
+			if( string.IsNullOrEmpty( FilePath ) && DatabaseStream == null )
+			{
+				throw new ArgumentNullException( "Please fill either FilePath or DatabaseStream for the LiteDB database!" );
+			}
+
+			Database = new LiteDatabase( FilePath , Mapper );
 		}
 
 		public async Task SaveGlobalData( GlobalData globalData )
 		{
 			await Task.CompletedTask;
-
 			var collection = Database.GetCollection<GlobalData>();
-
 			collection.Upsert( globalData );
 		}
 
 		public async Task SaveMatchData( string matchName , MatchData matchData )
 		{
 			await Task.CompletedTask;
-
 			var collection = Database.GetCollection<MatchData>();
-
 			collection.Upsert( matchData );
 		}
 
 		public async Task SaveRoundData( string roundName , RoundData roundData )
 		{
 			await Task.CompletedTask;
-
 			var collection = Database.GetCollection<RoundData>();
-
 			collection.Upsert( roundData );
-
-			//SavePlayerData( roundData.Players.ToArray() );
-			//SaveTeamData( roundData.Teams.ToArray() );
-			//SaveTeamData( roundData.Winner );
 		}
-
-		//utility methods
-		/*
-		private void SavePlayerData( params PlayerData [] playerList )
-		{
-			//incredibly inefficient?
-			foreach( var playerData in playerList )
-			{
-				var collection = Database.GetCollection<PlayerData>();
-				if( !collection.Update( playerData ) )
-				{
-					collection.Insert( playerData );
-				}
-			}
-		}
-
-		private void SaveTeamData( params TeamData[] teamList )
-		{
-			foreach( var teamData in teamList )
-			{
-				var collection = Database.GetCollection<TeamData>();
-				if( !collection.Update( teamData ) )
-				{
-					collection.Insert( teamData );
-				}
-
-				SavePlayerData( teamData.Players.ToArray() );
-			}
-		}
-		*/
-
 	}
 }
