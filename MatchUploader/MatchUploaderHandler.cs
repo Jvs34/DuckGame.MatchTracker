@@ -48,11 +48,8 @@ namespace MatchUploader
 		private IConfigurationRoot Configuration { get; }
 		private JsonSerializerSettings JsonSettings { get; }
 
-		private HttpClient youtubeDownloaderHttpClient { get; }
-
 		public MatchUploaderHandler( string [] args )
 		{
-			youtubeDownloaderHttpClient = new HttpClient( new HttpClientHandler() );
 
 			gameDatabase = new GameDatabase();
 			gameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;

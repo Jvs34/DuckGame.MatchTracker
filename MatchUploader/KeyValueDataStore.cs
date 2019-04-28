@@ -1,6 +1,5 @@
 ﻿using Google.Apis.Util.Store;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -17,7 +16,6 @@ namespace MatchUploader
 		{
 			await Task.CompletedTask;
 			Data.Clear();
-
 		}
 
 		public async Task DeleteAsync<T>( string key )
