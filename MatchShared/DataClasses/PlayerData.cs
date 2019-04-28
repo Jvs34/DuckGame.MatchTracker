@@ -12,20 +12,12 @@ namespace MatchTracker
 		//custom nickname for the player, this will be set manually on another json
 		public string NickName { get; set; }
 
-		//yes a hat is a team
-		public virtual TeamData Team { get; set; }
-
 		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
 		public string UserId { get; set; }
 
 		public int CompareTo( PlayerData other )
 		{
-			if( Team == null || other.Team == null )
-			{
-				return UserId.CompareTo( other.UserId );
-			}
-
-			return Team.score.CompareTo( other.Team.score );
+			return UserId.CompareTo( other.UserId );
 		}
 
 		public bool Equals( PlayerData other )

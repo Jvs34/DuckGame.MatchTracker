@@ -14,7 +14,8 @@ namespace MatchTest
 		private static async Task Main( string [] args )
 		{
 			//await new TestEF().Test();
-			await new TestYoutubeExplode().Test();
+			//await new TestYoutubeExplode().Test();
+			await new TestLiteDB().Test();
 			await Task.CompletedTask;
 			Console.ReadLine();
 		}

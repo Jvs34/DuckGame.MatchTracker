@@ -13,11 +13,11 @@ namespace MatchTracker
 		public string LevelName { get; set; }
 		public string Name { get; set; }
 		public string MatchName { get; set; }
-		public virtual List<PlayerData> Players { get; set; } = new List<PlayerData>();
+		public List<PlayerData> Players { get; set; } = new List<PlayerData>();
 		public List<TeamData> Teams { get; set; } = new List<TeamData>();
 		public DateTime TimeEnded { get; set; }
 		public DateTime TimeStarted { get; set; }
-		public virtual TeamData Winner { get; set; }
+		public TeamData Winner { get; set; }
 
 		//youtube url id of this round, this will be null by default, then filled by the uploader before being stored away
 		public string YoutubeUrl { get; set; }

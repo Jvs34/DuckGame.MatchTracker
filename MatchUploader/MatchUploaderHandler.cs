@@ -399,6 +399,7 @@ namespace MatchUploader
 			};
 		}
 
+
 		public async Task FixupTeams()
 		{
 			GlobalData globalData = await gameDatabase.GetGlobalData();
@@ -415,9 +416,10 @@ namespace MatchUploader
 				DoFixupTeams( roundData );
 				await gameDatabase.SaveRoundData( roundName , roundData );
 			}
-
+			DoFixupTeams( globalData );
 			await gameDatabase.SaveGlobalData( globalData );
 		}
+
 
 		public async Task<List<PlaylistItem>> GetAllPlaylistItems( string playlistId )
 		{
@@ -594,6 +596,7 @@ namespace MatchUploader
 
 			CommitGitChanges();
 			await UploadAllRounds();
+			
 		}
 
 		//in this context, settings are only the uploaderSettings
@@ -691,8 +694,6 @@ namespace MatchUploader
 					if( !globalData.Players.Any( p => p.UserId == ply.UserId ) )
 					{
 						PlayerData toAdd = ply;
-						ply.Team = null;
-
 						globalData.Players.Add( toAdd );
 					}
 				}
@@ -1132,9 +1133,11 @@ namespace MatchUploader
 			await gameDatabase.SaveRoundData( roundName , roundData );
 		}
 
-		private void DoFixupTeams( IWinner winnerObject )
+
+		private void DoFixupTeams( IPlayersList plyList )//IWinner winnerObject )
 		{
 			//first things first, get the teamdata entity of each player and add it to winnerObject.teams if it's not on there
+			/*
 			foreach( PlayerData playerData in winnerObject.Players )
 			{
 				TeamData teamData = playerData.Team;
@@ -1164,6 +1167,7 @@ namespace MatchUploader
 					winnerObject.Winner = foundList;
 				}
 			}
+			*/
 		}
 
 		private async Task<int> GetRemainingFilesCount()

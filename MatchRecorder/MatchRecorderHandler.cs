@@ -268,8 +268,6 @@ namespace MatchRecorder
 				}
 			}
 
-			pd.Team = CreateTeamDataFromTeam( profile.team , winnerObject );
-
 			return pd;
 		}
 
@@ -344,8 +342,6 @@ namespace MatchRecorder
 			{
 				if( !globalData.Players.Any( p => p.UserId == ply.UserId ) )
 				{
-					ply.Team = null;
-
 					globalData.Players.Add( ply );
 				}
 			}
