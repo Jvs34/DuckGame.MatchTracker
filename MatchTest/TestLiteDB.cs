@@ -12,7 +12,6 @@ namespace MatchTest
 {
 	public class TestLiteDB
 	{
-
 		public async Task Test()
 		{
 			IGameDatabase defaultDatabase = new GameDatabase();
@@ -20,10 +19,10 @@ namespace MatchTest
 			defaultDatabase.LoadMatchDataDelegate += async ( _ , ss , matchName ) => JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( ss.GetMatchPath( matchName ) ) );
 			defaultDatabase.LoadRoundDataDelegate += async ( _ , ss , roundName ) => JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( ss.GetRoundPath( roundName ) ) );
 
-
-			LiteDBGameDatabase liteDb = new LiteDBGameDatabase();
-			liteDb.FilePath = @"E:\Test\duckgame.db";
-
+			IGameDatabase liteDb = new LiteDBGameDatabase()
+			{
+				FilePath = @"E:\Test\duckgame.db" ,
+			};
 
 			var Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
@@ -41,7 +40,7 @@ namespace MatchTest
 
 			await liteDb.SaveGlobalData( globalData );
 
-			
+
 			foreach( var roundName in globalData.Rounds )
 			{
 				RoundData roundData = await defaultDatabase.GetRoundData( roundName );
@@ -53,7 +52,7 @@ namespace MatchTest
 				MatchData matchData = await defaultDatabase.GetMatchData( matchName );
 				await liteDb.SaveMatchData( matchName , matchData );
 			}
-			
+
 
 			GlobalData gaydata = await liteDb.GetGlobalData();
 

@@ -43,7 +43,7 @@ namespace MatchTracker
 				.Id( x => x.Name )
 				//.DbRef( x => x.Players )
 				;
-
+			 
 			Mapper.Entity<RoundData>()
 				.Id( x => x.Name )
 				//.DbRef( x => x.Players )
@@ -56,6 +56,14 @@ namespace MatchTracker
 			Mapper.Entity<TeamData>()
 				.DbRef( x => x.Players );
 			*/
+
+			Mapper.Entity<TagData>()
+				.Id( x => x.Name )
+				;
+
+			Mapper.Entity<LevelData>()
+				.Id( x => x.LevelName )
+				;
 		}
 
 		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
@@ -116,7 +124,9 @@ namespace MatchTracker
 				throw new ArgumentNullException( "Please fill either FilePath or DatabaseStream for the LiteDB database!" );
 			}
 
-			Database = new LiteDatabase( FilePath , Mapper );
+			Database = string.IsNullOrWhiteSpace( FilePath )
+				? new LiteDatabase( DatabaseStream , Mapper )
+				: new LiteDatabase( FilePath , Mapper );
 		}
 
 		public async Task SaveGlobalData( GlobalData globalData )

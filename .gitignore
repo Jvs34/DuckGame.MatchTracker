@@ -13,3 +13,4 @@ Settings/*.json
 */appsettings.json
 .vs/*
 ThirdParty/ffmpeg.exe
+MatchUploader/Properties/PublishProfiles/LinuxPublish.pubxml
