@@ -955,7 +955,7 @@ namespace MatchUploader
 						await ytClient.DownloadMediaStreamAsync( chosenQuality , videoStream );
 						videoStream.Position = 0;
 						var message = await uploadChannel.SendFileAsync( videoStream , $"{roundName}.mp4" );
-						discordMirrorUrl = message.Attachments.First().Url;
+						discordMirrorUrl = message.Attachments.FirstOrDefault()?.Url;
 					}
 
 					if( !string.IsNullOrEmpty( discordMirrorUrl ) )
