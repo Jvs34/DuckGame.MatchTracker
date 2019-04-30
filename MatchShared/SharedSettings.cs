@@ -25,86 +25,54 @@ namespace MatchTracker
 		public string RoundVideoFile { get; set; }
 		public string RoundVoiceFile { get; set; }
 		public string TimestampFormat { get; set; }
+		public string LevelsPreviewFolder { get; set; }
 
 		public string DateTimeToString( DateTime time )
 		{
 			return time.ToString( TimestampFormat );
 		}
 
-		public string GetGlobalPath()
+		private string Combine( bool isUrl , params string [] paths )
 		{
-			return Path.Combine( GetRecordingFolder() , GlobalDataFile );
+			return isUrl ? Url.Combine( paths ) : Path.Combine( paths );
 		}
 
-		public string GetGlobalUrl()
+		public string GetGlobalPath( bool useUrl = false )
 		{
-			return Url.Combine( GetRepositoryUrl() , GlobalDataFile );
+			return Combine( useUrl , GetRecordingFolder( useUrl ) , GlobalDataFile );
 		}
 
-		public string GetMatchPath( string matchName )
+		public string GetMatchPath( string matchName , bool useUrl = false )
 		{
-			string matchFolder = Path.Combine( GetRecordingFolder() , MatchesFolder );
-			string matchPath = Path.Combine( matchFolder , matchName );
-			return Path.ChangeExtension( matchPath , "json" );
+			string matchFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , MatchesFolder );
+			return Combine( useUrl , matchFolder , matchName + ".json" );
 		}
 
-		public string GetMatchUrl( string matchName )
+		public string GetRecordingFolder( bool useUrl = false )
 		{
-			string matchFolder = Url.Combine( GetRepositoryUrl() , MatchesFolder );
-			string matchPath = Url.Combine( matchFolder , matchName + ".json" );
-			return matchPath;
+			return useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
 		}
 
-		public string GetRecordingFolder()
+		public string GetRoundPath( string roundName , bool useUrl = false )
 		{
-			return BaseRecordingFolder;
+			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
+			string roundFile = Combine( useUrl , roundFolder , roundName );
+			return Combine( useUrl , roundFile , RoundDataFile );
 		}
 
-		public string GetRepositoryUrl()
+
+		public string GetRoundVideoPath( string roundName , bool useUrl = false )
 		{
-			return BaseRepositoryUrl;
+			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
+			string roundFile = Combine( useUrl , roundFolder , roundName );
+			return Combine( useUrl , roundFile , RoundVideoFile );
 		}
 
-		public string GetRoundPath( string roundName )
+		public string GetRoundVoicePath( string roundName , bool useUrl = false )
 		{
-			string roundFolder = Path.Combine( GetRecordingFolder() , RoundsFolder );
-			string roundFile = Path.Combine( roundFolder , roundName );
-			return Path.Combine( roundFile , RoundDataFile );
-		}
-
-		public string GetRoundUrl( string roundName )
-		{
-			string roundFolder = Url.Combine( GetRepositoryUrl() , RoundsFolder );
-			string roundFile = Url.Combine( roundFolder , roundName );
-			return Url.Combine( roundFile , RoundDataFile );
-		}
-
-		public string GetRoundVideoPath( string roundName )
-		{
-			string roundFolder = Path.Combine( GetRecordingFolder() , RoundsFolder );
-			string roundFile = Path.Combine( roundFolder , roundName );
-			return Path.Combine( roundFile , RoundVideoFile );
-		}
-
-		public string GetRoundVideoUrl( string roundName )
-		{
-			string roundFolder = Url.Combine( GetRepositoryUrl() , RoundsFolder );
-			string roundFile = Url.Combine( roundFolder , roundName );
-			return Url.Combine( roundFile , RoundVideoFile );
-		}
-
-		public string GetRoundVoicePath( string roundName )
-		{
-			string roundFolder = Path.Combine( GetRecordingFolder() , RoundsFolder );
-			string roundFile = Path.Combine( roundFolder , roundName );
-			return Path.Combine( roundFile , RoundVoiceFile );
-		}
-
-		public string GetRoundVoiceUrl( string roundName )
-		{
-			string roundFolder = Url.Combine( GetRepositoryUrl() , RoundsFolder );
-			string roundFile = Url.Combine( roundFolder , roundName );
-			return Url.Combine( roundFile , RoundVoiceFile );
+			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
+			string roundFile = Combine( useUrl , roundFolder , roundName );
+			return Combine( useUrl , roundFile , RoundVoiceFile );
 		}
 	}
 }

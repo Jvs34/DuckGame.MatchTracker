@@ -128,7 +128,7 @@ namespace MatchRecorder
 
 			CurrentRound = new RoundData()
 			{
-				MatchName = CurrentMatch?.Name,
+				MatchName = CurrentMatch?.Name ,
 				LevelName = lvl.level ,
 				Players = new List<PlayerData>() ,
 				TimeStarted = startTime ,
@@ -237,7 +237,47 @@ namespace MatchRecorder
 
 		public void Update()
 		{
+#if DEBUG
+			if( Keyboard.Down( Keys.LeftShift ) && Keyboard.Pressed( Keys.D0 ) )
+			{
+				var levels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
+				TryTakingScreenshots();
+			}
+#endif
 			recorderHandler?.Update();
+		}
+
+		private void TryTakingScreenshots()
+		{
+			string levelPath = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.LevelsPreviewFolder );
+
+			var levels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
+
+			foreach( string levelid in levels )
+			{
+				DuckGame.LevelData levelData = Content.GetLevel( levelid , LevelLocation.Content );
+
+				var rtTest = Content.GeneratePreview( levelid , null , true );
+
+				var imageData = rtTest.GetData();
+
+				int w = rtTest.width;
+				int h = rtTest.height;
+
+				System.Drawing.Bitmap pic = new System.Drawing.Bitmap( w , h , System.Drawing.Imaging.PixelFormat.Format32bppArgb );
+
+				for( int x = 0; x < w; x++ )
+				{
+					for( int y = 0; y < h; y++ )
+					{
+						int arrayIndex = ( y * w ) + x;
+						Color c = imageData [arrayIndex];
+						pic.SetPixel( x , y , System.Drawing.Color.FromArgb( c.a , c.r , c.g , c.b ) );
+					}
+				}
+
+				pic.Save( Path.Combine( levelPath , $"{levelid}.png" ) , System.Drawing.Imaging.ImageFormat.Png );
+			}
 		}
 
 		private PlayerData CreatePlayerDataFromProfile( Profile profile , IWinner winnerObject )
@@ -322,7 +362,7 @@ namespace MatchRecorder
 
 			if( Teams.winning.Count > 0 )
 			{
-				winner = Teams.winning.First();
+				winner = Teams.winning.FirstOrDefault();
 			}
 
 			if( winner != null )

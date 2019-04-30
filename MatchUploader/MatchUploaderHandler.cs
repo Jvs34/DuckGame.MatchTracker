@@ -18,6 +18,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,8 +46,10 @@ namespace MatchUploader
 		private YouTubeService youtubeService;
 		private CalendarService calendarService;
 
+		//private AuthenticationResult microsoftGraphCredentials;
 		private IConfigurationRoot Configuration { get; }
 		private JsonSerializerSettings JsonSettings { get; }
+
 
 		public MatchUploaderHandler( string [] args )
 		{
@@ -175,8 +178,9 @@ namespace MatchUploader
 			}
 		}
 
-		public void CommitGitChanges()
+		public async Task CommitGitChanges()
 		{
+
 			if( databaseRepository == null )
 				return;
 
@@ -299,6 +303,16 @@ namespace MatchUploader
 				ApplicationName = appName ,
 				GZipEnabled = true ,
 			} );
+
+
+			/*
+			Microsoft.Graph.GraphServiceClient graphService = new Microsoft.Graph.GraphServiceClient(
+					"https://graph.microsoft.com/v1.0/" ,
+					new Microsoft.Graph.DelegateAuthenticationProvider(
+						async ( requestMessage ) => requestMessage.Headers.Authorization = new AuthenticationHeaderValue( "bearer" , userCredentials.AccessToken )
+					)
+				);
+			*/
 		}
 
 		public async Task<List<Event>> GetAllCalendarEvents()
@@ -594,7 +608,7 @@ namespace MatchUploader
 
 			await SaveSettings();
 
-			CommitGitChanges();
+			await CommitGitChanges();
 			await UploadAllRounds();
 			
 		}
@@ -814,7 +828,7 @@ namespace MatchUploader
 				Console.WriteLine( ex.Message );
 			}
 
-			CommitGitChanges();
+			await CommitGitChanges();
 		}
 
 		//go through every match that has a playlist id, then update the name of it to reflect the new one
@@ -899,10 +913,24 @@ namespace MatchUploader
 						await UploadToDiscordAsync();
 						break;
 					}
+				case VideoMirrorType.OneDrive:
+					{
+						await UploadToOneDriveAsync();
+						break;
+					}
 				default:
+					{
+						Console.WriteLine( $"Unhandled mirror upload behaviour: {uploaderSettings.VideoMirrorUpload}" );
 					break;
+					}
 			}
-			CommitGitChanges();
+
+			await CommitGitChanges();
+		}
+
+		private async Task UploadToOneDriveAsync()
+		{
+			
 		}
 
 		public async Task UploadToDiscordAsync()
@@ -1284,9 +1312,9 @@ namespace MatchUploader
 			await File.WriteAllTextAsync( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented , JsonSettings ) );
 		}
 
-		private async Task SetPresence( string str )
+		private async Task SetDiscordPresence( string str )
 		{
-			if( discordClient == null )
+			if( discordClient == null || discordClient.CurrentUser == null )
 			{
 				return;
 			}
@@ -1301,12 +1329,12 @@ namespace MatchUploader
 
 		private async Task UpdateUploadProgress( double percentage )
 		{
-			await SetPresence( $"Uploading {currentVideo.VideoName} : {percentage}%" );
+			await SetDiscordPresence( $"Uploading {currentVideo.VideoName} : {percentage}%" );
 		}
 
 		private async Task UpdateUploadProgress( int remaining )
 		{
-			await SetPresence( $"{remaining} videos remaining" );
+			await SetDiscordPresence( $"{remaining} videos remaining" );
 		}
 
 		private async Task ProcessVideo( string roundName )

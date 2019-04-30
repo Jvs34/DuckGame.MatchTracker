@@ -1,11 +1,12 @@
 {
-  "baseRecordingFolder": "E:\\DuckGameRecordings",
-  "baseRepositoryUrl": "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/",
-  "roundsFolder": "rounds",
-  "matchesFolder": "matches",
-  "timestampFormat": "yyyy-MM-dd HH-mm-ss",
-  "roundDataFile": "rounddata.json",
-  "roundVideoFile": "video.mp4",
-  "roundVoiceFile": "voice.ogg",
-  "globalDataFile": "data.json"
+  "BaseRecordingFolder": "E:\\DuckGameRecordings",
+  "BaseRepositoryUrl": "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/",
+  "RoundsFolder": "rounds",
+  "MatchesFolder": "matches",
+  "LevelsPreviewFolder": "levelpreviews",
+  "TimestampFormat": "yyyy-MM-dd HH-mm-ss",
+  "RoundDataFile": "rounddata.json",
+  "RoundVideoFile": "video.mp4",
+  "RoundVoiceFile": "voice.ogg",
+  "GlobalDataFile": "data.json"
 }

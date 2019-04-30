@@ -458,21 +458,21 @@ namespace MatchBot
 
 		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalUrl() );
+			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalPath( true ) );
 			Console.WriteLine( "Loading GlobalData" );
 			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchUrl( matchName ) );
+			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchPath( matchName , true ) );
 			Console.WriteLine( $"Loading MatchData {matchName}" );
 			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundUrl( roundName ) );
+			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundPath( roundName , true ) );
 			Console.WriteLine( $"Loading RoundData {roundName}" );
 			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
 		}

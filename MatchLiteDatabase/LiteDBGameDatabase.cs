@@ -43,7 +43,7 @@ namespace MatchTracker
 				.Id( x => x.Name )
 				//.DbRef( x => x.Players )
 				;
-			 
+
 			Mapper.Entity<RoundData>()
 				.Id( x => x.Name )
 				//.DbRef( x => x.Players )
@@ -68,6 +68,7 @@ namespace MatchTracker
 
 		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
 		{
+			CheckDatabase();
 			await Task.CompletedTask;
 			var collection = Database.GetCollection<GlobalData>().IncludeAll();
 			return collection.FindOne( x => x.Name == nameof( GlobalData ) );
@@ -75,6 +76,7 @@ namespace MatchTracker
 
 		public async Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false )
 		{
+			CheckDatabase();
 			await Task.CompletedTask;
 			var collection = Database.GetCollection<MatchData>().IncludeAll();
 			return collection.FindOne( x => x.Name == matchName );
@@ -82,6 +84,7 @@ namespace MatchTracker
 
 		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
 		{
+			CheckDatabase();
 			await Task.CompletedTask;
 			var collection = Database.GetCollection<RoundData>().IncludeAll();
 			return collection.FindOne( x => x.Name == roundName );
@@ -89,6 +92,7 @@ namespace MatchTracker
 
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
 		{
+			CheckDatabase();
 			List<Task> callbackTasks = new List<Task>();
 
 			IEnumerable<IWinner> allMatchesOrRounds;
@@ -131,6 +135,7 @@ namespace MatchTracker
 
 		public async Task SaveGlobalData( GlobalData globalData )
 		{
+			CheckDatabase();
 			await Task.CompletedTask;
 			var collection = Database.GetCollection<GlobalData>();
 			collection.Upsert( globalData );
@@ -138,6 +143,7 @@ namespace MatchTracker
 
 		public async Task SaveMatchData( string matchName , MatchData matchData )
 		{
+			CheckDatabase();
 			await Task.CompletedTask;
 			var collection = Database.GetCollection<MatchData>();
 			collection.Upsert( matchData );
@@ -145,9 +151,18 @@ namespace MatchTracker
 
 		public async Task SaveRoundData( string roundName , RoundData roundData )
 		{
+			CheckDatabase();
 			await Task.CompletedTask;
 			var collection = Database.GetCollection<RoundData>();
 			collection.Upsert( roundData );
+		}
+
+		private void CheckDatabase()
+		{
+			if( Database == null )
+			{
+				throw new NullReferenceException( "Database was not loaded, please call LiteDBGameDatabase.Load first!" );
+			}
 		}
 	}
 }

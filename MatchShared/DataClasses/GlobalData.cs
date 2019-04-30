@@ -4,7 +4,7 @@ using System.Collections.Generic;
 namespace MatchTracker
 {
 	//this is what accessed by the website, so it will list the name of the matches that were tracked
-	public class GlobalData : IPlayersList, IMatchesList, IRoundsList
+	public class GlobalData : IPlayersList, IMatchesList, IRoundsList , ITags
 	{
 		public string Name => nameof( GlobalData );
 		public List<string> Matches { get; set; } = new List<string>();

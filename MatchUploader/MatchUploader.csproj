@@ -21,6 +21,7 @@
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.38.2.1488" />
     <PackageReference Include="LibGit2Sharp" Version="0.26.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.2.0" />
+    <PackageReference Include="Microsoft.Graph" Version="1.14.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.1" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />

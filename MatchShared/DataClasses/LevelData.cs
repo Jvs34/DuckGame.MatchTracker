@@ -1,7 +1,9 @@
-﻿namespace MatchTracker
+﻿using System.Collections.Generic;
+
+namespace MatchTracker
 {
 	//TODO
-	public class LevelData
+	public class LevelData : ITags
 	{
 		/// <summary>
 		/// The level's guid
@@ -17,5 +19,7 @@
 		/// Whether this is a map loaded from the workshop or sent over the network
 		/// </summary>
 		public bool IsCustomMap { get; set; }
+
+		public List<TagData> Tags { get; set; } = new List<TagData>();
 	}
 }
