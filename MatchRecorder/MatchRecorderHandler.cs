@@ -171,7 +171,7 @@ namespace MatchRecorder
 
 			foreach( TeamData teamData in winnerObject.Teams )
 			{
-				Team team = Teams.active.Find( x => x.name == teamData.hatName );
+				Team team = Teams.active.Find( x => x.name == teamData.HatName );
 				if( team != null )
 				{
 					foreach( Profile pro in team.activeProfiles )
@@ -280,6 +280,52 @@ namespace MatchRecorder
 			}
 		}
 
+		public void GatherLevelData()
+		{
+			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
+
+			var deathmatchLevels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
+
+			//
+			//go through each level and see if its info has been added to the database
+
+			foreach( string levelId in deathmatchLevels )
+			{
+				MatchTracker.LevelData mtLevelData = globalData.Levels.FirstOrDefault( x => x.LevelName == levelId );
+
+				if( mtLevelData == null )
+				{
+					mtLevelData = CreateLevelDataFromLevel( levelId );
+					if( mtLevelData != null )
+					{
+						globalData.Levels.Add( mtLevelData );
+					}
+				}
+
+			}
+
+			GameDatabase.SaveGlobalData( globalData );
+		}
+
+		private MatchTracker.LevelData CreateLevelDataFromLevel( string levelId )
+		{
+			DuckGame.LevelData dgLevelData = Content.GetLevel( levelId );
+			if( dgLevelData != null )
+			{
+				return new MatchTracker.LevelData()
+				{
+					LevelName = levelId ,
+					IsOnlineMap = dgLevelData.metaData.online ,
+					FilePath = dgLevelData.GetPath() ,
+					IsCustomMap = dgLevelData.GetLocation() != LevelLocation.Content ,
+					Author = dgLevelData.workshopData?.author ,
+					Description = dgLevelData.workshopData?.description
+				};
+			}
+
+			return null;
+		}
+
 		private PlayerData CreatePlayerDataFromProfile( Profile profile , IWinner winnerObject )
 		{
 			string userId = Network.isActive ? profile.steamID.ToString() : profile.id;
@@ -318,17 +364,17 @@ namespace MatchRecorder
 
 			if( winnerObject != null )
 			{
-				td = winnerObject.Teams.Find( x => x.hatName == team.name );
+				td = winnerObject.Teams.Find( x => x.HatName == team.name );
 			}
 
 			if( td == null )
 			{
 				td = new TeamData()
 				{
-					hasHat = team.hasHat ,
-					score = team.score ,
-					hatName = team.name ,
-					isCustomHat = team.customData != null ,
+					HasHat = team.hasHat ,
+					Score = team.score ,
+					HatName = team.name ,
+					IsCustomHat = team.customData != null ,
 				};
 			}
 
@@ -406,6 +452,11 @@ namespace MatchRecorder
 		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
 		private static void Prefix( Level value )
 		{
+			if( Level.current is null && value is TitleScreen )
+			{
+				MatchRecorderMod.Recorder?.GatherLevelData();
+			}
+
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
 			if( MatchRecorderMod.Recorder.IsRecording )
 			{

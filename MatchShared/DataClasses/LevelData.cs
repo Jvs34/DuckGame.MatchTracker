@@ -20,6 +20,23 @@ namespace MatchTracker
 		/// </summary>
 		public bool IsCustomMap { get; set; }
 
+		/// <summary>
+		/// Is this an online enabled map?
+		/// </summary>
+		public bool IsOnlineMap { get; set; }
+
+
+		/// <summary>
+		/// Description of the level, if there's any
+		/// </summary>
+		public string Description { get; set; }
+
+
+		/// <summary>
+		/// Author of the level, if there's any
+		/// </summary>
+		public string Author { get; set; }
+
 		public List<TagData> Tags { get; set; } = new List<TagData>();
 	}
 }

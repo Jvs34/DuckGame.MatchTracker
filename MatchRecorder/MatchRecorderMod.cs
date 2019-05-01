@@ -41,9 +41,14 @@ namespace MatchRecorder
 			string assemblyFolder = Path.Combine( configuration.directory , "MatchRecorder" , "bin" , "x86" , folder , "net471" );
 			string assemblyPath = Path.GetFullPath( Path.Combine( assemblyFolder , cleanName + ".dll" ) );
 
-			byte [] assemblyBytes = File.ReadAllBytes( assemblyPath );
+			if( File.Exists( assemblyPath ) )
+			{
+				byte [] assemblyBytes = File.ReadAllBytes( assemblyPath );
 
-			return Assembly.Load( assemblyBytes );
+				return Assembly.Load( assemblyBytes );
+			}
+
+			return null;
 		}
 	}
 }

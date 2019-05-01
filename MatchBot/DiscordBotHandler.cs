@@ -43,7 +43,11 @@ namespace MatchBot
 				Token = botSettings.DiscordToken ,
 			} );
 
+			discordClient.SocketOpened += OnDiscordConnected;
+			discordClient.SocketClosed += OnDiscordDisconnected;
 			discordClient.MessageCreated += OnDiscordMessage;
+			discordClient.MessageReactionAdded += OnDiscordMessageReactionAdded;
+			discordClient.MessageReactionRemoved += OnDiscordMessageReactionRemoved;
 
 			bot = new MatchBot( Configuration );
 
@@ -55,6 +59,8 @@ namespace MatchBot
 
 			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.LuisModelId , botSettings.LuisSubcriptionKey , botSettings.LuisUri ) ) );
 		}
+
+
 
 		public override async Task DeleteActivity( ITurnContext context , ConversationReference reference )
 		{
@@ -130,6 +136,7 @@ namespace MatchBot
 			};
 		}
 
+
 		//message incoming from discord, ignoring the ones from the bot
 		private async Task HandleIncomingMessage( MessageCreateEventArgs msg )
 		{
@@ -146,7 +153,6 @@ namespace MatchBot
 			//get the channel the original message came from
 			ulong channelId = Convert.ToUInt64( context.Activity.ChannelId );
 
-			//shouldn't this already be an ISocketMessageChannel? why do I have to cast to it? 🤔
 			var channel = await discordClient.GetChannelAsync( channelId );
 			if( channel != null )
 			{
@@ -160,10 +166,10 @@ namespace MatchBot
 			Console.WriteLine( "Connected to Discord" );
 		}
 
-		private async Task OnDiscordDisconnected( Exception arg )
+		private async Task OnDiscordDisconnected( SocketCloseEventArgs arg )
 		{
 			await Task.CompletedTask;
-			Console.WriteLine( "Disconnected from Discord {0}" , arg.ToString() );
+			Console.WriteLine( "Disconnected from Discord {0}" , arg.CloseMessage );
 		}
 
 		private async Task OnDiscordMessage( MessageCreateEventArgs msg )
@@ -172,10 +178,26 @@ namespace MatchBot
 			if( msg.Author.Id == discordClient.CurrentUser.Id )
 				return;
 
+			//we don't care about messages that are not sent to us privately or that aren't mentioning us
 			if( msg.Channel.Type != ChannelType.Private && !msg.MentionedUsers.Any( x => x.Id == discordClient.CurrentUser.Id ) )
 				return;
 
 			await HandleIncomingMessage( msg );
+		}
+
+
+		//
+		private async Task OnDiscordMessageReactionAdded( MessageReactionAddEventArgs e )
+		{
+			await Task.CompletedTask;
+
+		}
+
+		private async Task OnDiscordMessageReactionRemoved( MessageReactionRemoveEventArgs e )
+		{
+			await Task.CompletedTask;
+
+			Activity activity = new Activity();
 		}
 	}
 }

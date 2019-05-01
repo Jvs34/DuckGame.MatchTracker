@@ -6,20 +6,20 @@ namespace MatchTracker
 	//hats are used to define teams in duck game, so we kinda do need to track them
 	public class TeamData : IPlayersList, IEquatable<TeamData>, IComparable<TeamData>
 	{
-		public bool hasHat { get; set; }
-		public string hatName { get; set; }
-		public bool isCustomHat { get; set; }
+		public bool HasHat { get; set; }
+		public string HatName { get; set; }
+		public bool IsCustomHat { get; set; }
 		public List<PlayerData> Players { get; set; } = new List<PlayerData>();
-		public int score { get; set; }
+		public int Score { get; set; }
 
 		public int CompareTo( TeamData other )
 		{
-			return score.CompareTo( other.score );
+			return Score.CompareTo( other.Score );
 		}
 
 		public bool Equals( TeamData other )
 		{
-			return hatName == other.hatName;
+			return HatName == other.HatName;
 		}
 	}
 }

@@ -17,5 +17,8 @@ namespace MatchTracker
 		public List<string> Rounds { get; set; } = new List<string>();
 
 		public List<TagData> Tags { get; set; } = new List<TagData>();
+
+
+		public List<LevelData> Levels { get; set; } = new List<LevelData>();
 	}
 }

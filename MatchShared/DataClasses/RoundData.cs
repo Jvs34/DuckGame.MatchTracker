@@ -46,7 +46,7 @@ namespace MatchTracker
 			//check if anyone actually won
 			if( winners.Count != 0 )
 			{
-				winnerName = winners.Count > 1 ? Winner.hatName : winners [0].GetName();
+				winnerName = winners.Count > 1 ? Winner.HatName : winners [0].GetName();
 			}
 
 			return winnerName;
