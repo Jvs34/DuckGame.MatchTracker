@@ -2,17 +2,14 @@
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using MatchTracker;
-using Microsoft.Bot;
 using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Ai.LUIS;
-using Microsoft.Bot.Builder.Core.Extensions;
-using Microsoft.Bot.Builder.TraceExtensions;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchBot
@@ -50,19 +47,11 @@ namespace MatchBot
 			discordClient.MessageReactionRemoved += OnDiscordMessageReactionRemoved;
 
 			bot = new MatchBot( Configuration );
-
-			Use( new CatchExceptionMiddleware<Exception>( async ( context , exception ) =>
-			{
-				await context.TraceActivity( "MatchBot Exception" , exception );
-				await context.SendActivity( "Sorry, it looks like something went wrong!" );
-			} ) );
-
-			Use( new LuisRecognizerMiddleware( new LuisModel( botSettings.LuisModelId , botSettings.LuisSubcriptionKey , botSettings.LuisUri ) ) );
 		}
 
 
 
-		public override async Task DeleteActivity( ITurnContext context , ConversationReference reference )
+		public override async Task DeleteActivityAsync( ITurnContext context , ConversationReference reference , CancellationToken cancellationToken )
 		{
 			await Task.CompletedTask;
 		}
@@ -84,7 +73,7 @@ namespace MatchBot
 			await discordClient.UpdateStatusAsync( null , UserStatus.Online );
 		}
 
-		public override async Task<ResourceResponse []> SendActivities( ITurnContext context , Activity [] activities )
+		public override async Task<ResourceResponse []> SendActivitiesAsync( ITurnContext context , Activity [] activities , CancellationToken cancellationToken )
 		{
 			List<ResourceResponse> responses = new List<ResourceResponse>();
 			foreach( Activity activity in activities )
@@ -99,15 +88,15 @@ namespace MatchBot
 		}
 
 		//these ones aren't even used on ConsoleAdapter, although it would probably be nice to do that
-		public override async Task<ResourceResponse> UpdateActivity( ITurnContext context , Activity activity )
+		public override async Task<ResourceResponse> UpdateActivityAsync( ITurnContext context , Activity activity , CancellationToken cancellationToken )
 		{
 			await Task.CompletedTask;
 			return null;
 		}
 
-		private async Task BotCallback( ITurnContext context )
+		private async Task BotCallback( ITurnContext context , CancellationToken cancellationToken )
 		{
-			await bot.OnTurn( context );
+			await bot.OnTurnAsync( context );
 		}
 
 		private Activity GetActivityFromMessage( MessageCreateEventArgs msg )
@@ -141,9 +130,9 @@ namespace MatchBot
 		private async Task HandleIncomingMessage( MessageCreateEventArgs msg )
 		{
 			Activity act = GetActivityFromMessage( msg );
-			using( TurnContext context = new TurnContext( this , act ) )
+			using( var context = new TurnContext( this , act ) )
 			{
-				await RunPipeline( context , BotCallback );
+				await RunPipelineAsync( context , BotCallback , CancellationToken.None );
 			}
 		}
 
@@ -156,7 +145,18 @@ namespace MatchBot
 			var channel = await discordClient.GetChannelAsync( channelId );
 			if( channel != null )
 			{
-				await channel.SendMessageAsync( act.Text );
+
+				DiscordEmbedBuilder discordEmbedBuilder = new DiscordEmbedBuilder();
+
+				if( act.Attachments != null )
+				{
+					foreach( var attachment in act.Attachments )
+					{
+
+						//attachment.ContentUrl;
+					}
+				}
+				await channel.SendMessageAsync( act.Text , false /*, discordEmbedBuilder.Build()*/ );
 			}
 		}
 

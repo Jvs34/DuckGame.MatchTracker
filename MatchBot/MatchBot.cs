@@ -1,8 +1,6 @@
 ﻿using MatchTracker;
-using Microsoft.Bot;
 using Microsoft.Bot.Builder;
-using Microsoft.Bot.Builder.Ai.LUIS;
-using Microsoft.Bot.Builder.Core.Extensions;
+using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Schema;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -62,6 +60,8 @@ namespace MatchBot
 		private JsonSerializerSettings JsonSettings { get; }
 		private BotSettings botSettings;
 
+		private LuisRecognizer Recognizer { get; }
+
 		private IGameDatabase Database
 		{
 			get
@@ -95,7 +95,7 @@ namespace MatchBot
 
 			Configuration.Bind( remoteGameDatabase.SharedSettings );
 			Configuration.Bind( botSettings );
-			
+
 
 			remoteGameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
 			remoteGameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
@@ -107,18 +107,30 @@ namespace MatchBot
 			localGameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
 
 
+			LuisApplication luisApplication = new LuisApplication( botSettings.LuisModelId , botSettings.LuisSubcriptionKey , botSettings.LuisUri.ToString() );
+
+			Recognizer = new LuisRecognizer( luisApplication ,
+				new LuisPredictionOptions()
+				{
+					IncludeAllIntents = true
+				}
+			);
+
 			RefreshDatabase();
 			refreshTimer = new Timer( RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 ) );
 		}
 
-		public async Task OnTurn( ITurnContext turnContext )
+		public async Task OnTurnAsync( ITurnContext turnContext , CancellationToken cancellationToken )
 		{
 			await loadDatabaseTask;
 
 			if( turnContext.Activity.Type == ActivityTypes.Message )
 			{
+
 				Console.WriteLine( turnContext.Activity.Text );
-				var result = turnContext.Services.Get<RecognizerResult>( LuisRecognizerMiddleware.LuisRecognizerResultKey );
+
+
+				var result = await Recognizer.RecognizeAsync( turnContext , cancellationToken ) ;
 				var topIntent = result?.GetTopScoringIntent();
 				switch( topIntent?.intent )
 				{
@@ -144,7 +156,7 @@ namespace MatchBot
 						}
 					default:
 						{
-							await turnContext.SendActivity( "*Quack*" );
+							await turnContext.SendActivityAsync( "*Quack*" );
 							break;
 						}
 				}
@@ -270,7 +282,7 @@ namespace MatchBot
 
 		private async Task HandleHelp( ITurnContext turnContext )
 		{
-			await turnContext.SendActivity( "You can ask me stuff like who won the most, last played or times played" );
+			await turnContext.SendActivityAsync( "You can ask me stuff like who won the most, last played or times played" );
 			await Task.CompletedTask;
 		}
 
@@ -323,11 +335,11 @@ namespace MatchBot
 				if( lastPlayed != DateTime.MinValue )
 				{
 					CultureInfo ci = CultureInfo.CreateSpecificCulture( "en-US" );
-					await turnContext.SendActivity( $"The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed.ToString( "HH:mm:ss dddd d MMMM yyyy" , ci )}" );
+					await turnContext.SendActivityAsync( $"The last time {recognizedPlayer.FancyTarget} played was on {lastPlayed.ToString( "HH:mm:ss dddd d MMMM yyyy" , ci )}" );
 				}
 				else
 				{
-					await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
+					await turnContext.SendActivityAsync( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 				}
 			}
 		}
@@ -366,11 +378,11 @@ namespace MatchBot
 
 				if( mostWinsWinner != null )
 				{
-					await turnContext.SendActivity( $"{mostWinsWinner.GetName()} won {mostWins} and lost {mostWinsLosses} {gameTypeString}" );
+					await turnContext.SendActivityAsync( $"{mostWinsWinner.GetName()} won {mostWins} and lost {mostWinsLosses} {gameTypeString}" );
 				}
 				else
 				{
-					await turnContext.SendActivity( "Doesn't seem like there's someone with more wins than anybody else" );
+					await turnContext.SendActivityAsync( "Doesn't seem like there's someone with more wins than anybody else" );
 				}
 			}
 			else
@@ -384,11 +396,11 @@ namespace MatchBot
 
 						(wins, losses) = await GetPlayerWinsAndLosses( recognizedPlayer.PlayerDataTarget , gameType == GameType.Match );
 
-						await turnContext.SendActivity( $"{recognizedPlayer.PlayerDataTarget.GetName()} won {wins} and lost {losses} {gameTypeString}" );
+						await turnContext.SendActivityAsync( $"{recognizedPlayer.PlayerDataTarget.GetName()} won {wins} and lost {losses} {gameTypeString}" );
 					}
 					else
 					{
-						await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
+						await turnContext.SendActivityAsync( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 					}
 				}
 			}
@@ -447,11 +459,11 @@ namespace MatchBot
 
 				if( timesPlayed > 0 )
 				{
-					await turnContext.SendActivity( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {Math.Round( durationPlayed.TotalHours )} hours of playtime" );
+					await turnContext.SendActivityAsync( $"{recognizedPlayer.FancyTarget} played {timesPlayed} {gameTypeString} with {Math.Round( durationPlayed.TotalHours )} hours of playtime" );
 				}
 				else
 				{
-					await turnContext.SendActivity( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
+					await turnContext.SendActivityAsync( $"Sorry, there's nothing on record for {recognizedPlayer.FancyTarget}" );
 				}
 			}
 		}
