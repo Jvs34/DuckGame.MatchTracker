@@ -14,10 +14,8 @@ namespace MatchTest
 	{
 		public async Task Test()
 		{
-			IGameDatabase defaultDatabase = new GameDatabase();
-			defaultDatabase.LoadGlobalDataDelegate += async ( _ , ss ) => JsonConvert.DeserializeObject<GlobalData>( await File.ReadAllTextAsync( ss.GetGlobalPath() ) );
-			defaultDatabase.LoadMatchDataDelegate += async ( _ , ss , matchName ) => JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( ss.GetMatchPath( matchName ) ) );
-			defaultDatabase.LoadRoundDataDelegate += async ( _ , ss , roundName ) => JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( ss.GetRoundPath( roundName ) ) );
+			GameDatabase defaultDatabase = new FileSystemGameDatabase();
+
 
 			IGameDatabase liteDb = new LiteDBGameDatabase()
 			{

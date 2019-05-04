@@ -17,30 +17,18 @@ namespace MatchRecorder
 		public BotSettings BotSettings { get; }
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
-		public IGameDatabase GameDatabase { get; private set; }
+		public GameDatabase GameDatabase { get; }
 		public bool IsRecording => recorderHandler.IsRecording;
 		public string MatchesFolder { get; }
 		public string ModPath { get; }
 		public string RoundsFolder { get; }
 		private IConfigurationRoot Configuration { get; }
-		private JsonSerializerSettings JsonSettings { get; }
 
 		public MatchRecorderHandler( string modPath )
 		{
 			ModPath = modPath;
-			GameDatabase = new GameDatabase();
+			GameDatabase = new FileSystemGameDatabase();
 			BotSettings = new BotSettings();
-			GameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
-			GameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
-			GameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
-			GameDatabase.SaveGlobalDataDelegate += SaveDatabaseGlobalDataFile;
-			GameDatabase.SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
-			GameDatabase.SaveRoundDataDelegate += SaveDatabaseRoundataFile;
-
-			JsonSettings = new JsonSerializerSettings()
-			{
-				PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
-			};
 
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( modPath , "Settings" ) )
@@ -69,52 +57,14 @@ namespace MatchRecorder
 				GameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
 			}
 
-#if DEBUG
+#if VOICESUPPORT
 			recorderHandler = new ReplayRecorder( this );
 #else
 			recorderHandler = new ObsRecorder( this );
 #endif
+
+
 		}
-
-		#region DATABASEDELEGATES
-
-		private async Task<MatchTracker.GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
-		{
-			await Task.CompletedTask;
-			return JsonConvert.DeserializeObject<MatchTracker.GlobalData>( File.ReadAllText( sharedSettings.GetGlobalPath() ) , JsonSettings );
-		}
-
-		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
-		{
-			await Task.CompletedTask;
-			return JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) , JsonSettings );
-		}
-
-		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
-		{
-			await Task.CompletedTask;
-			return JsonConvert.DeserializeObject<RoundData>( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) , JsonSettings );
-		}
-
-		private async Task SaveDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , MatchTracker.GlobalData globalData )
-		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented , JsonSettings ) );
-		}
-
-		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName , MatchData matchData )
-		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented , JsonSettings ) );
-		}
-
-		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName , RoundData roundData )
-		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented , JsonSettings ) );
-		}
-
-		#endregion DATABASEDELEGATES
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
 		public bool IsLevelRecordable( Level level )

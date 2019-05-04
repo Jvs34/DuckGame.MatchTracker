@@ -88,8 +88,10 @@ namespace MatchBot
 		}
 
 		//these ones aren't even used on ConsoleAdapter, although it would probably be nice to do that
-		public override async Task<ResourceResponse> UpdateActivityAsync( ITurnContext context , Activity activity , CancellationToken cancellationToken )
+		public override async Task<ResourceResponse> UpdateActivityAsync( ITurnContext turnContext , Activity activity , CancellationToken cancellationToken )
 		{
+			
+
 			await Task.CompletedTask;
 			return null;
 		}
@@ -140,7 +142,7 @@ namespace MatchBot
 		private async Task HandleOutgoingMessage( ITurnContext context , Activity act )
 		{
 			//get the channel the original message came from
-			ulong channelId = Convert.ToUInt64( context.Activity.ChannelId );
+			ulong channelId = Convert.ToUInt64( act.ChannelId );
 
 			var channel = await discordClient.GetChannelAsync( channelId );
 			if( channel != null )

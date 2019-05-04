@@ -4,27 +4,36 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
+	public delegate Task<GlobalData> LoadGlobalDataDelegate( IGameDatabase database , SharedSettings settings );
+	public delegate Task<MatchData> LoadMatchDataDelegate( IGameDatabase database , SharedSettings settings , string matchName );
+	public delegate Task<RoundData> LoadRoundDataDelegate( IGameDatabase database , SharedSettings settings , string roundName );
+	public delegate Task SaveGlobalDataDelegate( IGameDatabase database , SharedSettings settings , GlobalData globalData );
+	public delegate Task SaveMatchDataDelegate( IGameDatabase database , SharedSettings settings , string matchName , MatchData matchData );
+	public delegate Task SaveRoundDataDelegate( IGameDatabase database , SharedSettings settings , string roundName , RoundData roundData );
+
 	public class GameDatabase : IGameDatabase
 	{
-		private readonly object globalDataLock;
-		private GlobalData globalData;
-		private Dictionary<string , MatchData> matchesData;
-		private Dictionary<string , RoundData> roundsData;
+		protected readonly object globalDataLock;
+		protected GlobalData globalData;
+		protected Dictionary<string , MatchData> matchesData;
+		protected Dictionary<string , RoundData> roundsData;
 		public SharedSettings SharedSettings { get; set; }
 
-		public event LoadGlobalDataDelegate LoadGlobalDataDelegate;
+		public bool ReadOnly => false;
 
-		public event LoadMatchDataDelegate LoadMatchDataDelegate;
+		protected event LoadGlobalDataDelegate LoadGlobalDataDelegate;
 
-		public event LoadRoundDataDelegate LoadRoundDataDelegate;
+		protected event LoadMatchDataDelegate LoadMatchDataDelegate;
 
-		public event SaveGlobalDataDelegate SaveGlobalDataDelegate;
+		protected event LoadRoundDataDelegate LoadRoundDataDelegate;
 
-		public event SaveMatchDataDelegate SaveMatchDataDelegate;
+		protected event SaveGlobalDataDelegate SaveGlobalDataDelegate;
 
-		public event SaveRoundDataDelegate SaveRoundDataDelegate;
+		protected event SaveMatchDataDelegate SaveMatchDataDelegate;
 
-		public GameDatabase()
+		protected event SaveRoundDataDelegate SaveRoundDataDelegate;
+
+		protected GameDatabase()
 		{
 			SharedSettings = new SharedSettings();
 			globalData = null;
@@ -213,6 +222,44 @@ namespace MatchTracker
 			{
 				await SaveRoundDataDelegate( this , SharedSettings , roundName , roundData );
 			}
+		}
+
+		public void SaveData<T>( T data , string dataId = "" )
+		{
+			//bleh
+
+			if( typeof( T ) == typeof( GlobalData ) )
+			{
+
+			}
+			else if( typeof( T ) == typeof( MatchData ) )
+			{
+
+			}
+			else if( typeof( T ) == typeof( RoundData ) )
+			{
+
+			}
+		}
+
+		public T GetData<T>( string dataId = "" )
+		{
+			/*
+			if( typeof( T ) == typeof( GlobalData ) )
+			{
+				return (T) await GetGlobalData();
+			}
+			else if( typeof( T ) == typeof( MatchData ) )
+			{
+				await SaveMatchData( dataId , data as MatchData );
+			}
+			else if( typeof( T ) == typeof( RoundData ) )
+			{
+				await SaveRoundData( dataId , data as RoundData );
+			}
+			*/
+
+			return default;
 		}
 	}
 }

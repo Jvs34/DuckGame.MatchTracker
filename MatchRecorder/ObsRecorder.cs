@@ -83,7 +83,7 @@ namespace MatchRecorder
 				{
 					TryConnect();
 
-					nextObsCheck = DateTime.Now.AddSeconds( 3 );
+					nextObsCheck = DateTime.Now.AddSeconds( 5 );
 				}
 
 				return;

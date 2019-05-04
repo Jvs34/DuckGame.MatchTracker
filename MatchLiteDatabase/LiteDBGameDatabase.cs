@@ -10,19 +10,14 @@ namespace MatchTracker
 	public class LiteDBGameDatabase : IGameDatabase
 	{
 		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
-
-		public event LoadGlobalDataDelegate LoadGlobalDataDelegate;
-		public event LoadMatchDataDelegate LoadMatchDataDelegate;
-		public event LoadRoundDataDelegate LoadRoundDataDelegate;
-		public event SaveGlobalDataDelegate SaveGlobalDataDelegate;
-		public event SaveMatchDataDelegate SaveMatchDataDelegate;
-		public event SaveRoundDataDelegate SaveRoundDataDelegate;
 		private BsonMapper Mapper { get; } = new BsonMapper();
 
 		private LiteDatabase Database { get; set; }
 
 		public Stream DatabaseStream { get; set; }
 		public string FilePath { get; set; }
+
+		public bool ReadOnly => DatabaseStream != null;//unless this logic changes in the future, a litedb using a stream will always be readonly
 
 		public LiteDBGameDatabase()
 		{
@@ -32,11 +27,13 @@ namespace MatchTracker
 		private void OnModelCreating()
 		{
 			//TODO: figure out how to add data that we don't add manually to the other collections in an automatic way
+			//unfortunately, I don't think even entity framework does that for you, so that's tough shit
 
 			//enable the dbrefs when that's over with
 			Mapper.Entity<GlobalData>()
 				.Id( x => x.Name )
 				//.DbRef( x => x.Players )
+				//.DbRef( x => x.Levels )
 				;
 
 			Mapper.Entity<MatchData>()
@@ -163,6 +160,27 @@ namespace MatchTracker
 			{
 				throw new NullReferenceException( "Database was not loaded, please call LiteDBGameDatabase.Load first!" );
 			}
+		}
+
+		public void SaveData<T>( T data , string dataId = "" )
+		{
+			//LiteDB does not need the data index as each class has been mapped to its own index up above with the BsonMapper
+
+			CheckDatabase();
+			var collection = Database.GetCollection<T>();
+			collection.Upsert( data );
+		}
+
+		public T GetData<T>( string dataId = "" )
+		{
+			if( string.IsNullOrEmpty( dataId ) )
+			{
+				dataId = typeof( T ).Name;
+			}
+
+			CheckDatabase();
+			var collection = Database.GetCollection<T>().IncludeAll();
+			return collection.FindById( dataId );
 		}
 	}
 }

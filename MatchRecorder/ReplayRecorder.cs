@@ -1,4 +1,5 @@
-﻿using DSharpPlus;
+﻿#if VOICESUPPORT
+using DSharpPlus;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
@@ -11,6 +12,8 @@ using System.IO;
 using System.IO.Pipes;
 using System.Linq;
 using System.Threading.Tasks;
+
+
 
 namespace MatchRecorder
 {
@@ -274,3 +277,4 @@ namespace MatchRecorder
 		}
 	}
 }
+#endif

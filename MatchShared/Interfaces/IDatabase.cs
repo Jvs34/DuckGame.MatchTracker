@@ -3,28 +3,13 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public delegate Task<GlobalData> LoadGlobalDataDelegate( IGameDatabase database , SharedSettings settings );
-	public delegate Task<MatchData> LoadMatchDataDelegate( IGameDatabase database , SharedSettings settings , string matchName );
-	public delegate Task<RoundData> LoadRoundDataDelegate( IGameDatabase database , SharedSettings settings , string roundName );
-	public delegate Task SaveGlobalDataDelegate( IGameDatabase database , SharedSettings settings , GlobalData globalData );
-	public delegate Task SaveMatchDataDelegate( IGameDatabase database , SharedSettings settings , string matchName , MatchData matchData );
-	public delegate Task SaveRoundDataDelegate( IGameDatabase database , SharedSettings settings , string roundName , RoundData roundData );
 
 	public interface IGameDatabase
 	{
 		SharedSettings SharedSettings { get; set; }
 
-		event LoadGlobalDataDelegate LoadGlobalDataDelegate;
+		bool ReadOnly { get; }
 
-		event LoadMatchDataDelegate LoadMatchDataDelegate;
-
-		event LoadRoundDataDelegate LoadRoundDataDelegate;
-
-		event SaveGlobalDataDelegate SaveGlobalDataDelegate;
-
-		event SaveMatchDataDelegate SaveMatchDataDelegate;
-
-		event SaveRoundDataDelegate SaveRoundDataDelegate;
 
 		Task<GlobalData> GetGlobalData( bool forceRefresh = false );
 
@@ -41,5 +26,9 @@ namespace MatchTracker
 		Task SaveMatchData( string matchName , MatchData matchData );
 
 		Task SaveRoundData( string roundName , RoundData roundData );
+
+		void SaveData<T>( T data , string dataId = "" );
+
+		T GetData<T>( string dataId = "" );
 	}
 }

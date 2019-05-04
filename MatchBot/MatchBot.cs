@@ -50,8 +50,7 @@ namespace MatchBot
 			//the colloquial target
 		}
 
-		private readonly IGameDatabase remoteGameDatabase;
-		private readonly IGameDatabase localGameDatabase;
+
 
 		private readonly HttpClient httpClient;
 		private readonly Timer refreshTimer;
@@ -62,11 +61,14 @@ namespace MatchBot
 
 		private LuisRecognizer Recognizer { get; }
 
-		private IGameDatabase Database
+		private HttpGameDatabase remoteGameDatabase;
+		private FileSystemGameDatabase localGameDatabase;
+
+		private GameDatabase Database
 		{
 			get
 			{
-				return botSettings.UseRemoteDatabase ? remoteGameDatabase : localGameDatabase;
+				return botSettings.UseRemoteDatabase ? (GameDatabase) remoteGameDatabase : localGameDatabase;
 			}
 		}
 
@@ -90,21 +92,14 @@ namespace MatchBot
 				Timeout = TimeSpan.FromMinutes( 30 )
 			};
 
-			remoteGameDatabase = new GameDatabase();
-			localGameDatabase = new GameDatabase();
+			remoteGameDatabase = new HttpGameDatabase( httpClient );
+			localGameDatabase = new FileSystemGameDatabase();
 
 			Configuration.Bind( remoteGameDatabase.SharedSettings );
 			Configuration.Bind( botSettings );
 
-
-			remoteGameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
-			remoteGameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
-			remoteGameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
-
 			localGameDatabase.SharedSettings = remoteGameDatabase.SharedSettings;
-			localGameDatabase.LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
-			localGameDatabase.LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
-			localGameDatabase.LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
+
 
 
 			LuisApplication luisApplication = new LuisApplication( botSettings.LuisModelId , botSettings.LuisSubcriptionKey , botSettings.LuisUri.ToString() );
@@ -130,7 +125,7 @@ namespace MatchBot
 				Console.WriteLine( turnContext.Activity.Text );
 
 
-				var result = await Recognizer.RecognizeAsync( turnContext , cancellationToken ) ;
+				var result = await Recognizer.RecognizeAsync( turnContext , cancellationToken );
 				var topIntent = result?.GetTopScoringIntent();
 				switch( topIntent?.intent )
 				{
@@ -149,6 +144,11 @@ namespace MatchBot
 							await HandleTimesPlayed( turnContext , result );
 							break;
 						}
+					case "Upload":
+						{
+							await HandleUploadsLeft( turnContext , result );
+							break;
+						}
 					case "Help":
 						{
 							await HandleHelp( turnContext );
@@ -161,6 +161,11 @@ namespace MatchBot
 						}
 				}
 			}
+		}
+
+		private async Task HandleUploadsLeft( ITurnContext turnContext , RecognizerResult result )
+		{
+			await turnContext.SendActivityAsync( "cba implementing right now" );
 		}
 
 		public void RefreshDatabase( object dontactuallycare = null )
@@ -468,43 +473,8 @@ namespace MatchBot
 			}
 		}
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings )
-		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetGlobalPath( true ) );
-			Console.WriteLine( "Loading GlobalData" );
-			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
-		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
-		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetMatchPath( matchName , true ) );
-			Console.WriteLine( $"Loading MatchData {matchName}" );
-			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
-		}
 
-		private async Task<RoundData> LoadDatabaseRoundDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
-		{
-			var response = await httpClient.GetStringAsync( sharedSettings.GetRoundPath( roundName , true ) );
-			Console.WriteLine( $"Loading RoundData {roundName}" );
-			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
-		}
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
-		{
-			Console.WriteLine( "Loading GlobalData" );
-			return JsonConvert.DeserializeObject<GlobalData>( await File.ReadAllTextAsync( sharedSettings.GetGlobalPath() ) , JsonSettings );
-		}
-
-		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
-		{
-			Console.WriteLine( $"Loading MatchData {matchName}" );
-			return JsonConvert.DeserializeObject<MatchData>( await File.ReadAllTextAsync( sharedSettings.GetMatchPath( matchName ) ) , JsonSettings );
-		}
-
-		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
-		{
-			Console.WriteLine( $"Loading RoundData {roundName}" );
-			return JsonConvert.DeserializeObject<RoundData>( await File.ReadAllTextAsync( sharedSettings.GetRoundPath( roundName ) ) , JsonSettings );
-		}
 	}
 }
