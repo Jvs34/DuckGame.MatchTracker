@@ -10,7 +10,6 @@ namespace MatchTracker
 
 		bool ReadOnly { get; }
 
-
 		Task<GlobalData> GetGlobalData( bool forceRefresh = false );
 
 		Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false );

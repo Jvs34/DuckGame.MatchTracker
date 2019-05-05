@@ -30,34 +30,40 @@ namespace MatchTracker
 
 		private async Task<GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
 		{
+			await Task.CompletedTask;
 			Console.WriteLine( "Loading GlobalData" );
 			return JsonConvert.DeserializeObject<GlobalData>( File.ReadAllText( sharedSettings.GetGlobalPath() ) , JsonSettings );
 		}
 
 		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
 		{
+			await Task.CompletedTask;
 			Console.WriteLine( $"Loading MatchData {matchName}" );
 			return JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) , JsonSettings );
 		}
 
 		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
 		{
+			await Task.CompletedTask;
 			Console.WriteLine( $"Loading RoundData {roundName}" );
 			return JsonConvert.DeserializeObject<RoundData>( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) , JsonSettings );
 		}
 
 		private async Task SaveDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
 		{
+			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented , JsonSettings ) );
 		}
 
 		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName , MatchData matchData )
 		{
+			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented , JsonSettings ) );
 		}
 
 		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName , RoundData roundData )
 		{
+			await Task.CompletedTask;
 			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented , JsonSettings ) );
 		}
 	}

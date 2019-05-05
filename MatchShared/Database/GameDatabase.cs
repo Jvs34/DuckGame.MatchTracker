@@ -19,7 +19,7 @@ namespace MatchTracker
 		protected Dictionary<string , RoundData> roundsData;
 		public SharedSettings SharedSettings { get; set; }
 
-		public bool ReadOnly => false;
+		public virtual bool ReadOnly => false;
 
 		protected event LoadGlobalDataDelegate LoadGlobalDataDelegate;
 
@@ -230,34 +230,37 @@ namespace MatchTracker
 
 			if( typeof( T ) == typeof( GlobalData ) )
 			{
-
+				SaveGlobalData( data as GlobalData ).Wait();
 			}
 			else if( typeof( T ) == typeof( MatchData ) )
 			{
-
+				SaveMatchData( dataId , data as MatchData ).Wait();
 			}
 			else if( typeof( T ) == typeof( RoundData ) )
 			{
-
+				SaveRoundData( dataId , data as RoundData ).Wait();
 			}
 		}
 
 		public T GetData<T>( string dataId = "" )
 		{
+
 			/*
 			if( typeof( T ) == typeof( GlobalData ) )
 			{
-				return (T) await GetGlobalData();
+				return (T) GetGlobalData().Result;
 			}
+			
 			else if( typeof( T ) == typeof( MatchData ) )
 			{
-				await SaveMatchData( dataId , data as MatchData );
+				SaveMatchData( dataId , data as MatchData );
 			}
 			else if( typeof( T ) == typeof( RoundData ) )
 			{
-				await SaveRoundData( dataId , data as RoundData );
+				SaveRoundData( dataId , data as RoundData );
 			}
 			*/
+
 
 			return default;
 		}

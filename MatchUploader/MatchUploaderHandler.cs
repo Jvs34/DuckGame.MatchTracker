@@ -39,7 +39,7 @@ namespace MatchUploader
 		private readonly Branch currentBranch;
 		private readonly Repository databaseRepository;
 		private readonly DiscordClient discordClient;
-		private readonly GameDatabase gameDatabase;
+		private readonly IGameDatabase gameDatabase;
 		private readonly string settingsFolder;
 		private readonly UploaderSettings uploaderSettings;
 		private PendingUpload currentVideo;

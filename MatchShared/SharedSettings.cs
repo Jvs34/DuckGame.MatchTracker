@@ -27,20 +27,15 @@ namespace MatchTracker
 		public string TimestampFormat { get; set; }
 		public string LevelsPreviewFolder { get; set; }
 
-		public string DateTimeToString( DateTime time )
-		{
-			return time.ToString( TimestampFormat );
-		}
+		public string DatabaseFile { get; set; }
 
-		private string Combine( bool isUrl , params string [] paths )
-		{
-			return isUrl ? Url.Combine( paths ) : Path.Combine( paths );
-		}
+		public string DateTimeToString( DateTime time ) => time.ToString( TimestampFormat );
 
-		public string GetGlobalPath( bool useUrl = false )
-		{
-			return Combine( useUrl , GetRecordingFolder( useUrl ) , GlobalDataFile );
-		}
+		private string Combine( bool isUrl , params string [] paths ) => isUrl ? Url.Combine( paths ) : Path.Combine( paths );
+
+		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
+
+		public string GetGlobalPath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , GlobalDataFile );
 
 		public string GetMatchPath( string matchName , bool useUrl = false )
 		{
@@ -48,10 +43,7 @@ namespace MatchTracker
 			return Combine( useUrl , matchFolder , matchName + ".json" );
 		}
 
-		public string GetRecordingFolder( bool useUrl = false )
-		{
-			return useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
-		}
+		public string GetRecordingFolder( bool useUrl = false ) => useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
 
 		public string GetRoundPath( string roundName , bool useUrl = false )
 		{

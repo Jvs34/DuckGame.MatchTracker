@@ -17,7 +17,7 @@ namespace MatchRecorder
 		public BotSettings BotSettings { get; }
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
-		public GameDatabase GameDatabase { get; }
+		public IGameDatabase GameDatabase { get; }
 		public bool IsRecording => recorderHandler.IsRecording;
 		public string MatchesFolder { get; }
 		public string ModPath { get; }

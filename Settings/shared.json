@@ -8,5 +8,6 @@
   "RoundDataFile": "rounddata.json",
   "RoundVideoFile": "video.mp4",
   "RoundVoiceFile": "voice.ogg",
-  "GlobalDataFile": "data.json"
+  "GlobalDataFile": "data.json",
+  "DatabaseFile": "duckgame.db"
 }

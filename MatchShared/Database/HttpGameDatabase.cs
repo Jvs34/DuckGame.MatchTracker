@@ -12,6 +12,7 @@ namespace MatchTracker
 	{
 		private HttpClient Client { get; }
 		private JsonSerializerSettings JsonSettings { get; }
+		public override bool ReadOnly => true;
 
 		public HttpGameDatabase( HttpClient httpClient )
 		{

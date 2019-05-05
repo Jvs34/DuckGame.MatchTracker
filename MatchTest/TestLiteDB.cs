@@ -14,13 +14,9 @@ namespace MatchTest
 	{
 		public async Task Test()
 		{
-			GameDatabase defaultDatabase = new FileSystemGameDatabase();
+			IGameDatabase defaultDatabase = new FileSystemGameDatabase();
 
-
-			IGameDatabase liteDb = new LiteDBGameDatabase()
-			{
-				FilePath = @"E:\Test\duckgame.db" ,
-			};
+			IGameDatabase liteDb = new LiteDBGameDatabase();
 
 			var Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
@@ -30,31 +26,41 @@ namespace MatchTest
 			Configuration.Bind( defaultDatabase.SharedSettings );
 			Configuration.Bind( liteDb.SharedSettings );
 
-			await defaultDatabase.Load();
 
+			await defaultDatabase.Load();
 			await liteDb.Load();
+
+
 
 			GlobalData globalData = await defaultDatabase.GetGlobalData();
 
-			await liteDb.SaveGlobalData( globalData );
+			liteDb.SaveData( globalData );
+
+			foreach( var ply in globalData.Players )
+			{
+				liteDb.SaveData( ply );
+			}
+
+			foreach( var lvl in globalData.Levels )
+			{
+				liteDb.SaveData( lvl );
+			}
 
 
 			foreach( var roundName in globalData.Rounds )
 			{
 				RoundData roundData = await defaultDatabase.GetRoundData( roundName );
-				await liteDb.SaveRoundData( roundName , roundData );
+				liteDb.SaveData( roundData );
 			}
 
 			foreach( var matchName in globalData.Matches )
 			{
 				MatchData matchData = await defaultDatabase.GetMatchData( matchName );
-				await liteDb.SaveMatchData( matchName , matchData );
+				liteDb.SaveData( matchData );
 			}
 
 
-			GlobalData gaydata = await liteDb.GetGlobalData();
 
-			RoundData randomRound = await liteDb.GetRoundData( globalData.Rounds [globalData.Rounds.Count / 2] );
 		}
 	}
 }

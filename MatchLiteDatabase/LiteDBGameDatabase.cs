@@ -15,7 +15,16 @@ namespace MatchTracker
 		private LiteDatabase Database { get; set; }
 
 		public Stream DatabaseStream { get; set; }
-		public string FilePath { get; set; }
+
+		public string FilePath
+		{
+			get
+			{
+				return SharedSettings.GetDatabasePath();
+			}
+		}
+
+		public bool UseStream { get; set; }
 
 		public bool ReadOnly => DatabaseStream != null;//unless this logic changes in the future, a litedb using a stream will always be readonly
 
@@ -32,27 +41,27 @@ namespace MatchTracker
 			//enable the dbrefs when that's over with
 			Mapper.Entity<GlobalData>()
 				.Id( x => x.Name )
-				//.DbRef( x => x.Players )
-				//.DbRef( x => x.Levels )
+				.DbRef( x => x.Players )
+				.DbRef( x => x.Levels )
 				;
 
 			Mapper.Entity<MatchData>()
 				.Id( x => x.Name )
-				//.DbRef( x => x.Players )
+				.DbRef( x => x.Players )
 				;
 
 			Mapper.Entity<RoundData>()
 				.Id( x => x.Name )
-				//.DbRef( x => x.Players )
+				.DbRef( x => x.Players )
 				;
 
 			Mapper.Entity<PlayerData>()
 				.Id( x => x.UserId );
 
-			/*
+			
 			Mapper.Entity<TeamData>()
 				.DbRef( x => x.Players );
-			*/
+			
 
 			Mapper.Entity<TagData>()
 				.Id( x => x.Name )
@@ -65,26 +74,20 @@ namespace MatchTracker
 
 		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
 		{
-			CheckDatabase();
 			await Task.CompletedTask;
-			var collection = Database.GetCollection<GlobalData>().IncludeAll();
-			return collection.FindOne( x => x.Name == nameof( GlobalData ) );
+			return GetData<GlobalData>();
 		}
 
 		public async Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false )
 		{
-			CheckDatabase();
 			await Task.CompletedTask;
-			var collection = Database.GetCollection<MatchData>().IncludeAll();
-			return collection.FindOne( x => x.Name == matchName );
+			return GetData<MatchData>( matchName );	
 		}
 
 		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
 		{
-			CheckDatabase();
 			await Task.CompletedTask;
-			var collection = Database.GetCollection<RoundData>().IncludeAll();
-			return collection.FindOne( x => x.Name == roundName );
+			return GetData<RoundData>( roundName );
 		}
 
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
@@ -125,33 +128,27 @@ namespace MatchTracker
 				throw new ArgumentNullException( "Please fill either FilePath or DatabaseStream for the LiteDB database!" );
 			}
 
-			Database = string.IsNullOrWhiteSpace( FilePath )
+			Database = UseStream
 				? new LiteDatabase( DatabaseStream , Mapper )
 				: new LiteDatabase( FilePath , Mapper );
 		}
 
 		public async Task SaveGlobalData( GlobalData globalData )
 		{
-			CheckDatabase();
 			await Task.CompletedTask;
-			var collection = Database.GetCollection<GlobalData>();
-			collection.Upsert( globalData );
+			SaveData( globalData );
 		}
 
 		public async Task SaveMatchData( string matchName , MatchData matchData )
 		{
-			CheckDatabase();
 			await Task.CompletedTask;
-			var collection = Database.GetCollection<MatchData>();
-			collection.Upsert( matchData );
+			SaveData( matchData );
 		}
 
 		public async Task SaveRoundData( string roundName , RoundData roundData )
 		{
-			CheckDatabase();
 			await Task.CompletedTask;
-			var collection = Database.GetCollection<RoundData>();
-			collection.Upsert( roundData );
+			SaveData( roundData );
 		}
 
 		private void CheckDatabase()

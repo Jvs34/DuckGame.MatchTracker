@@ -56,31 +56,15 @@ namespace MatchBot
 		private readonly Timer refreshTimer;
 		private Task loadDatabaseTask;
 		private IConfigurationRoot Configuration { get; }
-		private JsonSerializerSettings JsonSettings { get; }
 		private BotSettings botSettings;
 
 		private LuisRecognizer Recognizer { get; }
-
-		private HttpGameDatabase remoteGameDatabase;
-		private FileSystemGameDatabase localGameDatabase;
-
-		private GameDatabase Database
-		{
-			get
-			{
-				return botSettings.UseRemoteDatabase ? (GameDatabase) remoteGameDatabase : localGameDatabase;
-			}
-		}
+		private IGameDatabase Database { get; }
 
 		public MatchBot( IConfigurationRoot configuration )
 		{
 			botSettings = new BotSettings();
 			Configuration = configuration;
-
-			JsonSettings = new JsonSerializerSettings()
-			{
-				PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
-			};
 
 			httpClient = new HttpClient( new SocketsHttpHandler()
 			{
@@ -92,14 +76,18 @@ namespace MatchBot
 				Timeout = TimeSpan.FromMinutes( 30 )
 			};
 
-			remoteGameDatabase = new HttpGameDatabase( httpClient );
-			localGameDatabase = new FileSystemGameDatabase();
 
-			Configuration.Bind( remoteGameDatabase.SharedSettings );
+			if( botSettings.UseRemoteDatabase )
+			{
+				Database = new HttpGameDatabase( httpClient );
+			}
+			else
+			{
+				Database = new FileSystemGameDatabase();
+			}
+
+			Configuration.Bind( Database.SharedSettings );
 			Configuration.Bind( botSettings );
-
-			localGameDatabase.SharedSettings = remoteGameDatabase.SharedSettings;
-
 
 
 			LuisApplication luisApplication = new LuisApplication( botSettings.LuisModelId , botSettings.LuisSubcriptionKey , botSettings.LuisUri.ToString() );
