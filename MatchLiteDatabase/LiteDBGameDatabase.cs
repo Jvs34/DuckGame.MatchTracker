@@ -43,16 +43,19 @@ namespace MatchTracker
 				.Id( x => x.Name )
 				.DbRef( x => x.Players )
 				.DbRef( x => x.Levels )
+				.DbRef( x => x.Tags )
 				;
 
 			Mapper.Entity<MatchData>()
 				.Id( x => x.Name )
 				.DbRef( x => x.Players )
+				.DbRef( x => x.Tags )
 				;
 
 			Mapper.Entity<RoundData>()
 				.Id( x => x.Name )
 				.DbRef( x => x.Players )
+				.DbRef( x => x.Tags )
 				;
 
 			Mapper.Entity<PlayerData>()
@@ -61,7 +64,7 @@ namespace MatchTracker
 			
 			Mapper.Entity<TeamData>()
 				.DbRef( x => x.Players );
-			
+
 
 			Mapper.Entity<TagData>()
 				.Id( x => x.Name )
@@ -69,6 +72,7 @@ namespace MatchTracker
 
 			Mapper.Entity<LevelData>()
 				.Id( x => x.LevelName )
+				.DbRef( x => x.Tags )
 				;
 		}
 

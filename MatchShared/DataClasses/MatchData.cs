@@ -5,7 +5,7 @@ namespace MatchTracker
 {
 	//a match is kind of hard to keep track of in a sense, reconnections might throw stats off and create duplicate matches
 	//which in theory is fine until you want to link multiple matches together later on, gotta think about this
-	public class MatchData : IPlayersList, IRoundsList, IStartEnd, IWinner, IVideoUpload, IEquatable<MatchData>, IComparable<MatchData>
+	public class MatchData : IPlayersList, IRoundsList, IStartEnd, IWinner, IVideoUpload, IEquatable<MatchData>, IComparable<MatchData> , ITags
 	{
 		//name of the match
 		public string Name { get; set; } = string.Empty;
@@ -23,6 +23,7 @@ namespace MatchTracker
 		public string YoutubeUrl { get; set; } = string.Empty;
 		public VideoType VideoType { get; set; } = VideoType.PlaylistLink;
 		public List<VideoMirrorData> VideoMirrors { get; set; } = new List<VideoMirrorData>();
+		public List<TagData> Tags { get; set; } = new List<TagData>();
 
 		public int CompareTo( MatchData other )
 		{

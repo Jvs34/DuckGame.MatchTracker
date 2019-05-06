@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MatchTracker
 {
-	public class RoundData : IPlayersList, IStartEnd, IWinner, IVideoUpload, IEquatable<RoundData>, IComparable<RoundData>
+	public class RoundData : IPlayersList, IStartEnd, IWinner, IVideoUpload, IEquatable<RoundData>, IComparable<RoundData> , ITags
 	{
 		public RecordingType RecordingType { get; set; }
 		public bool IsCustomLevel { get; set; }
@@ -23,6 +23,7 @@ namespace MatchTracker
 		public string YoutubeUrl { get; set; }
 		public VideoType VideoType { get; set; } = VideoType.VideoLink;
 		public List<VideoMirrorData> VideoMirrors { get; set; } = new List<VideoMirrorData>();
+		public List<TagData> Tags { get; set; } = new List<TagData>();
 
 		public int CompareTo( RoundData other )
 		{

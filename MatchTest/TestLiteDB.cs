@@ -45,6 +45,11 @@ namespace MatchTest
 			{
 				liteDb.SaveData( lvl );
 			}
+			
+			foreach( var tag in globalData.Tags )
+			{
+				liteDb.SaveData( tag );
+			}
 
 
 			foreach( var roundName in globalData.Rounds )
