@@ -14,3 +14,5 @@ Settings/*.json
 .vs/*
 ThirdParty/ffmpeg.exe
 MatchUploader/Properties/PublishProfiles/LinuxPublish.pubxml
+UploaderTask/
+MatchUploader/Properties/PublishProfiles/

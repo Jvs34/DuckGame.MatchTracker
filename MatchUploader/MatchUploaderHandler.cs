@@ -917,8 +917,6 @@ namespace MatchUploader
 			}
 		}
 
-
-
 		private async Task SetDiscordPresence( string str )
 		{
 			if( discordClient == null || discordClient.CurrentUser == null )
@@ -937,7 +935,7 @@ namespace MatchUploader
 
 		private async Task UpdateUploadProgress( int remaining )
 		{
-			await SetDiscordPresence( $"{remaining} videos remaining" );
+			await SetDiscordPresence( $"{remaining} {uploaderSettings.VideoMirrorUpload.ToString()} videos to upload" );
 		}
 
 		private async Task ProcessVideo( string roundName )
