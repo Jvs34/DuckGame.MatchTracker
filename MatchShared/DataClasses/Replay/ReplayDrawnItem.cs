@@ -26,10 +26,5 @@ namespace MatchTracker
 		public double Depth { get; set; }
 
 		public Color Color { get; set; }
-
-		
-
-
-
 	}
 }

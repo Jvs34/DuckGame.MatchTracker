@@ -30,8 +30,6 @@ namespace MatchTracker
 
 		}
 
-		//TODO: add lots of default parameters so we can redirect all the draw calls to this function
-		//there is actually no need for that as all the other overloads redirect to the main draw call anyway
 		public void AddDrawCall( string texture , Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth )
 		{
 			//Draw(Tex2D texture, Vec2 position, Rectangle? sourceRectangle, Color color, float rotation, Vec2 origin, Vec2 scale, SpriteEffects effects, Depth depth = default(Depth))

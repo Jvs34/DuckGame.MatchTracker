@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace MatchRecorder
@@ -176,7 +177,7 @@ namespace MatchRecorder
 		public void TryCollectingMatchData()
 		{
 			//try saving the match if there's one and it's got at least one round
-			if( CurrentMatch != null && CurrentMatch.Rounds.Count > 0 )
+			if( CurrentMatch?.Rounds.Count > 0 )
 			{
 				StopCollectingMatchData();
 			}
@@ -194,6 +195,8 @@ namespace MatchRecorder
 				TryTakingScreenshots();
 			}
 #endif
+
+
 			recorderHandler?.Update();
 		}
 
@@ -221,7 +224,7 @@ namespace MatchRecorder
 					for( int y = 0; y < h; y++ )
 					{
 						int arrayIndex = ( y * w ) + x;
-						Color c = imageData [arrayIndex];
+						DuckGame.Color c = imageData [arrayIndex];
 						pic.SetPixel( x , y , System.Drawing.Color.FromArgb( c.a , c.r , c.g , c.b ) );
 					}
 				}
@@ -390,6 +393,18 @@ namespace MatchRecorder
 
 			return newMatchData;
 		}
+
+		public void StartFrame()
+		{
+
+		}
+		public void OnTextureDraw( Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , Depth depth = default( Depth ) )
+		{
+		}
+		internal void EndFrame()
+		{
+
+		}
 	}
 
 	#region HOOKS
@@ -460,6 +475,50 @@ namespace MatchRecorder
 			}
 		}
 	}
+
+	[HarmonyPatch( typeof( Level ) , nameof( Level.DrawCurrentLevel ) )]
+	internal static class OnNewRenderingFrame
+	{
+		private static void Prefix()
+		{
+			MatchRecorderMod.Recorder.StartFrame();
+			//start a new frame here
+		}
+
+		private static void Postfix()
+		{
+			MatchRecorderMod.Recorder.EndFrame();
+			//end the frame here
+		}
+	}
+
+	[HarmonyPatch()]
+	internal static class OnRender
+	{
+		static MethodBase TargetMethod()
+		{
+			return Array.Find( typeof( Graphics ).GetMethods() , x =>
+			{
+				if( x.Name == nameof( Graphics.Draw ) )
+				{
+					ParameterInfo [] parameters = x.GetParameters();
+					if( parameters.Length > 2 && parameters [0].ParameterType == typeof( Tex2D ) && parameters [1].ParameterType == typeof( DuckGame.Vec2 ) )
+					{
+						return true;
+					}
+				}
+
+				return false;
+			} );
+		}
+
+		private static void Prefix( Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , Depth depth = default( Depth ) )
+		{
+			MatchRecorderMod.Recorder?.OnTextureDraw( texture , position , sourceRectangle , color , rotation , origin , scale , (int) effects , depth );
+		}
+	}
+
+	//Level.DrawCurrentLevel();
 
 	#endregion HOOKS
 }
