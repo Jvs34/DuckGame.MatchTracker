@@ -73,6 +73,26 @@ namespace MatchRecorder
 			return level is GameLevel;
 		}
 
+		public void FixDuckPersonaPaths()
+		{
+			FieldInfo textureNameBinding = typeof( Tex2D ).GetField( "_textureName" , BindingFlags.NonPublic | BindingFlags.Instance );
+
+			foreach( DuckPersona persona in Persona.all )
+			{
+				textureNameBinding.SetValue( persona.skipSprite.texture , "skipSign" );
+				textureNameBinding.SetValue( persona.arrowSprite.texture , "startArrow" );
+				textureNameBinding.SetValue( persona.fingerPositionSprite.texture , "fingerPositions" );
+				textureNameBinding.SetValue( persona.featherSprite.texture , "feather" );
+				textureNameBinding.SetValue( persona.crowdSprite.texture , "seatDuck" );
+				textureNameBinding.SetValue( persona.sprite.texture , "duck" );
+				textureNameBinding.SetValue( persona.armSprite.texture , "duckArms" );
+				textureNameBinding.SetValue( persona.quackSprite.texture , "quackduck" );
+				textureNameBinding.SetValue( persona.controlledSprite.texture , "controlledDuck" );
+				textureNameBinding.SetValue( persona.defaultHead.texture , "hats/default" );
+			}
+
+		}
+
 		public RoundData StartCollectingRoundData( DateTime startTime )
 		{
 			Level lvl = Level.current;
@@ -417,8 +437,9 @@ namespace MatchRecorder
 		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
 		private static void Prefix( Level value )
 		{
-			if( Level.current is null && value is TitleScreen )
+			if( Level.current is null && value != null )
 			{
+				MatchRecorderMod.Recorder?.FixDuckPersonaPaths();
 				MatchRecorderMod.Recorder?.GatherLevelData();
 			}
 
@@ -517,8 +538,6 @@ namespace MatchRecorder
 			MatchRecorderMod.Recorder?.OnTextureDraw( texture , position , sourceRectangle , color , rotation , origin , scale , (int) effects , depth );
 		}
 	}
-
-	//Level.DrawCurrentLevel();
 
 	#endregion HOOKS
 }
