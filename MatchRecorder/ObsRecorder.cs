@@ -1,4 +1,5 @@
-﻿using MatchTracker;
+﻿using DuckGame;
+using MatchTracker;
 using OBSWebsocketDotNet;
 using System;
 using System.IO;
@@ -149,6 +150,19 @@ namespace MatchRecorder
 		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type )
 		{
 			recordingState = type;
+		}
+
+		public void StartFrame()
+		{
+			
+		}
+
+		public void EndFrame()
+		{
+		}
+
+		public void OnTextureDraw( Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , Depth depth = default )
+		{
 		}
 	}
 }

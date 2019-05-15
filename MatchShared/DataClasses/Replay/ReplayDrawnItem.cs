@@ -11,12 +11,12 @@ namespace MatchTracker
 	public class ReplayDrawnItem //TODO: Iequatable and whatever else
 	{
 		public int EntityIndex { get; set; }
-		public uint Texture { get; set; }//TODO: turn into reference
-		public uint Material { get; set; }//TODO: same here
+		public string Texture { get; set; }
+		public uint Material { get; set; }
 		public Vec2 Position { get; set; }
 		public Vec2 Center { get; set; }
 		public Vec2 Scale { get; set; }
-		public Rectangle TexCoords { get; set; }
+		public Rectangle ? TexCoords { get; set; }
 		public float Angle { get; set; }
 
 		/// <summary>

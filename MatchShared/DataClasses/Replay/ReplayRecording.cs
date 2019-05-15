@@ -10,6 +10,7 @@ namespace MatchTracker
 	/// </summary>
 	public class ReplayRecording
 	{
+		public int CurrentFrame { get; set; }
 		public List<ReplayFrame> Frames { get; set; } = new List<ReplayFrame>();//TODO: change to a different list or array type?
 
 		/// <summary>
@@ -18,6 +19,7 @@ namespace MatchTracker
 		/// Also these will be referenced directly from a ReplayDrawnItem
 		/// </summary>
 		public List<string> Textures { get; set; } = new List<string>();
+		public List<string> Materials { get; set; } = new List<string>();
 
 
 
@@ -30,11 +32,39 @@ namespace MatchTracker
 
 		}
 
-		public void AddDrawCall( string texture , Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth )
+		public ReplayFrame StartFrame()
+		{
+			var replayFrame = new ReplayFrame();
+
+			Frames.Add( replayFrame );
+
+			return replayFrame;
+		}
+
+		public void AddDrawCall( string texture , Vec2 position , Rectangle? sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth )
 		{
 			//Draw(Tex2D texture, Vec2 position, Rectangle? sourceRectangle, Color color, float rotation, Vec2 origin, Vec2 scale, SpriteEffects effects, Depth depth = default(Depth))
+			ReplayFrame replayFrame = Frames [CurrentFrame];
 
+			replayFrame.DrawCalls.Add( new ReplayDrawnItem()
+			{
+				Angle = rotation ,
+				TexCoords = sourceRectangle ,
+				Depth = depth ,
+				Center = spriteCenter ,
+				Position = position ,
+				Scale = scale ,
+				Color = color ,
+				Texture = texture ,
+				//TODO: materials along with their params
+			} );
+		}
 
+		public ReplayFrame EndFrame()
+		{
+			var replayFrame = Frames [CurrentFrame];
+			CurrentFrame++;
+			return replayFrame;
 		}
 	}
 }

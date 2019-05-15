@@ -14,12 +14,12 @@ namespace MatchRecorder
 {
 	public class MatchRecorderHandler
 	{
-		private IRecorder recorderHandler;
+		private IRecorder RecorderHandler { get; }
 		public BotSettings BotSettings { get; }
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
 		public IGameDatabase GameDatabase { get; }
-		public bool IsRecording => recorderHandler.IsRecording;
+		public bool IsRecording => RecorderHandler.IsRecording;
 		public string MatchesFolder { get; }
 		public string ModPath { get; }
 		public string RoundsFolder { get; }
@@ -58,10 +58,10 @@ namespace MatchRecorder
 				GameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
 			}
 
-#if VOICESUPPORT
-			recorderHandler = new ReplayRecorder( this );
+#if DEBUG
+			RecorderHandler = new ReplayRecorder( this );
 #else
-			recorderHandler = new ObsRecorder( this );
+			RecorderHandler = new ObsRecorder( this );
 #endif
 
 
@@ -79,6 +79,7 @@ namespace MatchRecorder
 
 			foreach( DuckPersona persona in Persona.all )
 			{
+				//persona.skipSprite.color = new DuckGame.Color( persona.color );
 				textureNameBinding.SetValue( persona.skipSprite.texture , "skipSign" );
 				textureNameBinding.SetValue( persona.arrowSprite.texture , "startArrow" );
 				textureNameBinding.SetValue( persona.fingerPositionSprite.texture , "fingerPositions" );
@@ -104,7 +105,7 @@ namespace MatchRecorder
 				Players = new List<PlayerData>() ,
 				TimeStarted = startTime ,
 				IsCustomLevel = false ,
-				RecordingType = recorderHandler.ResultingRecordingType ,
+				RecordingType = RecorderHandler.ResultingRecordingType ,
 			};
 
 			CurrentRound.Name = GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted );
@@ -124,7 +125,8 @@ namespace MatchRecorder
 
 		public void StartRecording()
 		{
-			recorderHandler?.StartRecording();
+			HUD.CloseCorner( HUDCorner.TopLeft );
+			RecorderHandler?.StartRecording();
 		}
 
 		public void AddTeamAndPlayerData( IWinner winnerObject )
@@ -191,7 +193,15 @@ namespace MatchRecorder
 
 		public void StopRecording()
 		{
-			recorderHandler?.StopRecording();
+			if( CurrentRound != null )
+			{
+				var cornerMessage = HUD.AddCornerMessage( HUDCorner.TopLeft , $"Recorded {CurrentRound.Name}" );
+				cornerMessage.slide = 1;
+			}
+
+			RecorderHandler?.StopRecording();
+
+
 		}
 
 		public void TryCollectingMatchData()
@@ -217,7 +227,7 @@ namespace MatchRecorder
 #endif
 
 
-			recorderHandler?.Update();
+			RecorderHandler?.Update();
 		}
 
 		private void TryTakingScreenshots()
@@ -416,14 +426,27 @@ namespace MatchRecorder
 
 		public void StartFrame()
 		{
-
+			if( RecorderHandler.IsRecording )
+			{
+				RecorderHandler.StartFrame();
+			}
 		}
 		public void OnTextureDraw( Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , Depth depth = default( Depth ) )
 		{
+			if( !RecorderHandler.IsRecording || Graphics.currentLayer == Layer.Console || Graphics.currentLayer == Layer.HUD )
+			{
+				return;
+			}
+
+			RecorderHandler.OnTextureDraw( texture , position , sourceRectangle , color , rotation , origin , scale , effects , depth );
 		}
+
 		internal void EndFrame()
 		{
-
+			if( RecorderHandler.IsRecording )
+			{
+				RecorderHandler.EndFrame();
+			}
 		}
 	}
 
@@ -446,7 +469,7 @@ namespace MatchRecorder
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
 			if( MatchRecorderMod.Recorder.IsRecording )
 			{
-				MatchRecorderMod.Recorder.StopRecording();
+				MatchRecorderMod.Recorder?.StopRecording();
 			}
 
 			//only really useful in multiplayer, since continuing a match from the endgame screen doesn't trigger ResetMatchStuff on other clients
@@ -492,7 +515,7 @@ namespace MatchRecorder
 			//only bother if the current level is something we care about
 			if( MatchRecorderMod.Recorder.IsLevelRecordable( Level.current ) )
 			{
-				MatchRecorderMod.Recorder.StartRecording();
+				MatchRecorderMod.Recorder?.StartRecording();
 			}
 		}
 	}
@@ -500,17 +523,9 @@ namespace MatchRecorder
 	[HarmonyPatch( typeof( Level ) , nameof( Level.DrawCurrentLevel ) )]
 	internal static class OnNewRenderingFrame
 	{
-		private static void Prefix()
-		{
-			MatchRecorderMod.Recorder.StartFrame();
-			//start a new frame here
-		}
+		private static void Prefix() => MatchRecorderMod.Recorder?.StartFrame();
 
-		private static void Postfix()
-		{
-			MatchRecorderMod.Recorder.EndFrame();
-			//end the frame here
-		}
+		private static void Postfix() => MatchRecorderMod.Recorder?.EndFrame();
 	}
 
 	[HarmonyPatch()]

@@ -10,6 +10,7 @@ namespace MatchTracker
 	/// </summary>
 	public class ReplayFrame
 	{
-
+		public List<ReplayDrawnItem> DrawCalls { get; set; } = new List<ReplayDrawnItem>();
+		public TimeSpan Time { get; set; }
 	}
 }
