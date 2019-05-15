@@ -16,7 +16,7 @@ namespace MatchTracker
 		public Vec2 Position { get; set; }
 		public Vec2 Center { get; set; }
 		public Vec2 Scale { get; set; }
-		public Rectangle ? TexCoords { get; set; }
+		public Rectangle TexCoords { get; set; }
 		public float Angle { get; set; }
 
 		/// <summary>

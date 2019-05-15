@@ -7,6 +7,7 @@ using DSharpPlus.VoiceNext.Codec;
 */
 using DuckGame;
 using MatchTracker;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -126,11 +127,24 @@ namespace MatchRecorder
 					Name = roundData.Name ,
 					TimeStarted = roundData.TimeStarted ,
 					TimeEnded = roundData.TimeEnded ,
+					Recording = CurrentRecording
 				};
-
-
-
 				//now save the current recording too
+
+				string recordingPath = Path.Combine( mainHandler.RoundsFolder , roundData.Name , "replaydata.json" );
+
+				JsonSerializer serializer = new JsonSerializer();
+				serializer.Formatting = Formatting.Indented;
+
+				using( var fileStream = File.OpenWrite( recordingPath ) )
+				using( StreamWriter writer = new StreamWriter( fileStream ) )
+				{
+					serializer.Serialize( writer , replayData );
+				}
+
+				//serializer.Serialize()
+
+				//File.WriteAllText( recordingPath , JsonConvert.SerializeObject( replayData , Formatting.Indented ) );
 
 				CurrentRecording = null;
 			}
@@ -183,10 +197,17 @@ namespace MatchRecorder
 			//TODO: for now ignore draw calls that are done outside of startframe and endframe
 			if( !CatchingDrawCalls )
 			{
+				//this is apparently done by some render target stuff like when ducks are outside the camera's view
 				return;
 			}
 
 			string textureName = texture.textureName;
+
+			//TODO: handle render targets better
+			if( textureName == "__internal" )
+			{
+				return;
+			}
 
 			//texture.
 			if( !CurrentRecording.Textures.Contains( textureName ) )
@@ -198,12 +219,15 @@ namespace MatchRecorder
 			{
 				CurrentRecording.Materials.Add( Graphics.material.effect.effectName );
 				//TODO: save material parameters? unless I add xna references I can't really do that
+				//unless I do a lot of reflection hackery
 			}
 
 
 			//Graphics.currentLayer
 			//Graphics.currentDrawingObject;
-			MatchTracker.Rectangle? texCoords = null;
+			MatchTracker.Rectangle texCoords = null;
+
+			int entityIndex = Graphics.currentDrawingObject?.GetHashCode() ?? -1;
 
 			if( sourceRectangle.HasValue )
 			{
@@ -216,6 +240,19 @@ namespace MatchRecorder
 					} ,
 					Width = sourceRectangle.Value.width ,
 					Height = sourceRectangle.Value.height ,
+				};
+			}
+			else
+			{
+				texCoords = new MatchTracker.Rectangle()
+				{
+					Position = new MatchTracker.Vec2()
+					{
+						X = 0 ,
+						Y = 0 ,
+					} ,
+					Width = texture.width ,
+					Height = texture.height ,
 				};
 			}
 
@@ -246,7 +283,8 @@ namespace MatchRecorder
 					Y = scale.y ,
 				} ,
 				effects ,
-				depth.value
+				depth.value,
+				entityIndex
 			);
 		}
 

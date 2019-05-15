@@ -41,13 +41,19 @@ namespace MatchTracker
 			return replayFrame;
 		}
 
-		public void AddDrawCall( string texture , Vec2 position , Rectangle? sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth )
+		public void AddDrawCall( string texture , Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth , int entityIndex )
 		{
-			//Draw(Tex2D texture, Vec2 position, Rectangle? sourceRectangle, Color color, float rotation, Vec2 origin, Vec2 scale, SpriteEffects effects, Depth depth = default(Depth))
 			ReplayFrame replayFrame = Frames [CurrentFrame];
 
-			replayFrame.DrawCalls.Add( new ReplayDrawnItem()
+			if( !replayFrame.DrawCalls.TryGetValue( entityIndex , out List<ReplayDrawnItem> drawCalls ) )
 			{
+				drawCalls = new List<ReplayDrawnItem>();
+				replayFrame.DrawCalls [entityIndex] = drawCalls;
+			}
+
+			drawCalls.Add( new ReplayDrawnItem()
+			{
+				EntityIndex = entityIndex,
 				Angle = rotation ,
 				TexCoords = sourceRectangle ,
 				Depth = depth ,
@@ -57,6 +63,7 @@ namespace MatchTracker
 				Color = color ,
 				Texture = texture ,
 				//TODO: materials along with their params
+				//TODO: repetitions, although that should be added to the trim shit
 			} );
 		}
 

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MatchTracker
 {
-	public struct Rectangle : IEquatable<Rectangle>
+	public class Rectangle : IEquatable<Rectangle>
 	{
 		public Vec2 Position { get; set; }
 		public float Width { get; set; }

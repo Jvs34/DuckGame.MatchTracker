@@ -10,7 +10,8 @@ namespace MatchTracker
 	/// </summary>
 	public class ReplayFrame
 	{
-		public List<ReplayDrawnItem> DrawCalls { get; set; } = new List<ReplayDrawnItem>();
+		//public List<ReplayDrawnItem> DrawCalls { get; set; } = new List<ReplayDrawnItem>();
+		public Dictionary<int , List<ReplayDrawnItem>> DrawCalls { get; set; } = new Dictionary<int , List<ReplayDrawnItem>>();
 		public TimeSpan Time { get; set; }
 	}
 }
