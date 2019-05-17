@@ -7,6 +7,7 @@ using DSharpPlus.VoiceNext.Codec;
 */
 using DuckGame;
 using MatchTracker;
+using MatchTracker.Replay;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -102,8 +103,11 @@ namespace MatchRecorder
 			Directory.CreateDirectory( roundPath );
 			RoundData roundData = mainHandler.StartCollectingRoundData( recordingTime );
 
-			CurrentRecording = new ReplayRecording();
-
+			CurrentRecording = new ReplayRecording()
+			{
+				TimeStarted = roundData.TimeStarted ,
+				Name = roundData.Name,
+			};
 
 			/*
 			if( voiceConnection != null )
@@ -122,24 +126,21 @@ namespace MatchRecorder
 
 			if( roundData != null )
 			{
-				ReplayData replayData = new ReplayData()
-				{
-					Name = roundData.Name ,
-					TimeStarted = roundData.TimeStarted ,
-					TimeEnded = roundData.TimeEnded ,
-					Recording = CurrentRecording
-				};
+
+				CurrentRecording.TimeEnded = roundData.TimeEnded;
 				//now save the current recording too
 
 				string recordingPath = Path.Combine( mainHandler.RoundsFolder , roundData.Name , "replaydata.json" );
 
-				JsonSerializer serializer = new JsonSerializer();
-				serializer.Formatting = Formatting.Indented;
+				JsonSerializer serializer = new JsonSerializer
+				{
+					Formatting = Formatting.Indented
+				};
 
 				using( var fileStream = File.OpenWrite( recordingPath ) )
 				using( StreamWriter writer = new StreamWriter( fileStream ) )
 				{
-					serializer.Serialize( writer , replayData );
+					serializer.Serialize( writer , CurrentRecording );
 				}
 
 				//serializer.Serialize()
@@ -254,6 +255,24 @@ namespace MatchRecorder
 					Width = texture.width ,
 					Height = texture.height ,
 				};
+			}
+
+			//TODO: check effects and flip stuff accordingly? this is already saved in ReplayFrameItem though
+			switch( effects )
+			{
+				case 1:
+					{
+						//origin.x = (sourceRectangle.HasValue ? sourceRectangle.Value.width : ((float)texture.w)) - origin.x;
+						//FlipHorizontally
+						break;
+					}
+				case 2:
+					{
+						//FlipVertically
+						break;
+					}
+				default:
+					break;
 			}
 
 

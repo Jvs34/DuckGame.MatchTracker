@@ -1,16 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
-namespace MatchTracker
+namespace MatchTracker.Replay
 {
 	/// <summary>
 	/// Represents an actual recording of the match, along with all the frames
 	/// and references to whatever textures and other stuff were used
 	/// </summary>
-	public class ReplayRecording
+	public class ReplayRecording : IStartEnd
 	{
-		public int CurrentFrame { get; set; }
+		public string Name { get; set; }
+
+		public DateTime TimeEnded { get; set; }
+		public DateTime TimeStarted { get; set; }
+
+		public TimeSpan GetDuration() => TimeEnded.Subtract( TimeStarted );
+
+		private int CurrentFrame { get; set; }
 		public List<ReplayFrame> Frames { get; set; } = new List<ReplayFrame>();//TODO: change to a different list or array type?
 
 		/// <summary>
@@ -24,10 +32,26 @@ namespace MatchTracker
 
 
 		/// <summary>
+		/// <para>
 		/// This is a quite expensive function, trims all the draw calls that were unchanged throughout
 		/// all the replay frames, to shave repeated data
+		/// </para>
+		/// <para>Use once before saving to file</para>
 		/// </summary>
 		public void TrimDrawCalls()
+		{
+
+		}
+
+
+		/// <summary>
+		/// <para>
+		/// The opposite of the above function, useful on the viewers side to not have to do keyframe interpolation
+		/// bullshit like remembering which frames had repetitions and shit
+		/// </para>
+		/// <para>Use once before displaying with the viewer</para>
+		/// </summary>
+		public void DuplicateDrawCalls()
 		{
 
 		}
@@ -45,15 +69,18 @@ namespace MatchTracker
 		{
 			ReplayFrame replayFrame = Frames [CurrentFrame];
 
+			//not very elegant but it works out
+
 			if( !replayFrame.DrawCalls.TryGetValue( entityIndex , out List<ReplayDrawnItem> drawCalls ) )
 			{
 				drawCalls = new List<ReplayDrawnItem>();
 				replayFrame.DrawCalls [entityIndex] = drawCalls;
 			}
 
+
 			drawCalls.Add( new ReplayDrawnItem()
 			{
-				EntityIndex = entityIndex,
+				EntityIndex = entityIndex ,
 				Angle = rotation ,
 				TexCoords = sourceRectangle ,
 				Depth = depth ,
@@ -62,6 +89,8 @@ namespace MatchTracker
 				Scale = scale ,
 				Color = color ,
 				Texture = texture ,
+				FlipHorizontally = effects == 1 ,
+				FlipVertically = effects == 2 ,
 				//TODO: materials along with their params
 				//TODO: repetitions, although that should be added to the trim shit
 			} );
