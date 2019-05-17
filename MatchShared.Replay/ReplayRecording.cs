@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
+using ProtoBuf;
+using ProtoBuf.Meta;
 
 namespace MatchTracker.Replay
 {
@@ -9,16 +12,23 @@ namespace MatchTracker.Replay
 	/// Represents an actual recording of the match, along with all the frames
 	/// and references to whatever textures and other stuff were used
 	/// </summary>
+	[ProtoContract]
 	public class ReplayRecording : IStartEnd
 	{
+		[ProtoMember( 1 )]
 		public string Name { get; set; }
 
+		[ProtoMember( 2 )]
 		public DateTime TimeEnded { get; set; }
+
+		[ProtoMember( 3 )]
 		public DateTime TimeStarted { get; set; }
 
 		public TimeSpan GetDuration() => TimeEnded.Subtract( TimeStarted );
 
 		private int CurrentFrame { get; set; }
+
+		[ProtoMember( 4 )]
 		public List<ReplayFrame> Frames { get; set; } = new List<ReplayFrame>();//TODO: change to a different list or array type?
 
 		/// <summary>
@@ -26,7 +36,10 @@ namespace MatchTracker.Replay
 		/// so a replay viewer can cache them right away
 		/// Also these will be referenced directly from a ReplayDrawnItem
 		/// </summary>
+		[ProtoMember( 5 )]
 		public List<string> Textures { get; set; } = new List<string>();
+
+		[ProtoMember( 6 )]
 		public List<string> Materials { get; set; } = new List<string>();
 
 
@@ -40,8 +53,66 @@ namespace MatchTracker.Replay
 		/// </summary>
 		public void TrimDrawCalls()
 		{
+			//for each frame, we need to find a draw call that has a duplicate item in the next frame, if it does, increment DrawCall.Repetitions, remove the item and keep scanning deeper
+			for( int frameIndex = 0; frameIndex < Frames.Count; frameIndex++ )
+			{
+				var frame = Frames [frameIndex];
+
+				//now go through all the draw calls per entity index
+
+				foreach( var kv in frame.DrawCalls )
+				{
+					foreach( var drawCall in kv.Value )
+					{
+						//ok, now go through the next frames
+						int duplicatesRemoved = GetAndRemoveDuplicates( drawCall , kv.Key , frameIndex + 1 );
+						drawCall.Repetitions = duplicatesRemoved;
+					}
+
+				}
+
+
+			}
+
 
 		}
+
+
+		/// <summary>
+		/// Searches deep into the drawcalls, stops when it can't find the requested 
+		/// </summary>
+		/// <param name="originalDrawcall">The original draw call to compare to</param>
+		/// <param name="entityIndex">The index to use in the search</param>
+		/// <param name="startAt">The index of the array to start at</param>
+		/// <returns>The amount of duplicates that were removed</returns>
+		public int GetAndRemoveDuplicates( ReplayDrawnItem originalDrawcall , int entityIndex , int startAt )
+		{
+			if( startAt >= Frames.Count )
+			{
+				return 0;
+			}
+
+			int duplicates = 0;
+
+			for( int fIndex = startAt; fIndex < Frames.Count; fIndex++ )
+			{
+				//a frame has to both contain the same index of our draw call and the actual drawcall
+				if( Frames [fIndex].DrawCalls.TryGetValue( entityIndex , out var drawCalls ) && drawCalls.Contains( originalDrawcall ) )
+				{
+					duplicates++;
+					drawCalls.Remove( originalDrawcall );
+				}
+				else
+				{
+					break;
+				}
+
+			}
+
+
+			return duplicates;
+		}
+
 
 
 		/// <summary>
@@ -53,6 +124,7 @@ namespace MatchTracker.Replay
 		/// </summary>
 		public void DuplicateDrawCalls()
 		{
+
 
 		}
 
@@ -71,9 +143,9 @@ namespace MatchTracker.Replay
 
 			//not very elegant but it works out
 
-			if( !replayFrame.DrawCalls.TryGetValue( entityIndex , out List<ReplayDrawnItem> drawCalls ) )
+			if( !replayFrame.DrawCalls.TryGetValue( entityIndex , out HashSet<ReplayDrawnItem> drawCalls ) )
 			{
-				drawCalls = new List<ReplayDrawnItem>();
+				drawCalls = new HashSet<ReplayDrawnItem>();
 				replayFrame.DrawCalls [entityIndex] = drawCalls;
 			}
 
@@ -101,6 +173,25 @@ namespace MatchTracker.Replay
 			var replayFrame = Frames [CurrentFrame];
 			CurrentFrame++;
 			return replayFrame;
+		}
+
+
+		public static void Serialize( Stream stream , ReplayRecording recording )
+		{
+			Serializer.Serialize( stream , recording );
+		}
+
+		public static ReplayRecording Unserialize( Stream stream )
+		{
+			return Serializer.Deserialize<ReplayRecording>( stream );
+		}
+
+		public static void InitProtoBuf()
+		{
+			//TODO: I am literally mixmatching attributes and manually adding stuff to protobuf, I need to fix this at some point
+			RuntimeTypeModel.Default.Add( typeof( Vec2 ) , false ).Add( "X" , "Y" );
+			RuntimeTypeModel.Default.Add( typeof( Color ) , false ).Add( "R" , "G" , "B" , "A" );
+			RuntimeTypeModel.Default.Add( typeof( Rectangle ) , false ).Add( "Position" , "Width" , "Height" );
 		}
 	}
 }

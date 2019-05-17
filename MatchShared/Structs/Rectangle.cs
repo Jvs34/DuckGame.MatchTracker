@@ -16,5 +16,19 @@ namespace MatchTracker
 				&& other.Width.Equals( Width )
 				&& other.Height.Equals( Height );
 		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = -1214283325;
+			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode( Position );
+			hashCode = hashCode * -1521134295 + Width.GetHashCode();
+			hashCode = hashCode * -1521134295 + Height.GetHashCode();
+			return hashCode;
+		}
+
+		public override string ToString()
+		{
+			return $"Rect P: {Position} W: {Width} H: {Height}";
+		}
 	}
 }

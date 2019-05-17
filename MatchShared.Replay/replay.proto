@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+import "google/protobuf/timestamp.proto";
+
+message ReplayRecording{
+  string name = 1;
+  google.protobuf.TimeStamp time_started = 2;
+  google.protobuf.TimeStamp time_ended = 3;
+  repeated ReplayFrame frames = 4;
+  repeated string textures = 5;
+  repeated string materials = 6;
+}
+
+message ReplayFrame{
+
+}

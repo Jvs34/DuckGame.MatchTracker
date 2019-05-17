@@ -18,5 +18,20 @@ namespace MatchTracker
 				&& other.B.Equals( B )
 				&& other.A.Equals( A );
 		}
+
+		public override int GetHashCode()
+		{
+			var hashCode = 1960784236;
+			hashCode = hashCode * -1521134295 + R.GetHashCode();
+			hashCode = hashCode * -1521134295 + G.GetHashCode();
+			hashCode = hashCode * -1521134295 + B.GetHashCode();
+			hashCode = hashCode * -1521134295 + A.GetHashCode();
+			return hashCode;
+		}
+
+		public override string ToString()
+		{
+			return $"Color R: {R} G: {G} B: {B} A: {A}";
+		}
 	}
 }

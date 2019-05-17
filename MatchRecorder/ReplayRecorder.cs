@@ -14,10 +14,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Pipes;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-
-
 
 namespace MatchRecorder
 {
@@ -71,6 +70,8 @@ namespace MatchRecorder
 				throw new ArgumentNullException( "discordToken is null!" );
 			}
 
+			ReplayRecording.InitProtoBuf();
+
 			/*
 			discordClient = new DiscordClient( new DiscordConfiguration()
 			{
@@ -106,7 +107,7 @@ namespace MatchRecorder
 			CurrentRecording = new ReplayRecording()
 			{
 				TimeStarted = roundData.TimeStarted ,
-				Name = roundData.Name,
+				Name = roundData.Name ,
 			};
 
 			/*
@@ -130,22 +131,13 @@ namespace MatchRecorder
 				CurrentRecording.TimeEnded = roundData.TimeEnded;
 				//now save the current recording too
 
-				string recordingPath = Path.Combine( mainHandler.RoundsFolder , roundData.Name , "replaydata.json" );
+				string recordingPath = Path.Combine( mainHandler.RoundsFolder , roundData.Name );
 
-				JsonSerializer serializer = new JsonSerializer
+				var rec = CurrentRecording;
+				Task.Factory.StartNew( () =>
 				{
-					Formatting = Formatting.Indented
-				};
-
-				using( var fileStream = File.OpenWrite( recordingPath ) )
-				using( StreamWriter writer = new StreamWriter( fileStream ) )
-				{
-					serializer.Serialize( writer , CurrentRecording );
-				}
-
-				//serializer.Serialize()
-
-				//File.WriteAllText( recordingPath , JsonConvert.SerializeObject( replayData , Formatting.Indented ) );
+					SaveReplay( recordingPath , rec );
+				} );
 
 				CurrentRecording = null;
 			}
@@ -158,6 +150,29 @@ namespace MatchRecorder
 			*/
 
 			//StopFFmpeg();
+		}
+
+		public void SaveReplay( string recordingPath , ReplayRecording recording )
+		{
+			//			await Task.CompletedTask;
+			string replayName = "replaydata.bin";
+			string archiveName = Path.ChangeExtension( replayName , "zip" );
+
+			using( var fileStream = File.OpenWrite( Path.Combine( recordingPath , archiveName ) ) )
+			using( ZipArchive archive = new ZipArchive( fileStream , ZipArchiveMode.Create ) )
+			{
+				recording.TrimDrawCalls();
+				ZipArchiveEntry replayEntry = archive.CreateEntry( replayName );
+				ReplayRecording.Serialize( replayEntry.Open() , recording );
+			}
+
+			/*
+			using( var fileStream = File.OpenWrite( recordingPath ) )
+			{
+				recording.TrimDrawCalls();
+				ReplayRecording.Serialize( fileStream , recording );
+			}
+			*/
 		}
 
 		public void Update()
@@ -183,8 +198,29 @@ namespace MatchRecorder
 			if( replayFrame != null && currentRound != null )
 			{
 				replayFrame.Time = DateTime.Now.Subtract( currentRound.TimeStarted );
+
+				var camera = Level.current?.camera;
+
+				if( camera != null )
+				{
+					replayFrame.CameraMovement = new MatchTracker.Rectangle()
+					{
+						Width = camera.width ,
+						Height = camera.height ,
+						Position = new MatchTracker.Vec2()
+						{
+							X = camera.x ,
+							Y = camera.y ,
+						}
+					};
+				}
+
 			}
 			CatchingDrawCalls = true;
+
+
+			//Level.current.camera.position , width, height
+			//if it's a followcam we need to save the zoom I think?
 		}
 
 		public void EndFrame()
@@ -302,7 +338,7 @@ namespace MatchRecorder
 					Y = scale.y ,
 				} ,
 				effects ,
-				depth.value,
+				depth.value ,
 				entityIndex
 			);
 		}
