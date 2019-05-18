@@ -59,22 +59,15 @@ namespace MatchTracker.Replay
 				var frame = Frames [frameIndex];
 
 				//now go through all the draw calls per entity index
-
 				foreach( var kv in frame.DrawCalls )
 				{
 					foreach( var drawCall in kv.Value )
 					{
 						//ok, now go through the next frames
-						int duplicatesRemoved = GetAndRemoveDuplicates( drawCall , kv.Key , frameIndex + 1 );
-						drawCall.Repetitions = duplicatesRemoved;
+						drawCall.Repetitions = GetAndRemoveDuplicates( drawCall , kv.Key , frameIndex + 1 );
 					}
-
 				}
-
-
 			}
-
-
 		}
 
 
@@ -85,7 +78,7 @@ namespace MatchTracker.Replay
 		/// <param name="entityIndex">The index to use in the search</param>
 		/// <param name="startAt">The index of the array to start at</param>
 		/// <returns>The amount of duplicates that were removed</returns>
-		public int GetAndRemoveDuplicates( ReplayDrawnItem originalDrawcall , int entityIndex , int startAt )
+		private int GetAndRemoveDuplicates( ReplayDrawnItem originalDrawcall , int entityIndex , int startAt )
 		{
 			if( startAt >= Frames.Count )
 			{
@@ -96,7 +89,7 @@ namespace MatchTracker.Replay
 
 			for( int fIndex = startAt; fIndex < Frames.Count; fIndex++ )
 			{
-				//a frame has to both contain the same index of our draw call and the actual drawcall
+				//a frame has to both contain the same entityIndex of our draw call and the actual drawcall
 				if( Frames [fIndex].DrawCalls.TryGetValue( entityIndex , out var drawCalls ) && drawCalls.Contains( originalDrawcall ) )
 				{
 					duplicates++;
@@ -113,7 +106,35 @@ namespace MatchTracker.Replay
 			return duplicates;
 		}
 
+		private void PopulateDuplicates( ReplayDrawnItem originalDrawcall , int entityIndex , int startAt , int duplicates )
+		{
+			if( startAt >= Frames.Count || duplicates <= 0 )
+			{
+				return;
+			}
 
+			for( int fIndex = startAt; fIndex < Frames.Count; fIndex++ )
+			{
+				//if we can index this draw call by the index, this means that at least the entity is valid
+				if( Frames [fIndex].DrawCalls.TryGetValue( entityIndex , out var drawCalls ) )
+				{
+					drawCalls.Add( (ReplayDrawnItem) originalDrawcall.Clone() );
+					duplicates--;
+				}
+				else
+				{
+					break;
+				}
+
+
+				if( duplicates != 0 )
+				{
+					continue;
+				}
+
+				break;
+			}
+		}
 
 		/// <summary>
 		/// <para>
@@ -124,7 +145,25 @@ namespace MatchTracker.Replay
 		/// </summary>
 		public void DuplicateDrawCalls()
 		{
+			for( int frameIndex = 0; frameIndex < Frames.Count; frameIndex++ )
+			{
+				var frame = Frames [frameIndex];
 
+				//now go through all the draw calls per entity index
+
+				foreach( var kv in frame.DrawCalls )
+				{
+					foreach( var drawCall in kv.Value )
+					{
+						//ok, now go through the next frames
+						PopulateDuplicates( drawCall , kv.Key , frameIndex + 1 , drawCall.Repetitions );
+						drawCall.Repetitions = 0;
+					}
+
+				}
+
+
+			}
 
 		}
 

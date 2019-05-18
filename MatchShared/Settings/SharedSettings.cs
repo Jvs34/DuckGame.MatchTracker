@@ -27,6 +27,10 @@ namespace MatchTracker
 		public string TimestampFormat { get; set; }
 		public string LevelsPreviewFolder { get; set; }
 
+		public string RoundReplayFile { get; set; }
+		public string RoundReplayFileCompressed { get; set; }
+
+
 		public string DatabaseFile { get; set; }
 
 		public string DateTimeToString( DateTime time ) => time.ToString( TimestampFormat );
@@ -65,6 +69,13 @@ namespace MatchTracker
 			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
 			string roundFile = Combine( useUrl , roundFolder , roundName );
 			return Combine( useUrl , roundFile , RoundVoiceFile );
+		}
+
+		public string GetRoundReplayPath( string roundName , bool useUrl = false )
+		{
+			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
+			string roundFile = Combine( useUrl , roundFolder , roundName );
+			return Combine( useUrl , roundFile , RoundReplayFileCompressed );
 		}
 	}
 }

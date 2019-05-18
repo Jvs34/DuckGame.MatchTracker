@@ -9,5 +9,7 @@
   "RoundVideoFile": "video.mp4",
   "RoundVoiceFile": "voice.ogg",
   "GlobalDataFile": "data.json",
-  "DatabaseFile": "duckgame.db"
+  "DatabaseFile": "duckgame.db",
+  "RoundReplayFile": "replaydata.bin",
+  "RoundReplayFileCompressed": "replaydata.zip"
 }

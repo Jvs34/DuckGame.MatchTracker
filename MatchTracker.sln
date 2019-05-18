@@ -24,7 +24,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchTest", "MatchTest\Matc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchLiteDatabase", "MatchLiteDatabase\MatchLiteDatabase.csproj", "{9B8D0D0E-6E44-4B0E-A5C5-57B7D6AB32E4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchShared.Replay", "MatchShared.Replay\MatchShared.Replay.csproj", "{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchShared.Replay", "MatchShared.Replay\MatchShared.Replay.csproj", "{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

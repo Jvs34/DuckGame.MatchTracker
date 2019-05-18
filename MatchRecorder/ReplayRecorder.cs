@@ -133,11 +133,9 @@ namespace MatchRecorder
 
 				string recordingPath = Path.Combine( mainHandler.RoundsFolder , roundData.Name );
 
-				var rec = CurrentRecording;
-				Task.Factory.StartNew( () =>
-				{
-					SaveReplay( recordingPath , rec );
-				} );
+				ReplayRecording rec = CurrentRecording;
+
+				Task.Factory.StartNew( () => SaveReplay( roundData.Name , rec , mainHandler.GameDatabase.SharedSettings ) );
 
 				CurrentRecording = null;
 			}
@@ -152,27 +150,16 @@ namespace MatchRecorder
 			//StopFFmpeg();
 		}
 
-		public void SaveReplay( string recordingPath , ReplayRecording recording )
+		private void SaveReplay( string roundName , ReplayRecording recording , SharedSettings sharedSettings )
 		{
-			//			await Task.CompletedTask;
-			string replayName = "replaydata.bin";
-			string archiveName = Path.ChangeExtension( replayName , "zip" );
-
-			using( var fileStream = File.OpenWrite( Path.Combine( recordingPath , archiveName ) ) )
+			using( var fileStream = File.OpenWrite( sharedSettings.GetRoundReplayPath( roundName ) ) )
 			using( ZipArchive archive = new ZipArchive( fileStream , ZipArchiveMode.Create ) )
 			{
 				recording.TrimDrawCalls();
-				ZipArchiveEntry replayEntry = archive.CreateEntry( replayName );
+				recording.DuplicateDrawCalls();
+				ZipArchiveEntry replayEntry = archive.CreateEntry( sharedSettings.RoundReplayFile );
 				ReplayRecording.Serialize( replayEntry.Open() , recording );
 			}
-
-			/*
-			using( var fileStream = File.OpenWrite( recordingPath ) )
-			{
-				recording.TrimDrawCalls();
-				ReplayRecording.Serialize( fileStream , recording );
-			}
-			*/
 		}
 
 		public void Update()
