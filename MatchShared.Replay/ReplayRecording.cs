@@ -118,6 +118,12 @@ namespace MatchTracker.Replay
 				//if we can index this draw call by the index, this means that at least the entity is valid
 				if( Frames [fIndex].DrawCalls.TryGetValue( entityIndex , out var drawCalls ) )
 				{
+					if( drawCalls == null )
+					{
+						drawCalls = new HashSet<ReplayDrawnItem>();
+						Frames [fIndex].DrawCalls [entityIndex] = drawCalls;
+					}
+
 					drawCalls.Add( (ReplayDrawnItem) originalDrawcall.Clone() );
 					duplicates--;
 				}
