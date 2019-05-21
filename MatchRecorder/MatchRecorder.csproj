@@ -6,6 +6,7 @@
     <DebugType>full</DebugType>
     <Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them to your desired repo</Description>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
