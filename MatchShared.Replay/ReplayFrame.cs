@@ -12,17 +12,16 @@ namespace MatchTracker.Replay
 	[ProtoContract]
 	public class ReplayFrame
 	{
-
 		[ProtoMember( 1 )]
 		public TimeSpan Time { get; set; }
 
-		//public List<ReplayDrawnItem> DrawCalls { get; set; } = new List<ReplayDrawnItem>();
-
-		//TODO: turn the list into a hashset
 		[ProtoMember( 2 )]
-		public Dictionary<int , HashSet<ReplayDrawnItem>> DrawCalls { get; set; } = new Dictionary<int , HashSet<ReplayDrawnItem>>();
-
-		[ProtoMember( 3 )]
 		public Rectangle CameraMovement { get; set; }
+
+        [ProtoMember( 4 )]
+        public List<int> DrawCallIndices = new List<int>();
+
+        [ProtoMember( 5 )]
+        public List<DrawCall.Properties> DrawCallProperties = new List<DrawCall.Properties>();
 	}
 }

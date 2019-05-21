@@ -155,9 +155,9 @@ namespace MatchRecorder
 			using( var fileStream = File.OpenWrite( sharedSettings.GetRoundReplayPath( roundName ) ) )
 			using( ZipArchive archive = new ZipArchive( fileStream , ZipArchiveMode.Create ) )
 			{
-				recording.TrimDrawCalls();
+				// recording.TrimDrawCalls();
 				ZipArchiveEntry replayEntry = archive.CreateEntry( sharedSettings.RoundReplayFile );
-				ReplayRecording.Serialize( replayEntry.Open() , recording );
+                recording.Serialize( replayEntry.Open() );
 			}
 		}
 
@@ -179,31 +179,31 @@ namespace MatchRecorder
 
 		public void StartFrame()
 		{
-			var replayFrame = CurrentRecording?.StartFrame();
-			var currentRound = mainHandler.CurrentRound;
-			if( replayFrame != null && currentRound != null )
-			{
-				replayFrame.Time = DateTime.Now.Subtract( currentRound.TimeStarted );
+            CatchingDrawCalls = true;
 
-				var camera = Level.current?.camera;
+            var currentRound = mainHandler.CurrentRound;
 
-				if( camera != null )
+            if ( currentRound == null || CurrentRecording == null )
+                return;
+            
+            var camera = Level.current?.camera;
+            MatchTracker.Rectangle cameraData = null; 
+
+            if ( camera != null )
+            {
+                cameraData = new MatchTracker.Rectangle()
 				{
-					replayFrame.CameraMovement = new MatchTracker.Rectangle()
+					Width = camera.width ,
+					Height = camera.height ,
+					Position = new MatchTracker.Vec2()
 					{
-						Width = camera.width ,
-						Height = camera.height ,
-						Position = new MatchTracker.Vec2()
-						{
-							X = camera.x ,
-							Y = camera.y ,
-						}
-					};
-				}
+						X = camera.x ,
+						Y = camera.y ,
+					}
+				};
+            }
 
-			}
-			CatchingDrawCalls = true;
-
+			CurrentRecording.StartFrame( DateTime.Now.Subtract( currentRound.TimeStarted ), cameraData );
 
 			//Level.current.camera.position , width, height
 			//if it's a followcam we need to save the zoom I think?

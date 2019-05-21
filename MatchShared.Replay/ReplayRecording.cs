@@ -15,220 +15,161 @@ namespace MatchTracker.Replay
 	[ProtoContract]
 	public class ReplayRecording : IStartEnd
 	{
-		[ProtoMember( 1 )]
-		public string Name { get; set; }
-
-		[ProtoMember( 2 )]
-		public DateTime TimeEnded { get; set; }
-
-		[ProtoMember( 3 )]
-		public DateTime TimeStarted { get; set; }
-
+        public string Name { get; set; }
+        public DateTime TimeEnded { get; set; }
+        public DateTime TimeStarted{ get; set; }
 		public TimeSpan GetDuration() => TimeEnded.Subtract( TimeStarted );
 
-		private int CurrentFrame { get; set; }
+        public List<string> Textures => new List<string>();
+        public List<string> Materials => new List<string>();
 
-		[ProtoMember( 4 )]
-		public List<ReplayFrame> Frames { get; set; } = new List<ReplayFrame>();//TODO: change to a different list or array type?
+		private int CurrentFrameIndex { get; set; }
 
-		/// <summary>
-		/// The list of textures that were used in this recording,
-		/// so a replay viewer can cache them right away
-		/// Also these will be referenced directly from a ReplayDrawnItem
-		/// </summary>
-		[ProtoMember( 5 )]
-		public List<string> Textures { get; set; } = new List<string>();
+        struct Frame
+        {
+            public TimeSpan Time;
+            public Rectangle CameraMovement;
+            public List<( Sprite, DrawCall, DrawCall.Properties )> DrawCalls;
+        }
 
-		[ProtoMember( 6 )]
-		public List<string> Materials { get; set; } = new List<string>();
+        List<Frame> Frames = new List<Frame>();
 
-
-
-		/// <summary>
-		/// <para>
-		/// This is a quite expensive function, trims all the draw calls that were unchanged throughout
-		/// all the replay frames, to shave repeated data
-		/// </para>
-		/// <para>Use once before saving to file</para>
-		/// </summary>
-		public void TrimDrawCalls()
+		public void StartFrame( TimeSpan time, MatchTracker.Rectangle cameraData )
 		{
-			//for each frame, we need to find a draw call that has a duplicate item in the next frame, if it does, increment DrawCall.Repetitions, remove the item and keep scanning deeper
-			for( int frameIndex = 0; frameIndex < Frames.Count; frameIndex++ )
-			{
-				var frame = Frames [frameIndex];
+            var newFrame = new Frame
+            {
+                Time = time,
+                CameraMovement = cameraData,
+                DrawCalls = new List<( Sprite, DrawCall, DrawCall.Properties )>()
+            };
 
-				//now go through all the draw calls per entity index
-				foreach( var kv in frame.DrawCalls )
-				{
-					foreach( var drawCall in kv.Value )
-					{
-						//ok, now go through the next frames
-						drawCall.Repetitions = GetAndRemoveDuplicates( drawCall , kv.Key , frameIndex + 1 );
-					}
-				}
-			}
-		}
-
-
-		/// <summary>
-		/// Searches deep into the drawcalls, stops when it can't find the requested 
-		/// </summary>
-		/// <param name="originalDrawcall">The original draw call to compare to</param>
-		/// <param name="entityIndex">The index to use in the search</param>
-		/// <param name="startAt">The index of the array to start at</param>
-		/// <returns>The amount of duplicates that were removed</returns>
-		private int GetAndRemoveDuplicates( ReplayDrawnItem originalDrawcall , int entityIndex , int startAt )
-		{
-			if( startAt >= Frames.Count )
-			{
-				return 0;
-			}
-
-			int duplicates = 0;
-
-			for( int fIndex = startAt; fIndex < Frames.Count; fIndex++ )
-			{
-				//a frame has to both contain the same entityIndex of our draw call and the actual drawcall
-				if( Frames [fIndex].DrawCalls.TryGetValue( entityIndex , out var drawCalls ) && drawCalls.Contains( originalDrawcall ) )
-				{
-					duplicates++;
-					drawCalls.Remove( originalDrawcall );
-				}
-				else
-				{
-					break;
-				}
-
-			}
-
-
-			return duplicates;
-		}
-
-		private void PopulateDuplicates( ReplayDrawnItem originalDrawcall , int entityIndex , int startAt , int duplicates )
-		{
-			if( startAt >= Frames.Count || duplicates <= 0 )
-			{
-				return;
-			}
-
-			for( int fIndex = startAt; fIndex < Frames.Count; fIndex++ )
-			{
-				//if we can index this draw call by the index, this means that at least the entity is valid
-				if( Frames [fIndex].DrawCalls.TryGetValue( entityIndex , out var drawCalls ) )
-				{
-					if( drawCalls == null )
-					{
-						drawCalls = new HashSet<ReplayDrawnItem>();
-						Frames [fIndex].DrawCalls [entityIndex] = drawCalls;
-					}
-
-					drawCalls.Add( (ReplayDrawnItem) originalDrawcall.Clone() );
-					duplicates--;
-				}
-				else
-				{
-					break;
-				}
-
-
-				if( duplicates != 0 )
-				{
-					continue;
-				}
-
-				break;
-			}
-		}
-
-		/// <summary>
-		/// <para>
-		/// The opposite of the above function, useful on the viewers side to not have to do keyframe interpolation
-		/// bullshit like remembering which frames had repetitions and shit
-		/// </para>
-		/// <para>Use once before displaying with the viewer</para>
-		/// </summary>
-		public void DuplicateDrawCalls()
-		{
-			for( int frameIndex = 0; frameIndex < Frames.Count; frameIndex++ )
-			{
-				var frame = Frames [frameIndex];
-
-				//now go through all the draw calls per entity index
-
-				foreach( var kv in frame.DrawCalls )
-				{
-					foreach( var drawCall in kv.Value )
-					{
-						//ok, now go through the next frames
-						PopulateDuplicates( drawCall , kv.Key , frameIndex + 1 , drawCall.Repetitions );
-						drawCall.Repetitions = 0;
-					}
-
-				}
-
-
-			}
-
-		}
-
-		public ReplayFrame StartFrame()
-		{
-			var replayFrame = new ReplayFrame();
-
-			Frames.Add( replayFrame );
-
-			return replayFrame;
+            Frames.Add( newFrame );
 		}
 
 		public void AddDrawCall( string texture , Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth , int entityIndex )
 		{
-			ReplayFrame replayFrame = Frames [CurrentFrame];
+            Frame currentFrame = Frames[CurrentFrameIndex];
 
-			//not very elegant but it works out
+            var sprite = new Sprite
+            {
+                Texture = texture,
+                // Material = ,
+                Center = spriteCenter,
+                TexCoords = sourceRectangle
+            };
 
-			if( !replayFrame.DrawCalls.TryGetValue( entityIndex , out HashSet<ReplayDrawnItem> drawCalls ) )
-			{
-				drawCalls = new HashSet<ReplayDrawnItem>();
-				replayFrame.DrawCalls [entityIndex] = drawCalls;
-			}
-
-
-			drawCalls.Add( new ReplayDrawnItem()
+            var drawCall = new DrawCall
 			{
 				EntityIndex = entityIndex ,
-				Angle = rotation ,
-				TexCoords = sourceRectangle ,
+                SpriteIndex = -1,
 				Depth = depth ,
-				Center = spriteCenter ,
-				Position = position ,
-				Scale = scale ,
 				Color = color ,
-				Texture = texture ,
 				FlipHorizontally = effects == 1 ,
-				FlipVertically = effects == 2 ,
-				//TODO: materials along with their params
-				//TODO: repetitions, although that should be added to the trim shit
-			} );
+				FlipVertically = effects == 2
+			};
+
+            var drawCallProperties = new DrawCall.Properties
+            {
+                Position = position,
+                Angle = null,
+                Scale = null
+            };
+
+            if ( rotation != 0f )
+                drawCallProperties.Angle = rotation;
+
+            if ( scale.X != 1f || scale.Y != 1f )
+                drawCallProperties.Scale = scale;
+
+            currentFrame.DrawCalls.Add( ( sprite, drawCall, drawCallProperties ) );
 		}
 
-		public ReplayFrame EndFrame()
+		public void EndFrame()
 		{
-			var replayFrame = Frames [CurrentFrame];
-			CurrentFrame++;
-			return replayFrame;
+			CurrentFrameIndex++;
 		}
 
 
-		public static void Serialize( Stream stream , ReplayRecording recording )
+		public void Serialize( Stream stream )
 		{
-			Serializer.Serialize( stream , recording );
+            var replay = new Replay
+            {
+                Name = Name,
+                TimeEnded = TimeEnded,
+                TimeStarted = TimeStarted,
+                Textures = Textures,
+                Materials = Materials
+            };
+
+            ///
+            /// all of it
+            ///
+            var spriteCount = 0;
+            var drawCallCount = 0;
+            var spriteHash = new Dictionary<Sprite, int>();
+            var drawCallHash = new Dictionary<DrawCall, int>();
+
+            foreach ( var runtimeFrame in Frames )
+            {
+                var frame = new ReplayFrame
+                {
+                    Time = runtimeFrame.Time,
+                    CameraMovement = runtimeFrame.CameraMovement,
+                };
+
+                foreach ( var drawCall in runtimeFrame.DrawCalls )
+                {
+                    int spriteIndex;
+                    int drawCallIndex;
+
+                    if ( !spriteHash.TryGetValue( drawCall.Item1, out spriteIndex ) )
+                    {
+                        spriteIndex = spriteCount;
+                        spriteHash.Add( drawCall.Item1, spriteCount++ );
+                    }
+
+                    var drawCall_Copy = drawCall.Item2;
+                    drawCall_Copy.SpriteIndex = spriteIndex;
+
+                    if ( !drawCallHash.TryGetValue( drawCall_Copy, out drawCallIndex ) )
+                    {
+                        drawCallIndex = drawCallCount;
+                        drawCallHash.Add( drawCall_Copy, drawCallCount++ );
+                    }
+
+                    frame.DrawCallIndices.Add( drawCallIndex );
+                    frame.DrawCallProperties.Add( drawCall.Item3 );
+                }
+
+                replay.Frames.Add( frame );
+            }
+
+            var spriteArray = new Sprite[spriteCount];
+
+            foreach ( var spriteEntry in spriteHash )
+            {
+                spriteArray[spriteEntry.Value] = spriteEntry.Key;
+            }
+
+            replay.Sprites = spriteArray.ToList();
+
+            var drawCallArray = new DrawCall[drawCallCount];
+
+            foreach ( var drawCallEntry in drawCallHash )
+            {
+                drawCallArray[drawCallEntry.Value] = drawCallEntry.Key;
+            }
+
+            replay.DrawCalls = drawCallArray.ToList();
+
+            var drawcalls_all = drawCallArray.GroupBy( x => x.EntityIndex ).OrderBy( x => x.Count() );
+
+			Serializer.Serialize( stream , replay );
 		}
 
-		public static ReplayRecording Unserialize( Stream stream )
+		public static Replay Unserialize( Stream stream )
 		{
-			return Serializer.Deserialize<ReplayRecording>( stream );
+			return Serializer.Deserialize<Replay>( stream );
 		}
 
 		public static void InitProtoBuf()
