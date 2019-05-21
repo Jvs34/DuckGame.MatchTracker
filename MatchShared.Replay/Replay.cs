@@ -10,7 +10,7 @@ namespace MatchTracker.Replay
 	/// Represents an actual draw call
 	/// </summary>
 	[ProtoContract]
-	public class Replay
+	public class Replay : IStartEnd
 	{
 		[ProtoMember( 1 )]
 		public string Name { get; set; }
@@ -21,16 +21,16 @@ namespace MatchTracker.Replay
 		[ProtoMember( 3 )]
 		public DateTime TimeStarted { get; set; }
 
-        [ProtoMember( 4 )]
-        public List<Sprite> Sprites { get; set; } = new List<Sprite>();
+		[ProtoMember( 4 )]
+		public List<Sprite> Sprites { get; set; } = new List<Sprite>();
 
-        [ProtoMember( 5 )]
-        public List<DrawCall> DrawCalls { get; set; } = new List<DrawCall>();
+		[ProtoMember( 5 )]
+		public List<DrawCall> DrawCalls { get; set; } = new List<DrawCall>();
 
-        [ProtoMember( 6 )]
-        public List<ReplayFrame> Frames { get; set; } = new List<ReplayFrame>();
+		[ProtoMember( 6 )]
+		public List<Frame> Frames { get; set; } = new List<Frame>();
 
-        /// <summary>
+		/// <summary>
 		/// The list of textures that were used in this recording,
 		/// so a replay viewer can cache them right away
 		/// Also these will be referenced directly from a ReplayDrawnItem
@@ -40,5 +40,7 @@ namespace MatchTracker.Replay
 
 		[ProtoMember( 8 )]
 		public List<string> Materials { get; set; } = new List<string>();
-    }
+
+		public TimeSpan GetDuration() => TimeEnded.Subtract( TimeStarted );
+	}
 }

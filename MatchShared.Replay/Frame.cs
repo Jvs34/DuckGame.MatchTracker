@@ -10,7 +10,7 @@ namespace MatchTracker.Replay
 	/// all the draw calls that were done in this frame
 	/// </summary>
 	[ProtoContract]
-	public class ReplayFrame
+	public class Frame
 	{
 		[ProtoMember( 1 )]
 		public TimeSpan Time { get; set; }
@@ -18,10 +18,10 @@ namespace MatchTracker.Replay
 		[ProtoMember( 2 )]
 		public Rectangle CameraMovement { get; set; }
 
-        [ProtoMember( 4 )]
-        public List<int> DrawCallIndices = new List<int>();
+		[ProtoMember( 4 )]
+		public List<int> DrawCallIndices = new List<int>();
 
-        [ProtoMember( 5 )]
-        public List<DrawCall.Properties> DrawCallProperties = new List<DrawCall.Properties>();
+		[ProtoMember( 5 )]
+		public List<DrawCall.Properties> DrawCallProperties = new List<DrawCall.Properties>();
 	}
 }

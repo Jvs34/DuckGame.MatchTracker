@@ -1,16 +1,54 @@
-syntax = "proto3";
+syntax = "proto2";
+import "protobuf-net/bcl.proto"; // schema for protobuf-net's handling of core .NET types
 
-import "google/protobuf/timestamp.proto";
-
-message ReplayRecording{
-  string name = 1;
-  google.protobuf.TimeStamp time_started = 2;
-  google.protobuf.TimeStamp time_ended = 3;
-  repeated ReplayFrame frames = 4;
-  repeated string textures = 5;
-  repeated string materials = 6;
+message Color {
+   optional uint32 R = 1;
+   optional uint32 G = 2;
+   optional uint32 B = 3;
+   optional uint32 A = 4;
+}
+message DrawCall {
+   optional int32 EntityIndex = 1 [default = 0];
+   optional int32 SpriteIndex = 2 [default = 0];
+   optional double Depth = 4 [default = 0];
+   optional Color Color = 5;
+   optional bool FlipVertically = 6 [default = false];
+   optional bool FlipHorizontally = 7 [default = false];
+}
+message Frame {
+   optional .bcl.TimeSpan Time = 1;
+   optional Rectangle CameraMovement = 2;
+   repeated int32 DrawCallIndices = 4;
+   repeated Properties DrawCallProperties = 5;
+}
+message Properties {
+   optional Vec2 Position = 1;
+   optional float Angle = 2;
+   optional Vec2 Scale = 3;
+}
+message Rectangle {
+   optional Vec2 Position = 1;
+   optional float Width = 2;
+   optional float Height = 3;
+}
+message Replay {
+   optional string Name = 1;
+   optional .bcl.DateTime TimeEnded = 2;
+   optional .bcl.DateTime TimeStarted = 3;
+   repeated Sprite Sprites = 4;
+   repeated DrawCall DrawCalls = 5;
+   repeated Frame Frames = 6;
+   repeated string Textures = 7;
+   repeated string Materials = 8;
+}
+message Sprite {
+   optional string Texture = 1;
+   optional uint32 Material = 2 [default = 0];
+   optional Vec2 Center = 3;
+   optional Rectangle TexCoords = 5;
+}
+message Vec2 {
+   optional float X = 1;
+   optional float Y = 2;
 }
 
-message ReplayFrame{
-
-}

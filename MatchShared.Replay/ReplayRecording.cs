@@ -12,76 +12,75 @@ namespace MatchTracker.Replay
 	/// Represents an actual recording of the match, along with all the frames
 	/// and references to whatever textures and other stuff were used
 	/// </summary>
-	[ProtoContract]
 	public class ReplayRecording : IStartEnd
 	{
-        public string Name { get; set; }
-        public DateTime TimeEnded { get; set; }
-        public DateTime TimeStarted{ get; set; }
+		public string Name { get; set; }
+		public DateTime TimeEnded { get; set; }
+		public DateTime TimeStarted { get; set; }
 		public TimeSpan GetDuration() => TimeEnded.Subtract( TimeStarted );
 
-        public List<string> Textures => new List<string>();
-        public List<string> Materials => new List<string>();
+		public List<string> Textures => new List<string>();
+		public List<string> Materials => new List<string>();
 
 		private int CurrentFrameIndex { get; set; }
 
-        struct Frame
-        {
-            public TimeSpan Time;
-            public Rectangle CameraMovement;
-            public List<( Sprite, DrawCall, DrawCall.Properties )> DrawCalls;
-        }
-
-        List<Frame> Frames = new List<Frame>();
-
-		public void StartFrame( TimeSpan time, MatchTracker.Rectangle cameraData )
+		struct Frame
 		{
-            var newFrame = new Frame
-            {
-                Time = time,
-                CameraMovement = cameraData,
-                DrawCalls = new List<( Sprite, DrawCall, DrawCall.Properties )>()
-            };
+			public TimeSpan Time;
+			public Rectangle CameraMovement;
+			public List<(Sprite, DrawCall, DrawCall.Properties)> DrawCalls;
+		}
 
-            Frames.Add( newFrame );
+		List<Frame> Frames = new List<Frame>();
+
+		public void StartFrame( TimeSpan time , MatchTracker.Rectangle cameraData )
+		{
+			var newFrame = new Frame
+			{
+				Time = time ,
+				CameraMovement = cameraData ,
+				DrawCalls = new List<(Sprite, DrawCall, DrawCall.Properties)>()
+			};
+
+			Frames.Add( newFrame );
 		}
 
 		public void AddDrawCall( string texture , Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth , int entityIndex )
 		{
-            Frame currentFrame = Frames[CurrentFrameIndex];
+			Frame currentFrame = Frames [CurrentFrameIndex];
 
-            var sprite = new Sprite
-            {
-                Texture = texture,
-                // Material = ,
-                Center = spriteCenter,
-                TexCoords = sourceRectangle
-            };
+			var sprite = new Sprite
+			{
+				Texture = texture ,
+				// Material = ,
+				Center = spriteCenter ,
+				TexCoords = sourceRectangle
+			};
 
-            var drawCall = new DrawCall
+			var drawCall = new DrawCall
 			{
 				EntityIndex = entityIndex ,
-                SpriteIndex = -1,
+				SpriteIndex = -1 ,
 				Depth = depth ,
 				Color = color ,
 				FlipHorizontally = effects == 1 ,
 				FlipVertically = effects == 2
 			};
 
-            var drawCallProperties = new DrawCall.Properties
-            {
-                Position = position,
-                Angle = null,
-                Scale = null
-            };
+			var drawCallProperties = new DrawCall.Properties
+			{
+				Position = position ,
+				Angle = null ,
+				Scale = null
+			};
 
-            if ( rotation != 0f )
-                drawCallProperties.Angle = rotation;
+			if( rotation != 0f )
+				drawCallProperties.Angle = rotation;
 
-            if ( scale.X != 1f || scale.Y != 1f )
-                drawCallProperties.Scale = scale;
+			if( scale.X != 1f || scale.Y != 1f )
+				drawCallProperties.Scale = scale;
 
-            currentFrame.DrawCalls.Add( ( sprite, drawCall, drawCallProperties ) );
+			currentFrame.DrawCalls.Add( (sprite, drawCall, drawCallProperties) );
 		}
 
 		public void EndFrame()
@@ -92,77 +91,77 @@ namespace MatchTracker.Replay
 
 		public void Serialize( Stream stream )
 		{
-            var replay = new Replay
-            {
-                Name = Name,
-                TimeEnded = TimeEnded,
-                TimeStarted = TimeStarted,
-                Textures = Textures,
-                Materials = Materials
-            };
+			var replay = new Replay
+			{
+				Name = Name ,
+				TimeEnded = TimeEnded ,
+				TimeStarted = TimeStarted ,
+				Textures = Textures ,
+				Materials = Materials
+			};
 
-            ///
-            /// all of it
-            ///
-            var spriteCount = 0;
-            var drawCallCount = 0;
-            var spriteHash = new Dictionary<Sprite, int>();
-            var drawCallHash = new Dictionary<DrawCall, int>();
+			///
+			/// all of it
+			///
+			var spriteCount = 0;
+			var drawCallCount = 0;
+			var spriteHash = new Dictionary<Sprite , int>();
+			var drawCallHash = new Dictionary<DrawCall , int>();
 
-            foreach ( var runtimeFrame in Frames )
-            {
-                var frame = new ReplayFrame
-                {
-                    Time = runtimeFrame.Time,
-                    CameraMovement = runtimeFrame.CameraMovement,
-                };
+			foreach( var runtimeFrame in Frames )
+			{
+				var frame = new MatchTracker.Replay.Frame
+				{
+					Time = runtimeFrame.Time ,
+					CameraMovement = runtimeFrame.CameraMovement ,
+				};
 
-                foreach ( var drawCall in runtimeFrame.DrawCalls )
-                {
-                    int spriteIndex;
-                    int drawCallIndex;
+				foreach( var drawCall in runtimeFrame.DrawCalls )
+				{
+					int spriteIndex;
+					int drawCallIndex;
 
-                    if ( !spriteHash.TryGetValue( drawCall.Item1, out spriteIndex ) )
-                    {
-                        spriteIndex = spriteCount;
-                        spriteHash.Add( drawCall.Item1, spriteCount++ );
-                    }
+					if( !spriteHash.TryGetValue( drawCall.Item1 , out spriteIndex ) )
+					{
+						spriteIndex = spriteCount;
+						spriteHash.Add( drawCall.Item1 , spriteCount++ );
+					}
 
-                    var drawCall_Copy = drawCall.Item2;
-                    drawCall_Copy.SpriteIndex = spriteIndex;
+					var drawCall_Copy = drawCall.Item2;
+					drawCall_Copy.SpriteIndex = spriteIndex;
 
-                    if ( !drawCallHash.TryGetValue( drawCall_Copy, out drawCallIndex ) )
-                    {
-                        drawCallIndex = drawCallCount;
-                        drawCallHash.Add( drawCall_Copy, drawCallCount++ );
-                    }
+					if( !drawCallHash.TryGetValue( drawCall_Copy , out drawCallIndex ) )
+					{
+						drawCallIndex = drawCallCount;
+						drawCallHash.Add( drawCall_Copy , drawCallCount++ );
+					}
 
-                    frame.DrawCallIndices.Add( drawCallIndex );
-                    frame.DrawCallProperties.Add( drawCall.Item3 );
-                }
+					frame.DrawCallIndices.Add( drawCallIndex );
+					frame.DrawCallProperties.Add( drawCall.Item3 );
+				}
 
-                replay.Frames.Add( frame );
-            }
+				replay.Frames.Add( frame );
+			}
 
-            var spriteArray = new Sprite[spriteCount];
+			var spriteArray = new Sprite [spriteCount];
 
-            foreach ( var spriteEntry in spriteHash )
-            {
-                spriteArray[spriteEntry.Value] = spriteEntry.Key;
-            }
+			foreach( var spriteEntry in spriteHash )
+			{
+				spriteArray [spriteEntry.Value] = spriteEntry.Key;
+			}
 
-            replay.Sprites = spriteArray.ToList();
+			replay.Sprites = spriteArray.ToList();
 
-            var drawCallArray = new DrawCall[drawCallCount];
+			var drawCallArray = new DrawCall [drawCallCount];
 
-            foreach ( var drawCallEntry in drawCallHash )
-            {
-                drawCallArray[drawCallEntry.Value] = drawCallEntry.Key;
-            }
+			foreach( var drawCallEntry in drawCallHash )
+			{
+				drawCallArray [drawCallEntry.Value] = drawCallEntry.Key;
+			}
 
-            replay.DrawCalls = drawCallArray.ToList();
+			replay.DrawCalls = drawCallArray.ToList();
 
-            var drawcalls_all = drawCallArray.GroupBy( x => x.EntityIndex ).OrderBy( x => x.Count() );
+			var drawcalls_all = drawCallArray.GroupBy( x => x.EntityIndex ).OrderBy( x => x.Count() );
 
 			Serializer.Serialize( stream , replay );
 		}
@@ -178,6 +177,20 @@ namespace MatchTracker.Replay
 			RuntimeTypeModel.Default.Add( typeof( Vec2 ) , false ).Add( "X" , "Y" );
 			RuntimeTypeModel.Default.Add( typeof( Color ) , false ).Add( "R" , "G" , "B" , "A" );
 			RuntimeTypeModel.Default.Add( typeof( Rectangle ) , false ).Add( "Position" , "Width" , "Height" );
+		}
+
+		public static string GetProto()
+		{
+			return new StringBuilder()
+				//.AppendLine( Serializer.GetProto<Vec2>() )
+				//.AppendLine( Serializer.GetProto<Color>() )
+				//.AppendLine( Serializer.GetProto<Rectangle>() )
+				.AppendLine( Serializer.GetProto<Replay>() )
+				//.AppendLine( Serializer.GetProto<MatchTracker.Replay.Frame>() )
+				//.AppendLine( Serializer.GetProto<DrawCall.Properties>() )
+				//.AppendLine( Serializer.GetProto<DrawCall>() )
+				//.AppendLine( Serializer.GetProto<Sprite>() )
+				.ToString();
 		}
 	}
 }

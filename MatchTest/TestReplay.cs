@@ -20,6 +20,8 @@ namespace MatchTest
 
 			ReplayRecording.InitProtoBuf();
 
+			File.WriteAllText( @"C:\Users\Jvsth.000.000\OneDrive\Documents\DuckGame\Mods\MatchTracker\MatchShared.Replay\replay.proto" , ReplayRecording.GetProto() );
+
 			//TODO: unhardcode and then check for webgl to load with the unity webrequest shit
 
 			GameDatabase = new FileSystemGameDatabase
@@ -30,14 +32,13 @@ namespace MatchTest
 
 			string replayPath = GameDatabase.SharedSettings.GetRoundReplayPath( roundName );
 
-			ReplayRecording recording = null;
+			Replay recording = null;
 
 			using( var fileStream = File.OpenRead( replayPath ) )//TODO: if webgl or windows build then fetch from internet or filesystem
 			using( var archive = new ZipArchive( fileStream ) )
 			{
 				var stream = archive.GetEntry( GameDatabase.SharedSettings.RoundReplayFile )?.Open();
 				recording = ReplayRecording.Unserialize( stream );
-				recording.DuplicateDrawCalls();
 			}
 		}
 	}
