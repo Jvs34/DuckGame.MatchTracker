@@ -156,7 +156,6 @@ namespace MatchRecorder
 			using( ZipArchive archive = new ZipArchive( fileStream , ZipArchiveMode.Create ) )
 			{
 				recording.TrimDrawCalls();
-				recording.DuplicateDrawCalls();
 				ZipArchiveEntry replayEntry = archive.CreateEntry( sharedSettings.RoundReplayFile );
 				ReplayRecording.Serialize( replayEntry.Open() , recording );
 			}
