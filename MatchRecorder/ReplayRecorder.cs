@@ -226,15 +226,10 @@ namespace MatchRecorder
 
 			string textureName = texture.textureName;
 
-			//TODO: handle render targets better
-			if( textureName == "__internal" )
-			{
-				return;
-			}
-
-            if ( textureName == "natureTileset" )
+            if ( textureName.StartsWith( "_" ) && CurrentRecording.WantsTexture( texture ) )
             {
-                Console.WriteLine( "Penis" );
+                var data = texture.GetData().SelectMany( x => new []{ x.r, x.g, x.b, x.a } ).ToArray();
+                CurrentRecording.SendTextureData( texture, texture.width, texture.height, data );
             }
 
 			//texture.
@@ -303,7 +298,7 @@ namespace MatchRecorder
 			}
 
 
-			CurrentRecording.AddDrawCall( textureName ,
+			CurrentRecording.AddDrawCall( textureName , texture,
 				new MatchTracker.Vec2()
 				{
 					X = position.x ,
@@ -356,6 +351,19 @@ namespace MatchRecorder
 			    return;
 
 			CurrentRecording?.OnStaticDraw( id );
+        }
+
+        public bool WantsTexture( object tex )
+        {
+            if ( CurrentRecording == null )
+                return false;
+
+            return CurrentRecording.WantsTexture( tex );
+        }
+
+        public void SendTextureData( object tex, int width, int height, byte[] data )
+        {
+            CurrentRecording?.SendTextureData( tex, width, height, data );
         }
 
 		/*

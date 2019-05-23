@@ -47,7 +47,7 @@ namespace MatchTracker.Replay
 			Frames.Add( newFrame );
 		}
 
-		public void AddDrawCall( string texture , Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth , int entityIndex )
+		public void AddDrawCall( string texture , object textureObj, Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth , int entityIndex )
 		{
 			Frame currentFrame = Frames [CurrentFrameIndex];
 
@@ -56,7 +56,8 @@ namespace MatchTracker.Replay
 				Texture = texture ,
 				// Material = ,
 				Center = spriteCenter ,
-				TexCoords = sourceRectangle
+				TexCoords = sourceRectangle ,
+                TextureObject = textureObj
 			};
 
 			var drawCall = new DrawCall
@@ -112,6 +113,22 @@ namespace MatchTracker.Replay
 			///
 			/// all of it
 			///
+            var runtimeTextureIndices = new Dictionary<object, int>();
+            {
+                int i = 0;
+
+                foreach ( var entry in RuntimeTextures )
+                {
+                    runtimeTextureIndices.Add( entry.Key, i++ );
+                    replay.RuntimeTextures.Add( new RuntimeTexture
+                    {
+                        Width = entry.Value.Item1,
+                        Height = entry.Value.Item2,
+                        Data = entry.Value.Item3
+                    } );
+                }
+            }
+
 			var spriteCount = 0;
 			var drawCallCount = 0;
 			var spriteHash = new Dictionary<Sprite , int>();
@@ -194,7 +211,12 @@ namespace MatchTracker.Replay
 
 			foreach( var spriteEntry in spriteHash )
 			{
-				spriteArray [spriteEntry.Value] = spriteEntry.Key;
+                var sprite = spriteEntry.Key;
+
+                if ( runtimeTextureIndices.TryGetValue( sprite.TextureObject, out int textureIndex ) )
+                    sprite.RuntimeTextureIndex = textureIndex;
+
+				spriteArray [spriteEntry.Value] = sprite;
 			}
 
 			replay.Sprites = spriteArray.ToList();
@@ -267,6 +289,18 @@ namespace MatchTracker.Replay
         {
 			Frame currentFrame = Frames[CurrentFrameIndex];
             currentFrame.StaticDrawCalls.Add( id );
+        }
+        
+        Dictionary<object, (int, int, byte[])> RuntimeTextures = new Dictionary<object, (int, int, byte[])>();
+
+        public bool WantsTexture( object tex )
+        {
+            return !RuntimeTextures.ContainsKey( tex );
+        }
+
+        public void SendTextureData( object tex, int width, int height, byte[] data )
+        {
+            RuntimeTextures.Add( tex, ( width, height, data ) );
         }
 	}
 }

@@ -20,6 +20,10 @@ namespace MatchTracker.Replay
 		[ProtoMember( 5 )]
 		public Rectangle TexCoords;
 
+        [ProtoMember( 6 )]
+        public int? RuntimeTextureIndex;
+        public object TextureObject;
+
 		public override bool Equals( object obj )
 		{
 			return obj is Sprite && Equals( (Sprite) obj );

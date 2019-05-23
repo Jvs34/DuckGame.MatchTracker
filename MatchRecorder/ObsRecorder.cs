@@ -177,5 +177,14 @@ namespace MatchRecorder
         public void OnStaticDraw( int id )
         {
         }
+
+        public bool WantsTexture( object tex )
+        {
+            return false;
+        }
+
+        public void SendTextureData( object tex, int width, int height, byte[] data )
+        {
+        }
 	}
 }

@@ -20,5 +20,8 @@ namespace MatchRecorder
         int OnStartStaticDraw();
         void OnFinishStaticDraw();
         void OnStaticDraw( int id );
+
+        bool WantsTexture( object tex );
+        void SendTextureData( object tex, int width, int height, byte[] data );
     }
 }

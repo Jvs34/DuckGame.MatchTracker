@@ -33,6 +33,9 @@ namespace MatchTracker.Replay
         [ProtoMember( 7 )]
         public List<StaticDrawCall> StaticDrawCalls = new List<StaticDrawCall>();
 
+        [ProtoMember( 10 )]
+        public List<RuntimeTexture> RuntimeTextures = new List<RuntimeTexture>();
+
 		/// <summary>
 		/// The list of textures that were used in this recording,
 		/// so a replay viewer can cache them right away

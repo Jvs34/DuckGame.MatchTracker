@@ -488,7 +488,7 @@ namespace MatchRecorder
 		{
 			if( Level.current is null && value != null )
 			{
-				MatchRecorderMod.Recorder?.FixDuckPersonaPaths();
+				// MatchRecorderMod.Recorder?.FixDuckPersonaPaths();
 				MatchRecorderMod.Recorder?.GatherLevelData();
 			}
 

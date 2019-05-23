@@ -34,21 +34,27 @@ message Rectangle {
    optional float Width = 2;
    optional float Height = 3;
 }
+message RuntimeTexture {
+   optional int32 Width = 1;
+   optional int32 Height = 2;
+   optional bytes Data = 3;
+}
 message Replay {
    optional string Name = 1;
    repeated Sprite Sprites = 4;
    repeated DrawCall DrawCalls = 5;
    repeated Frame Frames = 6;
    repeated StaticDrawCall StaticDrawCalls = 7;
+   repeated RuntimeTexture RuntimeTextures = 10;
 }
 message Sprite {
    optional string Texture = 1;
    optional uint32 Material = 2 [default = 0];
    optional Vec2 Center = 3;
    optional Rectangle TexCoords = 5;
+   optional int32 RuntimeTextureIndex = 6 [default = -1];
 }
 message Vec2 {
    optional float X = 1;
    optional float Y = 2;
 }
-
