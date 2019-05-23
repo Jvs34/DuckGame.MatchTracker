@@ -1,5 +1,4 @@
 syntax = "proto2";
-import "protobuf-net/bcl.proto"; // schema for protobuf-net's handling of core .NET types
 
 message Color {
    optional uint32 R = 1;
@@ -16,7 +15,6 @@ message DrawCall {
    optional bool FlipHorizontally = 7 [default = false];
 }
 message Frame {
-   optional .bcl.TimeSpan Time = 1;
    optional Rectangle CameraMovement = 2;
    repeated int32 DrawCallIndices = 4;
    repeated Properties DrawCallProperties = 5;
@@ -33,8 +31,6 @@ message Rectangle {
 }
 message Replay {
    optional string Name = 1;
-   optional .bcl.DateTime TimeEnded = 2;
-   optional .bcl.DateTime TimeStarted = 3;
    repeated Sprite Sprites = 4;
    repeated DrawCall DrawCalls = 5;
    repeated Frame Frames = 6;
