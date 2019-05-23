@@ -448,6 +448,32 @@ namespace MatchRecorder
 				RecorderHandler.EndFrame();
 			}
 		}
+
+        public int OnStartStaticDraw()
+        {
+			if ( RecorderHandler.IsRecording )
+			{
+			    return RecorderHandler.OnStartStaticDraw();
+            }
+
+            return 0;
+        }
+
+        public void OnFinishStaticDraw()
+        {
+			if ( RecorderHandler.IsRecording )
+			{
+                RecorderHandler.OnFinishStaticDraw();
+            }
+        }
+
+        public void OnStaticDraw( int id )
+        {
+			if ( RecorderHandler.IsRecording )
+			{
+                RecorderHandler.OnStaticDraw( id );
+            }
+        }
 	}
 
 	#region HOOKS
@@ -553,6 +579,44 @@ namespace MatchRecorder
 			MatchRecorderMod.Recorder?.OnTextureDraw( texture , position , sourceRectangle , color , rotation , origin , scale , (int) effects , depth );
 		}
 	}
+
+    [HarmonyPatch( typeof( SpriteMap ), nameof( SpriteMap.UltraCheapStaticDraw ) )]
+    internal static class OnStaticDraw
+    {
+        static private bool _drawing = false;
+        static private FieldInfo _batchItemField = typeof( SpriteMap ).GetField( "_batchItem" , BindingFlags.NonPublic | BindingFlags.Instance );
+        static private PropertyInfo _validProperty = typeof( SpriteMap ).GetProperty( "valid", BindingFlags.NonPublic | BindingFlags.Instance );
+
+        static private Dictionary<SpriteMap, int> _currentBatches = new Dictionary<SpriteMap, int>();
+
+        private static void Prefix( SpriteMap __instance )
+        {
+            var batchItem = (MTSpriteBatchItem) _batchItemField.GetValue( __instance );
+            var valid = (bool) _validProperty.GetValue( __instance );
+
+            if ( batchItem != null )
+            {
+                MatchRecorderMod.Recorder?.OnStaticDraw( _currentBatches[__instance] );
+                return;
+            }
+
+            if ( !valid || MatchRecorderMod.Recorder == null )
+                return;
+
+            int id = MatchRecorderMod.Recorder.OnStartStaticDraw();
+            _currentBatches[__instance] = id;
+            _drawing = true;
+        }
+
+        private static void Postfix( SpriteMap __instance )
+        {
+            if ( !_drawing )
+                return;
+
+            _drawing = false;
+            MatchRecorderMod.Recorder?.OnFinishStaticDraw();
+        }
+    }
 
 	#endregion HOOKS
 }

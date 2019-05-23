@@ -164,5 +164,18 @@ namespace MatchRecorder
 		public void OnTextureDraw( Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , Depth depth = default )
 		{
 		}
+
+        public int OnStartStaticDraw()
+        {
+            return 0;
+        }
+
+        public void OnFinishStaticDraw()
+        {
+        }
+
+        public void OnStaticDraw( int id )
+        {
+        }
 	}
 }

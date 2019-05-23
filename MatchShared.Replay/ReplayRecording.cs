@@ -29,6 +29,7 @@ namespace MatchTracker.Replay
 			public TimeSpan Time;
 			public Rectangle CameraMovement;
 			public List<(Sprite, DrawCall, DrawCall.Properties)> DrawCalls;
+            public List<int> StaticDrawCalls;
 		}
 
 		List<Frame> Frames = new List<Frame>();
@@ -39,7 +40,8 @@ namespace MatchTracker.Replay
 			{
 				Time = time ,
 				CameraMovement = cameraData ,
-				DrawCalls = new List<(Sprite, DrawCall, DrawCall.Properties)>()
+				DrawCalls = new List<(Sprite, DrawCall, DrawCall.Properties)>(),
+                StaticDrawCalls = new List<int>()
 			};
 
 			Frames.Add( newFrame );
@@ -79,8 +81,15 @@ namespace MatchTracker.Replay
 
 			if( scale.X != 1f || scale.Y != 1f )
 				drawCallProperties.Scale = scale;
-
-			currentFrame.DrawCalls.Add( (sprite, drawCall, drawCallProperties) );
+            
+            if ( CurrentStaticDrawList != null )
+            {
+                CurrentStaticDrawList.Add( ( sprite, drawCall, drawCallProperties ) );
+            }
+            else
+            {
+			    currentFrame.DrawCalls.Add( ( sprite, drawCall, drawCallProperties ) );
+            }
 		}
 
 		public void EndFrame()
@@ -140,8 +149,46 @@ namespace MatchTracker.Replay
 					frame.DrawCallProperties.Add( drawCall.Item3 );
 				}
 
+                frame.StaticDrawCallIndices.AddRange( runtimeFrame.StaticDrawCalls );
 				replay.Frames.Add( frame );
 			}
+
+            foreach ( var list in StaticDrawLists )
+            {
+                var staticDraw = new StaticDrawCall
+                {
+                    DrawCallIndices = new List<int>(),
+                    DrawCallProperties = new List<DrawCall.Properties>()
+                };
+
+                foreach ( var ( sprite, drawCall, drawCallProperties ) in list )
+                {
+					int spriteIndex;
+					int drawCallIndex;
+
+					if( !spriteHash.TryGetValue( sprite , out spriteIndex ) )
+					{
+						spriteIndex = spriteCount;
+						spriteHash.Add( sprite, spriteCount++ );
+					}
+                    
+					var drawCall_Copy = drawCall;
+					drawCall_Copy.SpriteIndex = spriteIndex;
+
+					if( !drawCallHash.TryGetValue( drawCall_Copy , out drawCallIndex ) )
+					{
+						drawCallIndex = drawCallCount;
+						drawCallHash.Add( drawCall_Copy , drawCallCount++ );
+					}
+                    
+                    staticDraw.DrawCallIndices.Add( drawCallIndex );
+                    staticDraw.DrawCallProperties.Add( drawCallProperties );
+                }
+
+                replay.StaticDrawCalls.Add( staticDraw );
+            }
+
+            // post
 
 			var spriteArray = new Sprite [spriteCount];
 
@@ -192,5 +239,34 @@ namespace MatchTracker.Replay
 				//.AppendLine( Serializer.GetProto<Sprite>() )
 				.ToString();
 		}
+
+        private List<(Sprite, DrawCall, DrawCall.Properties)> CurrentStaticDrawList;
+        private List<List<(Sprite, DrawCall, DrawCall.Properties)>> StaticDrawLists = new List<List<(Sprite, DrawCall, DrawCall.Properties)>>();
+
+        public int OnStartStaticDraw()
+        {
+            if ( CurrentStaticDrawList != null )
+                throw new Exception();
+                
+            CurrentStaticDrawList = new List<(Sprite, DrawCall, DrawCall.Properties)>();
+            StaticDrawLists.Add( CurrentStaticDrawList );
+            var id = StaticDrawLists.Count - 1;
+
+            return id;
+        }
+
+        public void OnFinishStaticDraw()
+        {
+            if ( CurrentStaticDrawList == null )
+                throw new Exception();
+
+            CurrentStaticDrawList = null;
+        }
+
+        public void OnStaticDraw( int id )
+        {
+			Frame currentFrame = Frames[CurrentFrameIndex];
+            currentFrame.StaticDrawCalls.Add( id );
+        }
 	}
 }

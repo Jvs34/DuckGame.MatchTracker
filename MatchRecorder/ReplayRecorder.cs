@@ -232,6 +232,11 @@ namespace MatchRecorder
 				return;
 			}
 
+            if ( textureName == "natureTileset" )
+            {
+                Console.WriteLine( "Penis" );
+            }
+
 			//texture.
 			if( !CurrentRecording.Textures.Contains( textureName ) )
 			{
@@ -328,6 +333,30 @@ namespace MatchRecorder
 				entityIndex
 			);
 		}
+        
+        public int OnStartStaticDraw()
+        {
+			if( !CatchingDrawCalls || CurrentRecording == null )
+			    return 0;
+
+            return CurrentRecording.OnStartStaticDraw();
+        }
+
+        public void OnFinishStaticDraw()
+        {
+			if( !CatchingDrawCalls )
+			    return;
+
+            CurrentRecording?.OnFinishStaticDraw();
+        }
+
+        public void OnStaticDraw( int id )
+        {
+			if( !CatchingDrawCalls )
+			    return;
+
+			CurrentRecording?.OnStaticDraw( id );
+        }
 
 		/*
 		private async Task ConnectToVoiceChat()

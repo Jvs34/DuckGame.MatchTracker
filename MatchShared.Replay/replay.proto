@@ -14,10 +14,15 @@ message DrawCall {
    optional bool FlipVertically = 6 [default = false];
    optional bool FlipHorizontally = 7 [default = false];
 }
+message StaticDrawCall {
+   repeated int32 DrawCallIndices = 1;
+   repeated Properties DrawCallProperties = 2;
+}
 message Frame {
    optional Rectangle CameraMovement = 2;
    repeated int32 DrawCallIndices = 4;
    repeated Properties DrawCallProperties = 5;
+   repeated int32 StaticDrawCallIndices = 6;
 }
 message Properties {
    optional Vec2 Position = 1;
@@ -34,8 +39,7 @@ message Replay {
    repeated Sprite Sprites = 4;
    repeated DrawCall DrawCalls = 5;
    repeated Frame Frames = 6;
-   repeated string Textures = 7;
-   repeated string Materials = 8;
+   repeated StaticDrawCall StaticDrawCalls = 7;
 }
 message Sprite {
    optional string Texture = 1;

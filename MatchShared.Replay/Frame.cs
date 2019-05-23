@@ -23,5 +23,8 @@ namespace MatchTracker.Replay
 
 		[ProtoMember( 5 )]
 		public List<DrawCall.Properties> DrawCallProperties = new List<DrawCall.Properties>();
+
+        [ProtoMember( 6 )]
+        public List<int> StaticDrawCallIndices = new List<int>();
 	}
 }
