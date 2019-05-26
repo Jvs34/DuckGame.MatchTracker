@@ -186,5 +186,13 @@ namespace MatchRecorder
         public void SendTextureData( object tex, int width, int height, byte[] data )
         {
         }
+
+		public void OnStartDrawingObject( object obj )
+		{
+		}
+
+		public void OnFinishDrawingObject( object obj )
+		{
+		}
 	}
 }

@@ -474,6 +474,22 @@ namespace MatchRecorder
                 RecorderHandler.OnStaticDraw( id );
             }
         }
+
+		public void OnStartDrawingObject( object obj )
+		{
+			if ( RecorderHandler.IsRecording )
+			{
+                RecorderHandler.OnStartDrawingObject( obj );
+            }
+		}
+
+		public void OnFinishDrawingObject( object obj )
+		{
+			if ( RecorderHandler.IsRecording )
+			{
+                RecorderHandler.OnFinishDrawingObject( obj );
+            }
+		}
 	}
 
 	#region HOOKS
@@ -617,6 +633,20 @@ namespace MatchRecorder
             MatchRecorderMod.Recorder?.OnFinishStaticDraw();
         }
     }
+
+	[HarmonyPatch( typeof( Thing ), nameof( Thing.DoDraw ) )]
+	internal static class OnDoDraw
+	{
+		private static void Prefix( Thing __instance )
+		{
+			MatchRecorderMod.Recorder?.OnStartDrawingObject( __instance );
+		}
+
+		private static void Postfix( Thing __instance )
+		{
+			MatchRecorderMod.Recorder?.OnFinishDrawingObject( __instance );
+		}
+	}
 
 	#endregion HOOKS
 }
