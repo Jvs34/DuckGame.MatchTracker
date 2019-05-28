@@ -19,15 +19,14 @@
     <!--<PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.0-beta-00491" />-->
     
     
+    <PackageReference Include="Lib.Harmony" Version="1.2.0.1" />
+    
+    
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
     <ProjectReference Include="..\MatchShared.Replay\MatchShared.Replay.csproj" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
-    <Reference Include="0Harmony">
-      <HintPath>..\ThirdParty\0Harmony.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
     <Reference Include="DuckGame">
       <HintPath>..\ThirdParty\DuckGame.exe</HintPath>
       <Private>false</Private>
