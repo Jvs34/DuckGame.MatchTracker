@@ -56,6 +56,8 @@ namespace MatchRecorder
 		public RecordingType ResultingRecordingType { get; set; }
 		public ReplayRecording CurrentRecording { get; private set; }
 
+		private MatchTracker.Replay.DeltaFormat.ReplayRecorder _deltaRecorder;
+
 		public ReplayRecorder( MatchRecorderHandler parent )
 		{
 			ResultingRecordingType = RecordingType.ReplayAndVoiceChat;
@@ -110,6 +112,8 @@ namespace MatchRecorder
 				Name = roundData.Name ,
 			};
 
+			_deltaRecorder = new MatchTracker.Replay.DeltaFormat.ReplayRecorder( roundData.Name );
+
 			/*
 			if( voiceConnection != null )
 			{
@@ -134,10 +138,13 @@ namespace MatchRecorder
 				string recordingPath = Path.Combine( mainHandler.RoundsFolder , roundData.Name );
 
 				ReplayRecording rec = CurrentRecording;
+				var deltaRec = _deltaRecorder;
 
 				Task.Factory.StartNew( () => SaveReplay( roundData.Name , rec , mainHandler.GameDatabase.SharedSettings ) );
+				Task.Factory.StartNew( () => SaveReplay( roundData.Name , deltaRec , mainHandler.GameDatabase.SharedSettings ) );
 
 				CurrentRecording = null;
+				_deltaRecorder = null;
 			}
 
 			/*
@@ -158,6 +165,16 @@ namespace MatchRecorder
 				// recording.TrimDrawCalls();
 				ZipArchiveEntry replayEntry = archive.CreateEntry( sharedSettings.RoundReplayFile );
 				recording.Serialize( replayEntry.Open() );
+			}
+		}
+
+		private void SaveReplay( string roundName , MatchTracker.Replay.DeltaFormat.ReplayRecorder deltaRecorder , SharedSettings sharedSettings )
+		{
+			using( var fileStream = File.OpenWrite( sharedSettings.GetRoundReplayPath( roundName ) + ".delta" ) )
+			using( ZipArchive archive = new ZipArchive( fileStream , ZipArchiveMode.Create ) )
+			{
+				ZipArchiveEntry replayEntry = archive.CreateEntry( sharedSettings.RoundReplayFile );
+				deltaRecorder.Serialize( replayEntry.Open() );
 			}
 		}
 
@@ -204,6 +221,7 @@ namespace MatchRecorder
 			}
 
 			CurrentRecording.StartFrame( DateTime.Now.Subtract( currentRound.TimeStarted ) , cameraData );
+			_deltaRecorder?.StartFrame();
 
 			//Level.current.camera.position , width, height
 			//if it's a followcam we need to save the zoom I think?
@@ -212,6 +230,7 @@ namespace MatchRecorder
 		public void EndFrame()
 		{
 			CurrentRecording?.EndFrame();
+			_deltaRecorder?.EndFrame();
 			CatchingDrawCalls = false;
 		}
 
@@ -327,6 +346,35 @@ namespace MatchRecorder
 				depth.value ,
 				entityIndex
 			);
+
+			_deltaRecorder.DrawTexture( textureName , texture,
+				new MatchTracker.Vec2()
+				{
+					X = position.x ,
+					Y = position.y
+				} ,
+				texCoords ,
+				new MatchTracker.Color()
+				{
+					R = color.r ,
+					G = color.g ,
+					B = color.b ,
+					A = color.a ,
+				} ,
+				rotation ,
+				new MatchTracker.Vec2()
+				{
+					X = origin.x ,
+					Y = origin.y ,
+				} ,
+				new MatchTracker.Vec2()
+				{
+					X = scale.x ,
+					Y = scale.y ,
+				} ,
+				effects ,
+				depth.value
+			);
 		}
         
         public int OnStartStaticDraw()
@@ -365,6 +413,16 @@ namespace MatchRecorder
         {
             CurrentRecording?.SendTextureData( tex, width, height, data );
         }
+
+		public void OnStartDrawingObject( object obj )
+		{
+			_deltaRecorder?.OnStartDrawingObject( obj );
+		}
+
+		public void OnFinishDrawingObject( object obj )
+		{
+			_deltaRecorder?.OnFinishDrawingObject( obj );
+		}
 
 		/*
 		private async Task ConnectToVoiceChat()

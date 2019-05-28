@@ -23,5 +23,8 @@ namespace MatchRecorder
 
         bool WantsTexture( object tex );
         void SendTextureData( object tex, int width, int height, byte[] data );
+
+		void OnStartDrawingObject( object obj );
+		void OnFinishDrawingObject( object obj );
     }
 }

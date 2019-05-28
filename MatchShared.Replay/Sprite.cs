@@ -24,26 +24,41 @@ namespace MatchTracker.Replay
         public int? RuntimeTextureIndex;
         public object TextureObject;
 
-		public override bool Equals( object obj )
+		public bool Equals(Sprite sprite)
 		{
-			return obj is Sprite && Equals( (Sprite) obj );
+			return Texture == sprite.Texture &&
+				   Material == sprite.Material &&
+				   Center.Equals(sprite.Center) &&
+				   EqualityComparer<Rectangle>.Default.Equals(TexCoords, sprite.TexCoords) &&
+				   EqualityComparer<int?>.Default.Equals(RuntimeTextureIndex, sprite.RuntimeTextureIndex) &&
+				   EqualityComparer<object>.Default.Equals(TextureObject, sprite.TextureObject);
 		}
 
-		public bool Equals( Sprite other )
+		public override bool Equals(object obj)
 		{
-			return Texture == other.Texture &&
-				   Material == other.Material &&
-				   Center.Equals( other.Center ) &&
-				   EqualityComparer<Rectangle>.Default.Equals( TexCoords , other.TexCoords );
+			if (!(obj is Sprite))
+			{
+				return false;
+			}
+
+			var sprite = (Sprite)obj;
+			return Texture == sprite.Texture &&
+				   Material == sprite.Material &&
+				   Center.Equals(sprite.Center) &&
+				   EqualityComparer<Rectangle>.Default.Equals(TexCoords, sprite.TexCoords) &&
+				   EqualityComparer<int?>.Default.Equals(RuntimeTextureIndex, sprite.RuntimeTextureIndex) &&
+				   EqualityComparer<object>.Default.Equals(TextureObject, sprite.TextureObject);
 		}
 
 		public override int GetHashCode()
 		{
-			var hashCode = -933968943;
-			hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode( Texture );
+			var hashCode = 311847513;
+			hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Texture);
 			hashCode = hashCode * -1521134295 + Material.GetHashCode();
-			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode( Center );
-			hashCode = hashCode * -1521134295 + EqualityComparer<Rectangle>.Default.GetHashCode( TexCoords );
+			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode(Center);
+			hashCode = hashCode * -1521134295 + EqualityComparer<Rectangle>.Default.GetHashCode(TexCoords);
+			hashCode = hashCode * -1521134295 + EqualityComparer<int?>.Default.GetHashCode(RuntimeTextureIndex);
+			hashCode = hashCode * -1521134295 + EqualityComparer<object>.Default.GetHashCode(TextureObject);
 			return hashCode;
 		}
 	}
