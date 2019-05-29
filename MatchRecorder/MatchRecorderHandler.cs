@@ -449,46 +449,46 @@ namespace MatchRecorder
 			}
 		}
 
-        public int OnStartStaticDraw()
-        {
-			if ( RecorderHandler.IsRecording )
+		public int OnStartStaticDraw()
+		{
+			if( RecorderHandler.IsRecording )
 			{
-			    return RecorderHandler.OnStartStaticDraw();
-            }
+				return RecorderHandler.OnStartStaticDraw();
+			}
 
-            return 0;
-        }
+			return 0;
+		}
 
-        public void OnFinishStaticDraw()
-        {
-			if ( RecorderHandler.IsRecording )
+		public void OnFinishStaticDraw()
+		{
+			if( RecorderHandler.IsRecording )
 			{
-                RecorderHandler.OnFinishStaticDraw();
-            }
-        }
+				RecorderHandler.OnFinishStaticDraw();
+			}
+		}
 
-        public void OnStaticDraw( int id )
-        {
-			if ( RecorderHandler.IsRecording )
+		public void OnStaticDraw( int id )
+		{
+			if( RecorderHandler.IsRecording )
 			{
-                RecorderHandler.OnStaticDraw( id );
-            }
-        }
+				RecorderHandler.OnStaticDraw( id );
+			}
+		}
 
 		public void OnStartDrawingObject( object obj )
 		{
-			if ( RecorderHandler.IsRecording )
+			if( RecorderHandler.IsRecording )
 			{
-                RecorderHandler.OnStartDrawingObject( obj );
-            }
+				RecorderHandler.OnStartDrawingObject( obj );
+			}
 		}
 
 		public void OnFinishDrawingObject( object obj )
 		{
-			if ( RecorderHandler.IsRecording )
+			if( RecorderHandler.IsRecording )
 			{
-                RecorderHandler.OnFinishDrawingObject( obj );
-            }
+				RecorderHandler.OnFinishDrawingObject( obj );
+			}
 		}
 	}
 
@@ -596,45 +596,45 @@ namespace MatchRecorder
 		}
 	}
 
-    [HarmonyPatch( typeof( SpriteMap ), nameof( SpriteMap.UltraCheapStaticDraw ) )]
-    internal static class OnStaticDraw
-    {
-        static private bool _drawing = false;
-        static private FieldInfo _batchItemField = typeof( SpriteMap ).GetField( "_batchItem" , BindingFlags.NonPublic | BindingFlags.Instance );
-        static private PropertyInfo _validProperty = typeof( SpriteMap ).GetProperty( "valid", BindingFlags.NonPublic | BindingFlags.Instance );
+	[HarmonyPatch( typeof( SpriteMap ) , nameof( SpriteMap.UltraCheapStaticDraw ) )]
+	internal static class OnStaticDraw
+	{
+		static private bool _drawing = false;
+		static private FieldInfo _batchItemField = typeof( SpriteMap ).GetField( "_batchItem" , BindingFlags.NonPublic | BindingFlags.Instance );
+		static private PropertyInfo _validProperty = typeof( SpriteMap ).GetProperty( "valid" , BindingFlags.NonPublic | BindingFlags.Instance );
 
-        static private Dictionary<SpriteMap, int> _currentBatches = new Dictionary<SpriteMap, int>();
+		static private Dictionary<SpriteMap , int> _currentBatches = new Dictionary<SpriteMap , int>();
 
-        private static void Prefix( SpriteMap __instance )
-        {
-            var batchItem = (MTSpriteBatchItem) _batchItemField.GetValue( __instance );
-            var valid = (bool) _validProperty.GetValue( __instance );
+		private static void Prefix( SpriteMap __instance )
+		{
+			var batchItem = (MTSpriteBatchItem) _batchItemField.GetValue( __instance );
+			var valid = (bool) _validProperty.GetValue( __instance );
 
-            if ( batchItem != null )
-            {
-                MatchRecorderMod.Recorder?.OnStaticDraw( _currentBatches[__instance] );
-                return;
-            }
+			if( batchItem != null )
+			{
+				MatchRecorderMod.Recorder?.OnStaticDraw( _currentBatches [__instance] );
+				return;
+			}
 
-            if ( !valid || MatchRecorderMod.Recorder == null )
-                return;
+			if( !valid || MatchRecorderMod.Recorder == null )
+				return;
 
-            int id = MatchRecorderMod.Recorder.OnStartStaticDraw();
-            _currentBatches[__instance] = id;
-            _drawing = true;
-        }
+			int id = MatchRecorderMod.Recorder.OnStartStaticDraw();
+			_currentBatches [__instance] = id;
+			_drawing = true;
+		}
 
-        private static void Postfix( SpriteMap __instance )
-        {
-            if ( !_drawing )
-                return;
+		private static void Postfix( SpriteMap __instance )
+		{
+			if( !_drawing )
+				return;
 
-            _drawing = false;
-            MatchRecorderMod.Recorder?.OnFinishStaticDraw();
-        }
-    }
+			_drawing = false;
+			MatchRecorderMod.Recorder?.OnFinishStaticDraw();
+		}
+	}
 
-	[HarmonyPatch( typeof( Thing ), nameof( Thing.DoDraw ) )]
+	[HarmonyPatch( typeof( Thing ) , nameof( Thing.DoDraw ) )]
 	internal static class OnDoDraw
 	{
 		private static void Prefix( Thing __instance )

@@ -245,11 +245,11 @@ namespace MatchRecorder
 
 			string textureName = texture.textureName;
 
-            if ( textureName.StartsWith( "_" ) && CurrentRecording.WantsTexture( texture ) )
-            {
-                var data = texture.GetData().SelectMany( x => new []{ x.r, x.g, x.b, x.a } ).ToArray();
-                CurrentRecording.SendTextureData( texture, texture.width, texture.height, data );
-            }
+			if( textureName.StartsWith( "_" ) && CurrentRecording.WantsTexture( texture ) )
+			{
+				var data = texture.GetData().SelectMany( x => new [] { x.r , x.g , x.b , x.a } ).ToArray();
+				CurrentRecording.SendTextureData( texture , texture.width , texture.height , data );
+			}
 
 			//texture.
 			if( !CurrentRecording.Textures.Contains( textureName ) )
@@ -317,7 +317,7 @@ namespace MatchRecorder
 			}
 
 
-			CurrentRecording.AddDrawCall( textureName , texture,
+			CurrentRecording.AddDrawCall( textureName , texture ,
 				new MatchTracker.Vec2()
 				{
 					X = position.x ,
@@ -347,7 +347,7 @@ namespace MatchRecorder
 				entityIndex
 			);
 
-			_deltaRecorder.DrawTexture( textureName , texture,
+			_deltaRecorder.DrawTexture( textureName , texture ,
 				new MatchTracker.Vec2()
 				{
 					X = position.x ,
@@ -376,43 +376,43 @@ namespace MatchRecorder
 				depth.value
 			);
 		}
-        
-        public int OnStartStaticDraw()
-        {
+
+		public int OnStartStaticDraw()
+		{
 			if( !CatchingDrawCalls || CurrentRecording == null )
-			    return 0;
+				return 0;
 
-            return CurrentRecording.OnStartStaticDraw();
-        }
+			return CurrentRecording.OnStartStaticDraw();
+		}
 
-        public void OnFinishStaticDraw()
-        {
+		public void OnFinishStaticDraw()
+		{
 			if( !CatchingDrawCalls )
-			    return;
+				return;
 
-            CurrentRecording?.OnFinishStaticDraw();
-        }
+			CurrentRecording?.OnFinishStaticDraw();
+		}
 
-        public void OnStaticDraw( int id )
-        {
+		public void OnStaticDraw( int id )
+		{
 			if( !CatchingDrawCalls )
-			    return;
+				return;
 
 			CurrentRecording?.OnStaticDraw( id );
-        }
+		}
 
-        public bool WantsTexture( object tex )
-        {
-            if ( CurrentRecording == null )
-                return false;
+		public bool WantsTexture( object tex )
+		{
+			if( CurrentRecording == null )
+				return false;
 
-            return CurrentRecording.WantsTexture( tex );
-        }
+			return CurrentRecording.WantsTexture( tex );
+		}
 
-        public void SendTextureData( object tex, int width, int height, byte[] data )
-        {
-            CurrentRecording?.SendTextureData( tex, width, height, data );
-        }
+		public void SendTextureData( object tex , int width , int height , byte [] data )
+		{
+			CurrentRecording?.SendTextureData( tex , width , height , data );
+		}
 
 		public void OnStartDrawingObject( object obj )
 		{
