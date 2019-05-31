@@ -32,7 +32,7 @@ namespace MatchTest
 
 
 
-			GlobalData globalData = await defaultDatabase.GetGlobalData();
+			GlobalData globalData = await defaultDatabase.GetData<GlobalData>();
 
 			await liteDb.SaveData( globalData );
 
@@ -54,13 +54,13 @@ namespace MatchTest
 
 			foreach( var roundName in globalData.Rounds )
 			{
-				RoundData roundData = await defaultDatabase.GetRoundData( roundName );
+				RoundData roundData = await defaultDatabase.GetData<RoundData>( roundName );
 				await liteDb.SaveData( roundData );
 			}
 
 			foreach( var matchName in globalData.Matches )
 			{
-				MatchData matchData = await defaultDatabase.GetMatchData( matchName );
+				MatchData matchData = await defaultDatabase.GetData<MatchData>( matchName );
 				await liteDb.SaveData( matchData );
 			}
 

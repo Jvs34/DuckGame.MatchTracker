@@ -335,13 +335,13 @@ namespace MatchUploader
 
 			var allEvents = await GetAllCalendarEvents();
 
-			GlobalData globalData = await gameDatabase.GetGlobalData();
+			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
 
 			List<Task<Event>> matchTasks = new List<Task<Event>>();
 
 			foreach( string matchName in globalData.Matches )
 			{
-				string strippedName = GetStrippedMatchName( await gameDatabase.GetMatchData( matchName ) );
+				string strippedName = GetStrippedMatchName( await gameDatabase.GetData<MatchData>( matchName ) );
 
 				//if this event is already added, don't even call this
 
@@ -375,7 +375,7 @@ namespace MatchUploader
 
 		public async Task<Event> GetCalendarEventForMatch( string matchName )
 		{
-			MatchData matchData = await gameDatabase.GetMatchData( matchName );
+			MatchData matchData = await gameDatabase.GetData<MatchData>( matchName );
 
 			var youtubeSnippet = await GetPlaylistDataForMatch( matchData );
 
@@ -633,13 +633,13 @@ namespace MatchUploader
 			var ytClient = new YoutubeExplode.YoutubeClient();
 
 			//just test with the first one for now
-			GlobalData globalData = await gameDatabase.GetGlobalData();
+			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
 
 			//go through each round, see if they already have a discord mirror, otherwise reupload
 
 			foreach( string roundName in globalData.Rounds )
 			{
-				RoundData roundData = await gameDatabase.GetRoundData( roundName );
+				RoundData roundData = await gameDatabase.GetData<RoundData>( roundName );
 				if( !string.IsNullOrWhiteSpace( roundData.YoutubeUrl ) && roundData.VideoType == VideoType.VideoLink )
 				{
 					VideoMirrorData discordMirror = roundData.VideoMirrors.FirstOrDefault( mirror => mirror.MirrorType == VideoMirrorType.Discord );
@@ -682,7 +682,7 @@ namespace MatchUploader
 						};
 
 						roundData.VideoMirrors.Add( discordMirror );
-						await gameDatabase.SaveRoundData( roundName , roundData );
+						await gameDatabase.SaveData( roundData );
 						Console.WriteLine( $"Uploaded {roundName}" );
 					}
 				}
@@ -699,7 +699,7 @@ namespace MatchUploader
 			{
 				await UpdateUploadProgress( remaining );
 
-				MatchData matchData = ( !string.IsNullOrEmpty( roundData.MatchName ) ) ? await gameDatabase.GetMatchData( roundData.MatchName ) : null;
+				MatchData matchData = ( !string.IsNullOrEmpty( roundData.MatchName ) ) ? await gameDatabase.GetData<MatchData>( roundData.MatchName ) : null;
 				List<PlaylistItem> playlistItems = null;
 
 				if( matchData != null && string.IsNullOrEmpty( matchData.YoutubeUrl ) )
@@ -707,7 +707,7 @@ namespace MatchUploader
 					Playlist playlist = await CreatePlaylist( matchData );
 					if( playlist != null )
 					{
-						await gameDatabase.SaveMatchData( roundData.MatchName , matchData );
+						await gameDatabase.SaveData( matchData );
 					}
 				}
 
@@ -825,7 +825,7 @@ namespace MatchUploader
 
 		private async Task SearchMap( string mapGuid )
 		{
-			GlobalData globalData = await gameDatabase.GetGlobalData();
+			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
 			await gameDatabase.IterateOverAllRoundsOrMatches( false , async ( round ) =>
 			{
 				RoundData roundData = (RoundData) round;
@@ -843,9 +843,9 @@ namespace MatchUploader
 
 		private async Task AddYoutubeIdToRound( string roundName , string videoId )
 		{
-			RoundData roundData = await gameDatabase.GetRoundData( roundName );
+			RoundData roundData = await gameDatabase.GetData<RoundData>( roundName );
 			roundData.YoutubeUrl = videoId;
-			await gameDatabase.SaveRoundData( roundName , roundData );
+			await gameDatabase.SaveData( roundData );
 		}
 
 
@@ -887,7 +887,7 @@ namespace MatchUploader
 
 		private async Task RemoveVideoFile( string roundName )
 		{
-			RoundData roundData = await gameDatabase.GetRoundData( roundName );
+			RoundData roundData = await gameDatabase.GetData<RoundData>( roundName );
 
 			//don't accidentally delete stuff that somehow doesn't have a url set
 			if( roundData.YoutubeUrl == null )
@@ -940,7 +940,7 @@ namespace MatchUploader
 
 		private async Task ProcessVideo( string roundName )
 		{
-			RoundData roundData = await gameDatabase.GetRoundData( roundName );
+			RoundData roundData = await gameDatabase.GetData<RoundData>( roundName );
 
 			string videoPath = gameDatabase.SharedSettings.GetRoundVideoPath( roundName );
 
@@ -997,7 +997,7 @@ namespace MatchUploader
 			FFmpeg.ExecutablesPath = tempFFmpegFolder;
 			await FFmpeg.GetLatestVersion();
 
-			GlobalData globalData = await gameDatabase.GetGlobalData();
+			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
 
 
 			List<Task> processingTasks = new List<Task>();

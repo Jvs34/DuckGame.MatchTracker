@@ -184,7 +184,7 @@ namespace MatchBot
 			List<RecognizedPlayerData> playerTargets = new List<RecognizedPlayerData>();
 			//List<PlayerData> players = new List<PlayerData>();
 
-			GlobalData globalData = await Database.GetGlobalData();
+			GlobalData globalData = await Database.GetData<GlobalData>();
 
 			if( entities.TryGetValue( "Player_Name" , out List<string> playerNames ) )
 			{
@@ -344,7 +344,7 @@ namespace MatchBot
 			GameType gameType = entities.ContainsKey( "Round" ) ? GameType.Round : GameType.Match;
 			string gameTypeString = gameType == GameType.Match ? "matches" : "rounds";
 
-			GlobalData globalData = await Database.GetGlobalData();
+			GlobalData globalData = await Database.GetData<GlobalData>();
 
 			//if there's 0 recognized player objects that means that the user wants to know who won the most, hopefully
 			if( recognizedPlayerEntities.Count == 0 )
@@ -414,7 +414,7 @@ namespace MatchBot
 
 				if( recognizedPlayer.TargetType == TargetType.Everyone )
 				{
-					GlobalData gd = await Database.GetGlobalData();
+					GlobalData gd = await Database.GetData<GlobalData>();
 					timesPlayed = gameType == GameType.Match ? gd.Matches.Count : gd.Rounds.Count;
 
 					await Database.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
@@ -431,7 +431,7 @@ namespace MatchBot
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
 				{
-					GlobalData gd = await Database.GetGlobalData();
+					GlobalData gd = await Database.GetData<GlobalData>();
 
 					await Database.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{

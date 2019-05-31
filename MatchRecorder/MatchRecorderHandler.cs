@@ -55,7 +55,7 @@ namespace MatchRecorder
 
 			if( !File.Exists( GameDatabase.SharedSettings.GetGlobalPath() ) )
 			{
-				GameDatabase.SaveGlobalData( new MatchTracker.GlobalData() ).Wait();
+				GameDatabase.SaveData( new MatchTracker.GlobalData() ).Wait();
 			}
 
 #if DEBUG
@@ -104,11 +104,11 @@ namespace MatchRecorder
 				LevelName = lvl.level ,
 				Players = new List<PlayerData>() ,
 				TimeStarted = startTime ,
+				Name = GameDatabase.SharedSettings.DateTimeToString( startTime ) ,
 				IsCustomLevel = false ,
 				RecordingType = RecorderHandler.ResultingRecordingType ,
 			};
 
-			CurrentRound.Name = GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted );
 
 			if( lvl is GameLevel gl )
 			{
@@ -178,11 +178,11 @@ namespace MatchRecorder
 
 			CurrentRound.TimeEnded = endTime;
 
-			GameDatabase.SaveRoundData( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted ) , CurrentRound ).Wait();
+			GameDatabase.SaveData( CurrentRound ).Wait();
 
-			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
+			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 			globalData.Rounds.Add( CurrentRound.Name );
-			GameDatabase.SaveGlobalData( globalData ).Wait();
+			GameDatabase.SaveData( globalData ).Wait();
 
 			RoundData newRoundData = CurrentRound;
 
@@ -265,7 +265,7 @@ namespace MatchRecorder
 
 		public void GatherLevelData()
 		{
-			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
+			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
 			var deathmatchLevels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
 
@@ -287,7 +287,7 @@ namespace MatchRecorder
 
 			}
 
-			GameDatabase.SaveGlobalData( globalData );
+			GameDatabase.SaveData( globalData );
 		}
 
 		private MatchTracker.LevelData CreateLevelDataFromLevel( string levelId )
@@ -313,7 +313,7 @@ namespace MatchRecorder
 		{
 			string userId = Network.isActive ? profile.steamID.ToString() : profile.id;
 
-			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
+			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
 			PlayerData pd = globalData.Players.Find( x => x.UserId == userId );
 
@@ -369,9 +369,8 @@ namespace MatchRecorder
 			CurrentMatch = new MatchData
 			{
 				TimeStarted = DateTime.Now ,
+				Name = GameDatabase.SharedSettings.DateTimeToString( DateTime.Now ) ,
 			};
-
-			CurrentMatch.Name = GameDatabase.SharedSettings.DateTimeToString( CurrentMatch.TimeStarted );
 
 			return CurrentMatch;
 		}
@@ -399,10 +398,10 @@ namespace MatchRecorder
 				CurrentMatch.Winner = CreateTeamDataFromTeam( winner , CurrentMatch );
 			}
 
-			GameDatabase.SaveMatchData( GameDatabase.SharedSettings.DateTimeToString( CurrentMatch.TimeStarted ) , CurrentMatch ).Wait();
+			GameDatabase.SaveData( CurrentMatch ).Wait();
 
 			//also add this match to the globaldata as well
-			MatchTracker.GlobalData globalData = GameDatabase.GetGlobalData().Result;
+			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 			globalData.Matches.Add( CurrentMatch.Name );
 
 			//try adding the players from the matchdata into the globaldata
@@ -415,7 +414,7 @@ namespace MatchRecorder
 				}
 			}
 
-			GameDatabase.SaveGlobalData( globalData ).Wait();
+			GameDatabase.SaveData( globalData ).Wait();
 
 			MatchData newMatchData = CurrentMatch;
 

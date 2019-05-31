@@ -144,7 +144,7 @@ namespace MatchTracker
 			if( callback == null )
 				return;
 
-			GlobalData globalData = await GetGlobalData();
+			GlobalData globalData = await GetData<GlobalData>();
 
 			List<string> matchesOrRounds = matchOrRound ? globalData.Matches : globalData.Rounds;
 
@@ -225,7 +225,7 @@ namespace MatchTracker
 		}
 
 
-		public async Task SaveData<T>( T data , string dataId = "" ) where T : IDatabaseEntry
+		public async Task SaveData<T>( T data ) where T : IDatabaseEntry
 		{
 			if( typeof( T ) == typeof( GlobalData ) )
 			{
@@ -233,11 +233,11 @@ namespace MatchTracker
 			}
 			else if( typeof( T ) == typeof( MatchData ) )
 			{
-				await SaveMatchData( dataId , data as MatchData );
+				await SaveMatchData( data.DatabaseIndex , data as MatchData );
 			}
 			else if( typeof( T ) == typeof( RoundData ) )
 			{
-				await SaveRoundData( dataId , data as RoundData );
+				await SaveRoundData( data.DatabaseIndex , data as RoundData );
 			}
 			else
 			{

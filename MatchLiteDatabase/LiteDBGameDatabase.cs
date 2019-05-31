@@ -40,38 +40,38 @@ namespace MatchTracker
 
 			//enable the dbrefs when that's over with
 			Mapper.Entity<GlobalData>()
-				.Id( x => x.Name )
+				.Id( x => x.DatabaseIndex )
 				.DbRef( x => x.Players )
 				.DbRef( x => x.Levels )
 				.DbRef( x => x.Tags )
 				;
 
 			Mapper.Entity<MatchData>()
-				.Id( x => x.Name )
+				.Id( x => x.DatabaseIndex )
 				.DbRef( x => x.Players )
 				.DbRef( x => x.Tags )
 				;
 
 			Mapper.Entity<RoundData>()
-				.Id( x => x.Name )
+				.Id( x => x.DatabaseIndex )
 				.DbRef( x => x.Players )
 				.DbRef( x => x.Tags )
 				;
 
 			Mapper.Entity<PlayerData>()
-				.Id( x => x.UserId );
+				.Id( x => x.DatabaseIndex );
 
-			
+
 			Mapper.Entity<TeamData>()
 				.DbRef( x => x.Players );
 
 
 			Mapper.Entity<TagData>()
-				.Id( x => x.Name )
+				.Id( x => x.DatabaseIndex )
 				;
 
 			Mapper.Entity<LevelData>()
-				.Id( x => x.LevelName )
+				.Id( x => x.DatabaseIndex )
 				.DbRef( x => x.Tags )
 				;
 		}
@@ -85,7 +85,7 @@ namespace MatchTracker
 		public async Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false )
 		{
 			await Task.CompletedTask;
-			return await GetData<MatchData>( matchName );	
+			return await GetData<MatchData>( matchName );
 		}
 
 		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
@@ -160,7 +160,7 @@ namespace MatchTracker
 			}
 		}
 
-		public async Task SaveData<T>( T data , string dataId = "" ) where T : IDatabaseEntry
+		public async Task SaveData<T>( T data ) where T : IDatabaseEntry
 		{
 			//LiteDB does not need the data index as each class has been mapped to its own index up above with the BsonMapper
 			await Task.CompletedTask;

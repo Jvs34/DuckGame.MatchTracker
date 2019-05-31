@@ -56,24 +56,24 @@ namespace MatchTracker
 			//firebase connect
 		}
 
-		public async Task SaveData<T>( T data , string dataId = "" ) where T : IDatabaseEntry
+		public async Task SaveData<T>( T data ) where T : IDatabaseEntry
 		{
 			//firebase save
 		}
 
 		public async Task SaveGlobalData( GlobalData globalData )
 		{
-			await SaveData( globalData , globalData.Name );
+			await SaveData( globalData );
 		}
 
 		public async Task SaveMatchData( string matchName , MatchData matchData )
 		{
-			await SaveData( matchData , matchName );
+			await SaveData( matchData );
 		}
 
 		public async Task SaveRoundData( string roundName , RoundData roundData )
 		{
-			await SaveData( roundData , roundName );
+			await SaveData( roundData );
 		}
 	}
 }
