@@ -76,24 +76,6 @@ namespace MatchTracker
 				;
 		}
 
-		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
-		{
-			await Task.CompletedTask;
-			return await GetData<GlobalData>();
-		}
-
-		public async Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false )
-		{
-			await Task.CompletedTask;
-			return await GetData<MatchData>( matchName );
-		}
-
-		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
-		{
-			await Task.CompletedTask;
-			return await GetData<RoundData>( roundName );
-		}
-
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
 		{
 			CheckDatabase();
@@ -135,21 +117,6 @@ namespace MatchTracker
 			Database = UseStream
 				? new LiteDatabase( DatabaseStream , Mapper )
 				: new LiteDatabase( FilePath , Mapper );
-		}
-
-		public async Task SaveGlobalData( GlobalData globalData )
-		{
-			await SaveData( globalData );
-		}
-
-		public async Task SaveMatchData( string matchName , MatchData matchData )
-		{
-			await SaveData( matchData );
-		}
-
-		public async Task SaveRoundData( string roundName , RoundData roundData )
-		{
-			await SaveData( roundData );
 		}
 
 		private void CheckDatabase()
