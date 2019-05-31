@@ -1,13 +1,15 @@
-﻿using Firebase.Database;
-using Firebase.Database.Offline;
+﻿using Firebase;
+using Firebase.Database;
+using Firebase.Database.Query;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public class FirebaseGameDatabase : IGameDatabase
+	public class FirebaseGameDatabase : IGameDatabase, IHttpClientFactory, IHttpClientProxy
 	{
 		public SharedSettings SharedSettings { get; set; }
 
@@ -15,20 +17,28 @@ namespace MatchTracker
 
 		private FirebaseClient FirebaseClient { get; }
 
-		public FirebaseGameDatabase( string firebaseUrl  )
+		private HttpClient HttpClient { get; }
+
+		public FirebaseGameDatabase( string firebaseUrl , HttpClient httpClient , string token )
 		{
+			HttpClient = httpClient;
+
 			FirebaseClient = new FirebaseClient( firebaseUrl , new FirebaseOptions()
 			{
-				OfflineDatabaseFactory = ( t , s ) => new OfflineDatabase( t , s ) ,
+				HttpClientFactory = this ,
+				JsonSerializerSettings = new JsonSerializerSettings()
+				{
+					Formatting = Formatting.Indented
+				} ,
+				AuthTokenAsyncFactory = () => Task.FromResult( token ) ,
 			} );
 
-			var gay = new OfflineDatabase( typeof( GlobalData ) , ""  );
-			var gay2 = gay [""];
 		}
 
 		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
 		{
-			throw new NotImplementedException();
+			var collection = FirebaseClient.Child( typeof( T ).Name ).Child( string.IsNullOrEmpty( dataId ) ? typeof( T ).Name : dataId );
+			return await collection.OnceSingleAsync<T>();
 		}
 
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
@@ -38,12 +48,24 @@ namespace MatchTracker
 
 		public async Task Load()
 		{
-			//firebase connect
+			await GetData<GlobalData>();
 		}
+
+
 
 		public async Task SaveData<T>( T data ) where T : IDatabaseEntry
 		{
-			//firebase save
+			var collection = FirebaseClient.Child( typeof( T ).Name ).Child( data.DatabaseIndex );
+
+			await collection.PostAsync( data , false );
+		}
+
+		public IHttpClientProxy GetHttpClient( TimeSpan? timeout ) => this;
+
+		public HttpClient GetHttpClient() => HttpClient;
+
+		public void Dispose()
+		{
 		}
 	}
 }

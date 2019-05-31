@@ -21,6 +21,7 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.2.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
     <PackageReference Include="YoutubeExplode" Version="4.7.0-alpha" />
+    <ProjectReference Include="..\MatchFirebaseDatabase\MatchFirebaseDatabase.csproj" />
     <ProjectReference Include="..\MatchLiteDatabase\MatchLiteDatabase.csproj" />
     <ProjectReference Include="..\MatchShared.Replay\MatchShared.Replay.csproj" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />

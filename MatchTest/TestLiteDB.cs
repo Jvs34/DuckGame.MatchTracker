@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,28 +15,79 @@ namespace MatchTest
 	{
 		public async Task Test()
 		{
-			IGameDatabase defaultDatabase = new FileSystemGameDatabase();
-
-			IGameDatabase liteDb = new LiteDBGameDatabase();
-
 			var Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
 				.AddJsonFile( "shared.json" )
+				.AddJsonFile( "firebase.json" )
 			.Build();
+
+			IGameDatabase defaultDatabase = new FileSystemGameDatabase();
+
+			HttpClient httpClient = new HttpClient();
+
+			IGameDatabase liteDb = new FirebaseGameDatabase(
+				"https://duckgame-match-tracker.firebaseio.com/" ,
+				httpClient ,
+				Configuration ["FirebaseToken"]
+			);
+
+			//IGameDatabase liteDb = new LiteDBGameDatabase();
+
+
+
 
 			Configuration.Bind( defaultDatabase.SharedSettings );
 			Configuration.Bind( liteDb.SharedSettings );
 
 
-			await defaultDatabase.Load();
+			string importPath = @"C:\Users\Jvsth.000.000\Desktop\duckgayimport.json";
+
 			await liteDb.Load();
 
-
+			await defaultDatabase.Load();
 
 			GlobalData globalData = await defaultDatabase.GetData<GlobalData>();
+			/*
+			{
+				var mainCollection = new Dictionary<string , Dictionary<string , IDatabaseEntry>>();
 
-			await liteDb.SaveData( globalData );
+				mainCollection [nameof( GlobalData )] = new Dictionary<string , IDatabaseEntry>();
+				mainCollection [nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>();
+				mainCollection [nameof( RoundData )] = new Dictionary<string , IDatabaseEntry>();
 
+				mainCollection [nameof( GlobalData )] [globalData.DatabaseIndex] = globalData;
+
+				foreach( var roundName in globalData.Rounds )
+				{
+					RoundData roundData = await defaultDatabase.GetData<RoundData>( roundName );
+
+					mainCollection [nameof( RoundData )] [roundData.DatabaseIndex] = roundData;
+				}
+
+				foreach( var matchName in globalData.Matches )
+				{
+					MatchData matchData = await defaultDatabase.GetData<MatchData>( matchName );
+					mainCollection [nameof( MatchData )] [matchData.DatabaseIndex] = matchData;
+				}
+
+				using( var fileWriter = File.CreateText( importPath ) )
+				{
+					JsonSerializer serializer = new JsonSerializer()
+					{
+						Formatting = Formatting.Indented ,
+					};
+
+					serializer.Serialize( fileWriter , mainCollection );
+				}
+
+
+			}
+			*/
+
+
+			//await liteDb.SaveData( globalData );
+
+			/*
 			foreach( var ply in globalData.Players )
 			{
 				await liteDb.SaveData( ply );
@@ -50,8 +102,9 @@ namespace MatchTest
 			{
 				await liteDb.SaveData( tag );
 			}
+			*/
 
-
+			/*
 			foreach( var roundName in globalData.Rounds )
 			{
 				RoundData roundData = await defaultDatabase.GetData<RoundData>( roundName );
@@ -63,9 +116,7 @@ namespace MatchTest
 				MatchData matchData = await defaultDatabase.GetData<MatchData>( matchName );
 				await liteDb.SaveData( matchData );
 			}
-
-
-
+			*/
 		}
 	}
 }
