@@ -26,8 +26,8 @@ namespace MatchTracker
 
 		Task SaveRoundData( string roundName , RoundData roundData );
 
-		void SaveData<T>( T data , string dataId = "" );
+		Task SaveData<T>( T data , string dataId = "" ) where T : IDatabaseEntry;
 
-		T GetData<T>( string dataId = "" );
+		Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry;
 	}
 }

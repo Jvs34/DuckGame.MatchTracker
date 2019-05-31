@@ -3,7 +3,7 @@
 namespace MatchTracker
 {
 	//duck game networked profiles aren't all that networked really, you only get the name and id
-	public class PlayerData : IEquatable<PlayerData>, IComparable<PlayerData>
+	public class PlayerData : IDatabaseEntry , IEquatable<PlayerData>, IComparable<PlayerData>
 	{
 		public ulong DiscordId { get; set; }
 
@@ -14,6 +14,8 @@ namespace MatchTracker
 
 		//usually the steamid, if this is a localplayer it will be PROFILE1/2/3/4 whatever
 		public string UserId { get; set; }
+
+		public string DatabaseIndex => UserId;
 
 		public int CompareTo( PlayerData other )
 		{

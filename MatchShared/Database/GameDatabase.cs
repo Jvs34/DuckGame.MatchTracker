@@ -224,45 +224,46 @@ namespace MatchTracker
 			}
 		}
 
-		public void SaveData<T>( T data , string dataId = "" )
-		{
-			//bleh
 
+		public async Task SaveData<T>( T data , string dataId = "" ) where T : IDatabaseEntry
+		{
 			if( typeof( T ) == typeof( GlobalData ) )
 			{
-				SaveGlobalData( data as GlobalData ).Wait();
+				await SaveGlobalData( data as GlobalData );
 			}
 			else if( typeof( T ) == typeof( MatchData ) )
 			{
-				SaveMatchData( dataId , data as MatchData ).Wait();
+				await SaveMatchData( dataId , data as MatchData );
 			}
 			else if( typeof( T ) == typeof( RoundData ) )
 			{
-				SaveRoundData( dataId , data as RoundData ).Wait();
+				await SaveRoundData( dataId , data as RoundData );
+			}
+			else
+			{
+				throw new NotImplementedException( $"Missing check clause for GameDatabase SaveData{typeof( T )}!" );
 			}
 		}
 
-		public T GetData<T>( string dataId = "" )
+		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
 		{
-
-			/*
 			if( typeof( T ) == typeof( GlobalData ) )
 			{
-				return (T) GetGlobalData().Result;
+				return (T) (object) await GetGlobalData();
 			}
-			
 			else if( typeof( T ) == typeof( MatchData ) )
 			{
-				SaveMatchData( dataId , data as MatchData );
+				return (T) (object) await GetMatchData( dataId );
 			}
 			else if( typeof( T ) == typeof( RoundData ) )
 			{
-				SaveRoundData( dataId , data as RoundData );
+				return (T) (object) await GetRoundData( dataId );
 			}
-			*/
-
-
-			return default;
+			else
+			{
+				throw new NotImplementedException( $"Missing check clause for GameDatabase GetData{typeof( T )}!" );
+			}
 		}
+
 	}
 }

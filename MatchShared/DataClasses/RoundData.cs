@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MatchTracker
 {
-	public class RoundData : IPlayersList, IStartEnd, IWinner, IVideoUpload, IEquatable<RoundData>, IComparable<RoundData> , ITags
+	public class RoundData : IPlayersList, IStartEnd, IWinner, IVideoUpload, IEquatable<RoundData>, IComparable<RoundData> , ITags , IDatabaseEntry
 	{
 		public RecordingType RecordingType { get; set; }
 		public bool IsCustomLevel { get; set; }
@@ -13,6 +13,9 @@ namespace MatchTracker
 		public string LevelName { get; set; }
 		public string Name { get; set; }
 		public string MatchName { get; set; }
+
+		public string DatabaseIndex => Name;
+
 		public List<PlayerData> Players { get; set; } = new List<PlayerData>();
 		public List<TeamData> Teams { get; set; } = new List<TeamData>();
 		public DateTime TimeEnded { get; set; }

@@ -4,9 +4,11 @@ using System.Text;
 
 namespace MatchTracker
 {
-	public class VideoMirrorData
+	public class VideoMirrorData : IDatabaseEntry
 	{
 		public VideoMirrorType MirrorType { get; set; } = VideoMirrorType.Youtube;
 		public string URL { get; set; }
+
+		public string DatabaseIndex => URL;
 	}
 }

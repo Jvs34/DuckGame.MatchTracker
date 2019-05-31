@@ -3,7 +3,7 @@
 namespace MatchTracker
 {
 	//TODO
-	public class LevelData : ITags
+	public class LevelData : ITags , IDatabaseEntry
 	{
 		/// <summary>
 		/// The level's guid
@@ -38,5 +38,7 @@ namespace MatchTracker
 		public string Author { get; set; }
 
 		public List<TagData> Tags { get; set; } = new List<TagData>();
+
+		public string DatabaseIndex => LevelName;
 	}
 }

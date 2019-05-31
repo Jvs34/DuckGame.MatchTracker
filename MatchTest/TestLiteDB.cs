@@ -34,34 +34,34 @@ namespace MatchTest
 
 			GlobalData globalData = await defaultDatabase.GetGlobalData();
 
-			liteDb.SaveData( globalData );
+			await liteDb.SaveData( globalData );
 
 			foreach( var ply in globalData.Players )
 			{
-				liteDb.SaveData( ply );
+				await liteDb.SaveData( ply );
 			}
 
 			foreach( var lvl in globalData.Levels )
 			{
-				liteDb.SaveData( lvl );
+				await liteDb.SaveData( lvl );
 			}
-			
+
 			foreach( var tag in globalData.Tags )
 			{
-				liteDb.SaveData( tag );
+				await liteDb.SaveData( tag );
 			}
 
 
 			foreach( var roundName in globalData.Rounds )
 			{
 				RoundData roundData = await defaultDatabase.GetRoundData( roundName );
-				liteDb.SaveData( roundData );
+				await liteDb.SaveData( roundData );
 			}
 
 			foreach( var matchName in globalData.Matches )
 			{
 				MatchData matchData = await defaultDatabase.GetMatchData( matchName );
-				liteDb.SaveData( matchData );
+				await liteDb.SaveData( matchData );
 			}
 
 

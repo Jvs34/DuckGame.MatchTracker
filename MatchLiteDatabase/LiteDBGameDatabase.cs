@@ -79,19 +79,19 @@ namespace MatchTracker
 		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
 		{
 			await Task.CompletedTask;
-			return GetData<GlobalData>();
+			return await GetData<GlobalData>();
 		}
 
 		public async Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false )
 		{
 			await Task.CompletedTask;
-			return GetData<MatchData>( matchName );	
+			return await GetData<MatchData>( matchName );	
 		}
 
 		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
 		{
 			await Task.CompletedTask;
-			return GetData<RoundData>( roundName );
+			return await GetData<RoundData>( roundName );
 		}
 
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
@@ -139,20 +139,17 @@ namespace MatchTracker
 
 		public async Task SaveGlobalData( GlobalData globalData )
 		{
-			await Task.CompletedTask;
-			SaveData( globalData );
+			await SaveData( globalData );
 		}
 
 		public async Task SaveMatchData( string matchName , MatchData matchData )
 		{
-			await Task.CompletedTask;
-			SaveData( matchData );
+			await SaveData( matchData );
 		}
 
 		public async Task SaveRoundData( string roundName , RoundData roundData )
 		{
-			await Task.CompletedTask;
-			SaveData( roundData );
+			await SaveData( roundData );
 		}
 
 		private void CheckDatabase()
@@ -163,17 +160,20 @@ namespace MatchTracker
 			}
 		}
 
-		public void SaveData<T>( T data , string dataId = "" )
+		public async Task SaveData<T>( T data , string dataId = "" ) where T : IDatabaseEntry
 		{
 			//LiteDB does not need the data index as each class has been mapped to its own index up above with the BsonMapper
+			await Task.CompletedTask;
 
 			CheckDatabase();
 			var collection = Database.GetCollection<T>();
 			collection.Upsert( data );
 		}
 
-		public T GetData<T>( string dataId = "" )
+		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
 		{
+			await Task.CompletedTask;
+
 			if( string.IsNullOrEmpty( dataId ) )
 			{
 				dataId = typeof( T ).Name;

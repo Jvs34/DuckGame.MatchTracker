@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MatchTracker
 {
-	public class TagData
+	public class TagData : IDatabaseEntry
 	{
 		/// <summary>
 		/// Used for id of the emoji, stuff like :eggplant:
@@ -16,5 +16,7 @@ namespace MatchTracker
 		/// Unicode(?) of the emoji, stuff like 🍆
 		/// </summary>
 		public string Emoji { get; set; }
+
+		public string DatabaseIndex => Name;
 	}
 }
