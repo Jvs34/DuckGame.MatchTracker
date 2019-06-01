@@ -26,19 +26,15 @@ namespace MatchTest
 			HttpClient httpClient = new HttpClient();
 
 			IGameDatabase liteDb = new FirebaseGameDatabase(
-				"https://duckgame-match-tracker.firebaseio.com/" ,
-				httpClient ,
-				Configuration ["FirebaseToken"]
+				httpClient
 			);
 
 			//IGameDatabase liteDb = new LiteDBGameDatabase();
 
 
-
-
 			Configuration.Bind( defaultDatabase.SharedSettings );
 			Configuration.Bind( liteDb.SharedSettings );
-
+			Configuration.Bind( liteDb is FirebaseGameDatabase firedb ? firedb.FirebaseSettings : null );
 
 			string importPath = @"C:\Users\Jvsth.000.000\Desktop\duckgayimport.json";
 
