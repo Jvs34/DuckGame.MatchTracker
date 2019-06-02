@@ -29,7 +29,6 @@ namespace MatchRecorder
 		private readonly DiscordClient discordClient;
 		private readonly VoiceNextExtension voiceClient;
 		*/
-		private readonly DuckRecordingListener eventListener;
 		private Task connectToVoiceChannelTask;
 		private readonly MatchRecorderHandler mainHandler;
 
@@ -64,7 +63,6 @@ namespace MatchRecorder
 			mainHandler = parent;
 			//initialize the discord bot
 
-			eventListener = new DuckRecordingListener();
 			ffmpegChannels = new Dictionary<ulong , NamedPipeServerStream>();
 
 			if( string.IsNullOrEmpty( mainHandler.BotSettings.DiscordToken ) )

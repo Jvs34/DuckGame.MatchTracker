@@ -44,6 +44,8 @@ namespace MatchRecorder
 			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( BotSettings );
 
+
+			//TODO:this should probably be done by the database implementation itself
 			RoundsFolder = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.RoundsFolder );
 			MatchesFolder = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.MatchesFolder );
 
@@ -53,7 +55,10 @@ namespace MatchRecorder
 			if( !Directory.Exists( MatchesFolder ) )
 				Directory.CreateDirectory( MatchesFolder );
 
-			if( !File.Exists( GameDatabase.SharedSettings.GetGlobalPath() ) )
+
+			var globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
+
+			if( globalData == null )
 			{
 				GameDatabase.SaveData( new MatchTracker.GlobalData() ).Wait();
 			}
@@ -64,34 +69,12 @@ namespace MatchRecorder
 			RecorderHandler = new ObsRecorder( this );
 #endif
 
-
 		}
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
 		public bool IsLevelRecordable( Level level )
 		{
 			return level is GameLevel;
-		}
-
-		public void FixDuckPersonaPaths()
-		{
-			FieldInfo textureNameBinding = typeof( Tex2D ).GetField( "_textureName" , BindingFlags.NonPublic | BindingFlags.Instance );
-
-			foreach( DuckPersona persona in Persona.all )
-			{
-				//persona.skipSprite.color = new DuckGame.Color( persona.color );
-				textureNameBinding.SetValue( persona.skipSprite.texture , "skipSign" );
-				textureNameBinding.SetValue( persona.arrowSprite.texture , "startArrow" );
-				textureNameBinding.SetValue( persona.fingerPositionSprite.texture , "fingerPositions" );
-				textureNameBinding.SetValue( persona.featherSprite.texture , "feather" );
-				textureNameBinding.SetValue( persona.crowdSprite.texture , "seatDuck" );
-				textureNameBinding.SetValue( persona.sprite.texture , "duck" );
-				textureNameBinding.SetValue( persona.armSprite.texture , "duckArms" );
-				textureNameBinding.SetValue( persona.quackSprite.texture , "quackduck" );
-				textureNameBinding.SetValue( persona.controlledSprite.texture , "controlledDuck" );
-				textureNameBinding.SetValue( persona.defaultHead.texture , "hats/default" );
-			}
-
 		}
 
 		public RoundData StartCollectingRoundData( DateTime startTime )
@@ -430,6 +413,7 @@ namespace MatchRecorder
 				RecorderHandler.StartFrame();
 			}
 		}
+
 		public void OnTextureDraw( Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , Depth depth = default( Depth ) )
 		{
 			if( !RecorderHandler.IsRecording || Graphics.currentLayer == Layer.Console || Graphics.currentLayer == Layer.HUD )
@@ -503,7 +487,6 @@ namespace MatchRecorder
 		{
 			if( Level.current is null && value != null )
 			{
-				// MatchRecorderMod.Recorder?.FixDuckPersonaPaths();
 				MatchRecorderMod.Recorder?.GatherLevelData();
 			}
 
