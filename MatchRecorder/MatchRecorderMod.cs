@@ -9,12 +9,32 @@ namespace MatchRecorder
 	{
 		public static MatchRecorderHandler Recorder { get; set; }
 
+
+
 		public MatchRecorderMod()
 		{
 #if DEBUG
 			System.Diagnostics.Debugger.Launch();
 #endif
 			AppDomain.CurrentDomain.AssemblyResolve += ModResolve;
+		}
+
+		private void CopyDiscordSharpPlusDependencies( string modPath )
+		{
+			var duckgameDir = Directory.GetCurrentDirectory();
+
+			foreach( var fileName in MatchDiscordRecorder.DiscordRecorder.DSharpRequirements )
+			{
+				//can't exactly do it any other way, duck game mods are loaded by copying the dll into memory
+				var thirdPartyFile = Path.Combine( modPath , "ThirdParty" , fileName );
+				var outputFile = Path.Combine( duckgameDir , fileName );
+
+				if( File.Exists( thirdPartyFile ) && !File.Exists( outputFile ) )
+				{
+					File.Copy( thirdPartyFile , outputFile );
+				}
+
+			}
 		}
 
 		~MatchRecorderMod()
@@ -24,6 +44,8 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
+			CopyDiscordSharpPlusDependencies( configuration.directory );
+
 			Recorder = new MatchRecorderHandler( configuration.directory );
 			HarmonyInstance.Create( "MatchRecorder" ).PatchAll( Assembly.GetExecutingAssembly() );
 		}
