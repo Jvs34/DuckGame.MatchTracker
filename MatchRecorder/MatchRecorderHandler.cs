@@ -25,6 +25,8 @@ namespace MatchRecorder
 		public string RoundsFolder { get; }
 		private IConfigurationRoot Configuration { get; }
 
+		private static readonly PropertyInfo onlineIDField = typeof( Profile ).GetProperty( "onlineID" );
+
 		public MatchRecorderHandler( string modPath )
 		{
 			ModPath = modPath;
@@ -294,7 +296,14 @@ namespace MatchRecorder
 
 		private PlayerData CreatePlayerDataFromProfile( Profile profile , IWinner winnerObject )
 		{
-			string userId = Network.isActive ? profile.steamID.ToString() : profile.id;
+
+			string discordOrSteamID = onlineIDField != null
+				? onlineIDField.GetValue( profile ).ToString()
+				: profile.steamID.ToString();
+
+
+
+			string userId = Network.isActive ? discordOrSteamID : profile.id;
 
 			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 

@@ -183,13 +183,6 @@ namespace MatchRecorder
 				//connectToVoiceChannelTask = ConnectToVoiceChat();
 			}
 			*/
-
-			if( DuckGame.Recorder.currentRecording != eventListener )
-			{
-				DuckGame.Recorder.currentRecording = eventListener;
-			}
-
-			eventListener.UpdateEvents();
 		}
 
 		public void StartFrame()
