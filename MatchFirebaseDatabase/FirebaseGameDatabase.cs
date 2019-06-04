@@ -50,7 +50,7 @@ namespace MatchTracker
 					{
 						Formatting = Formatting.Indented
 					} ,
-					AuthTokenAsyncFactory = () => Task.FromResult( FirebaseSettings.FirebaseURL ) ,
+					AuthTokenAsyncFactory = () => Task.FromResult( FirebaseSettings.FirebaseToken ) ,
 				} );
 
 				await GetData<GlobalData>();

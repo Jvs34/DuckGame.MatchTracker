@@ -40,14 +40,15 @@ namespace MatchTest
 				Configuration.Bind( firedb.FirebaseSettings );
 			}
 
-			string importPath = @"C:\Users\Jvsth.000.000\Desktop\duckgayimport.json";
+			
 
 			await liteDb.Load();
 
-			await defaultDatabase.Load();
+			//await defaultDatabase.Load();
 
 			GlobalData globalData = await defaultDatabase.GetData<GlobalData>();
 			/*
+			string importPath = @"C:\Users\Jvsth.000.000\Desktop\duckgayimport.json";
 			{
 				var mainCollection = new Dictionary<string , Dictionary<string , IDatabaseEntry>>();
 

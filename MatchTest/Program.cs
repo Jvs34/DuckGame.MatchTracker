@@ -15,11 +15,10 @@ namespace MatchTest
 		{
 			//await new TestEF().Test();
 			//await new TestYoutubeExplode().Test();
-			//await new TestLiteDB().Test();
+			await new TestLiteDB().Test();
 			//await new TestReplay().Test();
 
-			await new FixBullshit().Run();
-
+			
 			await Task.CompletedTask;
 			Console.ReadLine();
 		}
