@@ -34,7 +34,11 @@ namespace MatchTest
 
 			Configuration.Bind( defaultDatabase.SharedSettings );
 			Configuration.Bind( liteDb.SharedSettings );
-			Configuration.Bind( liteDb is FirebaseGameDatabase firedb ? firedb.FirebaseSettings : null );
+
+			if( liteDb is FirebaseGameDatabase firedb )
+			{
+				Configuration.Bind( firedb.FirebaseSettings );
+			}
 
 			string importPath = @"C:\Users\Jvsth.000.000\Desktop\duckgayimport.json";
 

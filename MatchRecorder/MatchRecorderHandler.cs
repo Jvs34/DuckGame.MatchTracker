@@ -311,6 +311,11 @@ namespace MatchRecorder
 
 			if( pd == null )
 			{
+				pd = globalData.Players.Find( x => x.DiscordId.ToString().Equals( userId ) );
+			}
+
+			if( pd == null )
+			{
 				pd = new PlayerData
 				{
 					UserId = userId ,
