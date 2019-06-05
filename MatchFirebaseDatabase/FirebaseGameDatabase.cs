@@ -15,7 +15,7 @@ namespace MatchTracker
 
 		public bool ReadOnly => false;
 
-		public FirebaseClient FirebaseClient { get; private set; }
+		public FirebaseClient Client { get; private set; }
 
 		private HttpClient HttpClient { get; }
 
@@ -29,7 +29,7 @@ namespace MatchTracker
 		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
 		{
 			CheckDatabase();
-			var collection = FirebaseClient.Child( typeof( T ).Name ).Child( string.IsNullOrEmpty( dataId ) ? typeof( T ).Name : dataId );
+			var collection = Client.Child( typeof( T ).Name ).Child( string.IsNullOrEmpty( dataId ) ? typeof( T ).Name : dataId );
 			return await collection.OnceSingleAsync<T>();
 		}
 
@@ -41,9 +41,9 @@ namespace MatchTracker
 
 		public async Task Load()
 		{
-			if( FirebaseClient == null )
+			if( Client == null )
 			{
-				FirebaseClient = new FirebaseClient( FirebaseSettings.FirebaseURL , new FirebaseOptions()
+				Client = new FirebaseClient( FirebaseSettings.FirebaseURL , new FirebaseOptions()
 				{
 					HttpClientFactory = this ,
 					JsonSerializerSettings = new JsonSerializerSettings()
@@ -59,7 +59,7 @@ namespace MatchTracker
 
 		private void CheckDatabase()
 		{
-			if( FirebaseClient == null )
+			if( Client == null )
 			{
 				throw new NullReferenceException( "Database was not loaded, please call FirebaseGameDatabase.Load first!" );
 			}
@@ -69,7 +69,7 @@ namespace MatchTracker
 		{
 			CheckDatabase();
 
-			var collection = FirebaseClient.Child( typeof( T ).Name ).Child( data.DatabaseIndex );
+			var collection = Client.Child( typeof( T ).Name ).Child( data.DatabaseIndex );
 
 			await collection.PostAsync( data , false );
 		}

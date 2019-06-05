@@ -40,8 +40,6 @@ namespace MatchTest
 				Configuration.Bind( firedb.FirebaseSettings );
 			}
 
-			
-
 			await liteDb.Load();
 
 			//await defaultDatabase.Load();

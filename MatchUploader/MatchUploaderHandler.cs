@@ -2,6 +2,7 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
 using Google.Apis.Calendar.v3.Data;
+using Google.Apis.Http;
 using Google.Apis.Services;
 using Google.Apis.Upload;
 using Google.Apis.YouTube.v3;
@@ -48,18 +49,16 @@ namespace MatchUploader
 
 		//private AuthenticationResult microsoftGraphCredentials;
 		private IConfigurationRoot Configuration { get; }
-		private JsonSerializerSettings JsonSettings { get; }
 
+
+		/// <summary>
+		/// Only to be used by the youtube downloader
+		/// </summary>
+		private HttpClient NormalHttpClient { get; } = new HttpClient();
 
 		public MatchUploaderHandler( string [] args )
 		{
-
 			gameDatabase = new FileSystemGameDatabase();
-
-			JsonSettings = new JsonSerializerSettings()
-			{
-				PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
-			};
 
 			uploaderSettings = new UploaderSettings();
 			botSettings = new BotSettings();
@@ -529,7 +528,7 @@ namespace MatchUploader
 			Console.WriteLine( "Finished loading the database" );
 		}
 
-		public async Task Run()
+		public async Task RunAsync()
 		{
 			await LoadDatabase();
 			await DoLogin();
@@ -548,6 +547,9 @@ namespace MatchUploader
 			await CommitGitChanges();
 			await UploadAllRounds();
 
+			uploaderSettings.LastRan = DateTime.Now;
+
+			await SaveSettings();
 		}
 
 		//in this context, settings are only the uploaderSettings
@@ -572,7 +574,7 @@ namespace MatchUploader
 
 				RoundData roundData = (RoundData) round;
 
-				if( roundData.RecordingType == RecordingType.Video && string.IsNullOrEmpty( roundData.YoutubeUrl ) )
+				if( roundData.RecordingType == RecordingType.Video && string.IsNullOrEmpty( roundData.YoutubeUrl ) && File.Exists( gameDatabase.SharedSettings.GetRoundVideoPath( roundData.Name ) ) )
 				{
 					uploadableRounds.Add( roundData );
 				}
@@ -630,7 +632,7 @@ namespace MatchUploader
 				return;
 			}
 
-			var ytClient = new YoutubeExplode.YoutubeClient();
+			var ytClient = new YoutubeExplode.YoutubeClient( NormalHttpClient );
 
 			//just test with the first one for now
 			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
