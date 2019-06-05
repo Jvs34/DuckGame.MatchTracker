@@ -569,7 +569,7 @@ namespace MatchUploader
 			{
 				if( uploadableRounds.Count >= 100 )
 				{
-					return;
+					return false;
 				}
 
 				RoundData roundData = (RoundData) round;
@@ -580,6 +580,7 @@ namespace MatchUploader
 				}
 
 				await Task.CompletedTask;
+				return true;
 			} );
 
 			return uploadableRounds.OrderBy( roundData => roundData.TimeStarted );
@@ -836,10 +837,12 @@ namespace MatchUploader
 				{
 					string youtubeUrl = $"https://www.youtube.com/watch?v={roundData.YoutubeUrl}";
 					Process.Start( "cmd" , $"/c start {youtubeUrl}" );
+					return false;
 				}
 
 
 				await Task.CompletedTask;
+				return true;
 			} );
 		}
 

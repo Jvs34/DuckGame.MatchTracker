@@ -76,7 +76,7 @@ namespace MatchTracker
 				;
 		}
 
-		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
+		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task<bool>> callback )
 		{
 			CheckDatabase();
 			List<Task> callbackTasks = new List<Task>();

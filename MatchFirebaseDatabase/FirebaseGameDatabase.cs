@@ -33,7 +33,7 @@ namespace MatchTracker
 			return await collection.OnceSingleAsync<T>();
 		}
 
-		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task> callback )
+		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task<bool>> callback )
 		{
 			CheckDatabase();
 			throw new NotImplementedException( "IterateOverAllRoundsOrMatches needs a more sensible way to be implemented quite honestly" );

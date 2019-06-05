@@ -268,6 +268,7 @@ namespace MatchBot
 					}
 				}
 				await Task.CompletedTask;
+				return true;
 			} );
 
 			return (wins, losses);
@@ -302,6 +303,7 @@ namespace MatchBot
 							}
 						}
 						await Task.CompletedTask;
+						return true;
 					} );
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
@@ -322,6 +324,7 @@ namespace MatchBot
 							}
 						}
 						await Task.CompletedTask;
+						return true;
 					} );
 				}
 
@@ -427,6 +430,7 @@ namespace MatchBot
 							}
 						}
 						await Task.CompletedTask;
+						return true;
 					} );
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
@@ -446,6 +450,7 @@ namespace MatchBot
 								}
 							}
 						}
+						return true;
 						await Task.CompletedTask;
 					} );
 				}
