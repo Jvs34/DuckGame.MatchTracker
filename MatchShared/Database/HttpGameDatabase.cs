@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,45 +9,71 @@ using System.Web;
 
 namespace MatchTracker
 {
-	public class HttpGameDatabase : GameDatabase
+	public class HttpGameDatabase : IGameDatabase
 	{
 		private HttpClient Client { get; }
-		private JsonSerializerSettings JsonSettings { get; }
-		public override bool ReadOnly => true;
+
+		public bool ReadOnly => true;
+
+		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
+
+		private JsonSerializer Serializer { get; } = new JsonSerializer()
+		{
+			Formatting = Formatting.Indented ,
+			PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
+		};
 
 		public HttpGameDatabase( HttpClient httpClient )
 		{
 			Client = httpClient;
+		}
 
-			JsonSettings = new JsonSerializerSettings()
+
+		public async Task Load()
+		{
+			await Task.CompletedTask;
+		}
+
+		public async Task SaveData<T>( T data ) where T : IDatabaseEntry
+		{
+			await Task.CompletedTask;
+		}
+
+		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
+		{
+			T data = default;
+
+			string url;
+
+			if( typeof( T ) == typeof( GlobalData ) )
 			{
-				PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
-			};
+				url = SharedSettings.GetGlobalPath( true );
+			}
+			else if( typeof( T ) == typeof( MatchData ) )
+			{
+				url = SharedSettings.GetMatchPath( dataId , true );
+			}
+			else if( typeof( T ) == typeof( RoundData ) )
+			{
+				url = SharedSettings.GetRoundPath( dataId , true );
+			}
+			else
+			{
+				throw new NotImplementedException( $"Cannot get datatype {typeof( T )} in GetData!!!" );
+			}
 
-			LoadGlobalDataDelegate += LoadDatabaseGlobalDataWeb;
-			LoadMatchDataDelegate += LoadDatabaseMatchDataWeb;
-			LoadRoundDataDelegate += LoadDatabaseRoundDataWeb;
-		}
+			if( !string.IsNullOrEmpty( url ) )
+			{
+				var responseStream = await Client.GetStreamAsync( url );
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings )
-		{
-			var response = await Client.GetStringAsync( sharedSettings.GetGlobalPath( true ) );
-			Console.WriteLine( "Loading GlobalData" );
-			return JsonConvert.DeserializeObject<GlobalData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
-		}
+				using( StreamReader reader = new StreamReader( responseStream ) )
+				using( JsonTextReader jsonReader = new JsonTextReader( reader ) )
+				{
+					data = Serializer.Deserialize<T>( jsonReader );
+				}
+			}
 
-		private async Task<MatchData> LoadDatabaseMatchDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
-		{
-			var response = await Client.GetStringAsync( sharedSettings.GetMatchPath( matchName , true ) );
-			Console.WriteLine( $"Loading MatchData {matchName}" );
-			return JsonConvert.DeserializeObject<MatchData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
-		}
-
-		private async Task<RoundData> LoadDatabaseRoundDataWeb( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
-		{
-			var response = await Client.GetStringAsync( sharedSettings.GetRoundPath( roundName , true ) );
-			Console.WriteLine( $"Loading RoundData {roundName}" );
-			return JsonConvert.DeserializeObject<RoundData>( HttpUtility.HtmlDecode( response ) , JsonSettings );
+			return data;
 		}
 	}
 }
