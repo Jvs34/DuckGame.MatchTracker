@@ -11,7 +11,7 @@ namespace MatchTracker
 {
 	public class FirebaseGameDatabase : IGameDatabase, IHttpClientFactory, IHttpClientProxy
 	{
-		public SharedSettings SharedSettings { get; set; }
+		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
 
 		public bool ReadOnly => false;
 
@@ -36,7 +36,25 @@ namespace MatchTracker
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task<bool>> callback )
 		{
 			CheckDatabase();
-			throw new NotImplementedException( "IterateOverAllRoundsOrMatches needs a more sensible way to be implemented quite honestly" );
+
+			if( callback == null )
+				return;
+
+			GlobalData globalData = await GetData<GlobalData>();
+
+			foreach( string matchOrRoundName in matchOrRound ? globalData.Matches : globalData.Rounds )
+			{
+				IWinner iterateItem = matchOrRound ?
+					await GetData<MatchData>( matchOrRoundName ) as IWinner :
+					await GetData<RoundData>( matchOrRoundName ) as IWinner;
+
+				bool shouldContinue = await callback( iterateItem );
+
+				if( !shouldContinue )
+				{
+					break;
+				}
+			}
 		}
 
 		public async Task Load()

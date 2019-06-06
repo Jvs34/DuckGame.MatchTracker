@@ -79,25 +79,22 @@ namespace MatchTracker
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task<bool>> callback )
 		{
 			CheckDatabase();
-			List<Task> callbackTasks = new List<Task>();
 
-			IEnumerable<IWinner> allMatchesOrRounds;
+			GlobalData globalData = await GetData<GlobalData>();
 
-			if( matchOrRound )
+			foreach( string matchOrRoundName in matchOrRound ? globalData.Matches : globalData.Rounds )
 			{
-				allMatchesOrRounds = Database.GetCollection<MatchData>().IncludeAll().FindAll();
-			}
-			else
-			{
-				allMatchesOrRounds = Database.GetCollection<RoundData>().IncludeAll().FindAll();
-			}
+				IWinner iterateItem = matchOrRound ?
+					await GetData<MatchData>( matchOrRoundName ) as IWinner :
+					await GetData<RoundData>( matchOrRoundName ) as IWinner;
 
-			foreach( var winnerObj in allMatchesOrRounds )
-			{
-				callbackTasks.Add( callback( winnerObj ) );
-			}
+				bool shouldContinue = await callback( iterateItem );
 
-			await Task.WhenAll( callbackTasks );
+				if( !shouldContinue )
+				{
+					break;
+				}
+			}
 		}
 
 		public async Task Load()

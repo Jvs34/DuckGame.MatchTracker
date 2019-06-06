@@ -42,47 +42,21 @@ namespace MatchTest
 
 			await liteDb.Load();
 
-			//await defaultDatabase.Load();
+			await defaultDatabase.Load();
 
-			GlobalData globalData = await defaultDatabase.GetData<GlobalData>();
-			/*
-			string importPath = @"C:\Users\Jvsth.000.000\Desktop\duckgayimport.json";
+			using( var fileWriter = File.CreateText( @"C:\Users\Jvsth.000.000\Desktop\duckgayimport.json" ) )
 			{
-				var mainCollection = new Dictionary<string , Dictionary<string , IDatabaseEntry>>();
-
-				mainCollection [nameof( GlobalData )] = new Dictionary<string , IDatabaseEntry>();
-				mainCollection [nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>();
-				mainCollection [nameof( RoundData )] = new Dictionary<string , IDatabaseEntry>();
-
-				mainCollection [nameof( GlobalData )] [globalData.DatabaseIndex] = globalData;
-
-				foreach( var roundName in globalData.Rounds )
+				JsonSerializer serializer = new JsonSerializer()
 				{
-					RoundData roundData = await defaultDatabase.GetData<RoundData>( roundName );
+					Formatting = Formatting.Indented ,
+				};
 
-					mainCollection [nameof( RoundData )] [roundData.DatabaseIndex] = roundData;
-				}
-
-				foreach( var matchName in globalData.Matches )
-				{
-					MatchData matchData = await defaultDatabase.GetData<MatchData>( matchName );
-					mainCollection [nameof( MatchData )] [matchData.DatabaseIndex] = matchData;
-				}
-
-				using( var fileWriter = File.CreateText( importPath ) )
-				{
-					JsonSerializer serializer = new JsonSerializer()
-					{
-						Formatting = Formatting.Indented ,
-					};
-
-					serializer.Serialize( fileWriter , mainCollection );
-				}
-
-
+				var mainCollection = await liteDb.GetBackup();
+				serializer.Serialize( fileWriter , mainCollection );
 			}
-			*/
 
+
+			//GlobalData globalData = await defaultDatabase.GetData<GlobalData>();
 
 			//await liteDb.SaveData( globalData );
 

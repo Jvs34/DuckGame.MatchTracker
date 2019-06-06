@@ -258,33 +258,39 @@ namespace MatchUploader
 			string appName = Assembly.GetEntryAssembly().GetName().Name;
 
 			//youtube stuff
-			youtubeService = new YouTubeService( new BaseClientService.Initializer()
-			{
-				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.Secrets ,
-					new [] { YouTubeService.Scope.Youtube } ,
-					"youtube" ,
-					CancellationToken.None ,
-					uploaderSettings.DataStore
-				) ,
-				ApplicationName = appName ,
-				GZipEnabled = true ,
-			} );
-			youtubeService.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
 
+			if( youtubeService == null )
+			{
+				youtubeService = new YouTubeService( new BaseClientService.Initializer()
+				{
+					HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.Secrets ,
+						new [] { YouTubeService.Scope.Youtube } ,
+						"youtube" ,
+						CancellationToken.None ,
+						uploaderSettings.DataStore
+					) ,
+					ApplicationName = appName ,
+					GZipEnabled = true ,
+				} );
+				youtubeService.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
+			}
 			//calendar stuff
 
-			calendarService = new CalendarService( new BaseClientService.Initializer()
+			if( calendarService == null )
 			{
-				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.Secrets ,
-					new [] { CalendarService.Scope.Calendar } ,
-					"calendar" ,
-					CancellationToken.None ,
-					uploaderSettings.DataStore
-				) ,
-				ApplicationName = appName ,
-				GZipEnabled = true ,
-			} );
 
+				calendarService = new CalendarService( new BaseClientService.Initializer()
+				{
+					HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.Secrets ,
+						new [] { CalendarService.Scope.Calendar } ,
+						"calendar" ,
+						CancellationToken.None ,
+						uploaderSettings.DataStore
+					) ,
+					ApplicationName = appName ,
+					GZipEnabled = true ,
+				} );
+			}
 
 			/*
 			Microsoft.Graph.GraphServiceClient graphService = new Microsoft.Graph.GraphServiceClient(

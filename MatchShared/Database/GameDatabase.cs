@@ -34,19 +34,19 @@ namespace MatchTracker
 			SharedSettings = new SharedSettings();
 		}
 
-		public async Task<GlobalData> GetGlobalData( bool forceRefresh = false )
+		public async Task<GlobalData> GetGlobalData()
 		{
-			return await LoadGlobalDataDelegate( this , SharedSettings ); ;
+			return await LoadGlobalDataDelegate( this , SharedSettings );
 		}
 
-		public async Task<MatchData> GetMatchData( string matchName , bool forceRefresh = false )
+		public async Task<MatchData> GetMatchData( string matchName )
 		{
-			return await LoadMatchDataDelegate( this , SharedSettings , matchName ); ;
+			return await LoadMatchDataDelegate( this , SharedSettings , matchName );
 		}
 
-		public async Task<RoundData> GetRoundData( string roundName , bool forceRefresh = false )
+		public async Task<RoundData> GetRoundData( string roundName )
 		{
-			return await LoadRoundDataDelegate( this , SharedSettings , roundName ); ;
+			return await LoadRoundDataDelegate( this , SharedSettings , roundName );
 		}
 
 		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task<bool>> callback )
@@ -59,8 +59,8 @@ namespace MatchTracker
 			foreach( string matchOrRoundName in matchOrRound ? globalData.Matches : globalData.Rounds )
 			{
 				IWinner iterateItem = matchOrRound ?
-					await GetMatchData( matchOrRoundName ) as IWinner :
-					await GetRoundData( matchOrRoundName ) as IWinner;
+					await GetData<MatchData>( matchOrRoundName ) as IWinner :
+					await GetData<RoundData>( matchOrRoundName ) as IWinner;
 
 				bool shouldContinue = await callback( iterateItem );
 
