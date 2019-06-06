@@ -30,6 +30,8 @@ namespace MatchTracker
 		public string RoundReplayFile { get; set; }
 		public string RoundReplayFileCompressed { get; set; }
 
+		public string RepositoryUser { get; set; }
+		public string RepositoryName { get; set; }
 
 		public string DatabaseFile { get; set; }
 

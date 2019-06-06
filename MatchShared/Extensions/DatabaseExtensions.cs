@@ -35,5 +35,27 @@ namespace MatchTracker
 
 			return mainCollection;
 		}
+
+		public static async Task IterateOverAllRoundsOrMatches( this IGameDatabase db , bool matchOrRound , Func<IWinner , Task<bool>> callback )
+		{
+			if( callback == null )
+				return;
+
+			GlobalData globalData = await db.GetData<GlobalData>();
+
+			foreach( string matchOrRoundName in matchOrRound ? globalData.Matches : globalData.Rounds )
+			{
+				IWinner iterateItem = matchOrRound ?
+					await db.GetData<MatchData>( matchOrRoundName ) as IWinner :
+					await db.GetData<RoundData>( matchOrRoundName ) as IWinner;
+
+				bool shouldContinue = await callback( iterateItem );
+
+				if( !shouldContinue )
+				{
+					break;
+				}
+			}
+		}
 	}
 }

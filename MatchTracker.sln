@@ -28,7 +28,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchShared.Replay", "Match
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchFirebaseDatabase", "MatchFirebaseDatabase\MatchFirebaseDatabase.csproj", "{5F6361D8-170D-4D9E-8171-D208A77C68E8}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchDiscordRecorder", "MatchDiscordRecorder\MatchDiscordRecorder.csproj", "{F966E071-3A9B-40D6-AC66-C5642059EF92}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchDiscordRecorder", "MatchDiscordRecorder\MatchDiscordRecorder.csproj", "{F966E071-3A9B-40D6-AC66-C5642059EF92}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchOctoKitDatabase", "MatchOctoKitDatabase\MatchOctoKitDatabase.csproj", "{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -109,6 +111,14 @@ Global
 		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Release|x86.ActiveCfg = Release|Any CPU
 		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Release|x86.Build.0 = Release|Any CPU
+		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Debug|x86.Build.0 = Debug|Any CPU
+		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Release|x86.ActiveCfg = Release|Any CPU
+		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

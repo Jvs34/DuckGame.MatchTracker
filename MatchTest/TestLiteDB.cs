@@ -46,6 +46,7 @@ namespace MatchTest
 
 			using( var fileWriter = File.CreateText( @"C:\Users\Jvsth.000.000\Desktop\duckgayimport.json" ) )
 			{
+
 				JsonSerializer serializer = new JsonSerializer()
 				{
 					Formatting = Formatting.Indented ,

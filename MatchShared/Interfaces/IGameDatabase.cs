@@ -10,8 +10,6 @@ namespace MatchTracker
 
 		bool ReadOnly { get; }
 
-		Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task<bool>> callback );
-
 		Task Load();
 
 		Task SaveData<T>( T data ) where T : IDatabaseEntry;

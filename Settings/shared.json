@@ -1,6 +1,8 @@
 {
   "BaseRecordingFolder": "E:\\DuckGameRecordings",
   "BaseRepositoryUrl": "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB/master/",
+  "RepositoryUser": "Jvs34",
+  "RepositoryName": "DuckGame.MatchDB",
   "RoundsFolder": "rounds",
   "MatchesFolder": "matches",
   "LevelsPreviewFolder": "levelpreviews",

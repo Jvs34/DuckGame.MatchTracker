@@ -76,27 +76,6 @@ namespace MatchTracker
 				;
 		}
 
-		public async Task IterateOverAllRoundsOrMatches( bool matchOrRound , Func<IWinner , Task<bool>> callback )
-		{
-			CheckDatabase();
-
-			GlobalData globalData = await GetData<GlobalData>();
-
-			foreach( string matchOrRoundName in matchOrRound ? globalData.Matches : globalData.Rounds )
-			{
-				IWinner iterateItem = matchOrRound ?
-					await GetData<MatchData>( matchOrRoundName ) as IWinner :
-					await GetData<RoundData>( matchOrRoundName ) as IWinner;
-
-				bool shouldContinue = await callback( iterateItem );
-
-				if( !shouldContinue )
-				{
-					break;
-				}
-			}
-		}
-
 		public async Task Load()
 		{
 			await Task.CompletedTask;

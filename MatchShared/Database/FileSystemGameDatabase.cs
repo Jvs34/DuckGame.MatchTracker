@@ -7,64 +7,78 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public class FileSystemGameDatabase : GameDatabase
+	public class FileSystemGameDatabase : IGameDatabase
 	{
-		private JsonSerializerSettings JsonSettings { get; }
+		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
+		public bool ReadOnly => false;
 
-		public FileSystemGameDatabase()
+		private JsonSerializer Serializer { get; } = new JsonSerializer()
 		{
+			Formatting = Formatting.Indented ,
+			PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
+		};
 
-			JsonSettings = new JsonSerializerSettings()
+		public async Task Load()
+		{
+			await Task.CompletedTask;
+		}
+
+		public async Task SaveData<T>( T data ) where T : IDatabaseEntry
+		{
+			await Task.CompletedTask;
+
+			string path = string.Empty;
+
+			if( typeof( T ) == typeof( GlobalData ) )
 			{
-				PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
-			};
+				path = SharedSettings.GetGlobalPath();
+			}
+			else if( typeof( T ) == typeof( MatchData ) )
+			{
+				path = SharedSettings.GetMatchPath( data.DatabaseIndex );
+			}
+			else if( typeof( T ) == typeof( RoundData ) )
+			{
+				path = SharedSettings.GetRoundPath( data.DatabaseIndex );
+			}
 
-
-			LoadGlobalDataDelegate += LoadDatabaseGlobalDataFile;
-			LoadMatchDataDelegate += LoadDatabaseMatchDataFile;
-			LoadRoundDataDelegate += LoadDatabaseRoundDataFile;
-			SaveGlobalDataDelegate += SaveDatabaseGlobalDataFile;
-			SaveMatchDataDelegate += SaveDatabaseMatchDataFile;
-			SaveRoundDataDelegate += SaveDatabaseRoundataFile;
+			using( var stream = File.CreateText( path ) )
+			{
+				Serializer.Serialize( stream , data );
+			}
 		}
 
-		private async Task<GlobalData> LoadDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings )
+		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
 		{
 			await Task.CompletedTask;
-			Console.WriteLine( "Loading GlobalData" );
-			return JsonConvert.DeserializeObject<GlobalData>( File.ReadAllText( sharedSettings.GetGlobalPath() ) , JsonSettings );
-		}
 
-		private async Task<MatchData> LoadDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName )
-		{
-			await Task.CompletedTask;
-			Console.WriteLine( $"Loading MatchData {matchName}" );
-			return JsonConvert.DeserializeObject<MatchData>( File.ReadAllText( sharedSettings.GetMatchPath( matchName ) ) , JsonSettings );
-		}
+			string path = string.Empty;
 
-		private async Task<RoundData> LoadDatabaseRoundDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName )
-		{
-			await Task.CompletedTask;
-			Console.WriteLine( $"Loading RoundData {roundName}" );
-			return JsonConvert.DeserializeObject<RoundData>( File.ReadAllText( sharedSettings.GetRoundPath( roundName ) ) , JsonSettings );
-		}
+			T data = default;
 
-		private async Task SaveDatabaseGlobalDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , GlobalData globalData )
-		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetGlobalPath() , JsonConvert.SerializeObject( globalData , Formatting.Indented , JsonSettings ) );
-		}
+			if( typeof( T ) == typeof( GlobalData ) )
+			{
+				path = SharedSettings.GetGlobalPath();
+			}
+			else if( typeof( T ) == typeof( MatchData ) )
+			{
+				path = SharedSettings.GetMatchPath( dataId );
+			}
+			else if( typeof( T ) == typeof( RoundData ) )
+			{
+				path = SharedSettings.GetRoundPath( dataId );
+			}
 
-		private async Task SaveDatabaseMatchDataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string matchName , MatchData matchData )
-		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetMatchPath( matchName ) , JsonConvert.SerializeObject( matchData , Formatting.Indented , JsonSettings ) );
-		}
+			if( File.Exists( path ) )
+			{
+				using( var stream = File.OpenText( path ) )
+				using( JsonTextReader jsonReader = new JsonTextReader( stream ) )
+				{
+					data = Serializer.Deserialize<T>( jsonReader );
+				}
+			}
 
-		private async Task SaveDatabaseRoundataFile( IGameDatabase gameDatabase , SharedSettings sharedSettings , string roundName , RoundData roundData )
-		{
-			await Task.CompletedTask;
-			File.WriteAllText( sharedSettings.GetRoundPath( roundName ) , JsonConvert.SerializeObject( roundData , Formatting.Indented , JsonSettings ) );
+			return data;
 		}
 	}
 }
