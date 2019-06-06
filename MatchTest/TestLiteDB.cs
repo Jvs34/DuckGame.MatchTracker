@@ -51,7 +51,7 @@ namespace MatchTest
 					Formatting = Formatting.Indented ,
 				};
 
-				var mainCollection = await liteDb.GetBackup();
+				var mainCollection = await defaultDatabase.GetBackup();
 				serializer.Serialize( fileWriter , mainCollection );
 			}
 
