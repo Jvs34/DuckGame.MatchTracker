@@ -27,20 +27,16 @@ namespace MatchTracker
 		{
 			await Task.CompletedTask;
 
-			string path = string.Empty;
+			try
+			{
+				Directory.CreateDirectory( SharedSettings.GetPath<T>( data.DatabaseIndex ) );
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e );
+			}
 
-			if( typeof( T ) == typeof( GlobalData ) )
-			{
-				path = SharedSettings.GetGlobalPath();
-			}
-			else if( typeof( T ) == typeof( MatchData ) )
-			{
-				path = SharedSettings.GetMatchPath( data.DatabaseIndex );
-			}
-			else if( typeof( T ) == typeof( RoundData ) )
-			{
-				path = SharedSettings.GetRoundPath( data.DatabaseIndex );
-			}
+			string path = SharedSettings.GetDataPath<T>( data.DatabaseIndex );
 
 			using( var stream = File.CreateText( path ) )
 			{
@@ -52,22 +48,9 @@ namespace MatchTracker
 		{
 			await Task.CompletedTask;
 
-			string path = string.Empty;
+			string path = SharedSettings.GetDataPath<T>( dataId );
 
 			T data = default;
-
-			if( typeof( T ) == typeof( GlobalData ) )
-			{
-				path = SharedSettings.GetGlobalPath();
-			}
-			else if( typeof( T ) == typeof( MatchData ) )
-			{
-				path = SharedSettings.GetMatchPath( dataId );
-			}
-			else if( typeof( T ) == typeof( RoundData ) )
-			{
-				path = SharedSettings.GetRoundPath( dataId );
-			}
 
 			if( File.Exists( path ) )
 			{

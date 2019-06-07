@@ -13,14 +13,7 @@ namespace MatchTracker
 
 		public string BaseRepositoryUrl { get; set; } //this has to be a github url for raw access
 
-		public string GlobalDataFile { get; set; }
-
-		public string MatchesFolder { get; set; }
-
-		public string RoundDataFile { get; set; }
-
-		//local paths
-		public string RoundsFolder { get; set; }
+		public string DataName { get; set; }
 
 		public string RoundVideoFile { get; set; }
 		public string RoundVoiceFile { get; set; }
@@ -39,45 +32,31 @@ namespace MatchTracker
 
 		private string Combine( bool isUrl , params string [] paths ) => isUrl ? Url.Combine( paths ) : Path.Combine( paths );
 
-		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
-
-		public string GetGlobalPath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , GlobalDataFile );
-
-		public string GetMatchPath( string matchName , bool useUrl = false )
-		{
-			string matchFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , MatchesFolder );
-			return Combine( useUrl , matchFolder , matchName + ".json" );
-		}
-
 		public string GetRecordingFolder( bool useUrl = false ) => useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
 
-		public string GetRoundPath( string roundName , bool useUrl = false )
+		public string GetPath<T>( string databaseIndex , bool useUrl = false )
 		{
-			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
-			string roundFile = Combine( useUrl , roundFolder , roundName );
-			return Combine( useUrl , roundFile , RoundDataFile );
+			if( string.IsNullOrEmpty( databaseIndex ) )
+			{
+				databaseIndex = typeof( T ).Name;
+			}
+
+			return Combine( useUrl , GetRecordingFolder( useUrl ) , typeof( T ).Name , databaseIndex );
 		}
 
-
-		public string GetRoundVideoPath( string roundName , bool useUrl = false )
+		public string GetDataPath<T>( string databaseIndex , bool useUrl = false )
 		{
-			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
-			string roundFile = Combine( useUrl , roundFolder , roundName );
-			return Combine( useUrl , roundFile , RoundVideoFile );
+			return Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
 		}
 
-		public string GetRoundVoicePath( string roundName , bool useUrl = false )
-		{
-			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
-			string roundFile = Combine( useUrl , roundFolder , roundName );
-			return Combine( useUrl , roundFile , RoundVoiceFile );
-		}
+		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
 
-		public string GetRoundReplayPath( string roundName , bool useUrl = false )
-		{
-			string roundFolder = Combine( useUrl , GetRecordingFolder( useUrl ) , RoundsFolder );
-			string roundFile = Combine( useUrl , roundFolder , roundName );
-			return Combine( useUrl , roundFile , RoundReplayFileCompressed );
-		}
+		//extra stuff
+
+		public string GetRoundVideoPath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundVideoFile );
+
+		public string GetRoundVoicePath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundVoiceFile );
+
+		public string GetRoundReplayPath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundReplayFileCompressed );
 	}
 }

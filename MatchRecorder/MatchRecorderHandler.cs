@@ -20,9 +20,7 @@ namespace MatchRecorder
 		public RoundData CurrentRound { get; private set; }
 		public IGameDatabase GameDatabase { get; }
 		public bool IsRecording => RecorderHandler.IsRecording;
-		public string MatchesFolder { get; }
 		public string ModPath { get; }
-		public string RoundsFolder { get; }
 		private IConfigurationRoot Configuration { get; }
 
 		private static readonly PropertyInfo onlineIDField = typeof( Profile ).GetProperty( "onlineID" );
@@ -46,16 +44,6 @@ namespace MatchRecorder
 			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( BotSettings );
 
-
-			//TODO:this should probably be done by the database implementation itself
-			RoundsFolder = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.RoundsFolder );
-			MatchesFolder = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.MatchesFolder );
-
-			if( !Directory.Exists( RoundsFolder ) )
-				Directory.CreateDirectory( RoundsFolder );
-
-			if( !Directory.Exists( MatchesFolder ) )
-				Directory.CreateDirectory( MatchesFolder );
 
 
 			var globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;

@@ -906,8 +906,7 @@ namespace MatchUploader
 
 			try
 			{
-				string roundsFolder = Path.Combine( gameDatabase.SharedSettings.GetRecordingFolder() , gameDatabase.SharedSettings.RoundsFolder );
-				string filePath = Path.Combine( Path.Combine( roundsFolder , roundName ) , gameDatabase.SharedSettings.RoundVideoFile );
+				string filePath = gameDatabase.SharedSettings.GetRoundVideoPath( roundName );
 				string reEncodedFilePath = Path.ChangeExtension( filePath , "converted.mp4" );
 
 				if( File.Exists( filePath ) )

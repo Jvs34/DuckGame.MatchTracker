@@ -43,24 +43,7 @@ namespace MatchTracker
 		{
 			T data = default;
 
-			string url;
-
-			if( typeof( T ) == typeof( GlobalData ) )
-			{
-				url = SharedSettings.GetGlobalPath( true );
-			}
-			else if( typeof( T ) == typeof( MatchData ) )
-			{
-				url = SharedSettings.GetMatchPath( dataId , true );
-			}
-			else if( typeof( T ) == typeof( RoundData ) )
-			{
-				url = SharedSettings.GetRoundPath( dataId , true );
-			}
-			else
-			{
-				throw new NotImplementedException( $"Cannot get datatype {typeof( T )} in GetData!!!" );
-			}
+			string url = SharedSettings.GetDataPath<T>( dataId , true );
 
 			if( !string.IsNullOrEmpty( url ) )
 			{

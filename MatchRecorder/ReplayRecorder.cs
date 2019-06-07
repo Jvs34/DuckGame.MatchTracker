@@ -100,8 +100,11 @@ namespace MatchRecorder
 		{
 			IsRecording = true;
 			DateTime recordingTime = DateTime.Now;
-			string roundPath = Path.Combine( mainHandler.RoundsFolder , mainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime ) );
-			Directory.CreateDirectory( roundPath );
+
+			string recordingTimeString = mainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime );
+
+			Directory.CreateDirectory( mainHandler.GameDatabase.SharedSettings.GetPath<RoundData>( recordingTimeString ) );
+
 			RoundData roundData = mainHandler.StartCollectingRoundData( recordingTime );
 
 			CurrentRecording = new ReplayRecording()
@@ -133,7 +136,7 @@ namespace MatchRecorder
 				CurrentRecording.TimeEnded = roundData.TimeEnded;
 				//now save the current recording too
 
-				string recordingPath = Path.Combine( mainHandler.RoundsFolder , roundData.Name );
+				string recordingPath = mainHandler.GameDatabase.SharedSettings.GetPath<RoundData>( roundData.Name );
 
 				ReplayRecording rec = CurrentRecording;
 				var deltaRec = _deltaRecorder;

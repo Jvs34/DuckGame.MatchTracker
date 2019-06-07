@@ -56,20 +56,7 @@ namespace MatchTracker
 				throw new Exception( "Cannot save data if user is unauthenticated" );
 			}
 
-			string url = string.Empty;
-
-			if( typeof( T ) == typeof( GlobalData ) )
-			{
-				url = SharedSettings.GetGlobalPath( true );
-			}
-			else if( typeof( T ) == typeof( MatchData ) )
-			{
-				url = SharedSettings.GetMatchPath( data.DatabaseIndex , true );
-			}
-			else if( typeof( T ) == typeof( RoundData ) )
-			{
-				url = SharedSettings.GetRoundPath( data.DatabaseIndex , true );
-			}
+			string url = SharedSettings.GetDataPath<T>( data.DatabaseIndex , true );
 
 			url = url.Replace( SharedSettings.BaseRepositoryUrl , string.Empty );
 
@@ -111,24 +98,7 @@ namespace MatchTracker
 		{
 			T data = default;
 
-			string url;
-
-			if( typeof( T ) == typeof( GlobalData ) )
-			{
-				url = SharedSettings.GetGlobalPath( true );
-			}
-			else if( typeof( T ) == typeof( MatchData ) )
-			{
-				url = SharedSettings.GetMatchPath( dataId , true );
-			}
-			else if( typeof( T ) == typeof( RoundData ) )
-			{
-				url = SharedSettings.GetRoundPath( dataId , true );
-			}
-			else
-			{
-				throw new NotImplementedException( $"Cannot get datatype {typeof( T )} in GetData!!!" );
-			}
+			string url = SharedSettings.GetDataPath<T>( dataId , true );
 
 			if( !string.IsNullOrEmpty( url ) )
 			{

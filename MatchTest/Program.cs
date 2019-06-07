@@ -18,8 +18,10 @@ namespace MatchTest
 			//await new TestLiteDB().Test();
 			//await new TestReplay().Test();
 
-			await new TestGithub().Run();
-			
+			//await new TestGithub().Run();
+
+			await new TestFS().Run();
+
 			await Task.CompletedTask;
 			Console.ReadLine();
 		}
