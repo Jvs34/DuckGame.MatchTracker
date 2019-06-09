@@ -18,12 +18,13 @@ namespace MatchTest
 			var Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
 				.AddJsonFile( "shared.json" )
-				.AddJsonFile( "firebase.json" )
 			.Build();
 
 			IGameDatabase db = new FileSystemGameDatabase();
 
 			Configuration.Bind( db.SharedSettings );
+
+			await db.Load();
 
 			GlobalData globalData = await db.GetData<GlobalData>();
 

@@ -34,13 +34,15 @@ namespace MatchTest
 
 			var globalData = await db.GetData<GlobalData>();
 
-			if( globalData.Tags.Count == 0 )
+			var emoji = new TagData()
 			{
-				globalData.Tags.Add( new TagData()
-				{
-					Emoji = "😡",
-					Name = "Angery",
-				} );
+				Emoji = "🤢" ,
+				Name = "Disgusting" ,
+			};
+
+			if( globalData.Tags.Find( x => x.DatabaseIndex.Equals( emoji.DatabaseIndex ) ) == null )
+			{
+				globalData.Tags.Add( emoji );
 			}
 
 			await db.SaveData( globalData );

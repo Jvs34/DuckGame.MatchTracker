@@ -76,7 +76,7 @@ namespace MatchTracker
 					RepositoryUser ,
 					RepositoryName ,
 					url ,
-					new CreateFileRequest( $"Created {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() )
+					new CreateFileRequest( $"Created {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() , true )
 				);
 			}
 			else
@@ -89,7 +89,7 @@ namespace MatchTracker
 					RepositoryUser ,
 					RepositoryName ,
 					url ,
-					new UpdateFileRequest( $"Updated {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() , fileInfo.Sha )
+					new UpdateFileRequest( $"Updated {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() , fileInfo.Sha , true )
 				);
 			}
 		}
