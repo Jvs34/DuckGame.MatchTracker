@@ -2,6 +2,7 @@
 using Octokit;
 using Octokit.Internal;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -9,47 +10,26 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public class OctoKitGameDatabase : IGameDatabase
+	public class OctoKitGameDatabase : HttpGameDatabase
 	{
-		private GitHubClient Client { get; }
-
-		private HttpClient HttpClient { get; }
+		private GitHubClient OctoKitClient { get; }
 
 		private OctoKitHttpClient GithubHttpClient { get; }
 
-		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
+		public override bool ReadOnly => OctoKitClient.Credentials == null;
 
-		public bool ReadOnly => Client.Credentials == null;
-
-		public string RepositoryName => SharedSettings.RepositoryName;
-
-		public string RepositoryUser => SharedSettings.RepositoryUser;
-
-		private JsonSerializer Serializer { get; } = new JsonSerializer()
+		public OctoKitGameDatabase( HttpClient http , string username = "" , string password = "" ) : base( http )
 		{
-			Formatting = Formatting.Indented ,
-			PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
-		};
-
-		public OctoKitGameDatabase( HttpClient http , string username = "" , string password = "" )
-		{
-			HttpClient = http;
-			GithubHttpClient = new OctoKitHttpClient( HttpClient );
-			Client = new GitHubClient( new Connection( new ProductHeaderValue( "MatchTracker" ) , GithubHttpClient ) );
+			GithubHttpClient = new OctoKitHttpClient( Client );
+			OctoKitClient = new GitHubClient( new Connection( new ProductHeaderValue( "MatchTracker" ) , GithubHttpClient ) );
 
 			if( !string.IsNullOrEmpty( username ) && !string.IsNullOrEmpty( password ) )
 			{
-				Client.Credentials = new Credentials( username , password );
+				OctoKitClient.Credentials = new Credentials( username , password );
 			}
 		}
 
-		public async Task Load()
-		{
-			//var gay = await Client.User.Current();
-			//var repo = await Client.Repository.Get( RepositoryUser , RepositoryName );
-		}
-
-		public async Task SaveData<T>( T data ) where T : IDatabaseEntry
+		public override async Task SaveData<T>( T data )
 		{
 			if( ReadOnly )
 			{
@@ -60,8 +40,6 @@ namespace MatchTracker
 
 			url = url.Replace( SharedSettings.BaseRepositoryUrl , string.Empty );
 
-			var file = await Client.Repository.Content.GetAllContents( RepositoryUser , RepositoryName , url );
-
 			var newFileContent = new StringBuilder();
 
 			using( StringWriter writer = new StringWriter( newFileContent ) )
@@ -69,49 +47,37 @@ namespace MatchTracker
 				Serializer.Serialize( writer , data );
 			}
 
-			//if the file doesn't exist, we need to create it instead
-			if( file.Count == 0 )
+			IReadOnlyList<RepositoryContent> fileContents = null;
+
+			try
 			{
-				var result = await Client.Repository.Content.CreateFile(
-					RepositoryUser ,
-					RepositoryName ,
+				//I don't know why this would throw an exception instead of just giving an empty list but WHATEVER MAN
+
+				fileContents = await OctoKitClient.Repository.Content.GetAllContents( SharedSettings.RepositoryUser , SharedSettings.RepositoryName , url );
+
+				if( fileContents?.Count > 0 )
+				{
+					var fileInfo = fileContents [0];
+
+					var result = await OctoKitClient.Repository.Content.UpdateFile(
+						SharedSettings.RepositoryUser ,
+						SharedSettings.RepositoryName ,
+						url ,
+						new UpdateFileRequest( $"Updated {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() , fileInfo.Sha , true )
+					);
+				}
+			}
+			catch( NotFoundException )
+			{
+				//the file was not found, this is totally fine, we'll create it now
+				var result = await OctoKitClient.Repository.Content.CreateFile(
+					SharedSettings.RepositoryUser ,
+					SharedSettings.RepositoryName ,
 					url ,
 					new CreateFileRequest( $"Created {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() , true )
 				);
 			}
-			else
-			{
-				var fileInfo = file [0];
 
-				//update it instead
-
-				var result = await Client.Repository.Content.UpdateFile(
-					RepositoryUser ,
-					RepositoryName ,
-					url ,
-					new UpdateFileRequest( $"Updated {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() , fileInfo.Sha , true )
-				);
-			}
-		}
-
-		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
-		{
-			T data = default;
-
-			string url = SharedSettings.GetDataPath<T>( dataId , true );
-
-			if( !string.IsNullOrEmpty( url ) )
-			{
-				var responseStream = await HttpClient.GetStreamAsync( url );
-
-				using( StreamReader reader = new StreamReader( responseStream ) )
-				using( JsonTextReader jsonReader = new JsonTextReader( reader ) )
-				{
-					data = Serializer.Deserialize<T>( jsonReader );
-				}
-			}
-
-			return data;
 		}
 	}
 }
