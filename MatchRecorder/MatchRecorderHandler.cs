@@ -236,6 +236,21 @@ namespace MatchRecorder
 			}
 		}
 
+		public void GatherLevelData( Level level )
+		{
+			string levelID = level.level;
+
+			MatchTracker.LevelData levelData = GameDatabase.GetData<MatchTracker.LevelData>( levelID ).Result;
+
+			if( levelData == null )
+			{
+				levelData = CreateLevelDataFromLevel( levelID );
+
+				GameDatabase.SaveData( levelData ).Wait();
+			}
+
+		}
+
 		public void GatherLevelData()
 		{
 			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
@@ -487,10 +502,12 @@ namespace MatchRecorder
 		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
 		private static void Prefix( Level value )
 		{
+			/*
 			if( Level.current is null && value != null )
 			{
 				MatchRecorderMod.Recorder?.GatherLevelData();
 			}
+			*/
 
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
 			if( MatchRecorderMod.Recorder.IsRecording )
@@ -542,6 +559,7 @@ namespace MatchRecorder
 			if( MatchRecorderMod.Recorder.IsLevelRecordable( Level.current ) )
 			{
 				MatchRecorderMod.Recorder?.StartRecording();
+				MatchRecorderMod.Recorder.GatherLevelData( Level.current );
 			}
 		}
 	}

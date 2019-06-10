@@ -1,15 +1,16 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 namespace MatchBot
 {
 	public static class Program
 	{
-		public static void Main( string [] args )
+		public static async Task Main( string [] args )
 		{
 			try
 			{
 				DiscordBotHandler handler = new DiscordBotHandler( args );
-				handler.Initialize().Wait();
+				await handler.Initialize();
 
 				Console.WriteLine( "Press a key to stop" );
 				Console.ReadKey();

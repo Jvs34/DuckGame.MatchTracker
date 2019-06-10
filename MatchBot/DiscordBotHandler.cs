@@ -28,6 +28,7 @@ namespace MatchBot
 				.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) )
 				.AddJsonFile( "shared.json" )
 				.AddJsonFile( "bot.json" )
+				.AddJsonFile( "uploader.json" )
 				.AddCommandLine( args )
 			.Build();
 
@@ -84,6 +85,8 @@ namespace MatchBot
 					await HandleOutgoingMessage( context , activity );
 				}
 			}
+			
+
 			return responses.ToArray();
 		}
 

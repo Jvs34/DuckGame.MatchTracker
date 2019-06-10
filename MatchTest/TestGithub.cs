@@ -22,10 +22,7 @@ namespace MatchTest
 			.Build();
 
 
-			HttpClient httpClient = new HttpClient( new SocketsHttpHandler()
-			{
-				AllowAutoRedirect = true
-			} );
+			HttpClient httpClient = new HttpClient();
 
 			var db = new OctoKitGameDatabase( httpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] );
 			Configuration.Bind( db.SharedSettings );

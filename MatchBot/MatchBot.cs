@@ -53,7 +53,6 @@ namespace MatchBot
 
 
 		private readonly HttpClient httpClient;
-		private readonly Timer refreshTimer;
 		private Task loadDatabaseTask;
 		private IConfigurationRoot Configuration { get; }
 		private BotSettings botSettings;
@@ -79,7 +78,7 @@ namespace MatchBot
 
 			if( botSettings.UseRemoteDatabase )
 			{
-				Database = new HttpGameDatabase( httpClient );
+				Database = new OctoKitGameDatabase( httpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] );
 			}
 			else
 			{
@@ -99,8 +98,7 @@ namespace MatchBot
 				}
 			);
 
-			RefreshDatabase();
-			refreshTimer = new Timer( RefreshDatabase , null , TimeSpan.Zero , TimeSpan.FromHours( 1 ) );
+			Database.Load().Wait();
 		}
 
 		public async Task OnTurnAsync( ITurnContext turnContext , CancellationToken cancellationToken )
@@ -109,9 +107,7 @@ namespace MatchBot
 
 			if( turnContext.Activity.Type == ActivityTypes.Message )
 			{
-
 				Console.WriteLine( turnContext.Activity.Text );
-
 
 				var result = await Recognizer.RecognizeAsync( turnContext , cancellationToken );
 				var topIntent = result?.GetTopScoringIntent();
@@ -156,16 +152,6 @@ namespace MatchBot
 			await turnContext.SendActivityAsync( "cba implementing right now" );
 		}
 
-		public void RefreshDatabase( object dontactuallycare = null )
-		{
-			if( loadDatabaseTask?.IsCompleted == false )
-			{
-				Console.WriteLine( "Database hasn't finished loading, skipping refresh" );
-				return;
-			}
-
-			loadDatabaseTask = Database.Load();
-		}
 
 		private Dictionary<string , List<string>> GetEntities( IDictionary<string , JToken> results )
 		{
@@ -422,6 +408,7 @@ namespace MatchBot
 
 					await Database.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
+						await Task.CompletedTask;
 						if( matchOrRound is IStartEnd duration )
 						{
 							lock( durationPlayedLock )
@@ -429,16 +416,20 @@ namespace MatchBot
 								durationPlayed = durationPlayed.Add( duration.GetDuration() );
 							}
 						}
-						await Task.CompletedTask;
+						
 						return true;
 					} );
 				}
 				else if( recognizedPlayer.PlayerDataTarget != null )
 				{
+					
+
 					GlobalData gd = await Database.GetData<GlobalData>();
 
 					await Database.IterateOverAllRoundsOrMatches( gameType == GameType.Match , async ( matchOrRound ) =>
 					{
+						await Task.CompletedTask;
+
 						if( matchOrRound.Players.Any( x => x.UserId == recognizedPlayer.PlayerDataTarget.UserId ) )
 						{
 							Interlocked.Increment( ref timesPlayed );
@@ -451,7 +442,7 @@ namespace MatchBot
 							}
 						}
 						return true;
-						await Task.CompletedTask;
+						
 					} );
 				}
 
