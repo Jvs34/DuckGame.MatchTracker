@@ -75,8 +75,45 @@ namespace MatchBot
 			await message.ModifyAsync( response.ToString() );
 		}
 
+		[Command( "TimesPlayed" )]
+		public async Task TimesPlayedCommand( CommandContext ctx , bool matchOrRound , params DiscordUser [] targets )
+		{
+			var message = await ctx.RespondAsync( "Looking through the database..." );
+
+			await ctx.Channel.TriggerTypingAsync();
+
+			StringBuilder response = new StringBuilder();
+
+			var globalData = await DB.GetData<GlobalData>();
+
+			if( targets.Length == 0 )
+			{
+				var timesPlayedInfo = await GetTimesPlayed( null , matchOrRound );
+				response.Append( $"We played {timesPlayedInfo.Item1} {( matchOrRound ? "matches" : "rounds" )} with a playtime of {timesPlayedInfo.Item2.Humanize( culture: GetLocale( ctx.Client ) )}" );
+			}
+			else
+			{
+				foreach( var target in targets )
+				{
+					var foundPlayer = await GetPlayer( target );
+					if( foundPlayer != null )
+					{
+						var timesPlayedInfo = await GetTimesPlayed( foundPlayer , matchOrRound );
+						response.Append( $"{foundPlayer.GetName()} played {timesPlayedInfo.Item1} {( matchOrRound ? "matches" : "rounds" )} with a playtime of {timesPlayedInfo.Item2.Humanize( culture: GetLocale( ctx.Client ) )}" );
+					}
+					else
+					{
+						response.Append( $"Sorry, there's nothing on record for {target?.Username}" );
+					}
+				}
+			}
+
+			await message.ModifyAsync( response.ToString() );
+		}
+
+
 		[Command( "Wins" )]
-		public async Task MostWinsCommand( CommandContext ctx , bool matchOrRound = true , params DiscordUser [] targets )
+		public async Task MostWinsCommand( CommandContext ctx , bool matchOrRound , params DiscordUser [] targets )
 		{
 			var message = await ctx.RespondAsync( "Looking through the database..." );
 
@@ -166,6 +203,37 @@ namespace MatchBot
 
 			return lastPlayed;
 		}
+
+		private async Task<(int, TimeSpan)> GetTimesPlayed( PlayerData player , bool findmatchOrRound )
+		{
+			int timesPlayed = 0;
+			TimeSpan durationPlayed = TimeSpan.Zero;
+			object durationPlayedLock = new object();
+
+			await DB.IterateOverAllRoundsOrMatches( findmatchOrRound , async ( matchOrRound ) =>
+			{
+				await Task.CompletedTask;
+
+				if( player == null || matchOrRound.Players.Any( x => x.UserId == player.UserId ) )
+				{
+					Interlocked.Increment( ref timesPlayed );
+
+					if( matchOrRound is IStartEnd duration )
+					{
+						lock( durationPlayedLock )
+						{
+							durationPlayed = durationPlayed.Add( duration.GetDuration() );
+						}
+					}
+				}
+				return true;
+
+			} );
+
+			return (timesPlayed, durationPlayed);
+		}
+
+
 
 		private CultureInfo GetLocale( DiscordClient client )
 		{
