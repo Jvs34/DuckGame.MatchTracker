@@ -173,8 +173,16 @@ namespace MatchBot
 			await message.ModifyAsync( response.ToString() );
 		}
 
-		[Command("VoteMaps")]
+		[Command( "VoteMaps" )]
 		public async Task VoteMapsCommand( CommandContext ctx )
+		{
+			var globalData = await DB.GetData<GlobalData>();
+
+			await VoteMapCommand( ctx , globalData.Levels.ToArray() );
+		}
+
+		[Command( "VoteMap" )]
+		public async Task VoteMapCommand( CommandContext ctx , params string [] levelIDs )
 		{
 			if( ctx.Channel.IsPrivate )
 			{
@@ -186,9 +194,11 @@ namespace MatchBot
 
 			await ctx.Channel.TriggerTypingAsync();
 
-			var globalData = await DB.GetData<GlobalData>();
+			var paginator = new VoteMapPaginator( ctx.User , DB , levelIDs , message );
 
-			var paginator = new VoteMapPaginator( ctx.User , DB , globalData.Levels , message );
+			var page = await paginator.GetPageAsync();
+
+			await message.ModifyAsync( page.Content , page.Embed );
 
 			await ctx.Client.GetInteractivity().WaitForCustomPaginationAsync( paginator );
 		}
