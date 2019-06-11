@@ -2,6 +2,7 @@
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
+using DSharpPlus.Interactivity;
 using Humanizer;
 using Humanizer.Localisation;
 using MatchTracker;
@@ -172,6 +173,15 @@ namespace MatchBot
 			await message.ModifyAsync( response.ToString() );
 		}
 
+		[Command("VoteMaps")]
+		public async Task VoteMapsCommand( CommandContext ctx )
+		{
+			var message = await ctx.RespondAsync( "Looking through the database..." );
+
+			await ctx.Channel.TriggerTypingAsync();
+
+			//ctx.Client.GetInteractivity().WaitForCustomPaginationAsync
+		}
 
 		private async Task<DateTime> GetLastTimePlayed( PlayerData player )
 		{
