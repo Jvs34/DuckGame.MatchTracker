@@ -4,8 +4,8 @@ using System.Text;
 
 namespace MatchTracker
 {
-	public interface ITags
+	public interface ILevelList
 	{
-		List<TagData> Tags { get; set; }
+		List<string> Levels { get; set; }
 	}
 }

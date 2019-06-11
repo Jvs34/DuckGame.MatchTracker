@@ -19,6 +19,8 @@ namespace MatchTracker
 		public string RepositoryUser { get; set; }
 		public string RepositoryName { get; set; }
 		public string DatabaseFile { get; set; }
+		public string LevelPreviewFile { get; set; }
+
 
 		public string DateTimeToString( DateTime time ) => time.ToString( TimestampFormat );
 
@@ -45,5 +47,7 @@ namespace MatchTracker
 		public string GetRoundVoicePath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundVoiceFile );
 
 		public string GetRoundReplayPath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundReplayFileCompressed );
+
+		public string GetLevelPreviewPath( string levelName , bool useUrl = false ) => Combine( useUrl , GetPath<LevelData>( levelName , useUrl ) , LevelPreviewFile );
 	}
 }

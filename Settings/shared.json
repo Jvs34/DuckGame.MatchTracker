@@ -4,11 +4,11 @@
   "RepositoryUser": "PNSCorpDuckGame",
   "RepositoryName": "MatchDB",
   "DataName": "data.json",
-  "LevelsPreviewFolder": "levelpreviews",
+  "LevelPreviewFile": "preview.png",
   "TimestampFormat": "yyyy-MM-dd HH-mm-ss",
   "RoundVideoFile": "video.mp4",
   "RoundVoiceFile": "voice.ogg",
   "DatabaseFile": "duckgame.db",
   "RoundReplayFile": "replaydata.bin",
-  "RoundReplayFileCompressed": "replaydata.zip"
+  "RoundReplayFileCompressed": "replaydata.zip",
 }

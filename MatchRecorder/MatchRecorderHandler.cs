@@ -203,6 +203,64 @@ namespace MatchRecorder
 			RecorderHandler?.Update();
 		}
 
+		public void TryTakingScreenshots()
+		{
+			//get all the levels that are currently saved in the database and make a thumbnail out of it
+			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
+
+			foreach( var levelID in globalData.Levels )
+			{
+				string levelPreviewFile = GameDatabase.SharedSettings.GetLevelPreviewPath( levelID );
+
+				if( File.Exists( levelPreviewFile ) )
+				{
+					continue;
+				}
+
+				var bitmap = TakeScreenshot( levelID );
+
+				if( bitmap != null )
+				{
+					using( var fileStream = File.Create( levelPreviewFile ) )
+					{
+						bitmap.Save( fileStream , System.Drawing.Imaging.ImageFormat.Png );
+					}
+				}
+
+			}
+		}
+
+		private System.Drawing.Bitmap TakeScreenshot( string levelID )
+		{
+			System.Drawing.Bitmap screenshot = null;
+			DuckGame.LevelData levelData = Content.GetLevel( levelID );
+
+			if( levelData != null )
+			{
+				var rtTest = Content.GeneratePreview( levelID , null , true );
+
+				var imageData = rtTest.GetData();
+
+				int w = rtTest.width;
+				int h = rtTest.height;
+
+				screenshot = new System.Drawing.Bitmap( w , h , System.Drawing.Imaging.PixelFormat.Format32bppArgb );
+
+				for( int x = 0; x < w; x++ )
+				{
+					for( int y = 0; y < h; y++ )
+					{
+						int arrayIndex = ( y * w ) + x;
+						DuckGame.Color c = imageData [arrayIndex];
+						screenshot.SetPixel( x , y , System.Drawing.Color.FromArgb( c.a , c.r , c.g , c.b ) );
+					}
+				}
+
+			}
+
+			return screenshot;
+		}
+
 		/*
 		private void TryTakingScreenshots()
 		{
@@ -243,16 +301,24 @@ namespace MatchRecorder
 			string levelID = level.level;
 
 			MatchTracker.LevelData levelData = GameDatabase.GetData<MatchTracker.LevelData>( levelID ).Result;
+			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
 			if( levelData == null )
 			{
 				levelData = CreateLevelDataFromLevel( levelID );
 
 				GameDatabase.SaveData( levelData ).Wait();
+
+				if( !globalData.Levels.Contains( levelID ) )
+				{
+					globalData.Levels.Add( levelID );
+					GameDatabase.SaveData( globalData ).Wait();
+				}
 			}
 
 		}
 
+		/*
 		public void GatherLevelData()
 		{
 			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
@@ -279,6 +345,7 @@ namespace MatchRecorder
 
 			GameDatabase.SaveData( globalData );
 		}
+		*/
 
 		private MatchTracker.LevelData CreateLevelDataFromLevel( string levelId )
 		{
@@ -504,12 +571,13 @@ namespace MatchRecorder
 		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
 		private static void Prefix( Level value )
 		{
-			/*
+
 			if( Level.current is null && value != null )
 			{
-				MatchRecorderMod.Recorder?.GatherLevelData();
+				//at the game startup, make screenshots of whatever map we need a preview of
+				MatchRecorderMod.Recorder?.TryTakingScreenshots();
 			}
-			*/
+
 
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
 			if( MatchRecorderMod.Recorder.IsRecording )

@@ -25,10 +25,7 @@ namespace MatchBot
 		}
 
 		[Command( "Quack" )]
-		public async Task QuackCommand( CommandContext ctx )
-		{
-			await ctx.RespondAsync( "🦆" );
-		}
+		public async Task QuackCommand( CommandContext ctx ) => await ctx.RespondAsync( "🦆" );
 
 		[Command( "Uploads" )]
 		public async Task UploadsLeftCommand( CommandContext ctx )
@@ -84,8 +81,6 @@ namespace MatchBot
 
 			StringBuilder response = new StringBuilder();
 
-			var globalData = await DB.GetData<GlobalData>();
-
 			if( targets.Length == 0 )
 			{
 				(int timesPlayed, TimeSpan timeSpanPlayed) = await GetTimesPlayed( null , matchOrRound );
@@ -110,7 +105,6 @@ namespace MatchBot
 
 			await message.ModifyAsync( response.ToString() );
 		}
-
 
 		[Command( "Wins" )]
 		public async Task MostWinsCommand( CommandContext ctx , bool matchOrRound , params DiscordUser [] targets )
@@ -233,10 +227,7 @@ namespace MatchBot
 			return (timesPlayed, durationPlayed);
 		}
 
-		private CultureInfo GetLocale( DiscordClient client )
-		{
-			return CultureInfo.GetCultureInfo( client.CurrentUser.Locale );
-		}
+		private CultureInfo GetLocale( DiscordClient client ) => CultureInfo.GetCultureInfo( client.CurrentUser.Locale );
 
 		private async Task<PlayerData> GetPlayer( DiscordUser discordUser )
 		{

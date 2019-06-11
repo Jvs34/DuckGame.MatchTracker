@@ -13,9 +13,9 @@ namespace MatchRecorder
 
 		public MatchRecorderMod()
 		{
-#if DEBUG
+//#if DEBUG
 			System.Diagnostics.Debugger.Launch();
-#endif
+//#endif
 			AppDomain.CurrentDomain.AssemblyResolve += ModResolve;
 		}
 
