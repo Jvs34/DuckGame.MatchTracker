@@ -1,4 +1,5 @@
-﻿using MatchTracker;
+﻿/*
+using MatchTracker;
 using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.AI.Luis;
 using Microsoft.Bot.Schema;
@@ -113,11 +114,6 @@ namespace MatchBot
 				var topIntent = result?.GetTopScoringIntent();
 				switch( topIntent?.intent )
 				{
-					case "LastPlayed":
-						{
-							await HandleLastPlayed( turnContext , result );
-							break;
-						}
 					case "MostWins":
 						{
 							await HandleMostWins( turnContext , result );
@@ -126,21 +122,6 @@ namespace MatchBot
 					case "TimesPlayed":
 						{
 							await HandleTimesPlayed( turnContext , result );
-							break;
-						}
-					case "Upload":
-						{
-							await HandleUploadsLeft( turnContext , result );
-							break;
-						}
-					case "Help":
-						{
-							await HandleHelp( turnContext );
-							break;
-						}
-					default:
-						{
-							await turnContext.SendActivityAsync( "*Quack*" );
 							break;
 						}
 				}
@@ -462,3 +443,4 @@ namespace MatchBot
 
 	}
 }
+*/

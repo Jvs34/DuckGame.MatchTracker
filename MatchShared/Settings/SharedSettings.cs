@@ -8,29 +8,21 @@ namespace MatchTracker
 	//this is something that once setup really shouldn't be touched again
 	public class SharedSettings
 	{
-		//global paths
 		public string BaseRecordingFolder { get; set; }
-
 		public string BaseRepositoryUrl { get; set; } //this has to be a github url for raw access
-
 		public string DataName { get; set; }
-
 		public string RoundVideoFile { get; set; }
 		public string RoundVoiceFile { get; set; }
 		public string TimestampFormat { get; set; }
-		public string LevelsPreviewFolder { get; set; }
-
 		public string RoundReplayFile { get; set; }
 		public string RoundReplayFileCompressed { get; set; }
-
 		public string RepositoryUser { get; set; }
 		public string RepositoryName { get; set; }
-
 		public string DatabaseFile { get; set; }
 
 		public string DateTimeToString( DateTime time ) => time.ToString( TimestampFormat );
 
-		private string Combine( bool isUrl , params string [] paths ) => isUrl ? Url.Combine( paths ) : Path.Combine( paths );
+		public static string Combine( bool isUrl , params string [] paths ) => isUrl ? Url.Combine( paths ) : Path.Combine( paths );
 
 		public string GetRecordingFolder( bool useUrl = false ) => useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
 
@@ -44,14 +36,9 @@ namespace MatchTracker
 			return Combine( useUrl , GetRecordingFolder( useUrl ) , typeof( T ).Name , databaseIndex );
 		}
 
-		public string GetDataPath<T>( string databaseIndex , bool useUrl = false )
-		{
-			return Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
-		}
+		public string GetDataPath<T>( string databaseIndex , bool useUrl = false ) => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
 
 		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
-
-		//extra stuff
 
 		public string GetRoundVideoPath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundVideoFile );
 

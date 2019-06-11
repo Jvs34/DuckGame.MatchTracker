@@ -195,7 +195,7 @@ namespace MatchRecorder
 			if( Keyboard.Down( Keys.LeftShift ) && Keyboard.Pressed( Keys.D0 ) )
 			{
 				var levels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
-				TryTakingScreenshots();
+				//TryTakingScreenshots();
 			}
 #endif
 
@@ -203,6 +203,7 @@ namespace MatchRecorder
 			RecorderHandler?.Update();
 		}
 
+		/*
 		private void TryTakingScreenshots()
 		{
 			string levelPath = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.LevelsPreviewFolder );
@@ -235,6 +236,7 @@ namespace MatchRecorder
 				pic.Save( Path.Combine( levelPath , $"{levelid}.png" ) , System.Drawing.Imaging.ImageFormat.Png );
 			}
 		}
+		*/
 
 		public void GatherLevelData( Level level )
 		{

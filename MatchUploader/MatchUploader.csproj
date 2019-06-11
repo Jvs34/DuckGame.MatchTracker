@@ -16,9 +16,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00595" />
-    <PackageReference Include="Google.Apis.Calendar.v3" Version="1.40.0.1590" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.40.0.1593" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00600" />
+    <PackageReference Include="Google.Apis.Calendar.v3" Version="1.40.1.1611" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.40.1.1593" />
     <PackageReference Include="LibGit2Sharp" Version="0.26.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="2.2.0" />
     <PackageReference Include="Microsoft.Graph" Version="1.15.0" />

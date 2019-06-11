@@ -43,19 +43,23 @@ namespace MatchTracker
 
 			GlobalData globalData = await db.GetData<GlobalData>();
 
+			List<Task> tasks = new List<Task>();
+
 			foreach( string matchOrRoundName in matchOrRound ? globalData.Matches : globalData.Rounds )
 			{
-				IWinner iterateItem = matchOrRound ?
-					await db.GetData<MatchData>( matchOrRoundName ) as IWinner :
-					await db.GetData<RoundData>( matchOrRoundName ) as IWinner;
-
-				bool shouldContinue = await callback( iterateItem );
-
-				if( !shouldContinue )
+				Func<Task> newTask = async () =>
 				{
-					break;
-				}
+					IWinner iterateItem = matchOrRound ?
+						await db.GetData<MatchData>( matchOrRoundName ) as IWinner :
+						await db.GetData<RoundData>( matchOrRoundName ) as IWinner;
+
+					await callback( iterateItem );
+				};
+
+				tasks.Add( newTask() );
 			}
+
+			await Task.WhenAll( tasks );
 		}
 	}
 }
