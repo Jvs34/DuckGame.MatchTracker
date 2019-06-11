@@ -217,6 +217,7 @@ namespace MatchBot
 		public async Task NextPageAsync()
 		{
 			await SaveCurrentEmojis();
+			await PaginatorMessage.DeleteAllReactionsAsync();
 			if( CurrentIndex < Levels.Count - 1 )
 			{
 				CurrentIndex++;
@@ -226,6 +227,7 @@ namespace MatchBot
 		public async Task PreviousPageAsync()
 		{
 			await SaveCurrentEmojis();
+			await PaginatorMessage.DeleteAllReactionsAsync();
 			if( CurrentIndex > 0 )
 			{
 				CurrentIndex--;
@@ -235,12 +237,14 @@ namespace MatchBot
 		public async Task SkipLeftAsync()
 		{
 			await SaveCurrentEmojis();
+			await PaginatorMessage.DeleteAllReactionsAsync();
 			CurrentIndex = 0;
 		}
 
 		public async Task SkipRightAsync()
 		{
 			await SaveCurrentEmojis();
+			await PaginatorMessage.DeleteAllReactionsAsync();
 			CurrentIndex = Levels.Count - 1;
 		}
 	}
