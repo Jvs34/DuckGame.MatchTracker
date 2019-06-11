@@ -53,6 +53,9 @@ namespace MatchBot
 				AutoReconnect = true ,
 				TokenType = TokenType.Bot ,
 				Token = BotSettings.DiscordToken ,
+#if DEBUG
+				LogLevel = LogLevel.Debug ,
+#endif
 			} );
 
 			//TODO:not sure if this has to be any other way, but singleton for now will work

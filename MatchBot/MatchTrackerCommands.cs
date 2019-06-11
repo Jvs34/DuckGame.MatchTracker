@@ -176,11 +176,21 @@ namespace MatchBot
 		[Command("VoteMaps")]
 		public async Task VoteMapsCommand( CommandContext ctx )
 		{
+			if( ctx.Channel.IsPrivate )
+			{
+				await ctx.RespondAsync( "Sorry but DSharpPlus's reaction shit doesn't seem to work in DMs, use a proper channel please" );
+				return;
+			}
+
 			var message = await ctx.RespondAsync( "Looking through the database..." );
 
 			await ctx.Channel.TriggerTypingAsync();
 
-			//ctx.Client.GetInteractivity().WaitForCustomPaginationAsync
+			var globalData = await DB.GetData<GlobalData>();
+
+			var paginator = new VoteMapPaginator( ctx.User , DB , globalData.Levels , message );
+
+			await ctx.Client.GetInteractivity().WaitForCustomPaginationAsync( paginator );
 		}
 
 		private async Task<DateTime> GetLastTimePlayed( PlayerData player )

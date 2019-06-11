@@ -1,63 +1,131 @@
-﻿using DSharpPlus.Entities;
+﻿using DSharpPlus;
+using DSharpPlus.CommandsNext;
+using DSharpPlus.CommandsNext.Attributes;
+using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
 using DSharpPlus.Interactivity.EventHandling;
+using Humanizer;
+using Humanizer.Localisation;
+using MatchTracker;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+
 
 namespace MatchBot
 {
 	public class VoteMapPaginator : IPaginationRequest
 	{
-		public Task DoCleanupAsync()
+		private PaginationEmojis PaginationEmojis { get; } = new PaginationEmojis();
+
+		private TaskCompletionSource<bool> CompletitionCondition { get; } = new TaskCompletionSource<bool>();
+
+		private List<string> Levels { get; }
+
+		private int CurrentIndex { get; set; }
+
+		private string CurrentLevel
 		{
-			throw new NotImplementedException();
+			get
+			{
+				return Levels [CurrentIndex];
+			}
 		}
 
-		public Task<PaginationEmojis> GetEmojisAsync()
+		private IGameDatabase DB { get; }
+
+		private DiscordMessage PaginatorMessage { get; }
+		private CancellationTokenSource TimeoutToken { get; }
+
+		private DiscordUser User { get; }
+
+		public VoteMapPaginator( DiscordUser usr , IGameDatabase database , IEnumerable<string> levels , DiscordMessage message )
 		{
-			throw new NotImplementedException();
+			User = usr;
+			DB = database;
+			Levels = new List<string>( levels );
+			PaginatorMessage = message;
+
+			TimeoutToken = new CancellationTokenSource( TimeSpan.FromSeconds( 30 ) );
+			TimeoutToken.Token.Register( () => CompletitionCondition.TrySetResult( true ) );
 		}
 
-		public Task<DiscordMessage> GetMessageAsync()
+		private async Task<Page> GetPageFromLevel()
 		{
-			throw new NotImplementedException();
+			Page levelPage = new Page( $"lmao {CurrentLevel}" );
+			Console.WriteLine( $"fucking {CurrentLevel}" );
+			return levelPage;
 		}
 
-		public Task<Page> GetPageAsync()
+
+		public async Task DoCleanupAsync()
 		{
-			throw new NotImplementedException();
+			await Task.CompletedTask;
+			await PaginatorMessage.DeleteAllReactionsAsync();
 		}
 
-		public Task<TaskCompletionSource<bool>> GetTaskCompletionSourceAsync()
+		public async Task<PaginationEmojis> GetEmojisAsync()
 		{
-			throw new NotImplementedException();
+			await Task.CompletedTask;
+			return PaginationEmojis;
 		}
 
-		public Task<DiscordUser> GetUserAsync()
+		public async Task<DiscordMessage> GetMessageAsync()
 		{
-			throw new NotImplementedException();
+			await Task.CompletedTask;
+			return PaginatorMessage;
 		}
 
-		public Task NextPageAsync()
+		public async Task<Page> GetPageAsync()
 		{
-			throw new NotImplementedException();
+			await Task.CompletedTask;
+			return await GetPageFromLevel();
 		}
 
-		public Task PreviousPageAsync()
+		public async Task<TaskCompletionSource<bool>> GetTaskCompletionSourceAsync()
 		{
-			throw new NotImplementedException();
+			await Task.CompletedTask;
+			return CompletitionCondition;
 		}
 
-		public Task SkipLeftAsync()
+		public async Task<DiscordUser> GetUserAsync()
 		{
-			throw new NotImplementedException();
+			await Task.CompletedTask;
+			return User;
 		}
 
-		public Task SkipRightAsync()
+		public async Task NextPageAsync()
 		{
-			throw new NotImplementedException();
+			await Task.CompletedTask;
+			if( CurrentIndex < Levels.Count - 1 )
+			{
+				CurrentIndex++;
+			}
+		}
+
+		public async Task PreviousPageAsync()
+		{
+			await Task.CompletedTask;
+			if( CurrentIndex > 0 )
+			{
+				CurrentIndex--;
+			}
+		}
+
+		public async Task SkipLeftAsync()
+		{
+			await Task.CompletedTask;
+			CurrentIndex = 0;
+		}
+
+		public async Task SkipRightAsync()
+		{
+			await Task.CompletedTask;
+			CurrentIndex = Levels.Count - 1;
 		}
 	}
 }
