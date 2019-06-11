@@ -88,8 +88,8 @@ namespace MatchBot
 
 			if( targets.Length == 0 )
 			{
-				var timesPlayedInfo = await GetTimesPlayed( null , matchOrRound );
-				response.Append( $"We played {timesPlayedInfo.Item1} {( matchOrRound ? "matches" : "rounds" )} with a playtime of {timesPlayedInfo.Item2.Humanize( culture: GetLocale( ctx.Client ) )}" );
+				(int timesPlayed, TimeSpan timeSpanPlayed) = await GetTimesPlayed( null , matchOrRound );
+				response.Append( $"We played {timesPlayed} {( matchOrRound ? "matches" : "rounds" )} with a playtime of {timeSpanPlayed.Humanize( culture: GetLocale( ctx.Client ) )}" );
 			}
 			else
 			{
@@ -98,8 +98,8 @@ namespace MatchBot
 					var foundPlayer = await GetPlayer( target );
 					if( foundPlayer != null )
 					{
-						var timesPlayedInfo = await GetTimesPlayed( foundPlayer , matchOrRound );
-						response.Append( $"{foundPlayer.GetName()} played {timesPlayedInfo.Item1} {( matchOrRound ? "matches" : "rounds" )} with a playtime of {timesPlayedInfo.Item2.Humanize( culture: GetLocale( ctx.Client ) )}" );
+						(int timesPlayed, TimeSpan timeSpanPlayed) = await GetTimesPlayed( foundPlayer , matchOrRound );
+						response.Append( $"{foundPlayer.GetName()} played {timesPlayed} {( matchOrRound ? "matches" : "rounds" )} with a playtime of {timeSpanPlayed.Humanize( culture: GetLocale( ctx.Client ) )}" );
 					}
 					else
 					{
@@ -232,8 +232,6 @@ namespace MatchBot
 
 			return (timesPlayed, durationPlayed);
 		}
-
-
 
 		private CultureInfo GetLocale( DiscordClient client )
 		{
