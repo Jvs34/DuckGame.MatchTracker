@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -14,6 +15,8 @@ namespace MatchTracker
 				[nameof( GlobalData )] = new Dictionary<string , IDatabaseEntry>() ,
 				[nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>() ,
 				[nameof( RoundData )] = new Dictionary<string , IDatabaseEntry>() ,
+				[nameof( LevelData )] = new Dictionary<string , IDatabaseEntry>() ,
+				[nameof( TagData )] = new Dictionary<string , IDatabaseEntry>() ,
 			};
 
 			var globalData = await db.GetData<GlobalData>();
@@ -32,6 +35,19 @@ namespace MatchTracker
 				MatchData matchData = await db.GetData<MatchData>( matchName );
 				mainCollection [nameof( MatchData )] [matchData.DatabaseIndex] = matchData;
 			}
+
+			foreach( var levelName in globalData.Levels )
+			{
+				LevelData levelData = await db.GetData<LevelData>( levelName );
+				mainCollection [nameof( LevelData )] [levelData.DatabaseIndex] = levelData;
+			}
+
+			foreach( var tagName in globalData.Tags )
+			{
+				TagData tagData = await db.GetData<TagData>( tagName );
+				mainCollection [nameof( TagData )] [tagData.DatabaseIndex] = tagData;
+			}
+
 
 			return mainCollection;
 		}
@@ -60,6 +76,41 @@ namespace MatchTracker
 			}
 
 			await Task.WhenAll( tasks );
+		}
+
+		public static async Task AddTag( this IGameDatabase db , string unicode , ITagsList tagsList = null , IDatabaseEntry databaseEntry = null )
+		{
+			//always get globalData
+
+			GlobalData globalData = await db.GetData<GlobalData>();
+			string emojiDatabaseIndex = string.Join( " " , Encoding.UTF8.GetBytes( unicode ) );
+
+			//now check if we exist
+			TagData tagData = await db.GetData<TagData>( emojiDatabaseIndex );
+
+			//we don't exist, 
+			if( tagData == null )
+			{
+				tagData = new TagData()
+				{
+					Name = emojiDatabaseIndex ,
+					Emoji = unicode ,
+				};
+
+				await db.SaveData( tagData );
+			}
+
+			if( !globalData.Tags.Contains( emojiDatabaseIndex ) )
+			{
+				globalData.Tags.Add( emojiDatabaseIndex );
+				await db.SaveData( globalData );
+			}
+
+			if( tagsList != null && databaseEntry != null && !tagsList.Tags.Contains( emojiDatabaseIndex ) )
+			{
+				tagsList.Tags.Add( emojiDatabaseIndex );
+				await db.SaveData( databaseEntry );
+			}
 		}
 	}
 }

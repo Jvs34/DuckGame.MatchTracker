@@ -142,6 +142,9 @@ namespace MatchBot
 				//we only care about unicode emojis
 				if( emoji.Id == 0 )
 				{
+					await DB.AddTag( emoji.Name , levelData , levelData );
+
+					/*
 					string emojiDatabaseIndex = string.Join( ' ' , Encoding.UTF8.GetBytes( emoji.Name ) );
 
 					TagData tagData = await DB.GetData<TagData>( emojiDatabaseIndex );
@@ -169,8 +172,8 @@ namespace MatchBot
 						levelData.Tags.Add( emojiDatabaseIndex );
 						await DB.SaveData( levelData );
 					}
+					*/
 				}
-
 
 
 			}
