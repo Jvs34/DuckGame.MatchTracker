@@ -25,6 +25,7 @@ namespace MatchBot
 			DB = database;
 		}
 
+		#region COMMANDS
 		[Command( "Quack" )]
 		public async Task QuackCommand( CommandContext ctx ) => await ctx.RespondAsync( "🦆" );
 
@@ -205,6 +206,9 @@ namespace MatchBot
 			await message.DeleteAsync();
 		}
 
+		#endregion
+
+		#region UTILS
 		private async Task<DateTime> GetLastTimePlayed( PlayerData player )
 		{
 			DateTime lastPlayed = DateTime.MinValue;
@@ -330,5 +334,6 @@ namespace MatchBot
 
 			return (wins, losses);
 		}
+		#endregion
 	}
 }

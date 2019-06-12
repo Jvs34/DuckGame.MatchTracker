@@ -144,36 +144,6 @@ namespace MatchBot
 				{
 					await DB.AddTag( emoji.Name , emoji.GetDiscordName() , levelData );
 					await DB.SaveData( levelData );
-
-					/*
-					string emojiDatabaseIndex = string.Join( ' ' , Encoding.UTF8.GetBytes( emoji.Name ) );
-
-					TagData tagData = await DB.GetData<TagData>( emojiDatabaseIndex );
-
-					//create the emoji now
-					if( tagData == null )
-					{
-						tagData = new TagData()
-						{
-							Name = emojiDatabaseIndex ,
-							Emoji = emoji.Name ,
-						};
-
-						await DB.SaveData( tagData );
-					}
-
-					if( !globalData.Tags.Contains( emojiDatabaseIndex ) )
-					{
-						globalData.Tags.Add( emojiDatabaseIndex );
-						await DB.SaveData( globalData );
-					}
-
-					if( !levelData.Tags.Contains( emojiDatabaseIndex ) )
-					{
-						levelData.Tags.Add( emojiDatabaseIndex );
-						await DB.SaveData( levelData );
-					}
-					*/
 				}
 
 
