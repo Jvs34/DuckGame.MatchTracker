@@ -39,7 +39,6 @@ namespace MatchBot
 		}
 
 		private IGameDatabase DB { get; }
-
 		private DiscordMessage PaginatorMessage { get; }
 		private CancellationTokenSource TimeoutToken { get; }
 
@@ -52,7 +51,7 @@ namespace MatchBot
 			Levels = new List<string>( levels );
 			PaginatorMessage = message;
 
-			TimeoutToken = new CancellationTokenSource( TimeSpan.FromSeconds( 120 ) );
+			TimeoutToken = new CancellationTokenSource( TimeSpan.FromMinutes( 5 ) );
 			TimeoutToken.Token.Register( () => CompletitionCondition.TrySetResult( true ) );
 
 			//no need for pagination emojis when it's only one level to vote for
@@ -83,7 +82,7 @@ namespace MatchBot
 				} ,
 				Description = levelData.Description ,
 				ImageUrl = DB.SharedSettings.GetLevelPreviewPath( CurrentLevel , true ) ,
-				Title = Path.GetFileName( levelData.FilePath ) ,
+				Title = $"{Path.GetFileName( levelData.FilePath )} ({CurrentLevel})" ,
 				Footer = new DiscordEmbedBuilder.EmbedFooter() ,
 			};
 

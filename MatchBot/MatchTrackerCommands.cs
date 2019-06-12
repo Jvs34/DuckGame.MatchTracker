@@ -201,6 +201,8 @@ namespace MatchBot
 			await message.ModifyAsync( page.Content , page.Embed );
 
 			await ctx.Client.GetInteractivity().WaitForCustomPaginationAsync( paginator );
+
+			await message.DeleteAsync();
 		}
 
 		private async Task<DateTime> GetLastTimePlayed( PlayerData player )

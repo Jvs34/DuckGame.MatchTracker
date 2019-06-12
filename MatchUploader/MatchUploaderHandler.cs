@@ -94,8 +94,11 @@ namespace MatchUploader
 			}
 		}
 
-		public async Task AddRoundToPlaylist( RoundData roundData , MatchData matchData , List<PlaylistItem> playlistItems )
+		public async Task AddRoundToPlaylist( string roundName , string matchName , List<PlaylistItem> playlistItems )
 		{
+			MatchData matchData = await gameDatabase.GetData<MatchData>( matchName );
+			RoundData roundData = await gameDatabase.GetData<RoundData>( roundName );
+
 			if( matchData.YoutubeUrl == null || roundData.YoutubeUrl == null )
 			{
 				Console.WriteLine( $"Could not add round {roundData.Name} to playlist because either match url or round url are missing" );
@@ -732,7 +735,7 @@ namespace MatchUploader
 					}
 				}
 
-				bool isUploaded = await UploadRoundToYoutubeAsync( roundData );
+				bool isUploaded = await UploadRoundToYoutubeAsync( roundData.Name );
 
 				if( isUploaded )
 				{
@@ -741,15 +744,17 @@ namespace MatchUploader
 
 					if( matchData != null && playlistItems != null )
 					{
-						await AddRoundToPlaylist( roundData , matchData , playlistItems );
+						await AddRoundToPlaylist( roundData.Name , matchData.Name , playlistItems );
 					}
 				}
 			}
 		}
 
 
-		public async Task<bool> UploadRoundToYoutubeAsync( RoundData roundData )
+		public async Task<bool> UploadRoundToYoutubeAsync( string roundName )
 		{
+			RoundData roundData = await gameDatabase.GetData<RoundData>( roundName );
+
 			if( youtubeService == null )
 			{
 				throw new NullReferenceException( "Youtube service is not initialized!!!" );
