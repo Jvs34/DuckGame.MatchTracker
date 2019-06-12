@@ -142,7 +142,8 @@ namespace MatchBot
 				//we only care about unicode emojis
 				if( emoji.Id == 0 )
 				{
-					await DB.AddTag( emoji.Name , levelData , levelData );
+					await DB.AddTag( emoji.Name , emoji.GetDiscordName() , levelData );
+					await DB.SaveData( levelData );
 
 					/*
 					string emojiDatabaseIndex = string.Join( ' ' , Encoding.UTF8.GetBytes( emoji.Name ) );

@@ -78,7 +78,7 @@ namespace MatchTracker
 			await Task.WhenAll( tasks );
 		}
 
-		public static async Task AddTag( this IGameDatabase db , string unicode , ITagsList tagsList = null , IDatabaseEntry databaseEntry = null )
+		public static async Task AddTag( this IGameDatabase db , string unicode , string fancyName , ITagsList tagsList = null )
 		{
 			//always get globalData
 
@@ -88,13 +88,13 @@ namespace MatchTracker
 			//now check if we exist
 			TagData tagData = await db.GetData<TagData>( emojiDatabaseIndex );
 
-			//we don't exist, 
 			if( tagData == null )
 			{
 				tagData = new TagData()
 				{
 					Name = emojiDatabaseIndex ,
 					Emoji = unicode ,
+					FancyName = fancyName,
 				};
 
 				await db.SaveData( tagData );
@@ -106,10 +106,9 @@ namespace MatchTracker
 				await db.SaveData( globalData );
 			}
 
-			if( tagsList != null && databaseEntry != null && !tagsList.Tags.Contains( emojiDatabaseIndex ) )
+			if( tagsList?.Tags.Contains( emojiDatabaseIndex ) == false )
 			{
 				tagsList.Tags.Add( emojiDatabaseIndex );
-				await db.SaveData( databaseEntry );
 			}
 		}
 	}

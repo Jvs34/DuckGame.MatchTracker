@@ -9,8 +9,6 @@ namespace MatchRecorder
 	{
 		public static MatchRecorderHandler Recorder { get; set; }
 
-
-
 		public MatchRecorderMod()
 		{
 #if DEBUG
