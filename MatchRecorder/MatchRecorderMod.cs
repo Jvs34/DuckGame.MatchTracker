@@ -45,7 +45,7 @@ namespace MatchRecorder
 			CopyDiscordSharpPlusDependencies( configuration.directory );
 
 			Recorder = new MatchRecorderHandler( configuration.directory );
-			HarmonyInstance.Create( "MatchRecorder" ).PatchAll( Assembly.GetExecutingAssembly() );
+			HarmonyInstance.Create( GetType().Namespace ).PatchAll( Assembly.GetExecutingAssembly() );
 		}
 
 		private Assembly ModResolve( object sender , ResolveEventArgs args )
