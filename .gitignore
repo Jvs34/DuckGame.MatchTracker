@@ -3,6 +3,7 @@
 
 */bin/*
 */obj/*
+*/Output/*
 *launchSettings.json
 
 build/build_compiled.hash
@@ -13,6 +14,5 @@ Settings/*.json
 */appsettings.json
 .vs/*
 ThirdParty/ffmpeg.exe
-MatchUploader/Properties/PublishProfiles/LinuxPublish.pubxml
 UploaderTask/
-MatchUploader/Properties/PublishProfiles/
+*/Properties/*

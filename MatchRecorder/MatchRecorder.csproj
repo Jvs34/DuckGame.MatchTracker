@@ -7,6 +7,7 @@
     <Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them to your desired repo</Description>
     <RunPostBuildEvent>Always</RunPostBuildEvent>
     <LangVersion>latest</LangVersion>
+    <OutputPath>Output\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
@@ -14,14 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!--<PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00595" />-->
-    
-    <!--<PackageReference Include="DSharpPlus.VoiceNext" Version="4.0.0-beta-00491" />-->
-    
-    
     <PackageReference Include="Lib.Harmony" Version="1.2.0.1" />
-    
-    
     <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.4" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
