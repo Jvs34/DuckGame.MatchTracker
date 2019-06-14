@@ -6,6 +6,7 @@ using MatchTracker;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -155,25 +156,36 @@ namespace MatchBot
 				embed.Author = new DiscordEmbedBuilder.EmbedAuthor()
 				{
 					Name = $"Winner: {winner.GetWinnerName()}" ,
-
 				};
+
+				if( winner.Winner?.Players.Count == 1 )
+				{
+					//see if it's a valid discord user
+					var discordUser = await DiscordClient.GetUserAsync( winner.Winner.Players [0].DiscordId );
+					if( discordUser != null )
+					{
+						embed.Author.IconUrl = discordUser.AvatarUrl;
+					}
+				}
 			}
 
 			if( itemData is IVideoUpload videoUpload && !string.IsNullOrEmpty( videoUpload.YoutubeUrl ) )
 			{
-				string embedString = "";
-
 				switch( videoUpload.VideoType )
 				{
 					case VideoType.VideoLink:
 						{
-							embedString = $"https://www.youtube.com/watch?v={videoUpload.YoutubeUrl}";
+							embed.Url = $"https://www.youtube.com/watch?v={videoUpload.YoutubeUrl}";
+
+							embed.ThumbnailUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg";
+							//embed.ImageUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg";
+							//embed.ThumbnailUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/0.jpg";
 						}
 						break;
 
 					case VideoType.PlaylistLink:
 						{
-							embedString = $"https://www.youtube.com/playlist?list={videoUpload.YoutubeUrl}";
+							embed.Url = $"https://www.youtube.com/playlist?list={videoUpload.YoutubeUrl}";
 						}
 						break;
 					//other case woul
@@ -187,8 +199,6 @@ namespace MatchBot
 					default:
 						break;
 				}
-
-				embed.ImageUrl = embedString;
 			}
 
 			if( itemData is LevelData levelData )

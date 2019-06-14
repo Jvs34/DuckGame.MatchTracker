@@ -185,6 +185,17 @@ namespace MatchBot
 		[Command( "VoteMap" )]
 		public async Task VoteMapCommand( CommandContext ctx , params string [] levelIDs )
 		{
+			await VoteDatabase<LevelData>( ctx , levelIDs );
+		}
+
+		[Command( "VoteRound" )]
+		public async Task VoteRoundCommand( CommandContext ctx , params string [] databaseIndexes )
+		{
+			await VoteDatabase<RoundData>( ctx , databaseIndexes );
+		}
+
+		private async Task VoteDatabase<T>( CommandContext ctx , params string [] databaseIndexes ) where T : IDatabaseEntry, ITagsList
+		{
 			if( ctx.Channel.IsPrivate )
 			{
 				await ctx.RespondAsync( "Sorry but DSharpPlus's reaction shit doesn't seem to work in DMs, use a proper channel please" );
@@ -195,7 +206,7 @@ namespace MatchBot
 
 			await ctx.Channel.TriggerTypingAsync();
 
-			var paginator = new DatabaseVotePaginator<LevelData>( ctx.Client , DB , levelIDs , ctx.User , message );//new VoteMapPaginator( ctx.User , DB , levelIDs , message );
+			var paginator = new DatabaseVotePaginator<T>( ctx.Client , DB , databaseIndexes , ctx.User , message );
 
 			var page = await paginator.GetPageAsync();
 
