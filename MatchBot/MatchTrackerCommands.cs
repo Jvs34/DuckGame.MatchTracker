@@ -188,6 +188,19 @@ namespace MatchBot
 			await VoteDatabase<LevelData>( ctx , levelIDs );
 		}
 
+		[Command( "VoteRounds" )]
+		public async Task VoteRoundsCommand( CommandContext ctx , string matchName )
+		{
+			MatchData matchData = await DB.GetData<MatchData>( matchName );
+			if( matchData == null )
+			{
+				await ctx.RespondAsync( $"{matchName} is not a valid MatchData database index!" );
+				return;
+			}
+
+			await VoteRoundCommand( ctx , matchData.Rounds.ToArray() );
+		}
+
 		[Command( "VoteRound" )]
 		public async Task VoteRoundCommand( CommandContext ctx , params string [] databaseIndexes )
 		{

@@ -153,9 +153,16 @@ namespace MatchBot
 
 			if( itemData is IWinner winner )
 			{
+				string winnerName = winner.GetWinnerName();
+
+				if( string.IsNullOrEmpty( winnerName ) )
+				{
+					winnerName = "Nobody";
+				}
+
 				embed.Author = new DiscordEmbedBuilder.EmbedAuthor()
 				{
-					Name = $"Winner: {winner.GetWinnerName()}" ,
+					Name = $"Winner: {winnerName}" ,
 				};
 
 				if( winner.Winner?.Players.Count == 1 )
@@ -178,6 +185,7 @@ namespace MatchBot
 							embed.Url = $"https://www.youtube.com/watch?v={videoUpload.YoutubeUrl}";
 
 							embed.ThumbnailUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg";
+							
 							//embed.ImageUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg";
 							//embed.ThumbnailUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/0.jpg";
 						}
@@ -188,14 +196,13 @@ namespace MatchBot
 							embed.Url = $"https://www.youtube.com/playlist?list={videoUpload.YoutubeUrl}";
 						}
 						break;
-					//other case woul
-
+					/*
 					case VideoType.MergedVideoLink:
 						{
 							//TODO: if this is ever actually a thing, append the timing at the end of the url
 						}
 						break;
-
+					*/
 					default:
 						break;
 				}
