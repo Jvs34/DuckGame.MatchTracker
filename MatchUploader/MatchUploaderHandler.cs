@@ -281,7 +281,6 @@ namespace MatchUploader
 
 			if( calendarService == null )
 			{
-
 				calendarService = new CalendarService( new BaseClientService.Initializer()
 				{
 					HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( uploaderSettings.Secrets ,
@@ -308,7 +307,6 @@ namespace MatchUploader
 		public async Task<List<Event>> GetAllCalendarEvents()
 		{
 			var allEvents = new List<Event>();
-
 
 			var eventRequest = calendarService.Events.List( uploaderSettings.CalendarID );
 			Events eventResponse;

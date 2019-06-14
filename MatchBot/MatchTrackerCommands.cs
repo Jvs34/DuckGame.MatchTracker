@@ -195,7 +195,7 @@ namespace MatchBot
 
 			await ctx.Channel.TriggerTypingAsync();
 
-			var paginator = new VoteMapPaginator( ctx.User , DB , levelIDs , message );
+			var paginator = new DatabaseVotePaginator<LevelData>( ctx.Client , DB , levelIDs , ctx.User , message );//new VoteMapPaginator( ctx.User , DB , levelIDs , message );
 
 			var page = await paginator.GetPageAsync();
 
