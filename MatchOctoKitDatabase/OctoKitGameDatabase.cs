@@ -77,13 +77,12 @@ namespace MatchTracker
 				Serialize( data , writer );
 			}
 
-			IReadOnlyList<RepositoryContent> fileContents = null;
+			SetCachedItem( data , DateTime.UtcNow.AddSeconds( 150 ) );
 
 			try
 			{
 				//I don't know why this would throw an exception instead of just giving an empty list but WHATEVER MAN
-				fileContents = await OctoKitClient.Repository.Content.GetAllContents( SharedSettings.RepositoryUser , SharedSettings.RepositoryName , url );
-
+				IReadOnlyList<RepositoryContent> fileContents = await OctoKitClient.Repository.Content.GetAllContents( SharedSettings.RepositoryUser , SharedSettings.RepositoryName , url );
 				if( fileContents?.Count > 0 )
 				{
 					var fileInfo = fileContents [0];
