@@ -24,7 +24,6 @@ namespace MatchTracker
 
 		public override async Task Load()
 		{
-			//TODO:fetch and cache the entire database with a github download
 			if( InitialLoad )
 			{
 				await LoadZippedDatabase();
@@ -33,29 +32,77 @@ namespace MatchTracker
 
 		protected virtual async Task LoadZippedDatabase()
 		{
-			//SharedSettings.RepositoryUser , SharedSettings.RepositoryName
 			string repositoryZipUrl = Url.Combine( "https://github.com" , SharedSettings.RepositoryUser , SharedSettings.RepositoryName , "archive" , "master.zip" );
 
 			var httpResponse = await Client.GetAsync( repositoryZipUrl , HttpCompletionOption.ResponseHeadersRead );
 
 			if( httpResponse.IsSuccessStatusCode )
 			{
-				string zipName = $"{SharedSettings.RepositoryName}-master";
-
 				using( var responseStream = await httpResponse.Content.ReadAsStreamAsync() )
 				using( ZipArchive zipArchive = new ZipArchive( responseStream , ZipArchiveMode.Read ) )
 				{
-					var globalPath = ToZipPath( zipName , SharedSettings.GetDataPath<GlobalData>( string.Empty ) );
-					
-					var globalDataStream = zipArchive.GetEntry( globalPath );
+					CacheEverythingInZip( zipArchive );
 				}
 			}
 		}
 
-		protected string ToZipPath( string zipName , string path )
+		protected void CacheEverythingInZip( ZipArchive zipArchive )
 		{
-			return path.Replace( SharedSettings.BaseRecordingFolder , zipName ).Replace( "\\" , "/" );
+			DateTime expireTime = DateTime.UtcNow.AddSeconds( 150 );
+			//try to get the globaldata
+			var globalData = GetZipEntry<GlobalData>( zipArchive );
+
+			SetCachedItem( globalData , expireTime );
+
+			foreach( var matchName in globalData.Matches )
+			{
+				var matchData = GetZipEntry<MatchData>( zipArchive , matchName );
+				SetCachedItem( matchData , expireTime );
+			}
+
+			foreach( var roundName in globalData.Rounds )
+			{
+				var roundData = GetZipEntry<RoundData>( zipArchive , roundName );
+				SetCachedItem( roundData , expireTime );
+			}
+
+			foreach( var levelName in globalData.Levels )
+			{
+				var levelData = GetZipEntry<LevelData>( zipArchive , levelName );
+				SetCachedItem( levelData , expireTime );
+			}
+
+			foreach( var tagName in globalData.Tags )
+			{
+				var tagData = GetZipEntry<TagData>( zipArchive , tagName );
+				SetCachedItem( tagData , expireTime );
+			}
+
 		}
+
+		protected string ToZipPath( ZipArchive zipArchive , string path )
+		{
+			return path.Replace( SharedSettings.BaseRecordingFolder , zipArchive.Entries [0]?.FullName.Replace( "/" , string.Empty ) ).Replace( "\\" , "/" );
+		}
+
+
+		protected T GetZipEntry<T>( ZipArchive zipArchive , string databaseIndex = "" ) where T : IDatabaseEntry
+		{
+			T data = default;
+			var dataPath = ToZipPath( zipArchive , SharedSettings.GetDataPath<T>( databaseIndex ) );
+
+			var zipEntry = zipArchive.GetEntry( dataPath );
+			if( zipEntry != null )
+			{
+				using( var stream = zipEntry.Open() )
+				{
+					data = Deserialize<T>( stream );
+				}
+			}
+
+			return data;
+		}
+
 
 		public override async Task SaveData<T>( T data )
 		{

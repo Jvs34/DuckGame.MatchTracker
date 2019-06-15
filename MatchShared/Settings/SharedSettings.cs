@@ -38,7 +38,7 @@ namespace MatchTracker
 			return Combine( useUrl , GetRecordingFolder( useUrl ) , typeof( T ).Name , databaseIndex );
 		}
 
-		public string GetDataPath<T>( string databaseIndex , bool useUrl = false ) => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
+		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
 
 		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
 

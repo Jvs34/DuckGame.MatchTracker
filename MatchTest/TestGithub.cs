@@ -26,7 +26,7 @@ namespace MatchTest
 
 			IGameDatabase db = new OctoKitGameDatabase( httpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] )
 			{
-				//InitialLoad = true ,
+				InitialLoad = true ,
 			};
 			Configuration.Bind( db.SharedSettings );
 
