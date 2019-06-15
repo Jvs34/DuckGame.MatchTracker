@@ -24,27 +24,18 @@ namespace MatchTest
 
 			HttpClient httpClient = new HttpClient();
 
-			var db = new OctoKitGameDatabase( httpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] );
+			IGameDatabase db = new OctoKitGameDatabase( httpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] )
+			{
+				//InitialLoad = true ,
+			};
 			Configuration.Bind( db.SharedSettings );
 
 			await db.Load();
 
 			var globalData = await db.GetData<GlobalData>();
 
-			var newEmoji = new TagData()
-			{
-				Emoji = "👎" ,
-				Name = "ThumbsDown" ,
-			};
+			globalData = await db.GetData<GlobalData>();
 
-			TagData emoji = await db.GetData<TagData>( newEmoji.DatabaseIndex );
-
-			if( emoji == null )
-			{
-				await db.SaveData( newEmoji );
-			}
-
-			//await db.SaveData( globalData );
 		}
 	}
 }

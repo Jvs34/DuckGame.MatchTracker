@@ -1,29 +1,19 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public class FileSystemGameDatabase : IGameDatabase
+	public class FileSystemGameDatabase : BaseGameDatabase
 	{
-		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
-		public bool ReadOnly => false;
+		public override bool ReadOnly => false;
 
-		private JsonSerializer Serializer { get; } = new JsonSerializer()
-		{
-			Formatting = Formatting.Indented ,
-			PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
-		};
-
-		public async Task Load()
+		public override async Task Load()
 		{
 			await Task.CompletedTask;
 		}
 
-		public async Task SaveData<T>( T data ) where T : IDatabaseEntry
+		public override async Task SaveData<T>( T data )
 		{
 			await Task.CompletedTask;
 
@@ -40,11 +30,11 @@ namespace MatchTracker
 
 			using( var stream = File.CreateText( path ) )
 			{
-				Serializer.Serialize( stream , data );
+				Serialize( data , stream );
 			}
 		}
 
-		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
+		public override async Task<T> GetData<T>( string dataId = "" )
 		{
 			await Task.CompletedTask;
 
@@ -54,10 +44,9 @@ namespace MatchTracker
 
 			if( File.Exists( path ) )
 			{
-				using( var stream = File.OpenText( path ) )
-				using( JsonTextReader jsonReader = new JsonTextReader( stream ) )
+				using( var stream = File.Open( path , FileMode.Open ) )
 				{
-					data = Serializer.Deserialize<T>( jsonReader );
+					data = Deserialize<T>( stream );
 				}
 			}
 

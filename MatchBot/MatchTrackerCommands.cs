@@ -29,7 +29,7 @@ namespace MatchBot
 		[Command( "Quack" )]
 		public async Task QuackCommand( CommandContext ctx ) => await ctx.RespondAsync( "🦆" );
 
-		[Command( "Uploads" )]
+		[Command( "Uploads" ), Description( "How many uploads are left" )]
 		public async Task UploadsLeftCommand( CommandContext ctx )
 		{
 			var message = await ctx.RespondAsync( "Looking through the database..." );
@@ -43,8 +43,8 @@ namespace MatchBot
 			await message.ModifyAsync( $"There are {uploadsLeft} Youtube videos left to upload, taking {timeSpan.Humanize( culture: GetLocale( ctx.Client ) , maxUnit: TimeUnit.Month )} to upload" );
 		}
 
-		[Command( "LastPlayed" )]
-		public async Task LastPlayedCommand( CommandContext ctx , params DiscordUser [] targets )
+		[Command( "LastPlayed" ), Description( "Checks when was the last time someone played" )]
+		public async Task LastPlayedCommand( CommandContext ctx , [Description( "Can be left empty" )] params DiscordUser [] targets )
 		{
 			var message = await ctx.RespondAsync( "Looking through the database..." );
 
@@ -75,7 +75,10 @@ namespace MatchBot
 		}
 
 		[Command( "TimesPlayed" )]
-		public async Task TimesPlayedCommand( CommandContext ctx , bool matchOrRound , params DiscordUser [] targets )
+		public async Task TimesPlayedCommand(
+			CommandContext ctx ,
+			[Description( "Whether we're doing this for a match(true) or a round(false)" )]  bool matchOrRound ,
+			[Description( "Can be left empty" )] params DiscordUser [] targets )
 		{
 			var message = await ctx.RespondAsync( "Looking through the database..." );
 
@@ -109,7 +112,10 @@ namespace MatchBot
 		}
 
 		[Command( "Wins" )]
-		public async Task MostWinsCommand( CommandContext ctx , bool matchOrRound , params DiscordUser [] targets )
+		public async Task MostWinsCommand(
+			CommandContext ctx ,
+			[Description( "Whether we're doing this for a match(true) or a round(false)" )] bool matchOrRound ,
+			[Description( "Can be left empty" )] params DiscordUser [] targets )
 		{
 			var message = await ctx.RespondAsync( "Looking through the database..." );
 
@@ -174,7 +180,7 @@ namespace MatchBot
 			await message.ModifyAsync( response.ToString() );
 		}
 
-		[Command( "VoteMaps" )]
+		[Command( "VoteMaps" ), Description( "Votes all maps registered in the database " )]
 		public async Task VoteMapsCommand( CommandContext ctx )
 		{
 			var globalData = await DB.GetData<GlobalData>();
@@ -189,7 +195,7 @@ namespace MatchBot
 		}
 
 		[Command( "VoteRounds" )]
-		public async Task VoteRoundsCommand( CommandContext ctx , string matchName )
+		public async Task VoteRoundsCommand( CommandContext ctx , [Description( "The match id to vote rounds for" )] string matchName )
 		{
 			MatchData matchData = await DB.GetData<MatchData>( matchName );
 			if( matchData == null )
@@ -202,7 +208,7 @@ namespace MatchBot
 		}
 
 		[Command( "VoteRound" )]
-		public async Task VoteRoundCommand( CommandContext ctx , params string [] databaseIndexes )
+		public async Task VoteRoundCommand( CommandContext ctx , [Description( "List of rounds to vote for, minimum 1" )] params string [] databaseIndexes )
 		{
 			await VoteDatabase<RoundData>( ctx , databaseIndexes );
 		}

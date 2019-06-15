@@ -3,7 +3,9 @@ using Octokit;
 using Octokit.Internal;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.IO.Compression;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +31,34 @@ namespace MatchTracker
 			}
 		}
 
+		/*
+		protected override async Task LoadZippedDatabase()
+		{
+			byte [] archive = null;
+
+			try
+			{
+				archive = await OctoKitClient.Repository.Content.GetArchive( SharedSettings.RepositoryUser , SharedSettings.RepositoryName );
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e );
+				Debug.WriteLine( e );
+			}
+
+			if( archive == null )
+			{
+				return;
+			}
+
+			using( var zipStream = new MemoryStream( archive ) )
+			using( ZipArchive zipArchive = new ZipArchive( zipStream , ZipArchiveMode.Read ) )
+			{
+
+			}
+		}
+		*/
+
 		public override async Task SaveData<T>( T data )
 		{
 			if( ReadOnly )
@@ -44,7 +74,7 @@ namespace MatchTracker
 
 			using( StringWriter writer = new StringWriter( newFileContent ) )
 			{
-				Serializer.Serialize( writer , data );
+				Serialize( data , writer );
 			}
 
 			IReadOnlyList<RepositoryContent> fileContents = null;
@@ -52,7 +82,6 @@ namespace MatchTracker
 			try
 			{
 				//I don't know why this would throw an exception instead of just giving an empty list but WHATEVER MAN
-
 				fileContents = await OctoKitClient.Repository.Content.GetAllContents( SharedSettings.RepositoryUser , SharedSettings.RepositoryName , url );
 
 				if( fileContents?.Count > 0 )

@@ -1,0 +1,122 @@
+﻿using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
+
+namespace MatchTracker
+{
+	public abstract class BaseGameDatabase : IGameDatabase
+	{
+		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
+		public virtual bool ReadOnly => false;
+		protected Dictionary<string , Dictionary<string , IDatabaseEntry>> Cache { get; } = new Dictionary<string , Dictionary<string , IDatabaseEntry>>();
+		protected Dictionary<string , Dictionary<string , DateTime>> CacheExpireTime { get; } = new Dictionary<string , Dictionary<string , DateTime>>();
+
+		protected JsonSerializer Serializer { get; } = new JsonSerializer()
+		{
+			Formatting = Formatting.Indented ,
+			PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
+		};
+
+		protected void Serialize<T>( T data , TextWriter textWriter ) where T : IDatabaseEntry
+		{
+			using( JsonTextWriter jsonTextWriter = new JsonTextWriter( textWriter ) )
+			{
+				Serializer.Serialize( textWriter , data );
+			}
+		}
+
+		protected T Deserialize<T>( Stream dataStream , T data = default ) where T : IDatabaseEntry
+		{
+			using( StreamReader reader = new StreamReader( dataStream ) )
+			using( JsonTextReader jsonReader = new JsonTextReader( reader ) )
+			{
+				if( data != default )
+				{
+					Serializer.Populate( jsonReader , data );
+				}
+				else
+				{
+					data = Serializer.Deserialize<T>( jsonReader );
+				}
+			}
+
+			return data;
+		}
+
+
+		protected void ClearCache()
+		{
+			lock( Cache )
+			{
+				lock( CacheExpireTime )
+				{
+					Cache.Clear();
+					CacheExpireTime.Clear();
+				}
+			}
+		}
+
+		protected void ClearExpiredCache()
+		{
+			//TODO
+		}
+
+		protected T GetCachedItem<T>( string databaseIndex )
+		{
+			lock( Cache )
+			{
+				if( Cache.TryGetValue( typeof( T ).Name , out var keyValues ) && keyValues.TryGetValue( databaseIndex , out var data ) )
+				{
+					return (T) data;
+				}
+			}
+			return default;
+		}
+
+		protected void SetCachedItem<T>( T data , DateTime expire ) where T : IDatabaseEntry
+		{
+			string typeName = typeof( T ).Name;
+
+			lock( Cache )
+			{
+				lock( CacheExpireTime )
+				{
+					if( !Cache.ContainsKey( typeName ) )
+					{
+						Cache [typeName] = new Dictionary<string , IDatabaseEntry>();
+					}
+
+					if( !CacheExpireTime.ContainsKey( typeName ) )
+					{
+						CacheExpireTime [typeName] = new Dictionary<string , DateTime>();
+					}
+
+					Cache [typeName] [data.DatabaseIndex] = data;
+					CacheExpireTime [typeName] [data.DatabaseIndex] = expire;
+				}
+			}
+		}
+
+		protected bool IsCachedItemExpired<T>( string databaseIndex , DateTime checkedAgainst ) where T : IDatabaseEntry
+		{
+			lock( CacheExpireTime )
+			{
+				if( CacheExpireTime.TryGetValue( typeof( T ).Name , out var keyValues ) && keyValues.TryGetValue( databaseIndex , out var date ) )
+				{
+					return date < checkedAgainst;
+				}
+			}
+			return true;
+		}
+
+		#region INTERFACE
+		public abstract Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry;
+
+		public abstract Task Load();
+
+		public abstract Task SaveData<T>( T data ) where T : IDatabaseEntry;
+		#endregion
+	}
+}
