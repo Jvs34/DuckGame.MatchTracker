@@ -36,16 +36,21 @@ namespace MatchBot
 				.AddCommandLine( args )
 			.Build();
 
+			Configuration.Bind( BotSettings );
+
 			if( BotSettings.UseRemoteDatabase )
 			{
-				DB = new OctoKitGameDatabase( HttpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] );
+				DB = new OctoKitGameDatabase( HttpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] )
+				{
+					InitialLoad = true,
+				};
 			}
 			else
 			{
 				DB = new FileSystemGameDatabase();
 			}
 
-			Configuration.Bind( BotSettings );
+			
 			Configuration.Bind( DB.SharedSettings );
 
 			DiscordInstance = new DiscordClient( new DiscordConfiguration()

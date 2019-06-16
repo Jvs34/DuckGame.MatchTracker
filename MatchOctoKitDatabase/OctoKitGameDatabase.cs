@@ -31,33 +31,6 @@ namespace MatchTracker
 			}
 		}
 
-		/*
-		protected override async Task LoadZippedDatabase()
-		{
-			byte [] archive = null;
-
-			try
-			{
-				archive = await OctoKitClient.Repository.Content.GetArchive( SharedSettings.RepositoryUser , SharedSettings.RepositoryName );
-			}
-			catch( Exception e )
-			{
-				Console.WriteLine( e );
-				Debug.WriteLine( e );
-			}
-
-			if( archive == null )
-			{
-				return;
-			}
-
-			using( var zipStream = new MemoryStream( archive ) )
-			using( ZipArchive zipArchive = new ZipArchive( zipStream , ZipArchiveMode.Read ) )
-			{
-
-			}
-		}
-		*/
 
 		public override async Task SaveData<T>( T data )
 		{
@@ -66,9 +39,7 @@ namespace MatchTracker
 				throw new Exception( "Cannot save data if user is unauthenticated" );
 			}
 
-			string url = SharedSettings.GetDataPath<T>( data.DatabaseIndex , true );
-
-			url = url.Replace( SharedSettings.BaseRepositoryUrl , string.Empty );
+			string url = SharedSettings.GetDataPath<T>( data.DatabaseIndex , true ).Replace( SharedSettings.BaseRepositoryUrl , string.Empty );
 
 			var newFileContent = new StringBuilder();
 
@@ -85,20 +56,18 @@ namespace MatchTracker
 				IReadOnlyList<RepositoryContent> fileContents = await OctoKitClient.Repository.Content.GetAllContents( SharedSettings.RepositoryUser , SharedSettings.RepositoryName , url );
 				if( fileContents?.Count > 0 )
 				{
-					var fileInfo = fileContents [0];
-
-					var result = await OctoKitClient.Repository.Content.UpdateFile(
+					await OctoKitClient.Repository.Content.UpdateFile(
 						SharedSettings.RepositoryUser ,
 						SharedSettings.RepositoryName ,
 						url ,
-						new UpdateFileRequest( $"Updated {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() , fileInfo.Sha , true )
+						new UpdateFileRequest( $"Updated {typeof( T )} : {data.DatabaseIndex}" , newFileContent.ToString() , fileContents [0].Sha , true )
 					);
 				}
 			}
-			catch( NotFoundException )
+			catch( Exception )
 			{
 				//the file was not found, this is totally fine, we'll create it now
-				var result = await OctoKitClient.Repository.Content.CreateFile(
+				await OctoKitClient.Repository.Content.CreateFile(
 					SharedSettings.RepositoryUser ,
 					SharedSettings.RepositoryName ,
 					url ,
