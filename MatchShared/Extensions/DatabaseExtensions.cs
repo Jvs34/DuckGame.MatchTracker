@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchTracker
@@ -61,16 +62,33 @@ namespace MatchTracker
 
 			List<Task> tasks = new List<Task>();
 
+			var tokenSource = new CancellationTokenSource();
+
 			foreach( string matchOrRoundName in matchOrRound ? globalData.Matches : globalData.Rounds )
 			{
-				Func<Task> newTask = async () =>
+				async Task newTask()
 				{
-					IWinner iterateItem = matchOrRound ?
-						await db.GetData<MatchData>( matchOrRoundName ) as IWinner :
-						await db.GetData<RoundData>( matchOrRoundName ) as IWinner;
+					bool shouldContinue = true;
 
-					await callback( iterateItem );
-				};
+					try
+					{
+						tokenSource.Token.ThrowIfCancellationRequested();
+
+						IWinner iterateItem = matchOrRound ?
+							await db.GetData<MatchData>( matchOrRoundName ) as IWinner :
+							await db.GetData<RoundData>( matchOrRoundName ) as IWinner;
+
+						shouldContinue = await callback( iterateItem );
+					}
+					catch( OperationCanceledException )
+					{
+					}
+
+					if( !shouldContinue )
+					{
+						tokenSource.Cancel();
+					}
+				}
 
 				tasks.Add( newTask() );
 			}
@@ -94,7 +112,7 @@ namespace MatchTracker
 				{
 					Name = emojiDatabaseIndex ,
 					Emoji = unicode ,
-					FancyName = fancyName,
+					FancyName = fancyName ,
 				};
 
 				await db.SaveData( tagData );
