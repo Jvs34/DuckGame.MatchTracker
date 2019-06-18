@@ -19,7 +19,8 @@ namespace MatchTracker
 			PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
 		};
 
-		protected void Serialize<T>( T data , TextWriter textWriter ) where T : IDatabaseEntry
+		#region JSON
+		protected virtual void Serialize<T>( T data , TextWriter textWriter ) where T : IDatabaseEntry
 		{
 			using( JsonTextWriter jsonTextWriter = new JsonTextWriter( textWriter ) )
 			{
@@ -27,7 +28,7 @@ namespace MatchTracker
 			}
 		}
 
-		protected T Deserialize<T>( Stream dataStream , T data = default ) where T : IDatabaseEntry
+		protected virtual T Deserialize<T>( Stream dataStream , T data = default ) where T : IDatabaseEntry
 		{
 			using( StreamReader reader = new StreamReader( dataStream ) )
 			using( JsonTextReader jsonReader = new JsonTextReader( reader ) )
@@ -44,8 +45,9 @@ namespace MatchTracker
 
 			return data;
 		}
+		#endregion
 
-
+		#region CACHE
 		protected void ClearCache()
 		{
 			lock( Cache )
@@ -110,6 +112,7 @@ namespace MatchTracker
 			}
 			return true;
 		}
+		#endregion
 
 		#region INTERFACE
 		public abstract Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry;

@@ -30,7 +30,7 @@ namespace MatchTracker
 			}
 		}
 
-		protected virtual async Task LoadZippedDatabase()
+		protected virtual async Task<Stream> GetZippedDatabaseStream()
 		{
 			string repositoryZipUrl = Url.Combine( "https://github.com" , SharedSettings.RepositoryUser , SharedSettings.RepositoryName , "archive" , "master.zip" );
 
@@ -38,7 +38,19 @@ namespace MatchTracker
 
 			if( httpResponse.IsSuccessStatusCode )
 			{
-				using( var responseStream = await httpResponse.Content.ReadAsStreamAsync() )
+				return await httpResponse.Content.ReadAsStreamAsync();
+			}
+
+			return null;
+		}
+
+		protected virtual async Task LoadZippedDatabase()
+		{
+			var zipStream = await GetZippedDatabaseStream();
+
+			if( zipStream != null )
+			{
+				using( var responseStream = zipStream )
 				using( ZipArchive zipArchive = new ZipArchive( responseStream , ZipArchiveMode.Read ) )
 				{
 					CacheEverythingInZip( zipArchive );

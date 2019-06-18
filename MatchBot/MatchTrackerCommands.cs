@@ -213,6 +213,37 @@ namespace MatchBot
 			await VoteDatabase<RoundData>( ctx , databaseIndexes );
 		}
 
+		/*
+		[Command( "AddEmojis" )]
+		public async Task AddEmojisCommand( CommandContext ctx )
+		{
+
+			var globalData = await DB.GetData<GlobalData>();
+
+			//UnicodeEmojis
+
+			var UnicodeEmojisProp = typeof( DiscordEmoji ).GetProperty( "UnicodeEmojis" , System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.NonPublic );
+
+			IReadOnlyDictionary<string , string> unicodeEmojis = (IReadOnlyDictionary<string, string>) UnicodeEmojisProp.GetValue( null );
+
+
+			try
+			{
+				foreach( var unicodeKV in unicodeEmojis )
+				{
+					await DB.AddTag( unicodeKV.Value , unicodeKV.Key );
+				}
+			}
+			catch( Exception e )
+			{
+
+			}
+		}
+		*/
+
+		#endregion
+
+		#region UTILS
 		private async Task VoteDatabase<T>( CommandContext ctx , params string [] databaseIndexes ) where T : IDatabaseEntry, ITagsList
 		{
 			if( ctx.Channel.IsPrivate )
@@ -236,9 +267,6 @@ namespace MatchBot
 			await message.DeleteAsync();
 		}
 
-		#endregion
-
-		#region UTILS
 		private async Task<DateTime> GetLastTimePlayed( PlayerData player )
 		{
 			DateTime lastPlayed = DateTime.MinValue;

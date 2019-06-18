@@ -33,6 +33,26 @@ namespace MatchTracker
 		}
 
 
+		protected override async Task<Stream> GetZippedDatabaseStream()
+		{
+			return await base.GetZippedDatabaseStream();
+
+			//ironically, this is actually worse than the default implementation because it uses precious hourly github api uses
+			//but also because it has to be fully loaded before reading it
+
+			/*
+			byte [] archiveBytes = await OctoKitClient.Repository.Content.GetArchive( SharedSettings.RepositoryUser , SharedSettings.RepositoryName , ArchiveFormat.Zipball );
+
+			if( archiveBytes != null )
+			{
+				return new MemoryStream( archiveBytes );
+			}
+
+			return null;
+			*/
+		}
+
+
 		public override async Task SaveData<T>( T data )
 		{
 			if( ReadOnly )
@@ -68,7 +88,7 @@ namespace MatchTracker
 			UpdateFileRequest contentRequest = new UpdateFileRequest(
 				$"{( fileInfo != null ? "Updated" : "Created" )} {typeof( T )} : {data.DatabaseIndex}" ,
 				newFileContent.ToString() ,
-				fileInfo != null ? fileInfo.Sha : string.Empty ,
+				fileInfo != null ? fileInfo.Sha : "null" ,
 				true
 			);
 
