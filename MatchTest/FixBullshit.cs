@@ -24,7 +24,24 @@ namespace MatchTest
 
 			GlobalData globalData = await db.GetData<GlobalData>();
 
+			await db.SaveData( globalData );
 
+			async Task<bool> touchMatchOrRound( IWinner matchOrRound )
+			{
+				if( matchOrRound is MatchData matchData )
+				{
+					await db.SaveData( matchData );
+				}
+				else if( matchOrRound is RoundData roundData )
+				{
+					await db.SaveData( roundData );
+				}
+
+				return true;
+			}
+
+			await db.IterateOverAllRoundsOrMatches( true , touchMatchOrRound );
+			await db.IterateOverAllRoundsOrMatches( false , touchMatchOrRound );
 		}
 	}
 }

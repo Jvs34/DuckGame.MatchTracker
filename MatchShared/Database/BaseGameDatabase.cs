@@ -15,8 +15,7 @@ namespace MatchTracker
 
 		protected JsonSerializer Serializer { get; } = new JsonSerializer()
 		{
-			Formatting = Formatting.Indented ,
-			PreserveReferencesHandling = PreserveReferencesHandling.Objects ,
+			Formatting = Formatting.Indented
 		};
 
 		#region JSON

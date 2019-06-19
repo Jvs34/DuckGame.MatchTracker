@@ -31,5 +31,10 @@ namespace MatchTracker
 		{
 			return NickName ?? Name;
 		}
+
+		public override string ToString()
+		{
+			return GetName();
+		}
 	}
 }

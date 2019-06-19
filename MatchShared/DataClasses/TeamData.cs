@@ -21,5 +21,10 @@ namespace MatchTracker
 		{
 			return HatName == other.HatName;
 		}
+
+		public override string ToString()
+		{
+			return $"{HatName} +{Score} " + string.Join( "," , Players );
+		}
 	}
 }

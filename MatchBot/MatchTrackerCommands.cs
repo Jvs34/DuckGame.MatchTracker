@@ -244,8 +244,24 @@ namespace MatchBot
 		#endregion
 
 		#region UTILS
+		private async Task<bool> CheckReadOnly( CommandContext ctx )
+		{
+			if( DB.ReadOnly )
+			{
+				await ctx.RespondAsync( $"{DB.GetType()} is in readonly mode" );
+				return true;
+			}
+
+			return false;
+		}
+
 		private async Task VoteDatabase<T>( CommandContext ctx , params string [] databaseIndexes ) where T : IDatabaseEntry, ITagsList
 		{
+			if( await CheckReadOnly( ctx ) )
+			{
+				return;
+			}
+
 			if( ctx.Channel.IsPrivate )
 			{
 				await ctx.RespondAsync( "Sorry but DSharpPlus's reaction shit doesn't seem to work in DMs, use a proper channel please" );
