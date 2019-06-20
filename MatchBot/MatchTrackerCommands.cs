@@ -185,7 +185,7 @@ namespace MatchBot
 		{
 			var globalData = await DB.GetData<GlobalData>();
 
-			await VoteMapCommand( ctx , globalData.Levels.ToArray() );
+			await VoteMapCommand( ctx , ( await DB.GetAll<LevelData>() ).ToArray() );
 		}
 
 		[Command( "VoteMap" )]

@@ -62,33 +62,55 @@ namespace MatchTracker
 		protected void CacheEverythingInZip( ZipArchive zipArchive )
 		{
 			DateTime expireTime = DateTime.UtcNow.AddSeconds( 150 );
-			//try to get the globaldata
+			
 			var globalData = GetZipEntry<GlobalData>( zipArchive );
-
-			SetCachedItem( globalData , expireTime );
-
-			foreach( var matchName in globalData.Matches )
+			if( globalData != null )
 			{
-				var matchData = GetZipEntry<MatchData>( zipArchive , matchName );
-				SetCachedItem( matchData , expireTime );
+				SetCachedItem( globalData , expireTime );
 			}
 
-			foreach( var roundName in globalData.Rounds )
+			var matchesEntry = GetZipEntry<EntryListData>( zipArchive , nameof( MatchData ) );
+			if( matchesEntry != null )
 			{
-				var roundData = GetZipEntry<RoundData>( zipArchive , roundName );
-				SetCachedItem( roundData , expireTime );
+				SetCachedItem( matchesEntry , expireTime );
+				foreach( var matchName in matchesEntry.Entries )
+				{
+					var matchData = GetZipEntry<MatchData>( zipArchive , matchName );
+					SetCachedItem( matchData , expireTime );
+				}
 			}
 
-			foreach( var levelName in globalData.Levels )
+			var roundsEntry = GetZipEntry<EntryListData>( zipArchive , nameof( RoundData ) );
+			if( roundsEntry != null )
 			{
-				var levelData = GetZipEntry<LevelData>( zipArchive , levelName );
-				SetCachedItem( levelData , expireTime );
+				SetCachedItem( roundsEntry , expireTime );
+				foreach( var roundName in roundsEntry.Entries )
+				{
+					var roundData = GetZipEntry<RoundData>( zipArchive , roundName );
+					SetCachedItem( roundData , expireTime );
+				}
 			}
 
-			foreach( var tagName in globalData.Tags )
+			var levelsEntry = GetZipEntry<EntryListData>( zipArchive , nameof( LevelData ) );
+			if( levelsEntry != null )
 			{
-				var tagData = GetZipEntry<TagData>( zipArchive , tagName );
-				SetCachedItem( tagData , expireTime );
+				SetCachedItem( levelsEntry , expireTime );
+				foreach( var levelName in levelsEntry.Entries )
+				{
+					var levelData = GetZipEntry<LevelData>( zipArchive , levelName );
+					SetCachedItem( levelData , expireTime );
+				}
+			}
+
+			var tagsEntry = GetZipEntry<EntryListData>( zipArchive , nameof( TagData ) );
+			if( tagsEntry != null )
+			{
+				SetCachedItem( tagsEntry , expireTime );
+				foreach( var tagName in tagsEntry.Entries )
+				{
+					var tagData = GetZipEntry<TagData>( zipArchive , tagName );
+					SetCachedItem( tagData , expireTime );
+				}
 			}
 
 		}

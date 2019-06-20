@@ -345,7 +345,7 @@ namespace MatchUploader
 
 			List<Task<Event>> matchTasks = new List<Task<Event>>();
 
-			foreach( string matchName in globalData.Matches )
+			foreach( string matchName in await gameDatabase.GetAll<MatchData>() )
 			{
 				string strippedName = GetStrippedMatchName( await gameDatabase.GetData<MatchData>( matchName ) );
 
@@ -647,7 +647,7 @@ namespace MatchUploader
 
 			//go through each round, see if they already have a discord mirror, otherwise reupload
 
-			foreach( string roundName in globalData.Rounds )
+			foreach( string roundName in await gameDatabase.GetAll<RoundData>() )
 			{
 				RoundData roundData = await gameDatabase.GetData<RoundData>( roundName );
 				if( !string.IsNullOrWhiteSpace( roundData.YoutubeUrl ) && roundData.VideoType == VideoType.VideoLink )
@@ -1015,7 +1015,7 @@ namespace MatchUploader
 
 			List<Task> processingTasks = new List<Task>();
 
-			foreach( string roundName in globalData.Rounds )
+			foreach( string roundName in await gameDatabase.GetAll<RoundData>() )
 			{
 				processingTasks.Add( ProcessVideo( roundName ) );
 			}

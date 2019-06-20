@@ -154,7 +154,7 @@ namespace MatchRecorder
 			GameDatabase.SaveData( CurrentRound ).Wait();
 
 			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
-			globalData.Rounds.Add( CurrentRound.Name );
+			GameDatabase.Add( CurrentRound ).Wait();
 			GameDatabase.SaveData( globalData ).Wait();
 
 			RoundData newRoundData = CurrentRound;
@@ -208,7 +208,7 @@ namespace MatchRecorder
 			//get all the levels that are currently saved in the database and make a thumbnail out of it
 			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
-			foreach( var levelID in globalData.Levels )
+			foreach( var levelID in GameDatabase.GetAll<MatchTracker.LevelData>().Result )
 			{
 				string levelPreviewFile = GameDatabase.SharedSettings.GetLevelPreviewPath( levelID );
 
@@ -309,11 +309,8 @@ namespace MatchRecorder
 
 				GameDatabase.SaveData( levelData ).Wait();
 
-				if( !globalData.Levels.Contains( levelID ) )
-				{
-					globalData.Levels.Add( levelID );
-					GameDatabase.SaveData( globalData ).Wait();
-				}
+
+				GameDatabase.Add( levelData ).Wait();
 			}
 
 		}
@@ -471,7 +468,8 @@ namespace MatchRecorder
 
 			//also add this match to the globaldata as well
 			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
-			globalData.Matches.Add( CurrentMatch.Name );
+
+			GameDatabase.Add( CurrentMatch ).Wait();
 
 			//try adding the players from the matchdata into the globaldata
 

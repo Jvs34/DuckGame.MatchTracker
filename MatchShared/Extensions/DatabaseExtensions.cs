@@ -113,11 +113,7 @@ namespace MatchTracker
 				await db.SaveData( tagData );
 			}
 
-			if( !globalData.Tags.Contains( emojiDatabaseIndex ) )
-			{
-				globalData.Tags.Add( emojiDatabaseIndex );
-				await db.SaveData( globalData );
-			}
+			await db.Add( tagData );
 
 			if( tagsList?.Tags.Contains( emojiDatabaseIndex ) == false )
 			{
@@ -125,7 +121,7 @@ namespace MatchTracker
 			}
 		}
 
-		public static async Task<List<string>> GetAll<T>( this IGameDatabase db , string globalDataName = "" ) where T : IDatabaseEntry
+		public static async Task<List<string>> GetAll<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
 			List<string> databaseIndexes = new List<string>();
 
