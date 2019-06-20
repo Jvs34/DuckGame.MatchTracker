@@ -10,71 +10,45 @@ namespace MatchTracker
 {
 	public static class DatabaseExtensions
 	{
-		public static HashSet<Type> DatabaseTypes { get; } = new HashSet<Type>();
-		public static Dictionary<Type , PropertyInfo> AllTypesOfDatabaseEntry { get; } = new Dictionary<Type , PropertyInfo>();
-
-		static DatabaseExtensions()
-		{
-			foreach( var type in typeof( DatabaseExtensions ).Assembly.GetTypes().Where( type => type.GetInterfaces().Contains( typeof( IDatabaseEntry ) ) ) )
-			{
-				DatabaseTypes.Add( type );
-			}
-
-			//now try to get which properties of globaldata have the generic attribute
-			var globalDataType = typeof( GlobalData );
-
-			foreach( var dbEntry in globalDataType.GetProperties().Where( x => x.PropertyType.IsGenericType && x.PropertyType.BaseType == typeof( DatabaseEntries ) ) )
-			{
-				//get the generic argument from this property's type
-				Type propertyType = dbEntry.PropertyType;
-
-				Type dbEntryType = propertyType.GenericTypeArguments.FirstOrDefault();
-
-				if( dbEntryType == null || !DatabaseTypes.Contains( dbEntryType ) )
-				{
-					continue;
-				}
-
-				AllTypesOfDatabaseEntry.Add( dbEntryType , dbEntry );
-			}
-		}
-
-
 		public static async Task<Dictionary<string , Dictionary<string , IDatabaseEntry>>> GetBackup( this IGameDatabase db )
 		{
 			var mainCollection = new Dictionary<string , Dictionary<string , IDatabaseEntry>>();
 
-			foreach( var dbEntryType in DatabaseTypes )
-			{
-				var collection = new Dictionary<string , IDatabaseEntry>();
-
-				mainCollection.Add( dbEntryType.Name , collection );
-			}
-
 			var globalData = await db.GetData<GlobalData>();
-			mainCollection [nameof( GlobalData )] [globalData.DatabaseIndex] = globalData;
+			mainCollection [nameof( GlobalData )] = new Dictionary<string , IDatabaseEntry>
+			{
+				[globalData.DatabaseIndex] = globalData
+			};
 
-
+			mainCollection [nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>();
 			foreach( var roundName in await db.GetAll<RoundData>() )
 			{
-				mainCollection [nameof( RoundData )] [roundName] = await db.GetData<RoundData>( roundName );
+				mainCollection [nameof( MatchData )] [roundName] = await db.GetData<RoundData>( roundName );
 			}
 
+			mainCollection [nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>();
 			foreach( var matchName in await db.GetAll<MatchData>() )
 			{
 				mainCollection [nameof( MatchData )] [matchName] = await db.GetData<MatchData>( matchName );
 			}
 
+			mainCollection [nameof( LevelData )] = new Dictionary<string , IDatabaseEntry>();
 			foreach( var levelName in await db.GetAll<LevelData>() )
 			{
 				mainCollection [nameof( LevelData )] [levelName] = await db.GetData<LevelData>( levelName );
 			}
 
+			mainCollection [nameof( TagData )] = new Dictionary<string , IDatabaseEntry>();
 			foreach( var tagName in await db.GetAll<TagData>() )
 			{
 				mainCollection [nameof( TagData )] [tagName] = await db.GetData<TagData>( tagName );
 			}
 
+			mainCollection [nameof( EntryListData )] = new Dictionary<string , IDatabaseEntry>();
+			foreach( var entryName in await db.GetAll<EntryListData>() )
+			{
+				mainCollection [nameof( EntryListData )] [entryName] = await db.GetData<EntryListData>( entryName );
+			}
 
 			return mainCollection;
 		}
@@ -88,7 +62,7 @@ namespace MatchTracker
 
 			var tokenSource = new CancellationTokenSource();
 
-			foreach( string matchOrRoundName in matchOrRound ? (DatabaseEntries) await db.GetAll<MatchData>() : await db.GetAll<RoundData>() )
+			foreach( string matchOrRoundName in matchOrRound ? await db.GetAll<MatchData>() : await db.GetAll<RoundData>() )
 			{
 				tasks.Add( IteratorTask( db , matchOrRound , callback , tasks , tokenSource , matchOrRoundName ) );
 			}
@@ -151,29 +125,55 @@ namespace MatchTracker
 			}
 		}
 
-		public static async Task<DatabaseEntries<T>> GetAll<T>( this IGameDatabase db , string globalDataName = "" ) where T : IDatabaseEntry
+		public static async Task<List<string>> GetAll<T>( this IGameDatabase db , string globalDataName = "" ) where T : IDatabaseEntry
 		{
-			DatabaseEntries<T> databaseIndexes = new DatabaseEntries<T>();
-			var globalData = await db.GetData<GlobalData>( globalDataName );
+			List<string> databaseIndexes = new List<string>();
 
-			//TODO: find a way to automate this, maybe with reflection?
-			if( globalData != null && typeof( T ) != typeof( GlobalData ) )
+			var entryListData = await db.GetData<EntryListData>( typeof( T ).Name );
+			if( entryListData != null )
 			{
-				if( AllTypesOfDatabaseEntry.TryGetValue( typeof( T ) , out var returnProp ) )
-				{
-					DatabaseEntries<T> returnedEntries = (DatabaseEntries<T>) returnProp.GetValue( globalData );
-
-					databaseIndexes.AddRange( returnedEntries );
-				}
-
-				return databaseIndexes;
-			}
-			else if( globalData != null )
-			{
-				databaseIndexes.Add( globalData.DatabaseIndex );
+				databaseIndexes.AddRange( entryListData.Entries );
 			}
 
 			return databaseIndexes;
+		}
+
+		public static async Task Add<T>( this IGameDatabase db , T data ) where T : IDatabaseEntry
+		{
+			await db.Add<T>( data.DatabaseIndex );
+		}
+
+		public static async Task Add<T>( this IGameDatabase db , params string [] databaseIndexes ) where T : IDatabaseEntry
+		{
+			var entryListData = await db.GetData<EntryListData>( typeof( T ).Name );
+
+			bool doAdd = false;
+
+			if( entryListData == null )
+			{
+				entryListData = new EntryListData()
+				{
+					Type = typeof( T ).Name
+				};
+
+				//signal that we need to add this to the EntryListData itself
+				doAdd = entryListData.Type != entryListData.GetType().Name;
+			}
+
+			foreach( var dbEntry in databaseIndexes )
+			{
+				if( !entryListData.Entries.Contains( dbEntry ) )
+				{
+					entryListData.Entries.Add( dbEntry );
+				}
+			}
+
+			if( doAdd )
+			{
+				await db.Add( entryListData );
+			}
+
+			await db.SaveData( entryListData );
 		}
 	}
 }

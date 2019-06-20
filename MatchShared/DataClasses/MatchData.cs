@@ -14,7 +14,7 @@ namespace MatchTracker
 
 		public List<PlayerData> Players { get; set; } = new List<PlayerData>();
 
-		public DatabaseEntries<RoundData> Rounds { get; set; } = new DatabaseEntries<RoundData>();
+		public List<string> Rounds { get; set; } = new List<string>();
 
 		public List<TeamData> Teams { get; set; } = new List<TeamData>();
 
@@ -25,7 +25,7 @@ namespace MatchTracker
 		public string YoutubeUrl { get; set; } = string.Empty;
 		public VideoType VideoType { get; set; } = VideoType.PlaylistLink;
 		public List<VideoMirrorData> VideoMirrors { get; set; } = new List<VideoMirrorData>();
-		public DatabaseEntries<TagData> Tags { get; set; } = new DatabaseEntries<TagData>();
+		public List<string> Tags { get; set; } = new List<string>();
 
 		public int CompareTo( MatchData other )
 		{

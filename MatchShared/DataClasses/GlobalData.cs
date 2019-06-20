@@ -7,10 +7,10 @@ namespace MatchTracker
 	public class GlobalData : IPlayersList, IMatchesList, IRoundsList, ITagsList, IDatabaseEntry, ILevelList
 	{
 		public string DatabaseIndex => nameof( GlobalData );
-		public DatabaseEntries<MatchData> Matches { get; set; } = new DatabaseEntries<MatchData>();
+		public List<string> Matches { get; set; } = new List<string>();
 		public List<PlayerData> Players { get; set; } = new List<PlayerData>();
-		public DatabaseEntries<RoundData> Rounds { get; set; } = new DatabaseEntries<RoundData>();
-		public DatabaseEntries<TagData> Tags { get; set; } = new DatabaseEntries<TagData>();
-		public DatabaseEntries<LevelData> Levels { get; set; } = new DatabaseEntries<LevelData>();
+		public List<string> Rounds { get; set; } = new List<string>();
+		public List<string> Tags { get; set; } = new List<string>();
+		public List<string> Levels { get; set; } = new List<string>();
 	}
 }

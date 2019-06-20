@@ -26,7 +26,14 @@ namespace MatchTest
 
 			await db.SaveData( globalData );
 
-			var backup = await db.GetBackup();
+			await db.Add<MatchData>( globalData.Matches.ToArray() );
+			await db.Add<RoundData>( globalData.Rounds.ToArray() );
+			await db.Add<LevelData>( globalData.Levels.ToArray() );
+			await db.Add<TagData>( globalData.Tags.ToArray() );
+			
+			
+
+			//var backup = await db.GetBackup();
 
 			//var allTags = await db.GetAll<TagData>();
 			/*
