@@ -286,7 +286,7 @@ namespace MatchBot
 
 			await DB.IterateOverAllRoundsOrMatches( true , async ( matchOrRound ) =>
 			{
-				if( player == null || matchOrRound.Players.Contains( player ) )
+				if( player == null || matchOrRound.Players.Contains( player.DatabaseIndex ) )
 				{
 					IStartEnd startEnd = (IStartEnd) matchOrRound;
 					if( startEnd.TimeEnded > lastPlayed )
@@ -314,7 +314,7 @@ namespace MatchBot
 			{
 				await Task.CompletedTask;
 
-				if( player == null || matchOrRound.Players.Any( x => x.UserId == player.UserId ) )
+				if( player == null || matchOrRound.Players.Contains( player.UserId ) )
 				{
 					Interlocked.Increment( ref timesPlayed );
 
@@ -385,11 +385,9 @@ namespace MatchBot
 			{
 				//even if it's team mode we consider it a win
 				//first off, only do this if the play is actually in the match
-				if( matchOrRound.Players.Any( x => x.UserId == player.UserId ) )
+				if( matchOrRound.Players.Contains( player.DatabaseIndex ) )
 				{
-					List<PlayerData> matchOrRoundWinners = matchOrRound.GetWinners();
-
-					if( matchOrRoundWinners.Any( x => x.UserId == player.UserId ) )
+					if( matchOrRound.GetWinners().Contains( player.DatabaseIndex ) )
 					{
 						Interlocked.Increment( ref wins );
 					}

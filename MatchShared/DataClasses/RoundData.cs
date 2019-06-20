@@ -16,7 +16,7 @@ namespace MatchTracker
 
 		public string DatabaseIndex => Name;
 
-		public List<PlayerData> Players { get; set; } = new List<PlayerData>();
+		public List<string> Players { get; set; } = new List<string>();
 		public List<TeamData> Teams { get; set; } = new List<TeamData>();
 		public DateTime TimeEnded { get; set; }
 		public DateTime TimeStarted { get; set; }
@@ -43,22 +43,9 @@ namespace MatchTracker
 			return TimeEnded.Subtract( TimeStarted );
 		}
 
-		public string GetWinnerName()
+		public List<string> GetWinners()
 		{
-			string winnerName = "";
-			var winners = GetWinners();
-			//check if anyone actually won
-			if( winners.Count != 0 )
-			{
-				winnerName = winners.Count > 1 ? Winner.HatName : winners [0].GetName();
-			}
-
-			return winnerName;
-		}
-
-		public List<PlayerData> GetWinners()
-		{
-			return Winner?.Players ?? new List<PlayerData>();
+			return Winner?.Players ?? new List<string>();
 		}
 	}
 }

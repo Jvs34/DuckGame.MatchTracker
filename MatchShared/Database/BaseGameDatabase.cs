@@ -13,7 +13,7 @@ namespace MatchTracker
 		protected Dictionary<string , Dictionary<string , IDatabaseEntry>> Cache { get; } = new Dictionary<string , Dictionary<string , IDatabaseEntry>>();
 		protected Dictionary<string , Dictionary<string , DateTime>> CacheExpireTime { get; } = new Dictionary<string , Dictionary<string , DateTime>>();
 
-		protected JsonSerializer Serializer { get; } = new JsonSerializer()
+		public JsonSerializer Serializer { get; } = new JsonSerializer()
 		{
 			Formatting = Formatting.Indented
 		};

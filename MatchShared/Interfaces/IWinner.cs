@@ -9,8 +9,6 @@ namespace MatchTracker
 	{
 		TeamData Winner { get; set; }
 
-		string GetWinnerName();
-
-		List<PlayerData> GetWinners();
+		List<string> GetWinners();
 	}
 }

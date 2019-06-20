@@ -125,12 +125,37 @@ namespace MatchTracker
 			return databaseIndexes;
 		}
 
+		/// <summary>
+		/// Ideally these two should not be used whatsoever, please deprecate after moving the code over
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="db"></param>
+		/// <param name="databaseIndexes"></param>
+		/// <returns></returns>
+		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db , params string [] databaseIndexes ) where T : IDatabaseEntry
+		{
+			List<T> dataList = new List<T>();
+
+			foreach( var entryIndex in databaseIndexes )
+			{
+				dataList.Add( await db.GetData<T>( entryIndex ) );
+			}
+
+			return dataList;
+		}
+
+		/// <summary>
+		/// Ideally these two should not be used whatsoever, please deprecate after moving the code over
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="db"></param>
+		/// <returns></returns>
 		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
 			List<T> dataList = new List<T>();
 
 			var dataEntries = await db.GetAll<T>();
-			
+
 			foreach( var entryIndex in dataEntries )
 			{
 				dataList.Add( await db.GetData<T>( entryIndex ) );

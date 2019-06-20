@@ -9,7 +9,7 @@ namespace MatchTracker
 		public bool HasHat { get; set; }
 		public string HatName { get; set; }
 		public bool IsCustomHat { get; set; }
-		public List<PlayerData> Players { get; set; } = new List<PlayerData>();
+		public List<string> Players { get; set; } = new List<string>();
 		public int Score { get; set; }
 
 		public int CompareTo( TeamData other )

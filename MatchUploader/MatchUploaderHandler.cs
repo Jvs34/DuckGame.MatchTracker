@@ -455,7 +455,9 @@ namespace MatchUploader
 		{
 			await Task.CompletedTask;
 
-			string winner = matchData.GetWinnerName();
+			var playerWinners = await gameDatabase.GetAllData<PlayerData>( matchData.GetWinners().ToArray() );
+
+			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
 
 			if( string.IsNullOrEmpty( winner ) )
 			{
@@ -496,14 +498,17 @@ namespace MatchUploader
 		public async Task<Video> GetVideoDataForRound( RoundData roundData )
 		{
 			await Task.CompletedTask;
-			string winner = roundData.GetWinnerName();
+
+			var playerWinners = await gameDatabase.GetAllData<PlayerData>( roundData.GetWinners().ToArray() );
+
+			string winner = string.Join( " " , playerWinners.Select( x=> x.GetName() ) );
 
 			if( string.IsNullOrEmpty( winner ) )
 			{
 				winner = "Nobody";
 			}
 
-			string description = string.Format( "Recorded on {0}\nThe winner is {1}" , gameDatabase.SharedSettings.DateTimeToString( roundData.TimeStarted ) , winner );
+			string description = $"Recorded on {gameDatabase.SharedSettings.DateTimeToString( roundData.TimeStarted )}\nThe winner is {winner}";
 
 			Video videoData = new Video()
 			{

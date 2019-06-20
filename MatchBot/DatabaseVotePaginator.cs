@@ -136,9 +136,11 @@ namespace MatchBot
 				//see if this user has a discord id, then use the mention thinghy to add him
 				foreach( var player in playerList.Players )
 				{
-					string playerName = player.GetName();
+					var playerData = await DB.GetData<PlayerData>( player );
 
-					DiscordUser discordUser = await DiscordClient.GetUserAsync( player.DiscordId );
+					string playerName = playerData.GetName();
+
+					DiscordUser discordUser = await DiscordClient.GetUserAsync( playerData.DiscordId );
 
 					if( discordUser != null )
 					{
@@ -153,7 +155,9 @@ namespace MatchBot
 
 			if( itemData is IWinner winner )
 			{
-				string winnerName = winner.GetWinnerName();
+				var playerWinners = await DB.GetAllData<PlayerData>( winner.GetWinners().ToArray() );
+
+				string winnerName = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
 
 				if( string.IsNullOrEmpty( winnerName ) )
 				{
@@ -168,7 +172,9 @@ namespace MatchBot
 				if( winner.Winner?.Players.Count == 1 )
 				{
 					//see if it's a valid discord user
-					var discordUser = await DiscordClient.GetUserAsync( winner.Winner.Players [0].DiscordId );
+					var firstPlayer = await DB.GetData<PlayerData>( winner.Winner.Players.FirstOrDefault() );
+
+					var discordUser = await DiscordClient.GetUserAsync( firstPlayer.DiscordId );
 					if( discordUser != null )
 					{
 						embed.Author.IconUrl = discordUser.AvatarUrl;

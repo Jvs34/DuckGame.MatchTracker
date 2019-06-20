@@ -1,5 +1,7 @@
 ﻿using MatchTracker;
 using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -9,6 +11,23 @@ using System.Threading.Tasks;
 
 namespace MatchTest
 {
+	/*
+	public class PlayerDataToDatabaseIndexConverter : JsonConverter<PlayerData>
+	{
+		public override PlayerData ReadJson( JsonReader reader , Type objectType , PlayerData existingValue , bool hasExistingValue , JsonSerializer serializer )
+		{
+			return null;
+		}
+
+		public override void WriteJson( JsonWriter writer , PlayerData value , JsonSerializer serializer )
+		{
+			//writer.WriteStartArray();
+			writer.WriteValue( value.DatabaseIndex );
+			//writer.WriteEndArray();
+		}
+	}
+	*/
+
 	public class FixBullshit
 	{
 		public async Task Run()
@@ -18,9 +37,32 @@ namespace MatchTest
 				.AddJsonFile( "shared.json" )
 			.Build();
 
-			IGameDatabase db = new FileSystemGameDatabase();
+			BaseGameDatabase db = new FileSystemGameDatabase();
 			Configuration.Bind( db.SharedSettings );
 			await db.Load();
+
+
+			/*
+			PlayerDataToDatabaseIndexConverter converter = new PlayerDataToDatabaseIndexConverter();
+
+			foreach( var roundData in await db.GetAllData<RoundData>() )
+			{
+				if( !db.Serializer.Converters.Contains( converter ) )
+				{
+					db.Serializer.Converters.Add( converter );
+				}
+
+				await db.SaveData( roundData );
+			}
+
+
+			*/
+			Console.WriteLine( "Done" );
+			
+
+			//db.Serializer.Converters.Contains(  )
+
+
 
 			/*
 			foreach( var playerData in globalData.Players )
@@ -36,7 +78,7 @@ namespace MatchTest
 			await db.Add<LevelData>( globalData.Levels.ToArray() );
 			await db.Add<TagData>( globalData.Tags.ToArray() );
 			*/
-			
+
 
 			//var backup = await db.GetBackup();
 

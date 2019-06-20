@@ -66,7 +66,6 @@ namespace MatchRecorder
 			{
 				MatchName = CurrentMatch?.Name ,
 				LevelName = lvl.level ,
-				Players = new List<PlayerData>() ,
 				TimeStarted = startTime ,
 				Name = GameDatabase.SharedSettings.DateTimeToString( startTime ) ,
 				IsCustomLevel = false ,
@@ -103,7 +102,7 @@ namespace MatchRecorder
 			foreach( Profile pro in Profiles.active )
 			{
 				PlayerData ply = CreatePlayerDataFromProfile( pro , winnerObject );
-				winnerObject.Players.Add( ply );
+				winnerObject.Players.Add( ply.DatabaseIndex );
 			}
 
 			foreach( TeamData teamData in winnerObject.Teams )
@@ -113,7 +112,7 @@ namespace MatchRecorder
 				{
 					foreach( Profile pro in team.activeProfiles )
 					{
-						teamData.Players.Add( CreatePlayerDataFromProfile( pro , winnerObject ) );
+						teamData.Players.Add( CreatePlayerDataFromProfile( pro , winnerObject ).DatabaseIndex );
 					}
 				}
 			}
