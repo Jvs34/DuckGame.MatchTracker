@@ -53,33 +53,28 @@ namespace MatchTracker
 			return mainCollection;
 		}
 
-		public static async Task IterateOverAllRoundsOrMatches( this IGameDatabase db , bool matchOrRound , Func<IWinner , Task<bool>> callback )
+		public static async Task IterateOverAll<T>( this IGameDatabase db , Func<T , Task<bool>> callback ) where T : IDatabaseEntry
 		{
-			if( callback == null )
-				return;
-
 			List<Task> tasks = new List<Task>();
 
 			var tokenSource = new CancellationTokenSource();
 
-			foreach( string matchOrRoundName in matchOrRound ? await db.GetAll<MatchData>() : await db.GetAll<RoundData>() )
+			foreach( string dataName in await db.GetAll<T>() )
 			{
-				tasks.Add( IteratorTask( db , matchOrRound , callback , tasks , tokenSource , matchOrRoundName ) );
+				tasks.Add( IteratorTask<T>( db , dataName , callback , tasks , tokenSource ) );
 			}
 
 			await Task.WhenAll( tasks );
 		}
 
-		private static async Task IteratorTask( IGameDatabase db , bool matchOrRound , Func<IWinner , Task<bool>> callback , List<Task> tasks , CancellationTokenSource tokenSource , string matchOrRoundName )
+		private static async Task IteratorTask<T>( IGameDatabase db , string dataName , Func<T , Task<bool>> callback , List<Task> tasks , CancellationTokenSource tokenSource ) where T : IDatabaseEntry
 		{
 			if( tokenSource.IsCancellationRequested )
 			{
 				return;
 			}
 
-			IWinner iterateItem = matchOrRound ?
-				await db.GetData<MatchData>( matchOrRoundName ) as IWinner :
-				await db.GetData<RoundData>( matchOrRoundName ) as IWinner;
+			T iterateItem = await db.GetData<T>( dataName );
 
 			if( !await callback( iterateItem ) )
 			{
@@ -90,6 +85,30 @@ namespace MatchTracker
 				tasks.Clear();
 			}
 		}
+
+
+		public static async Task IterateOverAllRoundsOrMatches( this IGameDatabase db , bool matchOrRound , Func<IWinner , Task<bool>> callback )
+		{
+			if( matchOrRound )
+			{
+				async Task<bool> matchTask( MatchData matchData )
+				{
+					return await callback( matchData );
+				};
+
+				await db.IterateOverAll<MatchData>( matchTask );
+			}
+			else
+			{
+				async Task<bool> roundTask( RoundData roundData )
+				{
+					return await callback( roundData );
+				};
+
+				await db.IterateOverAll<RoundData>( roundTask );
+			}
+		}
+
 
 		public static async Task AddTag( this IGameDatabase db , string unicode , string fancyName , ITagsList tagsList = null )
 		{
