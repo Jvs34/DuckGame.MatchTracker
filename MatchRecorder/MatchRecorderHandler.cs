@@ -370,17 +370,15 @@ namespace MatchRecorder
 				? onlineIDField.GetValue( profile ).ToString()
 				: profile.steamID.ToString();
 
-
-
 			string userId = Network.isActive ? discordOrSteamID : profile.id;
 
 			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
-			PlayerData pd = globalData.Players.Find( x => x.UserId == userId );
+			PlayerData pd = GameDatabase.GetData<PlayerData>( userId ).Result;
 
 			if( pd == null )
 			{
-				pd = globalData.Players.Find( x => x.DiscordId.ToString().Equals( userId ) );
+				pd = GameDatabase.GetAllData<PlayerData>().Result.Find( x => x.DiscordId.ToString().Equals( userId ) );
 			}
 
 			if( pd == null )
@@ -391,16 +389,10 @@ namespace MatchRecorder
 					Name = profile.name ,
 				};
 
-				//search for this profile on the globaldata, if it's there fill in the rest of the info
-				foreach( var ply in globalData.Players )
-				{
-					if( pd.Equals( ply ) )
-					{
-						pd.DiscordId = ply.DiscordId;
-						pd.NickName = ply.NickName;
-						break;
-					}
-				}
+				//last resort, create it now
+
+				GameDatabase.Add( pd ).Wait();
+				GameDatabase.SaveData( pd ).Wait();
 			}
 
 			return pd;
@@ -470,17 +462,6 @@ namespace MatchRecorder
 			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
 			GameDatabase.Add( CurrentMatch ).Wait();
-
-			//try adding the players from the matchdata into the globaldata
-
-			foreach( PlayerData ply in CurrentMatch.Players )
-			{
-				if( !globalData.Players.Any( p => p.UserId == ply.UserId ) )
-				{
-					globalData.Players.Add( ply );
-				}
-			}
-
 			GameDatabase.SaveData( globalData ).Wait();
 
 			MatchData newMatchData = CurrentMatch;

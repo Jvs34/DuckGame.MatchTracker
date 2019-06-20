@@ -27,6 +27,14 @@ namespace MatchTest
 			await db.SaveData( globalData );
 
 			/*
+			foreach( var playerData in globalData.Players )
+			{
+				await db.Add( playerData );
+				await db.SaveData( playerData );
+			}
+			*/
+
+			/*
 			await db.Add<MatchData>( globalData.Matches.ToArray() );
 			await db.Add<RoundData>( globalData.Rounds.ToArray() );
 			await db.Add<LevelData>( globalData.Levels.ToArray() );

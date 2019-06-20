@@ -20,10 +20,10 @@ namespace MatchTracker
 				[globalData.DatabaseIndex] = globalData
 			};
 
-			mainCollection [nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>();
+			mainCollection [nameof( RoundData )] = new Dictionary<string , IDatabaseEntry>();
 			foreach( var roundName in await db.GetAll<RoundData>() )
 			{
-				mainCollection [nameof( MatchData )] [roundName] = await db.GetData<RoundData>( roundName );
+				mainCollection [nameof( RoundData )] [roundName] = await db.GetData<RoundData>( roundName );
 			}
 
 			mainCollection [nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>();
@@ -132,6 +132,20 @@ namespace MatchTracker
 			}
 
 			return databaseIndexes;
+		}
+
+		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db ) where T : IDatabaseEntry
+		{
+			List<T> dataList = new List<T>();
+
+			var dataEntries = await db.GetAll<T>();
+			
+			foreach( var entryIndex in dataEntries )
+			{
+				dataList.Add( await db.GetData<T>( entryIndex ) );
+			}
+
+			return dataList;
 		}
 
 		public static async Task Add<T>( this IGameDatabase db , T data ) where T : IDatabaseEntry

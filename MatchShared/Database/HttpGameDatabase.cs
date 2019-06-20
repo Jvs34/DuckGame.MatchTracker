@@ -63,10 +63,16 @@ namespace MatchTracker
 		{
 			DateTime expireTime = DateTime.UtcNow.AddSeconds( 150 );
 			
-			var globalData = GetZipEntry<GlobalData>( zipArchive );
-			if( globalData != null )
+			SetCachedItem( GetZipEntry<GlobalData>( zipArchive ) , expireTime );
+
+			var playersEntry = GetZipEntry<EntryListData>( zipArchive , nameof( PlayerData ) );
+			if( playersEntry != null )
 			{
-				SetCachedItem( globalData , expireTime );
+				SetCachedItem( playersEntry , expireTime );
+				foreach( var playerName in playersEntry.Entries )
+				{
+					SetCachedItem( GetZipEntry<PlayerData>( zipArchive , playerName ) , expireTime );
+				}
 			}
 
 			var matchesEntry = GetZipEntry<EntryListData>( zipArchive , nameof( MatchData ) );
@@ -75,8 +81,7 @@ namespace MatchTracker
 				SetCachedItem( matchesEntry , expireTime );
 				foreach( var matchName in matchesEntry.Entries )
 				{
-					var matchData = GetZipEntry<MatchData>( zipArchive , matchName );
-					SetCachedItem( matchData , expireTime );
+					SetCachedItem( GetZipEntry<MatchData>( zipArchive , matchName ) , expireTime );
 				}
 			}
 
@@ -86,8 +91,7 @@ namespace MatchTracker
 				SetCachedItem( roundsEntry , expireTime );
 				foreach( var roundName in roundsEntry.Entries )
 				{
-					var roundData = GetZipEntry<RoundData>( zipArchive , roundName );
-					SetCachedItem( roundData , expireTime );
+					SetCachedItem( GetZipEntry<RoundData>( zipArchive , roundName ) , expireTime );
 				}
 			}
 
@@ -97,8 +101,7 @@ namespace MatchTracker
 				SetCachedItem( levelsEntry , expireTime );
 				foreach( var levelName in levelsEntry.Entries )
 				{
-					var levelData = GetZipEntry<LevelData>( zipArchive , levelName );
-					SetCachedItem( levelData , expireTime );
+					SetCachedItem( GetZipEntry<LevelData>( zipArchive , levelName ) , expireTime );
 				}
 			}
 
@@ -108,8 +111,7 @@ namespace MatchTracker
 				SetCachedItem( tagsEntry , expireTime );
 				foreach( var tagName in tagsEntry.Entries )
 				{
-					var tagData = GetZipEntry<TagData>( zipArchive , tagName );
-					SetCachedItem( tagData , expireTime );
+					SetCachedItem( GetZipEntry<TagData>( zipArchive , tagName ) , expireTime );
 				}
 			}
 

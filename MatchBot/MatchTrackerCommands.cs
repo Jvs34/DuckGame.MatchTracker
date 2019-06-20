@@ -131,7 +131,7 @@ namespace MatchBot
 				int mostWins = 0;
 				int mostWinsLosses = 0;
 
-				foreach( PlayerData player in globalData.Players )
+				foreach( PlayerData player in await DB.GetAllData<PlayerData>() )
 				{
 					int wins = 0;
 					int losses = 0;
@@ -343,13 +343,13 @@ namespace MatchBot
 		{
 			PlayerData foundPlayerData = null;
 
-			GlobalData globalData = await DB.GetData<GlobalData>();
+			var players = await DB.GetAllData<PlayerData>();
 
-			foundPlayerData = globalData.Players.Find( p => p.DiscordId == discordUser.Id || p.DatabaseIndex == discordUser.Id.ToString() );
+			foundPlayerData = players.Find( p => p.DiscordId == discordUser.Id || p.DatabaseIndex == discordUser.Id.ToString() );
 
 			if( foundPlayerData == null )
 			{
-				foundPlayerData = globalData.Players.Find( p =>
+				foundPlayerData = players.Find( p =>
 				{
 					return string.Equals( p.NickName , discordUser.Username , StringComparison.CurrentCultureIgnoreCase )
 											|| string.Equals( p.Name , discordUser.Username , StringComparison.CurrentCultureIgnoreCase );
