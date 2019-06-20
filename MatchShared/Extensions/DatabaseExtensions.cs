@@ -38,6 +38,12 @@ namespace MatchTracker
 				mainCollection [nameof( TagData )] [tagName] = await db.GetData<TagData>( tagName );
 			}
 
+			mainCollection [nameof( PlayerData )] = new Dictionary<string , IDatabaseEntry>();
+			foreach( var playerName in await db.GetAll<PlayerData>() )
+			{
+				mainCollection [nameof( PlayerData )] [playerName] = await db.GetData<PlayerData>( playerName );
+			}
+
 			mainCollection [nameof( EntryListData )] = new Dictionary<string , IDatabaseEntry>();
 			foreach( var entryName in await db.GetAll<EntryListData>() )
 			{
