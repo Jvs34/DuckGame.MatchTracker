@@ -5,6 +5,6 @@ namespace MatchTracker
 {
 	public interface IRoundsList
 	{
-		List<string> Rounds { get; set; }
+		DatabaseEntries<RoundData> Rounds { get; set; }
 	}
 }

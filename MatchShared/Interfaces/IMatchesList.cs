@@ -5,6 +5,6 @@ namespace MatchTracker
 {
 	public interface IMatchesList
 	{
-		List<string> Matches { get; set; }
+		DatabaseEntries<MatchData> Matches { get; set; }
 	}
 }

@@ -37,7 +37,7 @@ namespace MatchTracker
 		/// </summary>
 		public string Author { get; set; }
 
-		public List<string> Tags { get; set; } = new List<string>();
+		public DatabaseEntries<TagData> Tags { get; set; } = new DatabaseEntries<TagData>();
 
 		public string DatabaseIndex => LevelName;
 	}

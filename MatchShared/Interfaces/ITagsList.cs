@@ -6,6 +6,6 @@ namespace MatchTracker
 {
 	public interface ITagsList
 	{
-		List<string> Tags { get; set; }
+		DatabaseEntries<TagData> Tags { get; set; }
 	}
 }

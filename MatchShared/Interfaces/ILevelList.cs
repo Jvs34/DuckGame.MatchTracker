@@ -6,6 +6,6 @@ namespace MatchTracker
 {
 	public interface ILevelList
 	{
-		List<string> Levels { get; set; }
+		DatabaseEntries<LevelData> Levels { get; set; }
 	}
 }

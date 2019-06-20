@@ -26,6 +26,29 @@ namespace MatchTest
 
 			await db.SaveData( globalData );
 
+			var backup = await db.GetBackup();
+
+			//var allTags = await db.GetAll<TagData>();
+			/*
+			foreach( var tagName in globalData.Tags )
+			{
+				var tagData = await db.GetData<TagData>( tagName );
+				await db.SaveData( tagData );
+			}
+
+			foreach( var levelName in globalData.Levels )
+			{
+				var levelData = await db.GetData<LevelData>( levelName );
+				await db.SaveData( levelData );
+			}
+			*/
+
+
+			/*
+			GlobalData globalData = await db.GetData<GlobalData>();
+
+			await db.SaveData( globalData );
+
 			async Task<bool> touchMatchOrRound( IWinner matchOrRound )
 			{
 				if( matchOrRound is MatchData matchData )
@@ -42,6 +65,7 @@ namespace MatchTest
 
 			await db.IterateOverAllRoundsOrMatches( true , touchMatchOrRound );
 			await db.IterateOverAllRoundsOrMatches( false , touchMatchOrRound );
+			*/
 		}
 	}
 }
