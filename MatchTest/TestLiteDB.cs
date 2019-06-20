@@ -1,4 +1,5 @@
-﻿using MatchTracker;
+﻿/*
+using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
@@ -56,41 +57,8 @@ namespace MatchTest
 				serializer.Serialize( fileWriter , mainCollection );
 			}
 
-
-			//GlobalData globalData = await defaultDatabase.GetData<GlobalData>();
-
-			//await liteDb.SaveData( globalData );
-
-			/*
-			foreach( var ply in globalData.Players )
-			{
-				await liteDb.SaveData( ply );
-			}
-
-			foreach( var lvl in globalData.Levels )
-			{
-				await liteDb.SaveData( lvl );
-			}
-
-			foreach( var tag in globalData.Tags )
-			{
-				await liteDb.SaveData( tag );
-			}
-			*/
-
-			/*
-			foreach( var roundName in globalData.Rounds )
-			{
-				RoundData roundData = await defaultDatabase.GetData<RoundData>( roundName );
-				await liteDb.SaveData( roundData );
-			}
-
-			foreach( var matchName in globalData.Matches )
-			{
-				MatchData matchData = await defaultDatabase.GetData<MatchData>( matchName );
-				await liteDb.SaveData( matchData );
-			}
-			*/
 		}
 	}
 }
+
+*/

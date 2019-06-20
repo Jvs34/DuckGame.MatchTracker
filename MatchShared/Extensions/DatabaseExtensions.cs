@@ -14,12 +14,6 @@ namespace MatchTracker
 		{
 			var mainCollection = new Dictionary<string , Dictionary<string , IDatabaseEntry>>();
 
-			var globalData = await db.GetData<GlobalData>();
-			mainCollection [nameof( GlobalData )] = new Dictionary<string , IDatabaseEntry>
-			{
-				[globalData.DatabaseIndex] = globalData
-			};
-
 			mainCollection [nameof( RoundData )] = new Dictionary<string , IDatabaseEntry>();
 			foreach( var roundName in await db.GetAll<RoundData>() )
 			{
@@ -93,9 +87,6 @@ namespace MatchTracker
 
 		public static async Task AddTag( this IGameDatabase db , string unicode , string fancyName , ITagsList tagsList = null )
 		{
-			//always get globalData
-
-			GlobalData globalData = await db.GetData<GlobalData>();
 			string emojiDatabaseIndex = string.Join( " " , Encoding.UTF8.GetBytes( unicode ) );
 
 			//now check if we exist

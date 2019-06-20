@@ -32,9 +32,6 @@ namespace MatchTest
 
 			await db.Load();
 
-			var globalData = await db.GetData<GlobalData>();
-
-			globalData = await db.GetData<GlobalData>();
 
 		}
 	}

@@ -63,8 +63,6 @@ namespace MatchTracker
 		{
 			DateTime expireTime = DateTime.UtcNow.AddSeconds( 150 );
 			
-			SetCachedItem( GetZipEntry<GlobalData>( zipArchive ) , expireTime );
-
 			var playersEntry = GetZipEntry<EntryListData>( zipArchive , nameof( PlayerData ) );
 			if( playersEntry != null )
 			{

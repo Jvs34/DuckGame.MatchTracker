@@ -341,8 +341,6 @@ namespace MatchUploader
 
 			var allEvents = await GetAllCalendarEvents();
 
-			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
-
 			List<Task<Event>> matchTasks = new List<Task<Event>>();
 
 			foreach( string matchName in await gameDatabase.GetAll<MatchData>() )
@@ -642,9 +640,6 @@ namespace MatchUploader
 
 			var ytClient = new YoutubeExplode.YoutubeClient( NormalHttpClient );
 
-			//just test with the first one for now
-			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
-
 			//go through each round, see if they already have a discord mirror, otherwise reupload
 
 			foreach( string roundName in await gameDatabase.GetAll<RoundData>() )
@@ -837,7 +832,6 @@ namespace MatchUploader
 
 		private async Task SearchMap( string mapGuid )
 		{
-			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
 			await gameDatabase.IterateOverAllRoundsOrMatches( false , async ( round ) =>
 			{
 				RoundData roundData = (RoundData) round;
@@ -1009,8 +1003,6 @@ namespace MatchUploader
 
 			FFmpeg.ExecutablesPath = tempFFmpegFolder;
 			await FFmpeg.GetLatestVersion();
-
-			GlobalData globalData = await gameDatabase.GetData<GlobalData>();
 
 
 			List<Task> processingTasks = new List<Task>();

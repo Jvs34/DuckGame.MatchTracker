@@ -123,8 +123,6 @@ namespace MatchBot
 
 			StringBuilder response = new StringBuilder();
 
-			var globalData = await DB.GetData<GlobalData>();
-
 			if( targets.Length == 0 )
 			{
 				PlayerData mostWinsWinner = null;
@@ -183,8 +181,6 @@ namespace MatchBot
 		[Command( "VoteMaps" ), Description( "Votes all maps registered in the database " )]
 		public async Task VoteMapsCommand( CommandContext ctx )
 		{
-			var globalData = await DB.GetData<GlobalData>();
-
 			await VoteMapCommand( ctx , ( await DB.GetAll<LevelData>() ).ToArray() );
 		}
 

@@ -44,15 +44,6 @@ namespace MatchRecorder
 			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( BotSettings );
 
-
-
-			var globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
-
-			if( globalData == null )
-			{
-				GameDatabase.SaveData( new MatchTracker.GlobalData() ).Wait();
-			}
-
 #if DEBUG
 			RecorderHandler = new ReplayRecorder( this );
 #else
@@ -153,9 +144,7 @@ namespace MatchRecorder
 
 			GameDatabase.SaveData( CurrentRound ).Wait();
 
-			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 			GameDatabase.Add( CurrentRound ).Wait();
-			GameDatabase.SaveData( globalData ).Wait();
 
 			RoundData newRoundData = CurrentRound;
 
@@ -206,7 +195,6 @@ namespace MatchRecorder
 		public void TryTakingScreenshots()
 		{
 			//get all the levels that are currently saved in the database and make a thumbnail out of it
-			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
 			foreach( var levelID in GameDatabase.GetAll<MatchTracker.LevelData>().Result )
 			{
@@ -301,7 +289,6 @@ namespace MatchRecorder
 			string levelID = level.level;
 
 			MatchTracker.LevelData levelData = GameDatabase.GetData<MatchTracker.LevelData>( levelID ).Result;
-			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
 			if( levelData == null )
 			{
@@ -371,8 +358,6 @@ namespace MatchRecorder
 				: profile.steamID.ToString();
 
 			string userId = Network.isActive ? discordOrSteamID : profile.id;
-
-			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
 
 			PlayerData pd = GameDatabase.GetData<PlayerData>( userId ).Result;
 
@@ -457,12 +442,7 @@ namespace MatchRecorder
 			}
 
 			GameDatabase.SaveData( CurrentMatch ).Wait();
-
-			//also add this match to the globaldata as well
-			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
-
 			GameDatabase.Add( CurrentMatch ).Wait();
-			GameDatabase.SaveData( globalData ).Wait();
 
 			MatchData newMatchData = CurrentMatch;
 

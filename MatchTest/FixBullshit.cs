@@ -22,10 +22,6 @@ namespace MatchTest
 			Configuration.Bind( db.SharedSettings );
 			await db.Load();
 
-			GlobalData globalData = await db.GetData<GlobalData>();
-
-			await db.SaveData( globalData );
-
 			/*
 			foreach( var playerData in globalData.Players )
 			{

@@ -26,7 +26,6 @@ namespace MatchTest
 
 			await db.Load();
 
-			GlobalData globalData = await db.GetData<GlobalData>();
 
 			MatchData matchData = await db.GetData<MatchData>( ( await db.GetAll<MatchData>() ).FirstOrDefault() );
 
