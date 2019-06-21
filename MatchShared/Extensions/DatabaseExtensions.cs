@@ -52,21 +52,6 @@ namespace MatchTracker
 
 			return mainCollection;
 		}
-
-		public static async Task IterateOverAll<T>( this IGameDatabase db , Func<T , Task<bool>> callback ) where T : IDatabaseEntry
-		{
-			List<Task> tasks = new List<Task>();
-
-			var tokenSource = new CancellationTokenSource();
-
-			foreach( string dataName in await db.GetAll<T>() )
-			{
-				tasks.Add( IteratorTask<T>( db , dataName , callback , tasks , tokenSource ) );
-			}
-
-			await Task.WhenAll( tasks );
-		}
-
 		private static async Task IteratorTask<T>( IGameDatabase db , string dataName , Func<T , Task<bool>> callback , List<Task> tasks , CancellationTokenSource tokenSource ) where T : IDatabaseEntry
 		{
 			if( tokenSource.IsCancellationRequested )
@@ -86,29 +71,55 @@ namespace MatchTracker
 			}
 		}
 
+		/// <summary>
+		/// Iterate over the specified 
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="db"></param>
+		/// <param name="callback"></param>
+		/// <param name="databaseIndexes"></param>
+		/// <returns></returns>
+		public static async Task IterateOver<T>( this IGameDatabase db , Func<T , Task<bool>> callback , params string [] databaseIndexes ) where T : IDatabaseEntry
+		{
+			List<Task> tasks = new List<Task>();
 
+			var tokenSource = new CancellationTokenSource();
+
+			foreach( string dataName in databaseIndexes )
+			{
+				tasks.Add( IteratorTask<T>( db , dataName , callback , tasks , tokenSource ) );
+			}
+
+			await Task.WhenAll( tasks );
+		}
+
+		public static async Task IterateOverAll<T>( this IGameDatabase db , Func<T , Task<bool>> callback ) where T : IDatabaseEntry
+		{
+			await db.IterateOver( callback , ( await db.GetAll<T>() ).ToArray() );
+		}
+
+		/// <summary>
+		/// Legacy, please use IGameDatabase.IterateOverAll directly
+		/// </summary>
+		/// <param name="db"></param>
+		/// <param name="matchOrRound">true for match, false for round</param>
+		/// <param name="callback">The callback, return false to interrupt the iteration</param>
+		/// <returns></returns>
 		public static async Task IterateOverAllRoundsOrMatches( this IGameDatabase db , bool matchOrRound , Func<IWinner , Task<bool>> callback )
 		{
 			if( matchOrRound )
 			{
-				async Task<bool> matchTask( MatchData matchData )
-				{
-					return await callback( matchData );
-				};
+				async Task<bool> matchTask( MatchData matchData ) => await callback( matchData );
 
 				await db.IterateOverAll<MatchData>( matchTask );
 			}
 			else
 			{
-				async Task<bool> roundTask( RoundData roundData )
-				{
-					return await callback( roundData );
-				};
+				async Task<bool> roundTask( RoundData roundData ) => await callback( roundData );
 
 				await db.IterateOverAll<RoundData>( roundTask );
 			}
 		}
-
 
 		public static async Task AddTag( this IGameDatabase db , string unicode , string fancyName , ITagsList tagsList = null )
 		{
@@ -131,7 +142,7 @@ namespace MatchTracker
 
 			await db.Add( tagData );
 
-			if( tagsList?.Tags.Contains( emojiDatabaseIndex ) == false )
+			if( tagsList != null && !tagsList.Tags.Contains( emojiDatabaseIndex ) )
 			{
 				tagsList.Tags.Add( emojiDatabaseIndex );
 			}
@@ -156,7 +167,6 @@ namespace MatchTracker
 		/// <typeparam name="T"></typeparam>
 		/// <param name="db"></param>
 		/// <param name="databaseIndexes"></param>
-		/// <returns></returns>
 		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db , params string [] databaseIndexes ) where T : IDatabaseEntry
 		{
 			List<T> dataList = new List<T>();
@@ -174,21 +184,21 @@ namespace MatchTracker
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="db"></param>
-		/// <returns></returns>
 		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
-			List<T> dataList = new List<T>();
-
-			var dataEntries = await db.GetAll<T>();
-
-			foreach( var entryIndex in dataEntries )
-			{
-				dataList.Add( await db.GetData<T>( entryIndex ) );
-			}
-
-			return dataList;
+			return await db.GetAllData<T>( ( await db.GetAll<T>() ).ToArray() );
 		}
 
+		/// <summary>
+		/// <para>Adds this item to EntryListData of this type</para>
+		/// <para>
+		/// This overload calls back to IGameDatabase.Add( string databaseIndex )
+		/// NOTE: this will not save the data itself, call db.SaveData for that
+		/// </para>
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="db"></param>
+		/// <param name="data"></param>
 		public static async Task Add<T>( this IGameDatabase db , T data ) where T : IDatabaseEntry
 		{
 			await db.Add<T>( data.DatabaseIndex );
