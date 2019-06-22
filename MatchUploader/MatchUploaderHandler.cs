@@ -50,6 +50,9 @@ namespace MatchUploader
 		//private AuthenticationResult microsoftGraphCredentials;
 		private IConfigurationRoot Configuration { get; }
 
+		private Uploader CalendarUploader { get; set; }
+		private Dictionary<VideoMirrorType , Uploader> VideoUploaders { get; } = new Dictionary<VideoMirrorType , Uploader>();
+		private List<Uploader> Uploaders { get; } = new List<Uploader>();
 
 		/// <summary>
 		/// Only to be used by the youtube downloader
@@ -92,6 +95,50 @@ namespace MatchUploader
 					Token = BotSettings.DiscordToken ,
 				} );
 			}
+		}
+
+		private void CreateUploaders()
+		{
+			//always create the calendar one
+			{
+				Uploader calendar = new CalendarUploader( new UploaderInfo() , GameDatabase );
+				Uploaders.Add( calendar );
+			}
+
+			//youtube uploader
+			switch( UploaderSettings.VideoMirrorUpload )
+			{
+				case VideoMirrorType.Youtube:
+					{
+						if( !UploaderSettings.UploadersInfo.TryGetValue( VideoMirrorType.Youtube , out UploaderInfo uploaderInfo ) )
+						{
+							uploaderInfo = new UploaderInfo()
+							{
+								UploaderType = VideoMirrorType.Youtube
+							};
+						}
+
+						Uploader youtube = new YoutubeUploader( uploaderInfo , GameDatabase );
+
+						Uploaders.Add( youtube );
+
+						VideoUploaders.TryAdd( VideoMirrorType.Youtube , youtube );
+					}
+					break;
+
+				case VideoMirrorType.Discord:
+					{
+
+					}
+					break;
+
+				default:
+					break;
+			}
+
+
+
+
 		}
 
 		public async Task AddRoundToPlaylist( string roundName , string matchName , List<PlaylistItem> playlistItems )
@@ -250,8 +297,14 @@ namespace MatchUploader
 			return null;
 		}
 
-		public async Task DoLogin()
+		public async Task Initialize()
 		{
+			foreach( var uploader in Uploaders )
+			{
+				await uploader.Initialize();
+			}
+
+
 			if( DiscordClient != null )
 			{
 				await DiscordClient.ConnectAsync();
@@ -501,7 +554,7 @@ namespace MatchUploader
 
 			var playerWinners = await GameDatabase.GetAllData<PlayerData>( roundData.GetWinners().ToArray() );
 
-			string winner = string.Join( " " , playerWinners.Select( x=> x.GetName() ) );
+			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
 
 			if( string.IsNullOrEmpty( winner ) )
 			{
@@ -541,7 +594,7 @@ namespace MatchUploader
 		public async Task RunAsync()
 		{
 			await LoadDatabase();
-			await DoLogin();
+			await Initialize();
 
 			try
 			{
@@ -781,13 +834,13 @@ namespace MatchUploader
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
 				//get the pending upload for this roundName
-				CurrentVideo = UploaderSettings.PendingUploads.Find( x => x.VideoName.Equals( roundData.Name ) );
+				CurrentVideo = UploaderSettings.PendingUploads.Find( x => x.DataName.Equals( roundData.Name ) );
 
 				if( CurrentVideo == null )
 				{
 					CurrentVideo = new PendingUpload()
 					{
-						VideoName = roundData.Name
+						DataName = roundData.Name
 					};
 
 					UploaderSettings.PendingUploads.Add( CurrentVideo );
@@ -798,7 +851,7 @@ namespace MatchUploader
 				if( CurrentVideo.ErrorCount > UploaderSettings.RetryCount )
 				{
 					CurrentVideo.UploadUrl = null;
-					Console.WriteLine( "Replacing resumable upload url for {0} after too many errors" , CurrentVideo.VideoName );
+					Console.WriteLine( "Replacing resumable upload url for {0} after too many errors" , CurrentVideo.DataName );
 					CurrentVideo.ErrorCount = 0;
 					CurrentVideo.LastException = string.Empty;
 				}
@@ -814,12 +867,12 @@ namespace MatchUploader
 
 				if( CurrentVideo.UploadUrl != null )
 				{
-					Console.WriteLine( "Resuming upload {0}" , CurrentVideo.VideoName );
+					Console.WriteLine( "Resuming upload {0}" , CurrentVideo.DataName );
 					uploadProgress = await videosInsertRequest.ResumeAsync( CurrentVideo.UploadUrl );
 				}
 				else
 				{
-					Console.WriteLine( "Beginning to upload {0}" , CurrentVideo.VideoName );
+					Console.WriteLine( "Beginning to upload {0}" , CurrentVideo.DataName );
 					uploadProgress = await videosInsertRequest.UploadAsync();
 				}
 
@@ -875,9 +928,9 @@ namespace MatchUploader
 			}
 
 			SaveSettings().Wait();
-			AddYoutubeIdToRound( CurrentVideo.VideoName , video.Id ).Wait();
+			AddYoutubeIdToRound( CurrentVideo.DataName , video.Id ).Wait();
 
-			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , CurrentVideo.VideoName , video.Id );
+			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , CurrentVideo.DataName , video.Id );
 		}
 
 		private void OnStartUploading( IUploadSessionData resumable )
@@ -894,7 +947,7 @@ namespace MatchUploader
 					{
 						double percentage = Math.Round( ( (double) progress.BytesSent / (double) CurrentVideo.FileSize ) * 100f , 2 );
 						//UpdateUploadProgress( percentage , true );
-						Console.WriteLine( $"{CurrentVideo.VideoName} : {percentage}%" );
+						Console.WriteLine( $"{CurrentVideo.DataName} : {percentage}%" );
 						break;
 					}
 				case UploadStatus.Failed:

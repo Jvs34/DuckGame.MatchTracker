@@ -10,7 +10,7 @@ namespace MatchUploader
 		public string GitPassword { get; set; }
 		public string GitUsername { get; set; }
 		public List<PendingUpload> PendingUploads { get; set; } = new List<PendingUpload>();
-
+		public Dictionary<MatchTracker.VideoMirrorType , UploaderInfo> UploadersInfo { get; set; } = new Dictionary<MatchTracker.VideoMirrorType , UploaderInfo>();
 		public int RetryCount { get; set; } = 5;
 		public GoogleSecrets Secrets { get; set; }
 		public Uri YoutubeChannel { get; set; }

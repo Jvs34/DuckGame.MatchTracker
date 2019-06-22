@@ -47,5 +47,8 @@ namespace MatchUploader
 		/// </summary>
 		public TimeSpan NextReset { get; set; }
 
+		public int Retries { get; set; }
+
+		public Queue<PendingUpload> Uploads { get; set; } = new Queue<PendingUpload>();
 	}
 }

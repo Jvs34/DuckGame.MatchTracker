@@ -8,6 +8,6 @@ namespace MatchUploader
 		public long FileSize { get; set; }
 		public string LastException { get; set; }
 		public Uri UploadUrl { get; set; }
-		public string VideoName { get; set; }
+		public string DataName { get; set; }
 	}
 }
