@@ -622,7 +622,7 @@ namespace MatchUploader
 
 			await CommitGitChanges();
 
-			await Upload();
+			//await Upload();
 
 			await UploadAllRounds();
 
