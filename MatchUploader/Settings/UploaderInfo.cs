@@ -5,6 +5,8 @@ namespace MatchUploader
 {
 	public class UploaderInfo
 	{
+		public bool HasBeenSetup { get; set; }
+
 		/// <summary>
 		/// Youtube, twitch etc etc
 		/// </summary>
@@ -37,7 +39,6 @@ namespace MatchUploader
 		/// This is set when the first download starts or resumes
 		/// </summary>
 		public DateTime NextResetTime { get; set; }
-
 
 		/// <summary>
 		/// Depending on the API, this might be 24 hours or whatever

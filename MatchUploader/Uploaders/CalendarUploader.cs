@@ -6,7 +6,7 @@ namespace MatchUploader
 {
 	public class CalendarUploader : Uploader
 	{
-		public CalendarUploader( UploaderInfo uploaderInfo , IGameDatabase gameDatabase ) : base( uploaderInfo , gameDatabase )
+		public CalendarUploader( UploaderInfo uploaderInfo , IGameDatabase gameDatabase , UploaderSettings settings ) : base( uploaderInfo , gameDatabase , settings )
 		{
 		}
 

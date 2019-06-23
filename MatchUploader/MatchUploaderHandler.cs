@@ -104,7 +104,7 @@ namespace MatchUploader
 		{
 			//always create the calendar one
 			{
-				Uploader calendar = new CalendarUploader( new UploaderInfo() , GameDatabase );
+				Uploader calendar = new CalendarUploader( new UploaderInfo() , GameDatabase , UploaderSettings );
 				Uploaders.Add( calendar );
 			}
 
@@ -121,7 +121,7 @@ namespace MatchUploader
 							};
 						}
 
-						Uploader youtube = new YoutubeUploader( uploaderInfo , GameDatabase );
+						Uploader youtube = new YoutubeUploader( uploaderInfo , GameDatabase , UploaderSettings );
 
 						Uploaders.Add( youtube );
 
@@ -307,6 +307,13 @@ namespace MatchUploader
 			foreach( var uploader in Uploaders )
 			{
 				uploader.SaveCallback += SaveSettings;
+
+				if( !uploader.Info.HasBeenSetup )
+				{
+					uploader.CreateDefaultInfo();
+					uploader.Info.HasBeenSetup = true;
+				}
+
 				await uploader.Initialize();
 			}
 
