@@ -42,9 +42,9 @@ namespace MatchUploader
 			}
 		}
 
-		public event Func<Task> SaveCallback;
+		public event Action SaveSettingsCallback;
 
-		public event Func<Task<string>> UpdateStatus;
+		public event Func<string , Task> UpdateStatusCallback;
 
 		protected Uploader( UploaderInfo uploaderInfo , IGameDatabase gameDatabase , UploaderSettings settings )
 		{
@@ -127,19 +127,21 @@ namespace MatchUploader
 				Uploads.Enqueue( CurrentUpload );
 			}
 
-			Console.WriteLine( $"Fetching uploads for {GetType().Name}" );
+			Console.WriteLine( $"{GetType().Name}: Fetching uploads for {GetType().Name}" );
 
 			await FetchUploads();
 
-			Console.WriteLine( $"Uploading {Uploads.Count} rounds" );
+			Console.WriteLine( $"{GetType().Name}: Uploading {Uploads.Count} rounds" );
 
 			while( Uploads.Count > 0 && CanUpload() )
 			{
+
+
 				PendingUpload upload = Uploads.Dequeue();
 
 				CurrentUpload = upload;
 
-				await SaveSettings();
+				SaveSettings();
 				bool uploadCompleted;
 				bool shouldRetry;
 
@@ -148,7 +150,13 @@ namespace MatchUploader
 					Info.LastUploadTime = DateTime.Now;
 					Info.CurrentUploads++;
 
+					await UpdateStatus( $"{GetType().Name}:  {Info.CurrentUploads} / {Info.UploadsBeforeReset}" );
 					uploadCompleted = await UploadItem( upload );
+
+					if( !uploadCompleted )
+					{
+						upload.ErrorCount++;
+					}
 
 					if( uploadCompleted && Info.HasApiLimit )
 					{
@@ -168,23 +176,20 @@ namespace MatchUploader
 				while( shouldRetry );
 
 				CurrentUpload = null;
-
-
-
-
-
-
-				await SaveSettings();
-
-
+				SaveSettings();
 			}
 		}
 
 		protected abstract Task<bool> UploadItem( PendingUpload upload );
 
-		protected async Task SaveSettings()
+		protected void SaveSettings()
 		{
-			await SaveCallback.Invoke();
+			SaveSettingsCallback.Invoke();
+		}
+
+		protected async Task UpdateStatus( string status )
+		{
+			await UpdateStatusCallback.Invoke( status );
 		}
 	}
 }

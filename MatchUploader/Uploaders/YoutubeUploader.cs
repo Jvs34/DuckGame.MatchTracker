@@ -78,43 +78,6 @@ namespace MatchUploader
 
 		}
 
-		private async Task<Video> GetVideoDataForRound( RoundData roundData )
-		{
-			await Task.CompletedTask;
-
-			var playerWinners = await DB.GetAllData<PlayerData>( roundData.GetWinners().ToArray() );
-
-			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
-
-			if( string.IsNullOrEmpty( winner ) )
-			{
-				winner = "Nobody";
-			}
-
-			string description = $"Recorded on {DB.SharedSettings.DateTimeToString( roundData.TimeStarted )}\nThe winner is {winner}";
-
-			Video videoData = new Video()
-			{
-				Snippet = new VideoSnippet()
-				{
-					Title = $"{roundData.Name} {winner}" ,
-					Tags = new List<string>() { "duckgame" , "peniscorp" } ,
-					CategoryId = "20" ,
-					Description = description ,
-				} ,
-				Status = new VideoStatus()
-				{
-					PrivacyStatus = "unlisted" ,
-				} ,
-				RecordingDetails = new VideoRecordingDetails()
-				{
-					RecordingDate = roundData.TimeStarted ,
-				}
-			};
-
-			return videoData;
-		}
-
 		protected override async Task<bool> UploadItem( PendingUpload upload )
 		{
 			RoundData roundData = await DB.GetData<RoundData>( upload.DataName );
@@ -164,38 +127,47 @@ namespace MatchUploader
 					uploadProgress = await videosInsertRequest.UploadAsync();
 				}
 
-				//save it to the uploader settings and increment the error count only if it's not the annoying too many videos error
 				if( uploadProgress.Status != UploadStatus.Completed && upload.UploadUrl != null )
 				{
 					upload.LastException = uploadProgress.Exception.Message;
-					upload.ErrorCount++;
-					await SaveSettings();
+					SaveSettings();
 				}
 
 				videosInsertRequest.ProgressChanged -= OnYoutubeUploadProgress;
 				videosInsertRequest.ResponseReceived -= OnYoutubeUploadFinished;
 				videosInsertRequest.UploadSessionData -= OnYoutubeUploadStart;
 
+
+				//fetch the data again if it was modified
+				roundData = await DB.GetData<RoundData>( upload.DataName );
+				if( !string.IsNullOrEmpty( roundData.YoutubeUrl ) )
+				{
+					//now add it to the playlist of the match
+					await AddRoundToPlaylist( roundData.DatabaseIndex );
+				}
+
+
 				return uploadProgress.Status == UploadStatus.Completed;
 			}
 		}
 
+
+
+
+
+
+
+
+		#region UPLOADCALLBACKS
 		private void OnYoutubeUploadStart( IUploadSessionData resumable )
 		{
 			CurrentUpload.UploadUrl = resumable.UploadUri;
-			SaveSettings().Wait();
-		}
-
-		private async Task AddYoutubeIdToRound( string roundName , string videoId )
-		{
-			RoundData roundData = await DB.GetData<RoundData>( roundName );
-			roundData.YoutubeUrl = videoId;
-			await DB.SaveData( roundData );
+			SaveSettings();
 		}
 
 		private void OnYoutubeUploadFinished( Video video )
 		{
-			SaveSettings().Wait();
+			SaveSettings();
 			AddYoutubeIdToRound( CurrentUpload.DataName , video.Id ).Wait();
 
 			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , CurrentUpload.DataName , video.Id );
@@ -209,7 +181,7 @@ namespace MatchUploader
 					{
 						CurrentUpload.BytesSent = progress.BytesSent;
 
-						double percentage = Math.Round( ( (double) progress.BytesSent / (double) CurrentUpload.FileSize ) * 100f , 2 );
+						double percentage = Math.Round( progress.BytesSent / (double) CurrentUpload.FileSize * 100f , 2 );
 						//UpdateUploadProgress( percentage , true );
 						Console.WriteLine( $"{CurrentUpload.DataName} : {percentage}%" );
 						break;
@@ -219,5 +191,173 @@ namespace MatchUploader
 					break;
 			}
 		}
+		#endregion
+
+		private async Task<Video> GetVideoDataForRound( RoundData roundData )
+		{
+			await Task.CompletedTask;
+
+			var playerWinners = await DB.GetAllData<PlayerData>( roundData.GetWinners().ToArray() );
+
+			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
+
+			if( string.IsNullOrEmpty( winner ) )
+			{
+				winner = "Nobody";
+			}
+
+			string description = $"Recorded on {DB.SharedSettings.DateTimeToString( roundData.TimeStarted )}\nThe winner is {winner}";
+
+			Video videoData = new Video()
+			{
+				Snippet = new VideoSnippet()
+				{
+					Title = $"{roundData.Name} {winner}" ,
+					Tags = new List<string>() { "duckgame" , "peniscorp" } ,
+					CategoryId = "20" ,
+					Description = description ,
+				} ,
+				Status = new VideoStatus()
+				{
+					PrivacyStatus = "unlisted" ,
+				} ,
+				RecordingDetails = new VideoRecordingDetails()
+				{
+					RecordingDate = roundData.TimeStarted ,
+				}
+			};
+
+			return videoData;
+		}
+
+		private async Task AddYoutubeIdToRound( string roundName , string videoId )
+		{
+			RoundData roundData = await DB.GetData<RoundData>( roundName );
+			roundData.YoutubeUrl = videoId;
+			await DB.SaveData( roundData );
+		}
+
+		private async Task AddRoundToPlaylist( string roundName )
+		{
+			RoundData roundData = await DB.GetData<RoundData>( roundName );
+			MatchData matchData = await DB.GetData<MatchData>( roundData.MatchName );
+
+			if( matchData == null )
+			{
+				return;
+			}
+
+			if( string.IsNullOrEmpty( matchData.YoutubeUrl ) )
+			{
+				Console.WriteLine( $"Created playlist for {matchData.DatabaseIndex}" );
+				await CreatePlaylist( roundData.MatchName );
+			}
+
+			matchData = await DB.GetData<MatchData>( roundData.MatchName );
+
+			//wasn't created, still null
+			if( string.IsNullOrEmpty( matchData.YoutubeUrl ) )
+			{
+				return;
+			}
+
+			await AddRoundToPlaylist( roundName , roundData.MatchName );
+		}
+
+		private async Task<Playlist> CreatePlaylist( string matchName )
+		{
+			Playlist matchPlaylist = null;
+
+			try
+			{
+				MatchData matchData = await DB.GetData<MatchData>( matchName );
+				matchPlaylist = await Service.Playlists.Insert( await GetPlaylistDataForMatch( matchData ) , "snippet,status" ).ExecuteAsync();
+
+				if( matchPlaylist != null )
+				{
+					matchData.YoutubeUrl = matchPlaylist.Id;
+					await DB.SaveData( matchData );
+				}
+			}
+			catch( Exception )
+			{
+
+			}
+
+			return matchPlaylist;
+		}
+
+		private async Task AddRoundToPlaylist( string roundName , string matchName )
+		{
+			MatchData matchData = await DB.GetData<MatchData>( matchName );
+			RoundData roundData = await DB.GetData<RoundData>( roundName );
+
+			if( matchData.YoutubeUrl == null || roundData.YoutubeUrl == null )
+			{
+				Console.WriteLine( $"Could not add round {roundData.Name} to playlist because either match url or round url are missing" );
+				await Task.CompletedTask;
+				return;
+			}
+
+			int roundIndex = matchData.Rounds.IndexOf( roundData.Name );
+
+			try
+			{
+				Console.WriteLine( $"Adding {roundData.Name} to playlist {matchData.Name}" );
+				PlaylistItem roundPlaylistItem = await GetPlaylistItemForRound( roundData );
+				roundPlaylistItem.Snippet.Position = roundIndex + 1;
+				roundPlaylistItem.Snippet.PlaylistId = matchData.YoutubeUrl;
+				await Service.PlaylistItems.Insert( roundPlaylistItem , "snippet" ).ExecuteAsync();
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e.Message );
+			}
+		}
+
+		private async Task<PlaylistItem> GetPlaylistItemForRound( RoundData roundData )
+		{
+			await Task.CompletedTask;
+			return new PlaylistItem()
+			{
+				Snippet = new PlaylistItemSnippet()
+				{
+					ResourceId = new ResourceId()
+					{
+						Kind = "youtube#video" ,
+						VideoId = roundData.YoutubeUrl ,
+					}
+				} ,
+			};
+		}
+
+		private async Task<Playlist> GetPlaylistDataForMatch( MatchData matchData )
+		{
+			await Task.CompletedTask;
+
+			var playerWinners = await DB.GetAllData<PlayerData>( matchData.GetWinners().ToArray() );
+
+			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
+
+			if( string.IsNullOrEmpty( winner ) )
+			{
+				winner = "Nobody";
+			}
+
+			return new Playlist()
+			{
+				Snippet = new PlaylistSnippet()
+				{
+					Title = $"{matchData.Name} {winner}" ,
+					Description = string.Format( "Recorded on {0}\nThe winner is {1}" , DB.SharedSettings.DateTimeToString( matchData.TimeStarted ) , winner ) ,
+					Tags = new List<string>() { "duckgame" , "peniscorp" }
+				} ,
+				Status = new PlaylistStatus()
+				{
+					PrivacyStatus = "public"
+				}
+			};
+		}
+
 	}
 }

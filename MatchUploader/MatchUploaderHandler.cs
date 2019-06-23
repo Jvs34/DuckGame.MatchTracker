@@ -119,6 +119,8 @@ namespace MatchUploader
 							{
 								UploaderType = VideoMirrorType.Youtube
 							};
+
+							UploaderSettings.UploadersInfo.TryAdd( VideoMirrorType.Youtube , uploaderInfo );
 						}
 
 						Uploader youtube = new YoutubeUploader( uploaderInfo , GameDatabase , UploaderSettings );
@@ -306,7 +308,8 @@ namespace MatchUploader
 		{
 			foreach( var uploader in Uploaders )
 			{
-				uploader.SaveCallback += SaveSettings;
+				uploader.SaveSettingsCallback += SaveSettings;
+				uploader.UpdateStatusCallback += SetDiscordPresence;
 
 				if( !uploader.Info.HasBeenSetup )
 				{
@@ -618,17 +621,17 @@ namespace MatchUploader
 				Console.WriteLine( e );
 			}
 
-			await SaveSettings();
+			SaveSettings();
 
 			await CommitGitChanges();
 
-			//await Upload();
+			await Upload();
 
-			await UploadAllRounds();
+			//await UploadAllRounds();
 
 			UploaderSettings.LastRan = DateTime.Now;
 
-			await SaveSettings();
+			SaveSettings();
 		}
 
 		private async Task Upload()
@@ -640,12 +643,9 @@ namespace MatchUploader
 		}
 
 		//in this context, settings are only the uploaderSettings
-		public async Task SaveSettings()
+		public void SaveSettings()
 		{
-			await Task.CompletedTask;
-
-			using( var fileStream = File.OpenWrite( Path.Combine( SettingsFolder , "uploader.json" ) ) )
-			using( var writer = new StreamWriter( fileStream ) )
+			using( var writer = File.CreateText( Path.Combine( SettingsFolder , "uploader.json" ) ) )
 			{
 				Serializer.Serialize( writer , UploaderSettings );
 			}
@@ -908,7 +908,7 @@ namespace MatchUploader
 				{
 					CurrentVideo.LastException = uploadProgress.Exception.Message;
 					CurrentVideo.ErrorCount++;
-					await SaveSettings();
+					SaveSettings();
 				}
 				CurrentVideo = null;
 
@@ -954,7 +954,7 @@ namespace MatchUploader
 				UploaderSettings.PendingUploads.Remove( CurrentVideo );
 			}
 
-			SaveSettings().Wait();
+			SaveSettings();
 			AddYoutubeIdToRound( CurrentVideo.DataName , video.Id ).Wait();
 
 			Console.WriteLine( "Round {0} with id {1} was successfully uploaded." , CurrentVideo.DataName , video.Id );
@@ -963,7 +963,7 @@ namespace MatchUploader
 		private void OnStartUploading( IUploadSessionData resumable )
 		{
 			CurrentVideo.UploadUrl = resumable.UploadUri;
-			SaveSettings().Wait();//save right away in case the program crashes or connection screws up
+			SaveSettings();
 		}
 
 		private void OnUploadProgress( IUploadProgress progress )
@@ -1022,7 +1022,6 @@ namespace MatchUploader
 			{
 				return;
 			}
-
 
 			if( DiscordClient.CurrentUser.Presence.Activity != null && DiscordClient.CurrentUser.Presence.Activity.Name == str )
 			{
