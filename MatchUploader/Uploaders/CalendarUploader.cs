@@ -12,12 +12,10 @@ namespace MatchUploader
 
 		public override async Task Initialize()
 		{
-			Console.WriteLine( "Calendar uploader initialized" );
 		}
 
 		protected override async Task FetchUploads()
 		{
-			Console.WriteLine( "Calendar uploader fetched shit" );
 		}
 
 		protected override async Task<bool> UploadItem( PendingUpload upload )

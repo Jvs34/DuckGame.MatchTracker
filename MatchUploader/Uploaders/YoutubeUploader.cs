@@ -142,6 +142,7 @@ namespace MatchUploader
 				roundData = await DB.GetData<RoundData>( upload.DataName );
 				if( !string.IsNullOrEmpty( roundData.YoutubeUrl ) )
 				{
+					await RemoveVideoFile( roundData.DatabaseIndex );
 					//now add it to the playlist of the match
 					await AddRoundToPlaylist( roundData.DatabaseIndex );
 				}
@@ -228,6 +229,39 @@ namespace MatchUploader
 			};
 
 			return videoData;
+		}
+
+		private async Task RemoveVideoFile( string roundName )
+		{
+			RoundData roundData = await DB.GetData<RoundData>( roundName );
+
+			//don't accidentally delete stuff that somehow doesn't have a url set
+			if( roundData.YoutubeUrl == null )
+			{
+				return;
+			}
+
+			try
+			{
+				string filePath = DB.SharedSettings.GetRoundVideoPath( roundName );
+				string reEncodedFilePath = Path.ChangeExtension( filePath , "converted.mp4" );
+
+				if( File.Exists( filePath ) )
+				{
+					Console.WriteLine( "Removed video file for {0}" , roundName );
+					File.Delete( filePath );
+				}
+
+				if( File.Exists( reEncodedFilePath ) )
+				{
+					Console.WriteLine( "Also removing the reencoded version {0}" , roundName );
+					File.Delete( reEncodedFilePath );
+				}
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e );
+			}
 		}
 
 		private async Task AddYoutubeIdToRound( string roundName , string videoId )

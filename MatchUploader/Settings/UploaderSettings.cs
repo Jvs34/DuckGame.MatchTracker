@@ -9,7 +9,6 @@ namespace MatchUploader
 		public string GitEmail { get; set; }
 		public string GitPassword { get; set; }
 		public string GitUsername { get; set; }
-		public List<PendingUpload> PendingUploads { get; set; } = new List<PendingUpload>();
 		public Dictionary<MatchTracker.VideoMirrorType , UploaderInfo> UploadersInfo { get; set; } = new Dictionary<MatchTracker.VideoMirrorType , UploaderInfo>();
 		public int RetryCount { get; set; } = 5;
 		public GoogleSecrets Secrets { get; set; }
@@ -22,11 +21,8 @@ namespace MatchUploader
 		public MatchTracker.VideoMirrorType VideoMirrorUpload { get; set; }
 		public int DiscordMaxUploadSize { get; set; } = 8388608;
 		public ulong DiscordUploadChannel { get; set; }
-
 		public string CronSchedule { get; set; }
-
 		public DateTime LastRan { get; set; } = DateTime.Now.Subtract( TimeSpan.FromSeconds( 1 ) );
-
 		public bool ScheduleEnabled { get; set; }
 	}
 }
