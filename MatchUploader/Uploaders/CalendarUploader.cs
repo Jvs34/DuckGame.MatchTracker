@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using MatchTracker;
+using System;
 using System.Threading.Tasks;
-using MatchTracker;
 
 namespace MatchUploader
 {
@@ -12,19 +10,20 @@ namespace MatchUploader
 		{
 		}
 
-		public override Task Initialize()
+		public override async Task Initialize()
 		{
-			throw new NotImplementedException();
+			Console.WriteLine( "Calendar uploader initialized" );
 		}
 
-		protected override Task FetchUploads()
+		protected override async Task FetchUploads()
 		{
-			throw new NotImplementedException();
+			Console.WriteLine( "Calendar uploader fetched shit" );
 		}
 
-		protected override Task<bool> UploadItem( PendingUpload upload )
+		protected override async Task<bool> UploadItem( PendingUpload upload )
 		{
-			throw new NotImplementedException();
+			Console.WriteLine( "Calendar uploader uploaded shit" );
+			return true;
 		}
 	}
 }

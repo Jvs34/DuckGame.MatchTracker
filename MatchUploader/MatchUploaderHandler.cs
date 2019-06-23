@@ -2,7 +2,6 @@
 using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
 using Google.Apis.Calendar.v3.Data;
-using Google.Apis.Http;
 using Google.Apis.Services;
 using Google.Apis.Upload;
 using Google.Apis.YouTube.v3;
@@ -19,13 +18,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Enums;
-using YoutubeExplode.Models.MediaStreams;
 
 /*
 Goes through all the folders, puts all rounds and matches into data.json
@@ -49,8 +46,6 @@ namespace MatchUploader
 
 		//private AuthenticationResult microsoftGraphCredentials;
 		private IConfigurationRoot Configuration { get; }
-
-		private Uploader CalendarUploader { get; set; }
 		private Dictionary<VideoMirrorType , Uploader> VideoUploaders { get; } = new Dictionary<VideoMirrorType , Uploader>();
 		private List<Uploader> Uploaders { get; } = new List<Uploader>();
 
@@ -58,6 +53,11 @@ namespace MatchUploader
 		/// Only to be used by the youtube downloader
 		/// </summary>
 		private HttpClient NormalHttpClient { get; } = new HttpClient();
+
+		private JsonSerializer Serializer { get; } = new JsonSerializer()
+		{
+			Formatting = Formatting.Indented
+		};
 
 		public MatchUploaderHandler( string [] args )
 		{
@@ -74,6 +74,7 @@ namespace MatchUploader
 				.AddJsonFile( "bot.json" )
 				.AddCommandLine( args )
 			.Build();
+
 
 			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( UploaderSettings );
@@ -95,6 +96,8 @@ namespace MatchUploader
 					Token = BotSettings.DiscordToken ,
 				} );
 			}
+
+			CreateUploaders();
 		}
 
 		private void CreateUploaders()
@@ -213,7 +216,9 @@ namespace MatchUploader
 			await Task.CompletedTask;
 
 			if( DatabaseRepository == null )
+			{
 				return;
+			}
 
 			Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , UploaderSettings.GitEmail , DateTime.Now );
 			var credentialsHandler = new CredentialsHandler(
@@ -301,6 +306,7 @@ namespace MatchUploader
 		{
 			foreach( var uploader in Uploaders )
 			{
+				uploader.SaveCallback += SaveSettings;
 				await uploader.Initialize();
 			}
 
@@ -608,6 +614,9 @@ namespace MatchUploader
 			await SaveSettings();
 
 			await CommitGitChanges();
+
+			await Upload();
+
 			await UploadAllRounds();
 
 			UploaderSettings.LastRan = DateTime.Now;
@@ -615,13 +624,24 @@ namespace MatchUploader
 			await SaveSettings();
 		}
 
+		private async Task Upload()
+		{
+			foreach( var uploader in Uploaders )
+			{
+				await uploader.UploadAll();
+			}
+		}
+
 		//in this context, settings are only the uploaderSettings
 		public async Task SaveSettings()
 		{
-			await File.WriteAllTextAsync(
-				Path.Combine( SettingsFolder , "uploader.json" ) ,
-				JsonConvert.SerializeObject( UploaderSettings , Formatting.Indented )
-			);
+			await Task.CompletedTask;
+
+			using( var fileStream = File.OpenWrite( Path.Combine( SettingsFolder , "uploader.json" ) ) )
+			using( var writer = new StreamWriter( fileStream ) )
+			{
+				Serializer.Serialize( writer , UploaderSettings );
+			}
 		}
 
 		private async Task<IEnumerable<RoundData>> GetUploadableRounds()
@@ -962,7 +982,9 @@ namespace MatchUploader
 
 			//don't accidentally delete stuff that somehow doesn't have a url set
 			if( roundData.YoutubeUrl == null )
+			{
 				return;
+			}
 
 			try
 			{

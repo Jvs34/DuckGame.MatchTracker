@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using MatchTracker;
 using System.Threading.Tasks;
-using MatchTracker;
 
 namespace MatchUploader
 {

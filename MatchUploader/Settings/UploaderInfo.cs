@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using MatchTracker;
+﻿using MatchTracker;
+using System;
 
 namespace MatchUploader
 {
@@ -11,7 +9,7 @@ namespace MatchUploader
 		/// Youtube, twitch etc etc
 		/// </summary>
 		public VideoMirrorType UploaderType { get; set; }
-		
+
 		/// <summary>
 		/// Even if this uploader has no theoretical limit, set this anyway
 		/// Don't want to get banned by surprise because of abuse
@@ -35,13 +33,12 @@ namespace MatchUploader
 		/// </summary>
 		public DateTime LastUploadTime { get; set; }
 
-		
 		/// <summary>
 		/// This is set when the first download starts or resumes
 		/// </summary>
 		public DateTime NextResetTime { get; set; }
 
-		
+
 		/// <summary>
 		/// Depending on the API, this might be 24 hours or whatever
 		/// </summary>
@@ -49,6 +46,6 @@ namespace MatchUploader
 
 		public int Retries { get; set; }
 
-		public Queue<PendingUpload> Uploads { get; set; } = new Queue<PendingUpload>();
+		public PendingUpload CurrentUpload { get; set; }
 	}
 }

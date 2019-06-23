@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using NCrontab;
-using System.Net.Http;
+using System;
+using System.IO;
+using System.Threading.Tasks;
 
 namespace MatchUploader
 {

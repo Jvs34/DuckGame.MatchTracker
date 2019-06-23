@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MatchUploader.Uploaders
+﻿namespace MatchUploader.Uploaders
 {
 	class OneDriveUploader
 	{
