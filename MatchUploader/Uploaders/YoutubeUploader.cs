@@ -82,6 +82,12 @@ namespace MatchUploader
 		{
 			RoundData roundData = await DB.GetData<RoundData>( upload.DataName );
 
+			if( !string.IsNullOrEmpty( roundData.YoutubeUrl ) )
+			{
+				Console.WriteLine( "Tried to upload a round that already had a youtube video on it somehow??" );
+				return true;
+			}
+
 			Video videoData = await GetVideoDataForRound( roundData );
 			string filePath = DB.SharedSettings.GetRoundVideoPath( roundData.Name );
 
@@ -151,13 +157,6 @@ namespace MatchUploader
 
 			return uploadProgress.Status == UploadStatus.Completed;
 		}
-
-
-
-
-
-
-
 
 		#region UPLOADCALLBACKS
 		private void OnYoutubeUploadStart( IUploadSessionData resumable )
