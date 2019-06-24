@@ -3,8 +3,6 @@ using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
 using Google.Apis.Calendar.v3.Data;
 using Google.Apis.Services;
-using Google.Apis.Upload;
-using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
 using LibGit2Sharp;
 using LibGit2Sharp.Handlers;
@@ -14,7 +12,6 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -40,7 +37,6 @@ namespace MatchUploader
 		private IGameDatabase GameDatabase { get; }
 		private string SettingsFolder { get; }
 		private UploaderSettings UploaderSettings { get; }
-		private PendingUpload CurrentVideo { get; set; }
 		private CalendarService CalendarService { get; set; }
 
 		//private AuthenticationResult microsoftGraphCredentials;
@@ -156,7 +152,7 @@ namespace MatchUploader
 
 			Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , UploaderSettings.GitEmail , DateTime.Now );
 			var credentialsHandler = new CredentialsHandler(
-				( url , usernameFromUrl , supportedCredentialTypes ) =>
+				( _ , __ , ___ ) =>
 					new UsernamePasswordCredentials()
 					{
 						Username = UploaderSettings.GitUsername ,
@@ -164,7 +160,6 @@ namespace MatchUploader
 					}
 			);
 
-			bool hasChanges = false;
 
 			Console.WriteLine( "Fetching repository status" );
 
@@ -185,21 +180,9 @@ namespace MatchUploader
 				throw new Exception( "Could not complete a successful merge. " );
 			}
 
-			foreach( var item in DatabaseRepository.RetrieveStatus() )
+			try
 			{
-				if( item.State != FileStatus.Ignored && item.State != FileStatus.Unaltered )
-				{
-					Console.WriteLine( "File {0} {1}" , item.FilePath , item.State );
-
-					Commands.Stage( DatabaseRepository , item.FilePath );
-					hasChanges = true;
-				}
-			}
-
-			if( hasChanges )
-			{
-				//Commands.Stage( repository , "*" );
-
+				Commands.Stage( DatabaseRepository , "*" );
 				DatabaseRepository.Commit( "Updated database" , us , us );
 
 				Console.WriteLine( "Creating commit" );
@@ -212,6 +195,11 @@ namespace MatchUploader
 				DatabaseRepository.Network.Push( CurrentBranch , pushOptions );
 				Console.WriteLine( "Commit pushed" );
 			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e.Message );
+			}
+
 		}
 
 		public async Task Initialize()
@@ -368,43 +356,6 @@ namespace MatchUploader
 			};
 		}
 
-		public async Task<Video> GetVideoDataForRound( RoundData roundData )
-		{
-			await Task.CompletedTask;
-
-			var playerWinners = await GameDatabase.GetAllData<PlayerData>( roundData.GetWinners().ToArray() );
-
-			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
-
-			if( string.IsNullOrEmpty( winner ) )
-			{
-				winner = "Nobody";
-			}
-
-			string description = $"Recorded on {GameDatabase.SharedSettings.DateTimeToString( roundData.TimeStarted )}\nThe winner is {winner}";
-
-			Video videoData = new Video()
-			{
-				Snippet = new VideoSnippet()
-				{
-					Title = $"{roundData.Name} {winner}" ,
-					Tags = new List<string>() { "duckgame" , "peniscorp" } ,
-					CategoryId = "20" , // See https://developers.google.com/youtube/v3/docs/videoCategories/list
-					Description = description ,
-				} ,
-				Status = new VideoStatus()
-				{
-					PrivacyStatus = "unlisted" ,
-				} ,
-				RecordingDetails = new VideoRecordingDetails()
-				{
-					RecordingDate = roundData.TimeStarted ,
-				}
-			};
-
-			return videoData;
-		}
-
 		public async Task LoadDatabase()
 		{
 			await GameDatabase.Load();
@@ -431,8 +382,6 @@ namespace MatchUploader
 
 			await Upload();
 
-			//await UploadAllRounds();
-
 			UploaderSettings.LastRan = DateTime.Now;
 
 			SaveSettings();
@@ -453,31 +402,6 @@ namespace MatchUploader
 			{
 				Serializer.Serialize( writer , UploaderSettings );
 			}
-		}
-
-		private async Task<IEnumerable<RoundData>> GetUploadableRounds()
-		{
-			ConcurrentBag<RoundData> uploadableRounds = new ConcurrentBag<RoundData>();
-
-			await GameDatabase.IterateOverAllRoundsOrMatches( false , async ( round ) =>
-			{
-				if( uploadableRounds.Count >= 100 )
-				{
-					return false;
-				}
-
-				RoundData roundData = (RoundData) round;
-
-				if( roundData.RecordingType == RecordingType.Video && string.IsNullOrEmpty( roundData.YoutubeUrl ) && File.Exists( GameDatabase.SharedSettings.GetRoundVideoPath( roundData.Name ) ) )
-				{
-					uploadableRounds.Add( roundData );
-				}
-
-				await Task.CompletedTask;
-				return true;
-			} );
-
-			return uploadableRounds.OrderBy( roundData => roundData.TimeStarted );
 		}
 
 		public async Task UploadToDiscordAsync()

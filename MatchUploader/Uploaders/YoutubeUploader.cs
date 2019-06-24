@@ -68,7 +68,7 @@ namespace MatchUploader
 
 			foreach( var roundData in uploadableRounds.OrderBy( roundData => roundData.TimeStarted ) )
 			{
-				PendingUpload upload = CreatePendingUpload( roundData );
+				PendingUpload upload = await CreatePendingUpload( roundData );
 
 				if( upload != null )
 				{
@@ -142,7 +142,6 @@ namespace MatchUploader
 				roundData = await DB.GetData<RoundData>( upload.DataName );
 				if( !string.IsNullOrEmpty( roundData.YoutubeUrl ) )
 				{
-					await RemoveVideoFile( roundData.DatabaseIndex );
 					//now add it to the playlist of the match
 					await AddRoundToPlaylist( roundData.DatabaseIndex );
 				}
@@ -150,6 +149,8 @@ namespace MatchUploader
 
 				return uploadProgress.Status == UploadStatus.Completed;
 			}
+
+			await RemoveVideoFile( roundData.DatabaseIndex );
 		}
 
 
@@ -393,5 +394,35 @@ namespace MatchUploader
 			};
 		}
 
+		protected override async Task<PendingUpload> CreatePendingUpload( IDatabaseEntry entry )
+		{
+			PendingUpload upload = null;
+
+			if( entry is RoundData roundData )
+			{
+				string videoPath = DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false );
+
+				string reEncodedVideoPath = Path.ChangeExtension( videoPath , "converted.mp4" );
+
+				if( File.Exists( reEncodedVideoPath ) )
+				{
+					videoPath = reEncodedVideoPath;
+				}
+
+				if( File.Exists( videoPath ) )
+				{
+					var fileInfo = new FileInfo( videoPath );
+
+					upload = new PendingUpload()
+					{
+						DataName = roundData.DatabaseIndex ,
+						FileSize = fileInfo.Length ,
+					};
+				}
+			}
+
+
+			return upload;
+		}
 	}
 }

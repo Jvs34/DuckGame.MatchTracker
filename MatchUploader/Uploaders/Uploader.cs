@@ -60,40 +60,7 @@ namespace MatchUploader
 
 		}
 
-		protected async Task<PendingUpload> CreatePendingUpload( string roundName )
-		{
-			return CreatePendingUpload( await DB.GetData<RoundData>( roundName ) );
-		}
-
-		protected PendingUpload CreatePendingUpload( RoundData roundData )
-		{
-			PendingUpload upload = null;
-
-			if( roundData != null )
-			{
-				string videoPath = DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false );
-
-				string reEncodedVideoPath = Path.ChangeExtension( videoPath , "converted.mp4" );
-
-				if( File.Exists( reEncodedVideoPath ) )
-				{
-					videoPath = reEncodedVideoPath;
-				}
-
-				if( File.Exists( videoPath ) )
-				{
-					var fileInfo = new FileInfo( videoPath );
-
-					upload = new PendingUpload()
-					{
-						DataName = roundData.DatabaseIndex ,
-						FileSize = fileInfo.Length ,
-					};
-				}
-			}
-
-			return upload;
-		}
+		protected abstract Task<PendingUpload> CreatePendingUpload( IDatabaseEntry entry );
 
 		protected abstract Task FetchUploads();
 
