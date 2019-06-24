@@ -97,6 +97,8 @@ namespace MatchUploader
 				filePath = reEncodedVideoPath;
 			}
 
+			IUploadProgress uploadProgress;
+
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
 				if( upload.ErrorCount > UploaderSettings.RetryCount )
@@ -113,8 +115,6 @@ namespace MatchUploader
 				videosInsertRequest.ProgressChanged += OnYoutubeUploadProgress;
 				videosInsertRequest.ResponseReceived += OnYoutubeUploadFinished;
 				videosInsertRequest.UploadSessionData += OnYoutubeUploadStart;
-
-				IUploadProgress uploadProgress;
 
 				if( upload.UploadUrl != null )
 				{
@@ -145,12 +145,11 @@ namespace MatchUploader
 					//now add it to the playlist of the match
 					await AddRoundToPlaylist( roundData.DatabaseIndex );
 				}
-
-
-				return uploadProgress.Status == UploadStatus.Completed;
 			}
 
 			await RemoveVideoFile( roundData.DatabaseIndex );
+
+			return uploadProgress.Status == UploadStatus.Completed;
 		}
 
 
