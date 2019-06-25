@@ -66,7 +66,7 @@ namespace MatchUploader
 					Console.WriteLine( $"Event for {matchData.DatabaseIndex} does not exist" );
 				}
 
-				if( matchData is null )
+				if( matchDataEvent is null )
 				{
 					uploadableRounds.Add( matchData );
 				}

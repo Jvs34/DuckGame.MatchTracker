@@ -94,11 +94,11 @@ namespace MatchUploader
 				Uploads.Enqueue( CurrentUpload );
 			}
 
-			Console.WriteLine( $"{GetType().Name}: Fetching uploads for {GetType().Name}" );
+			await UpdateStatus( $"{GetType().Name}: Fetching uploads for {GetType().Name}" );
 
 			await FetchUploads();
 
-			Console.WriteLine( $"{GetType().Name}: Uploading {Uploads.Count} rounds" );
+			await UpdateStatus( $"{GetType().Name}: Uploading {Uploads.Count} rounds" );
 
 			while( Uploads.Count > 0 && CanUpload() )
 			{
@@ -156,6 +156,7 @@ namespace MatchUploader
 
 		protected async Task UpdateStatus( string status )
 		{
+			Console.WriteLine( status );
 			await UpdateStatusCallback.Invoke( status );
 		}
 	}
