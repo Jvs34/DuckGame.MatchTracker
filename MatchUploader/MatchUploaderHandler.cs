@@ -1,22 +1,15 @@
 ﻿using DSharpPlus;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Calendar.v3;
-using Google.Apis.Calendar.v3.Data;
-using Google.Apis.Services;
-using Google.Apis.YouTube.v3.Data;
 using LibGit2Sharp;
 using LibGit2Sharp.Handlers;
 using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Enums;
@@ -30,14 +23,13 @@ namespace MatchUploader
 {
 	public sealed class MatchUploaderHandler
 	{
-		private BotSettings BotSettings { get; }
+		private BotSettings BotSettings { get; } = new BotSettings();
 		private Branch CurrentBranch { get; }
 		private Repository DatabaseRepository { get; }
 		private DiscordClient DiscordClient { get; }
 		private IGameDatabase GameDatabase { get; }
 		private string SettingsFolder { get; }
-		private UploaderSettings UploaderSettings { get; }
-		private CalendarService CalendarService { get; set; }
+		private UploaderSettings UploaderSettings { get; } = new UploaderSettings();
 
 		//private AuthenticationResult microsoftGraphCredentials;
 		private IConfigurationRoot Configuration { get; }
@@ -56,11 +48,7 @@ namespace MatchUploader
 
 		public MatchUploaderHandler( string [] args )
 		{
-			GameDatabase = new FileSystemGameDatabase();
-
-			UploaderSettings = new UploaderSettings();
-			BotSettings = new BotSettings();
-
+			
 			SettingsFolder = Path.Combine( Directory.GetCurrentDirectory() , "Settings" );
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( SettingsFolder )
@@ -70,6 +58,7 @@ namespace MatchUploader
 				.AddCommandLine( args )
 			.Build();
 
+			GameDatabase = new FileSystemGameDatabase();
 
 			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( UploaderSettings );
@@ -225,25 +214,6 @@ namespace MatchUploader
 				await DiscordClient.InitializeAsync();
 			}
 
-			string appName = Assembly.GetEntryAssembly().GetName().Name;
-
-			//calendar stuff
-
-			if( CalendarService == null )
-			{
-				CalendarService = new CalendarService( new BaseClientService.Initializer()
-				{
-					HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( UploaderSettings.Secrets ,
-						new [] { CalendarService.Scope.Calendar } ,
-						"calendar" ,
-						CancellationToken.None ,
-						UploaderSettings.DataStore
-					) ,
-					ApplicationName = appName ,
-					GZipEnabled = true ,
-				} );
-			}
-
 			/*
 			Microsoft.Graph.GraphServiceClient graphService = new Microsoft.Graph.GraphServiceClient(
 					"https://graph.microsoft.com/v1.0/" ,
@@ -252,108 +222,6 @@ namespace MatchUploader
 					)
 				);
 			*/
-		}
-
-		public async Task<List<Event>> GetAllCalendarEvents()
-		{
-			var allEvents = new List<Event>();
-
-			var eventRequest = CalendarService.Events.List( UploaderSettings.CalendarID );
-			Events eventResponse;
-
-			do
-			{
-				eventResponse = await eventRequest.ExecuteAsync();
-
-				foreach( var eventItem in eventResponse.Items )
-				{
-					if( !allEvents.Contains( eventItem ) )
-					{
-						allEvents.Add( eventItem );
-					}
-				}
-
-				eventRequest.PageToken = eventResponse.NextPageToken;
-			}
-			while( eventResponse.Items.Count > 0 && eventResponse.NextPageToken != null );
-
-			return allEvents;
-		}
-
-		public async Task HandleCalendar()
-		{
-			if( CalendarService is null )
-			{
-				return;
-			}
-
-			string calendarID = UploaderSettings.CalendarID;
-
-			var allEvents = await GetAllCalendarEvents();
-
-			List<Task<Event>> matchTasks = new List<Task<Event>>();
-
-			foreach( string matchName in await GameDatabase.GetAll<MatchData>() )
-			{
-				string strippedName = GetStrippedMatchName( await GameDatabase.GetData<MatchData>( matchName ) );
-
-				//if this event is already added, don't even call this
-
-				if( allEvents.Any( x => x.Id.Equals( strippedName ) ) )
-				{
-					continue;
-				}
-
-				matchTasks.Add( GetCalendarEventForMatch( matchName ) );
-			}
-
-			await Task.WhenAll( matchTasks );
-
-			//only get the first one and try using it
-
-			List<Task<Event>> eventTasks = new List<Task<Event>>();
-
-			foreach( var matchTask in matchTasks )
-			{
-				eventTasks.Add( CalendarService.Events.Insert( matchTask.Result , calendarID ).ExecuteAsync() );
-			}
-
-			//now create one for each one
-			await Task.WhenAll( eventTasks );
-		}
-
-		private string GetStrippedMatchName( MatchData matchData )
-		{
-			return matchData.Name.Replace( "-" , string.Empty ).Replace( " " , string.Empty );//matchData.TimeStarted.ToString( "yyyyMMddHHmmss" );
-		}
-
-		public async Task<Event> GetCalendarEventForMatch( string matchName )
-		{
-			MatchData matchData = await GameDatabase.GetData<MatchData>( matchName );
-
-			var playerWinners = await GameDatabase.GetAllData<PlayerData>( matchData.GetWinners().ToArray() );
-
-			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
-
-			if( string.IsNullOrEmpty( winner ) )
-			{
-				winner = "Nobody";
-			}
-
-			return new Event()
-			{
-				Id = GetStrippedMatchName( matchData ) ,
-				Start = new EventDateTime()
-				{
-					DateTime = matchData.TimeStarted
-				} ,
-				End = new EventDateTime()
-				{
-					DateTime = matchData.TimeEnded
-				} ,
-				Summary = $"{matchData.Name} {winner}" ,
-				Description = string.Format( "Recorded on {0}\nThe winner is {1}" , GameDatabase.SharedSettings.DateTimeToString( matchData.TimeStarted ) , winner )
-			};
 		}
 
 		public async Task LoadDatabase()
@@ -366,15 +234,6 @@ namespace MatchUploader
 		{
 			await LoadDatabase();
 			await Initialize();
-
-			try
-			{
-				await HandleCalendar();
-			}
-			catch( Exception e )
-			{
-				Console.WriteLine( e );
-			}
 
 			SaveSettings();
 

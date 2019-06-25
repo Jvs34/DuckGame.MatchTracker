@@ -1,8 +1,12 @@
 ﻿using Google.Apis.Auth.OAuth2;
 using Google.Apis.Calendar.v3;
+using Google.Apis.Calendar.v3.Data;
 using Google.Apis.Services;
 using MatchTracker;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,20 +41,109 @@ namespace MatchUploader
 
 		protected override async Task<PendingUpload> CreatePendingUpload( IDatabaseEntry entry )
 		{
-			PendingUpload upload = null;
+			await Task.CompletedTask;
 
-
-			return upload;
+			return new PendingUpload()
+			{
+				DataName = entry.DatabaseIndex,
+			};
 		}
 
 		protected override async Task FetchUploads()
 		{
+			ConcurrentBag<MatchData> uploadableRounds = new ConcurrentBag<MatchData>();
+			await DB.IterateOverAll<MatchData>( async ( matchData ) =>
+			{
+				string matchEventID = GetStrippedMatchName( matchData );
+				Event matchDataEvent = null;
+
+				try
+				{
+					matchDataEvent = await Service.Events.Get( UploaderSettings.CalendarID , matchEventID ).ExecuteAsync();
+				}
+				catch( Exception )
+				{
+					Console.WriteLine( $"Event for {matchData.DatabaseIndex} does not exist" );
+				}
+
+				if( matchData is null )
+				{
+					uploadableRounds.Add( matchData );
+				}
+
+				return true;
+			} );
+
+			foreach( var matchData in uploadableRounds.OrderBy( matchData => matchData.TimeStarted ) )
+			{
+				PendingUpload upload = await CreatePendingUpload( matchData );
+
+				if( upload != null )
+				{
+					Uploads.Enqueue( upload );
+				}
+			}
+
 		}
 
 		protected override async Task<bool> UploadItem( PendingUpload upload )
 		{
 			Console.WriteLine( "Calendar uploader uploaded shit" );
-			return true;
+
+			Event matchEvent;
+			try
+			{
+				matchEvent = await Service
+					.Events
+					.Insert( await GetCalendarEventForMatch( upload.DataName ) , UploaderSettings.CalendarID )
+					.ExecuteAsync();
+			}
+			catch( Exception )
+			{
+				matchEvent = null;
+			}
+
+			return matchEvent != null;
+		}
+
+		private string GetStrippedMatchName( MatchData matchData )
+		{
+			return matchData.DatabaseIndex.Replace( "-" , string.Empty ).Replace( " " , string.Empty );//matchData.TimeStarted.ToString( "yyyyMMddHHmmss" );
+		}
+
+		public async Task<Event> GetCalendarEventForMatch( string matchName )
+		{
+			MatchData matchData = await DB.GetData<MatchData>( matchName );
+
+			var playerWinners = await DB.GetAllData<PlayerData>( matchData.GetWinners().ToArray() );
+
+			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
+
+			if( string.IsNullOrEmpty( winner ) )
+			{
+				winner = "Nobody";
+			}
+
+			return new Event()
+			{
+				Id = GetStrippedMatchName( matchData ) ,
+				Start = new EventDateTime()
+				{
+					DateTime = matchData.TimeStarted
+				} ,
+				End = new EventDateTime()
+				{
+					DateTime = matchData.TimeEnded
+				} ,
+				Summary = $"{matchData.Name} {winner}" ,
+				Description = string.Format( "Recorded on {0}\nThe winner is {1}" , DB.SharedSettings.DateTimeToString( matchData.TimeStarted ) , winner )
+			};
+		}
+
+		public override void CreateDefaultInfo()
+		{
+			Info.HasApiLimit = false;
+			Info.Retries = 0;
 		}
 	}
 }
