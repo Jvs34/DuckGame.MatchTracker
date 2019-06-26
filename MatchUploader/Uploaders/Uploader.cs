@@ -94,7 +94,7 @@ namespace MatchUploader
 				Uploads.Enqueue( CurrentUpload );
 			}
 
-			await UpdateStatus( $"{GetType().Name}: Fetching uploads for {GetType().Name}" );
+			await UpdateStatus( $"{GetType().Name}: Fetching uploads" );
 
 			await FetchUploads();
 
@@ -102,8 +102,6 @@ namespace MatchUploader
 
 			while( Uploads.Count > 0 && CanUpload() )
 			{
-
-
 				PendingUpload upload = Uploads.Dequeue();
 
 				CurrentUpload = upload;

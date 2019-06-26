@@ -88,8 +88,6 @@ namespace MatchUploader
 
 		protected override async Task<bool> UploadItem( PendingUpload upload )
 		{
-			Console.WriteLine( "Calendar uploader uploaded shit" );
-
 			Event matchEvent;
 			try
 			{

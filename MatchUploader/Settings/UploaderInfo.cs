@@ -8,11 +8,6 @@ namespace MatchUploader
 		public bool HasBeenSetup { get; set; }
 
 		/// <summary>
-		/// Youtube, twitch etc etc
-		/// </summary>
-		public VideoMirrorType UploaderType { get; set; }
-
-		/// <summary>
 		/// Even if this uploader has no theoretical limit, set this anyway
 		/// Don't want to get banned by surprise because of abuse
 		/// </summary>

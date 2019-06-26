@@ -48,7 +48,7 @@ namespace MatchUploader
 
 		public MatchUploaderHandler( string [] args )
 		{
-			
+
 			SettingsFolder = Path.Combine( Directory.GetCurrentDirectory() , "Settings" );
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( SettingsFolder )
@@ -99,10 +99,7 @@ namespace MatchUploader
 					{
 						if( !UploaderSettings.UploadersInfo.TryGetValue( VideoMirrorType.Youtube , out UploaderInfo uploaderInfo ) )
 						{
-							uploaderInfo = new UploaderInfo()
-							{
-								UploaderType = VideoMirrorType.Youtube
-							};
+							uploaderInfo = new UploaderInfo();
 
 							UploaderSettings.UploadersInfo.TryAdd( VideoMirrorType.Youtube , uploaderInfo );
 						}
