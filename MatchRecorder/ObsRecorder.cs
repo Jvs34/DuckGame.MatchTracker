@@ -8,7 +8,7 @@ namespace MatchRecorder
 {
 	internal class ObsRecorder : IRecorder
 	{
-		private readonly MatchRecorderHandler mainHandler;
+		private MatchRecorderHandler MainHandler { get; }
 		private DateTime nextObsCheck;
 		private OBSWebsocket obsHandler;
 		private OutputState recordingState;
@@ -43,7 +43,7 @@ namespace MatchRecorder
 		public ObsRecorder( MatchRecorderHandler parent )
 		{
 			ResultingRecordingType = RecordingType.Video;
-			mainHandler = parent;
+			MainHandler = parent;
 			recordingState = OutputState.Stopped;
 			obsHandler = new OBSWebsocket()
 			{
@@ -101,7 +101,7 @@ namespace MatchRecorder
 								DateTime endTime = DateTime.Now;
 								obsHandler.StopRecording();
 								requestedRecordingStop = false;
-								mainHandler.StopCollectingRoundData( endTime );
+								MainHandler.StopCollectingRoundData( endTime );
 							}
 							catch( Exception )
 							{
@@ -118,9 +118,9 @@ namespace MatchRecorder
 							{
 								DateTime recordingTime = DateTime.Now;
 
-								string recordingTimeString = mainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime );
+								string recordingTimeString = MainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime );
 
-								string roundPath = mainHandler.GameDatabase.SharedSettings.GetPath<RoundData>( recordingTimeString );
+								string roundPath = MainHandler.GameDatabase.SharedSettings.GetPath<RoundData>( recordingTimeString );
 
 								//try setting the recording folder first, then create it before we start recording
 
@@ -130,7 +130,7 @@ namespace MatchRecorder
 
 								obsHandler.StartRecording();
 								requestedRecordingStart = false;
-								mainHandler.StartCollectingRoundData( recordingTime );
+								MainHandler.StartCollectingRoundData( recordingTime );
 							}
 							catch( Exception )
 							{

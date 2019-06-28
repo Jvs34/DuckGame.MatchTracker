@@ -160,7 +160,7 @@ namespace MatchTracker
 					{
 						using( var responseStream = await httpResponse.Content.ReadAsStreamAsync() )
 						{
-							data = Deserialize( responseStream , data );
+							data = Deserialize<T>( responseStream );
 						}
 
 						SetCachedItem( data , httpResponse.Content.Headers.Expires.HasValue

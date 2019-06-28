@@ -27,19 +27,13 @@ namespace MatchTracker
 			}
 		}
 
-		protected virtual T Deserialize<T>( Stream dataStream , T data = default ) where T : IDatabaseEntry
+		protected virtual T Deserialize<T>( Stream dataStream ) where T : IDatabaseEntry
 		{
+			T data = default;
 			using( StreamReader reader = new StreamReader( dataStream ) )
 			using( JsonTextReader jsonReader = new JsonTextReader( reader ) )
 			{
-				if( data != default )
-				{
-					Serializer.Populate( jsonReader , data );
-				}
-				else
-				{
-					data = Serializer.Deserialize<T>( jsonReader );
-				}
+				data = Serializer.Deserialize<T>( jsonReader );
 			}
 
 			return data;

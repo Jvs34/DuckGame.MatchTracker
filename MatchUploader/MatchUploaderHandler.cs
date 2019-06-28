@@ -1,6 +1,4 @@
 ﻿using DSharpPlus;
-using LibGit2Sharp;
-using LibGit2Sharp.Handlers;
 using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -24,8 +22,6 @@ namespace MatchUploader
 	public sealed class MatchUploaderHandler
 	{
 		private BotSettings BotSettings { get; } = new BotSettings();
-		private Branch CurrentBranch { get; }
-		private Repository DatabaseRepository { get; }
 		private DiscordClient DiscordClient { get; }
 		private IGameDatabase GameDatabase { get; }
 		private string SettingsFolder { get; }
@@ -58,18 +54,18 @@ namespace MatchUploader
 				.AddCommandLine( args )
 			.Build();
 
-			GameDatabase = new FileSystemGameDatabase();
-
-			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( UploaderSettings );
 			Configuration.Bind( BotSettings );
 
-			if( Repository.IsValid( GameDatabase.SharedSettings.GetRecordingFolder() ) )
+			//GameDatabase = new FileSystemGameDatabase();
+
+			GameDatabase = new OctoKitGameDatabase( NormalHttpClient , UploaderSettings.GitUsername , UploaderSettings.GitPassword )
 			{
-				Console.WriteLine( "Loaded {0}" , GameDatabase.SharedSettings.GetRecordingFolder() );
-				DatabaseRepository = new Repository( GameDatabase.SharedSettings.GetRecordingFolder() );
-				CurrentBranch = DatabaseRepository.Branches.First( branch => branch.IsCurrentRepositoryHead );
-			}
+				InitialLoad = true,
+			};
+
+
+			Configuration.Bind( GameDatabase.SharedSettings );
 
 			if( !string.IsNullOrEmpty( BotSettings.DiscordToken ) )
 			{
@@ -127,67 +123,6 @@ namespace MatchUploader
 
 		}
 
-		public async Task CommitGitChanges()
-		{
-			await Task.CompletedTask;
-
-			if( DatabaseRepository == null )
-			{
-				return;
-			}
-
-			Signature us = new Signature( Assembly.GetEntryAssembly().GetName().Name , UploaderSettings.GitEmail , DateTime.Now );
-			var credentialsHandler = new CredentialsHandler(
-				( _ , __ , ___ ) =>
-					new UsernamePasswordCredentials()
-					{
-						Username = UploaderSettings.GitUsername ,
-						Password = UploaderSettings.GitPassword ,
-					}
-			);
-
-
-			Console.WriteLine( "Fetching repository status" );
-
-			var mergeResult = Commands.Pull( DatabaseRepository , us , new PullOptions()
-			{
-				FetchOptions = new FetchOptions()
-				{
-					CredentialsProvider = credentialsHandler ,
-				} ,
-				MergeOptions = new MergeOptions()
-				{
-					CommitOnSuccess = true ,
-				}
-			} );
-
-			if( mergeResult.Status == MergeStatus.Conflicts )
-			{
-				throw new Exception( "Could not complete a successful merge. " );
-			}
-
-			try
-			{
-				Commands.Stage( DatabaseRepository , "*" );
-				DatabaseRepository.Commit( "Updated database" , us , us );
-
-				Console.WriteLine( "Creating commit" );
-
-				//I guess you should always try to push regardless if there has been any changes
-				PushOptions pushOptions = new PushOptions
-				{
-					CredentialsProvider = credentialsHandler ,
-				};
-				DatabaseRepository.Network.Push( CurrentBranch , pushOptions );
-				Console.WriteLine( "Commit pushed" );
-			}
-			catch( Exception e )
-			{
-				Console.WriteLine( e.Message );
-			}
-
-		}
-
 		public async Task Initialize()
 		{
 			foreach( var uploader in Uploaders )
@@ -223,8 +158,9 @@ namespace MatchUploader
 
 		public async Task LoadDatabase()
 		{
+			Console.WriteLine( $"Loading the {GameDatabase.GetType()}" );
 			await GameDatabase.Load();
-			Console.WriteLine( "Finished loading the database" );
+			Console.WriteLine( $"Finished loading the {GameDatabase.GetType()}" );
 		}
 
 		public async Task RunAsync()
@@ -233,8 +169,6 @@ namespace MatchUploader
 			await Initialize();
 
 			SaveSettings();
-
-			await CommitGitChanges();
 
 			await Upload();
 

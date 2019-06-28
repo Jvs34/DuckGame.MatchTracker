@@ -82,7 +82,7 @@ namespace MatchTracker
 			RepositoryContent fileInfo = fileContents.FirstOrDefault();
 
 			UpdateFileRequest contentRequest = new UpdateFileRequest(
-				$"{( fileInfo != null ? "Updated" : "Created" )} {typeof( T )} : {data.DatabaseIndex}" ,
+				$"{( fileInfo != null ? "Updated" : "Created" )} {typeof( T ).Name} : {data.DatabaseIndex}" ,
 				newFileContent.ToString() ,
 				fileInfo != null ? fileInfo.Sha : "null" ,
 				true
