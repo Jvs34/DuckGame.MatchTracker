@@ -8,13 +8,12 @@ using DSharpPlus.VoiceNext.Codec;
 using DuckGame;
 using MatchTracker;
 using MatchTracker.Replay;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.IO.Pipes;
 using System.IO.Compression;
+using System.IO.Pipes;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -195,7 +194,9 @@ namespace MatchRecorder
 			var currentRound = mainHandler.CurrentRound;
 
 			if( currentRound == null || CurrentRecording == null )
+			{
 				return;
+			}
 
 			var camera = Level.current?.camera;
 			MatchTracker.Rectangle cameraData = null;
@@ -374,7 +375,9 @@ namespace MatchRecorder
 		public int OnStartStaticDraw()
 		{
 			if( !CatchingDrawCalls || CurrentRecording == null )
+			{
 				return 0;
+			}
 
 			return CurrentRecording.OnStartStaticDraw();
 		}
@@ -382,7 +385,9 @@ namespace MatchRecorder
 		public void OnFinishStaticDraw()
 		{
 			if( !CatchingDrawCalls )
+			{
 				return;
+			}
 
 			CurrentRecording?.OnFinishStaticDraw();
 		}
@@ -390,7 +395,9 @@ namespace MatchRecorder
 		public void OnStaticDraw( int id )
 		{
 			if( !CatchingDrawCalls )
+			{
 				return;
+			}
 
 			CurrentRecording?.OnStaticDraw( id );
 		}
@@ -398,7 +405,9 @@ namespace MatchRecorder
 		public bool WantsTexture( object tex )
 		{
 			if( CurrentRecording == null )
+			{
 				return false;
+			}
 
 			return CurrentRecording.WantsTexture( tex );
 		}

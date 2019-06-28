@@ -1,7 +1,5 @@
 ﻿using Flurl;
-using Newtonsoft.Json;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -62,7 +60,7 @@ namespace MatchTracker
 		protected void CacheEverythingInZip( ZipArchive zipArchive )
 		{
 			DateTime expireTime = DateTime.UtcNow.AddSeconds( 150 );
-			
+
 			var playersEntry = GetZipEntry<EntryListData>( zipArchive , nameof( PlayerData ) );
 			if( playersEntry != null )
 			{

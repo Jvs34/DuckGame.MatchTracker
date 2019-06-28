@@ -1,5 +1,5 @@
-﻿using System.Threading.Tasks;
-using MatchTracker;
+﻿using MatchTracker;
+using System.Threading.Tasks;
 
 namespace MatchUploader.Uploaders
 {

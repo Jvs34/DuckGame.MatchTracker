@@ -1,11 +1,8 @@
 ﻿using MatchTracker;
 using MatchTracker.Replay;
 using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MatchTest

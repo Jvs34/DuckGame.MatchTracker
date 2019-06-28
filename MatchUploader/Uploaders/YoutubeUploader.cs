@@ -9,7 +9,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -312,9 +311,9 @@ namespace MatchUploader
 					await DB.SaveData( matchData );
 				}
 			}
-			catch( Exception )
+			catch( Exception e )
 			{
-
+				Console.WriteLine( $"Could not create playlist {matchName} , {e.Message}" );
 			}
 
 			return matchPlaylist;
@@ -394,31 +393,30 @@ namespace MatchUploader
 
 		protected override async Task<PendingUpload> CreatePendingUpload( IDatabaseEntry entry )
 		{
+			await Task.CompletedTask;
+
 			PendingUpload upload = null;
 
 			if( entry is RoundData roundData )
 			{
-				string videoPath = DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false );
+				FileInfo videoInfo = new FileInfo( DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false ) );
 
-				string reEncodedVideoPath = Path.ChangeExtension( videoPath , "converted.mp4" );
+				FileInfo reencodedInfo = new FileInfo( Path.ChangeExtension( DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false ) , "converted.mp4" ) );
 
-				if( File.Exists( reEncodedVideoPath ) )
+				if( reencodedInfo.Exists )
 				{
-					videoPath = reEncodedVideoPath;
+					videoInfo = reencodedInfo;
 				}
 
-				if( File.Exists( videoPath ) )
+				if( videoInfo.Exists )
 				{
-					var fileInfo = new FileInfo( videoPath );
-
 					upload = new PendingUpload()
 					{
 						DataName = roundData.DatabaseIndex ,
-						FileSize = fileInfo.Length ,
+						FileSize = videoInfo.Length ,
 					};
 				}
 			}
-
 
 			return upload;
 		}

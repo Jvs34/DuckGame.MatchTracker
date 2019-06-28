@@ -5,7 +5,6 @@ using Google.Apis.Services;
 using MatchTracker;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -45,7 +44,7 @@ namespace MatchUploader
 
 			return new PendingUpload()
 			{
-				DataName = entry.DatabaseIndex,
+				DataName = entry.DatabaseIndex ,
 			};
 		}
 

@@ -1,7 +1,6 @@
 ﻿using ProtoBuf;
 using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace MatchTracker.Replay
 {
@@ -30,11 +29,11 @@ namespace MatchTracker.Replay
 		[ProtoMember( 6 )]
 		public List<Frame> Frames = new List<Frame>();
 
-        [ProtoMember( 7 )]
-        public List<StaticDrawCall> StaticDrawCalls = new List<StaticDrawCall>();
+		[ProtoMember( 7 )]
+		public List<StaticDrawCall> StaticDrawCalls = new List<StaticDrawCall>();
 
-        [ProtoMember( 10 )]
-        public List<RuntimeTexture> RuntimeTextures = new List<RuntimeTexture>();
+		[ProtoMember( 10 )]
+		public List<RuntimeTexture> RuntimeTextures = new List<RuntimeTexture>();
 
 		/// <summary>
 		/// The list of textures that were used in this recording,

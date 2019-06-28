@@ -3,7 +3,6 @@ using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
-using DSharpPlus.Interactivity.Enums;
 using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,7 +41,7 @@ namespace MatchBot
 			{
 				DB = new OctoKitGameDatabase( HttpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] )
 				{
-					InitialLoad = true,
+					InitialLoad = true ,
 				};
 			}
 			else
@@ -50,7 +49,7 @@ namespace MatchBot
 				DB = new FileSystemGameDatabase();
 			}
 
-			
+
 			Configuration.Bind( DB.SharedSettings );
 
 			DiscordInstance = new DiscordClient( new DiscordConfiguration()

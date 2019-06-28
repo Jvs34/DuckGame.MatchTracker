@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -323,10 +322,16 @@ namespace MatchTracker
 				foreach( var link in links )
 				{
 					var relMatch = _linkRelRegex.Match( link );
-					if( !relMatch.Success || relMatch.Groups.Count != 2 ) break;
+					if( !relMatch.Success || relMatch.Groups.Count != 2 )
+					{
+						break;
+					}
 
 					var uriMatch = _linkUriRegex.Match( link );
-					if( !uriMatch.Success || uriMatch.Groups.Count != 2 ) break;
+					if( !uriMatch.Success || uriMatch.Groups.Count != 2 )
+					{
+						break;
+					}
 
 					httpLinks.Add( relMatch.Groups [1].Value , new Uri( uriMatch.Groups [1].Value ) );
 				}

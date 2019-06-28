@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MatchTracker
+﻿namespace MatchTracker
 {
 	public class BotSettings
 	{

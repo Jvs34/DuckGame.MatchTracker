@@ -191,7 +191,7 @@ namespace MatchBot
 							embed.Url = $"https://www.youtube.com/watch?v={videoUpload.YoutubeUrl}";
 
 							embed.ThumbnailUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg";
-							
+
 							//embed.ImageUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg";
 							//embed.ThumbnailUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/0.jpg";
 						}

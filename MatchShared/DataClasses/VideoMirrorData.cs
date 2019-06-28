@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MatchTracker
+﻿namespace MatchTracker
 {
 	public class VideoMirrorData
 	{

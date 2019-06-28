@@ -3,7 +3,7 @@
 namespace MatchTracker
 {
 	//duck game networked profiles aren't all that networked really, you only get the name and id
-	public class PlayerData : IDatabaseEntry , IEquatable<PlayerData>, IComparable<PlayerData>
+	public class PlayerData : IDatabaseEntry, IEquatable<PlayerData>, IComparable<PlayerData>
 	{
 		public ulong DiscordId { get; set; }
 

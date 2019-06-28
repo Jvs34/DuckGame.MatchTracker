@@ -1,10 +1,10 @@
-﻿using System;
+﻿using ProtoBuf;
+using ProtoBuf.Meta;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
-using ProtoBuf;
-using ProtoBuf.Meta;
 
 namespace MatchTracker.Replay
 {
@@ -29,7 +29,7 @@ namespace MatchTracker.Replay
 			public TimeSpan Time;
 			public Rectangle CameraMovement;
 			public List<(Sprite, DrawCall, DrawCall.Properties)> DrawCalls;
-            public List<int> StaticDrawCalls;
+			public List<int> StaticDrawCalls;
 		}
 
 		List<Frame> Frames = new List<Frame>();
@@ -40,14 +40,14 @@ namespace MatchTracker.Replay
 			{
 				Time = time ,
 				CameraMovement = cameraData ,
-				DrawCalls = new List<(Sprite, DrawCall, DrawCall.Properties)>(),
-                StaticDrawCalls = new List<int>()
+				DrawCalls = new List<(Sprite, DrawCall, DrawCall.Properties)>() ,
+				StaticDrawCalls = new List<int>()
 			};
 
 			Frames.Add( newFrame );
 		}
 
-		public void AddDrawCall( string texture , object textureObj, Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth , int entityIndex )
+		public void AddDrawCall( string texture , object textureObj , Vec2 position , Rectangle sourceRectangle , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth , int entityIndex )
 		{
 			Frame currentFrame = Frames [CurrentFrameIndex];
 
@@ -57,7 +57,7 @@ namespace MatchTracker.Replay
 				// Material = ,
 				Center = spriteCenter ,
 				TexCoords = sourceRectangle ,
-                TextureObject = textureObj
+				TextureObject = textureObj
 			};
 
 			var drawCall = new DrawCall
@@ -78,19 +78,23 @@ namespace MatchTracker.Replay
 			};
 
 			if( rotation != 0f )
+			{
 				drawCallProperties.Angle = rotation;
+			}
 
 			if( scale.X != 1f || scale.Y != 1f )
+			{
 				drawCallProperties.Scale = scale;
-            
-            if ( CurrentStaticDrawList != null )
-            {
-                CurrentStaticDrawList.Add( ( sprite, drawCall, drawCallProperties ) );
-            }
-            else
-            {
-			    currentFrame.DrawCalls.Add( ( sprite, drawCall, drawCallProperties ) );
-            }
+			}
+
+			if( CurrentStaticDrawList != null )
+			{
+				CurrentStaticDrawList.Add( (sprite, drawCall, drawCallProperties) );
+			}
+			else
+			{
+				currentFrame.DrawCalls.Add( (sprite, drawCall, drawCallProperties) );
+			}
 		}
 
 		public void EndFrame()
@@ -113,21 +117,21 @@ namespace MatchTracker.Replay
 			///
 			/// all of it
 			///
-            var runtimeTextureIndices = new Dictionary<object, int>();
-            {
-                int i = 0;
+			var runtimeTextureIndices = new Dictionary<object , int>();
+			{
+				int i = 0;
 
-                foreach ( var entry in RuntimeTextures )
-                {
-                    runtimeTextureIndices.Add( entry.Key, i++ );
-                    replay.RuntimeTextures.Add( new RuntimeTexture
-                    {
-                        Width = entry.Value.Item1,
-                        Height = entry.Value.Item2,
-                        Data = entry.Value.Item3
-                    } );
-                }
-            }
+				foreach( var entry in RuntimeTextures )
+				{
+					runtimeTextureIndices.Add( entry.Key , i++ );
+					replay.RuntimeTextures.Add( new RuntimeTexture
+					{
+						Width = entry.Value.Item1 ,
+						Height = entry.Value.Item2 ,
+						Data = entry.Value.Item3
+					} );
+				}
+			}
 
 			var spriteCount = 0;
 			var drawCallCount = 0;
@@ -166,29 +170,29 @@ namespace MatchTracker.Replay
 					frame.DrawCallProperties.Add( drawCall.Item3 );
 				}
 
-                frame.StaticDrawCallIndices.AddRange( runtimeFrame.StaticDrawCalls );
+				frame.StaticDrawCallIndices.AddRange( runtimeFrame.StaticDrawCalls );
 				replay.Frames.Add( frame );
 			}
 
-            foreach ( var list in StaticDrawLists )
-            {
-                var staticDraw = new StaticDrawCall
-                {
-                    DrawCallIndices = new List<int>(),
-                    DrawCallProperties = new List<DrawCall.Properties>()
-                };
+			foreach( var list in StaticDrawLists )
+			{
+				var staticDraw = new StaticDrawCall
+				{
+					DrawCallIndices = new List<int>() ,
+					DrawCallProperties = new List<DrawCall.Properties>()
+				};
 
-                foreach ( var ( sprite, drawCall, drawCallProperties ) in list )
-                {
+				foreach( var (sprite, drawCall, drawCallProperties) in list )
+				{
 					int spriteIndex;
 					int drawCallIndex;
 
 					if( !spriteHash.TryGetValue( sprite , out spriteIndex ) )
 					{
 						spriteIndex = spriteCount;
-						spriteHash.Add( sprite, spriteCount++ );
+						spriteHash.Add( sprite , spriteCount++ );
 					}
-                    
+
 					var drawCall_Copy = drawCall;
 					drawCall_Copy.SpriteIndex = spriteIndex;
 
@@ -197,24 +201,26 @@ namespace MatchTracker.Replay
 						drawCallIndex = drawCallCount;
 						drawCallHash.Add( drawCall_Copy , drawCallCount++ );
 					}
-                    
-                    staticDraw.DrawCallIndices.Add( drawCallIndex );
-                    staticDraw.DrawCallProperties.Add( drawCallProperties );
-                }
 
-                replay.StaticDrawCalls.Add( staticDraw );
-            }
+					staticDraw.DrawCallIndices.Add( drawCallIndex );
+					staticDraw.DrawCallProperties.Add( drawCallProperties );
+				}
 
-            // post
+				replay.StaticDrawCalls.Add( staticDraw );
+			}
+
+			// post
 
 			var spriteArray = new Sprite [spriteCount];
 
 			foreach( var spriteEntry in spriteHash )
 			{
-                var sprite = spriteEntry.Key;
+				var sprite = spriteEntry.Key;
 
-                if ( runtimeTextureIndices.TryGetValue( sprite.TextureObject, out int textureIndex ) )
-                    sprite.RuntimeTextureIndex = textureIndex;
+				if( runtimeTextureIndices.TryGetValue( sprite.TextureObject , out int textureIndex ) )
+				{
+					sprite.RuntimeTextureIndex = textureIndex;
+				}
 
 				spriteArray [spriteEntry.Value] = sprite;
 			}
@@ -262,45 +268,49 @@ namespace MatchTracker.Replay
 				.ToString();
 		}
 
-        private List<(Sprite, DrawCall, DrawCall.Properties)> CurrentStaticDrawList;
-        private List<List<(Sprite, DrawCall, DrawCall.Properties)>> StaticDrawLists = new List<List<(Sprite, DrawCall, DrawCall.Properties)>>();
+		private List<(Sprite, DrawCall, DrawCall.Properties)> CurrentStaticDrawList;
+		private List<List<(Sprite, DrawCall, DrawCall.Properties)>> StaticDrawLists = new List<List<(Sprite, DrawCall, DrawCall.Properties)>>();
 
-        public int OnStartStaticDraw()
-        {
-            if ( CurrentStaticDrawList != null )
-                throw new Exception();
-                
-            CurrentStaticDrawList = new List<(Sprite, DrawCall, DrawCall.Properties)>();
-            StaticDrawLists.Add( CurrentStaticDrawList );
-            var id = StaticDrawLists.Count - 1;
+		public int OnStartStaticDraw()
+		{
+			if( CurrentStaticDrawList != null )
+			{
+				throw new Exception();
+			}
 
-            return id;
-        }
+			CurrentStaticDrawList = new List<(Sprite, DrawCall, DrawCall.Properties)>();
+			StaticDrawLists.Add( CurrentStaticDrawList );
+			var id = StaticDrawLists.Count - 1;
 
-        public void OnFinishStaticDraw()
-        {
-            if ( CurrentStaticDrawList == null )
-                throw new Exception();
+			return id;
+		}
 
-            CurrentStaticDrawList = null;
-        }
+		public void OnFinishStaticDraw()
+		{
+			if( CurrentStaticDrawList == null )
+			{
+				throw new Exception();
+			}
 
-        public void OnStaticDraw( int id )
-        {
-			Frame currentFrame = Frames[CurrentFrameIndex];
-            currentFrame.StaticDrawCalls.Add( id );
-        }
-        
-        Dictionary<object, (int, int, byte[])> RuntimeTextures = new Dictionary<object, (int, int, byte[])>();
+			CurrentStaticDrawList = null;
+		}
 
-        public bool WantsTexture( object tex )
-        {
-            return !RuntimeTextures.ContainsKey( tex );
-        }
+		public void OnStaticDraw( int id )
+		{
+			Frame currentFrame = Frames [CurrentFrameIndex];
+			currentFrame.StaticDrawCalls.Add( id );
+		}
 
-        public void SendTextureData( object tex, int width, int height, byte[] data )
-        {
-            RuntimeTextures.Add( tex, ( width, height, data ) );
-        }
+		Dictionary<object , (int, int, byte [])> RuntimeTextures = new Dictionary<object , (int, int, byte [])>();
+
+		public bool WantsTexture( object tex )
+		{
+			return !RuntimeTextures.ContainsKey( tex );
+		}
+
+		public void SendTextureData( object tex , int width , int height , byte [] data )
+		{
+			RuntimeTextures.Add( tex , (width, height, data) );
+		}
 	}
 }

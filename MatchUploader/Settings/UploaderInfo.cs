@@ -1,5 +1,4 @@
-﻿using MatchTracker;
-using System;
+﻿using System;
 
 namespace MatchUploader
 {

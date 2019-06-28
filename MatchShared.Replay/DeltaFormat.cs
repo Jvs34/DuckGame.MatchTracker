@@ -1,9 +1,8 @@
-﻿using System;
+﻿using ProtoBuf;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using ProtoBuf;
 
 namespace MatchTracker.Replay.DeltaFormat
 {
@@ -19,10 +18,10 @@ namespace MatchTracker.Replay.DeltaFormat
 		private object _currentObject;
 		private List<int> _currentDrawCalls = new List<int>();
 
-		private Dictionary<Sprite, int> _sprites = new Dictionary<Sprite, int>();
-		private Dictionary<DrawCall, int> _drawCalls = new Dictionary<DrawCall, int>();
-		
-		private Dictionary<object, List<( int duration, List<int> drawCalls )>> _entityDrawCalls = new Dictionary<object, List<( int duration, List<int> drawCalls )>>();
+		private Dictionary<Sprite , int> _sprites = new Dictionary<Sprite , int>();
+		private Dictionary<DrawCall , int> _drawCalls = new Dictionary<DrawCall , int>();
+
+		private Dictionary<object , List<(int duration, List<int> drawCalls)>> _entityDrawCalls = new Dictionary<object , List<(int duration, List<int> drawCalls)>>();
 
 		public ReplayRecorder( string name )
 		{
@@ -34,31 +33,35 @@ namespace MatchTracker.Replay.DeltaFormat
 			_inFrame = true;
 		}
 
-		public void DrawTexture( string textureName, object textureObj, Vec2 position, Rectangle texCoords, Color color, float rotation, Vec2 spriteCenter, Vec2 scale, int effects, double depth )
+		public void DrawTexture( string textureName , object textureObj , Vec2 position , Rectangle texCoords , Color color , float rotation , Vec2 spriteCenter , Vec2 scale , int effects , double depth )
 		{
-			if ( !_inFrame )
+			if( !_inFrame )
+			{
 				return;
+			}
 
 			// TODO
-			if ( _currentObject == null )
+			if( _currentObject == null )
+			{
 				return;
+			}
 
 			int drawCallIndex;
 			{
 				var sprite = new Sprite
 				{
-					Texture = textureName,
-					Center = spriteCenter,
+					Texture = textureName ,
+					Center = spriteCenter ,
 					TexCoords = texCoords
 				};
 
 				var drawCall = new DrawCall
 				{
-					SpriteIndex = GetSpriteIndex( sprite ),
-					Position = position,
-					Rotation = rotation,
-					Scale = scale,
-					Depth = depth,
+					SpriteIndex = GetSpriteIndex( sprite ) ,
+					Position = position ,
+					Rotation = rotation ,
+					Scale = scale ,
+					Depth = depth ,
 					Color = color
 				};
 
@@ -85,41 +88,45 @@ namespace MatchTracker.Replay.DeltaFormat
 
 		public void OnFinishDrawingObject( object obj )
 		{
-			if ( !_inFrame || _currentObject != obj )
-				throw new Exception();
-
-			List<( int duration, List<int> drawCalls )> drawCalls;
-
-			if ( !_entityDrawCalls.TryGetValue( _currentObject, out drawCalls ) )
+			if( !_inFrame || _currentObject != obj )
 			{
-				drawCalls = new List<( int duration, List<int> drawCalls )>();
-				_entityDrawCalls.Add( _currentObject, drawCalls );
+				throw new Exception();
+			}
 
-				if ( _frameNum > 0 )
-					drawCalls.Add( ( _frameNum, null ) );
+			List<(int duration, List<int> drawCalls)> drawCalls;
+
+			if( !_entityDrawCalls.TryGetValue( _currentObject , out drawCalls ) )
+			{
+				drawCalls = new List<(int duration, List<int> drawCalls)>();
+				_entityDrawCalls.Add( _currentObject , drawCalls );
+
+				if( _frameNum > 0 )
+				{
+					drawCalls.Add( (_frameNum, null) );
+				}
 			}
 
 			var idx = drawCalls.Count - 1;
-			if ( drawCalls.Count == 0 || drawCalls[idx].drawCalls == null || !drawCalls[idx].drawCalls.SequenceEqual( _currentDrawCalls ) )
+			if( drawCalls.Count == 0 || drawCalls [idx].drawCalls == null || !drawCalls [idx].drawCalls.SequenceEqual( _currentDrawCalls ) )
 			{
-				drawCalls.Add( ( 1, _currentDrawCalls.ToList() ) ); // Copy here so that we don't give away our reference
+				drawCalls.Add( (1, _currentDrawCalls.ToList()) ); // Copy here so that we don't give away our reference
 			}
 			else
 			{
-				drawCalls[idx] = ( drawCalls[idx].duration + 1, drawCalls[idx].drawCalls );
+				drawCalls [idx] = (drawCalls [idx].duration + 1, drawCalls [idx].drawCalls);
 			}
 
 			_currentObject = _currentObjectStack.Pop();
 			_currentDrawCalls = _currentDrawCallsStack.Pop();
 		}
-		
+
 		public void Serialize( Stream outStream )
 		{
 			Replay replay = new Replay
 			{
-				Name = _name,
-				DrawCalls = new List<DrawCall>(),
-				Frames = new List<Frame>(),
+				Name = _name ,
+				DrawCalls = new List<DrawCall>() ,
+				Frames = new List<Frame>() ,
 				Entities = new List<Entity>()
 			};
 		}
@@ -127,10 +134,10 @@ namespace MatchTracker.Replay.DeltaFormat
 		private int GetSpriteIndex( Sprite sprite )
 		{
 			int index;
-			if ( !_sprites.TryGetValue( sprite, out index ) )
+			if( !_sprites.TryGetValue( sprite , out index ) )
 			{
 				index = _sprites.Count;
-				_sprites.Add( sprite, index );
+				_sprites.Add( sprite , index );
 			}
 
 			return index;
@@ -139,10 +146,10 @@ namespace MatchTracker.Replay.DeltaFormat
 		private int GetDrawCallIndex( DrawCall drawCall )
 		{
 			int index;
-			if ( !_drawCalls.TryGetValue( drawCall, out index ) )
+			if( !_drawCalls.TryGetValue( drawCall , out index ) )
 			{
 				index = _drawCalls.Count;
-				_drawCalls.Add( drawCall, index );
+				_drawCalls.Add( drawCall , index );
 			}
 
 			return index;
@@ -180,7 +187,7 @@ namespace MatchTracker.Replay.DeltaFormat
 	{
 		[ProtoMember( 1 )]
 		public int SpriteIndex;
-		
+
 		[ProtoMember( 1 )]
 		public Vec2 Position;
 
@@ -196,30 +203,30 @@ namespace MatchTracker.Replay.DeltaFormat
 		[ProtoMember( 1 )]
 		public Color Color;
 
-		public override bool Equals(object obj)
+		public override bool Equals( object obj )
 		{
-			return obj is DrawCall && Equals((DrawCall)obj);
+			return obj is DrawCall && Equals( (DrawCall) obj );
 		}
 
-		public bool Equals(DrawCall other)
+		public bool Equals( DrawCall other )
 		{
 			return SpriteIndex == other.SpriteIndex &&
-				   Position.Equals(other.Position) &&
+				   Position.Equals( other.Position ) &&
 				   Rotation == other.Rotation &&
-				   Scale.Equals(other.Scale) &&
+				   Scale.Equals( other.Scale ) &&
 				   Depth == other.Depth &&
-				   Color.Equals(other.Color);
+				   Color.Equals( other.Color );
 		}
 
 		public override int GetHashCode()
 		{
 			var hashCode = -1831673700;
 			hashCode = hashCode * -1521134295 + SpriteIndex.GetHashCode();
-			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode(Position);
+			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode( Position );
 			hashCode = hashCode * -1521134295 + Rotation.GetHashCode();
-			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode(Scale);
+			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode( Scale );
 			hashCode = hashCode * -1521134295 + Depth.GetHashCode();
-			hashCode = hashCode * -1521134295 + EqualityComparer<Color>.Default.GetHashCode(Color);
+			hashCode = hashCode * -1521134295 + EqualityComparer<Color>.Default.GetHashCode( Color );
 			return hashCode;
 		}
 	}
@@ -253,24 +260,24 @@ namespace MatchTracker.Replay.DeltaFormat
 		[ProtoMember( 3 )]
 		public Rectangle TexCoords;
 
-		public override bool Equals(object obj)
+		public override bool Equals( object obj )
 		{
-			return obj is Sprite && Equals((Sprite)obj);
+			return obj is Sprite && Equals( (Sprite) obj );
 		}
 
-		public bool Equals(Sprite other)
+		public bool Equals( Sprite other )
 		{
 			return Texture == other.Texture &&
-				   Center.Equals(other.Center) &&
-				   EqualityComparer<Rectangle>.Default.Equals(TexCoords, other.TexCoords);
+				   Center.Equals( other.Center ) &&
+				   EqualityComparer<Rectangle>.Default.Equals( TexCoords , other.TexCoords );
 		}
 
 		public override int GetHashCode()
 		{
 			var hashCode = 1373877432;
-			hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(Texture);
-			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode(Center);
-			hashCode = hashCode * -1521134295 + EqualityComparer<Rectangle>.Default.GetHashCode(TexCoords);
+			hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode( Texture );
+			hashCode = hashCode * -1521134295 + EqualityComparer<Vec2>.Default.GetHashCode( Center );
+			hashCode = hashCode * -1521134295 + EqualityComparer<Rectangle>.Default.GetHashCode( TexCoords );
 			return hashCode;
 		}
 	}

@@ -1,8 +1,4 @@
-﻿using MatchTracker;
-using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
-using System;
-using System.IO;
+﻿using System;
 using System.Threading.Tasks;
 
 namespace MatchTest

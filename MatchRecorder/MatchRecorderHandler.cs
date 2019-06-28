@@ -2,13 +2,11 @@
 using Harmony;
 using MatchTracker;
 using Microsoft.Extensions.Configuration;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
@@ -647,7 +645,9 @@ namespace MatchRecorder
 			}
 
 			if( !valid || MatchRecorderMod.Recorder == null )
+			{
 				return;
+			}
 
 			int id = MatchRecorderMod.Recorder.OnStartStaticDraw();
 			_currentBatches [__instance] = id;
@@ -657,7 +657,9 @@ namespace MatchRecorder
 		private static void Postfix( SpriteMap __instance )
 		{
 			if( !_drawing )
+			{
 				return;
+			}
 
 			_drawing = false;
 			MatchRecorderMod.Recorder?.OnFinishStaticDraw();

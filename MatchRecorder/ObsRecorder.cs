@@ -158,7 +158,7 @@ namespace MatchRecorder
 
 		public void StartFrame()
 		{
-			
+
 		}
 
 		public void EndFrame()
@@ -169,27 +169,27 @@ namespace MatchRecorder
 		{
 		}
 
-        public int OnStartStaticDraw()
-        {
-            return 0;
-        }
+		public int OnStartStaticDraw()
+		{
+			return 0;
+		}
 
-        public void OnFinishStaticDraw()
-        {
-        }
+		public void OnFinishStaticDraw()
+		{
+		}
 
-        public void OnStaticDraw( int id )
-        {
-        }
+		public void OnStaticDraw( int id )
+		{
+		}
 
-        public bool WantsTexture( object tex )
-        {
-            return false;
-        }
+		public bool WantsTexture( object tex )
+		{
+			return false;
+		}
 
-        public void SendTextureData( object tex, int width, int height, byte[] data )
-        {
-        }
+		public void SendTextureData( object tex , int width , int height , byte [] data )
+		{
+		}
 
 		public void OnStartDrawingObject( object obj )
 		{
