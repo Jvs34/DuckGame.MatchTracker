@@ -117,10 +117,7 @@ namespace MatchUploader
 					await UpdateStatus( $"{GetType().Name}:  {Info.CurrentUploads} / {Info.UploadsBeforeReset}" );
 					uploadCompleted = await UploadItem( upload );
 
-					if( !uploadCompleted )
-					{
-						upload.ErrorCount++;
-					}
+					upload.ErrorCount = uploadCompleted ? 0 : upload.ErrorCount + 1;
 
 					if( uploadCompleted && Info.HasApiLimit )
 					{

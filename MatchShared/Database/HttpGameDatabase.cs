@@ -15,6 +15,8 @@ namespace MatchTracker
 
 		public virtual bool InitialLoad { get; set; } = false;
 
+		protected int DefaultCacheExpireTime { get; set; } = 300;
+
 		public HttpGameDatabase( HttpClient httpClient )
 		{
 			Client = httpClient;
@@ -59,7 +61,7 @@ namespace MatchTracker
 
 		protected void CacheEverythingInZip( ZipArchive zipArchive )
 		{
-			DateTime expireTime = DateTime.UtcNow.AddSeconds( 150 );
+			DateTime expireTime = DateTime.UtcNow.AddSeconds( DefaultCacheExpireTime );
 
 			var playersEntry = GetZipEntry<EntryListData>( zipArchive , nameof( PlayerData ) );
 			if( playersEntry != null )
@@ -150,7 +152,7 @@ namespace MatchTracker
 
 			string url = SharedSettings.GetDataPath<T>( dataId , true );
 
-			if( !string.IsNullOrEmpty( url ) && cacheExpired )
+			if( cacheExpired )
 			{
 				try
 				{
@@ -158,14 +160,16 @@ namespace MatchTracker
 
 					if( httpResponse.IsSuccessStatusCode )
 					{
+						var contentHeaders = httpResponse.Content.Headers;
+
 						using( var responseStream = await httpResponse.Content.ReadAsStreamAsync() )
 						{
 							data = Deserialize<T>( responseStream );
 						}
 
-						SetCachedItem( data , httpResponse.Content.Headers.Expires.HasValue
-							? httpResponse.Content.Headers.Expires.Value.DateTime
-							: DateTime.UtcNow.AddSeconds( 60 ) );
+						SetCachedItem( data , contentHeaders.Expires.HasValue
+							? contentHeaders.Expires.Value.DateTime
+							: DateTime.UtcNow.AddSeconds( DefaultCacheExpireTime ) );
 					}
 				}
 				catch( HttpRequestException e )
@@ -175,7 +179,7 @@ namespace MatchTracker
 				}
 			}
 
-			return (T) data;
+			return data;
 		}
 
 	}
