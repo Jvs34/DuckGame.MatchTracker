@@ -60,7 +60,14 @@ namespace MatchUploader
 
 				if( roundData.RecordingType == RecordingType.Video && string.IsNullOrEmpty( roundData.YoutubeUrl ) )
 				{
-					uploadableRounds.Add( roundData );
+					//check if there's any video files too first
+					FileInfo fileInfo = GetVideoFileInfo( roundData );
+
+					if( fileInfo.Exists )
+					{
+						Console.WriteLine( $"Found upload to do {roundData.DatabaseIndex}" );
+						uploadableRounds.Add( roundData );
+					}
 				}
 				return true;
 			} );
@@ -191,6 +198,20 @@ namespace MatchUploader
 			}
 		}
 		#endregion
+
+		private FileInfo GetVideoFileInfo( RoundData roundData )
+		{
+			FileInfo videoInfo = new FileInfo( DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false ) );
+
+			FileInfo reencodedInfo = new FileInfo( Path.ChangeExtension( DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false ) , "converted.mp4" ) );
+
+			if( reencodedInfo.Exists )
+			{
+				videoInfo = reencodedInfo;
+			}
+
+			return videoInfo;
+		}
 
 		private async Task<Video> GetVideoDataForRound( RoundData roundData )
 		{
@@ -399,14 +420,7 @@ namespace MatchUploader
 
 			if( entry is RoundData roundData )
 			{
-				FileInfo videoInfo = new FileInfo( DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false ) );
-
-				FileInfo reencodedInfo = new FileInfo( Path.ChangeExtension( DB.SharedSettings.GetRoundVideoPath( roundData.DatabaseIndex , false ) , "converted.mp4" ) );
-
-				if( reencodedInfo.Exists )
-				{
-					videoInfo = reencodedInfo;
-				}
+				FileInfo videoInfo = GetVideoFileInfo( roundData );
 
 				if( videoInfo.Exists )
 				{
