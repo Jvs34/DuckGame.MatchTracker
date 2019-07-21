@@ -16,3 +16,4 @@ Settings/*.json
 ThirdParty/ffmpeg.exe
 UploaderTask/
 */Properties/*
+.vscode/
