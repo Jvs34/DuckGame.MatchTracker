@@ -117,7 +117,10 @@ namespace MatchTracker
 
 		protected string ToZipPath( ZipArchive zipArchive , string path )
 		{
-			return path.Replace( SharedSettings.BaseRecordingFolder , zipArchive.Entries [0]?.FullName.Replace( "/" , string.Empty ) ).Replace( "\\" , "/" );
+			return path
+				.Replace( SharedSettings.BaseRecordingFolder , zipArchive.Entries [0]?.FullName )
+				.Replace( "\\" , "/" )
+				.Replace( "//" , "/" );
 		}
 
 
@@ -154,6 +157,7 @@ namespace MatchTracker
 
 			if( cacheExpired )
 			{
+				Console.WriteLine( $"Loading {dataId} from url because it expired" );
 				try
 				{
 					var httpResponse = await Client.GetAsync( url , HttpCompletionOption.ResponseHeadersRead );

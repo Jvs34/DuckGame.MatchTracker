@@ -19,10 +19,14 @@ namespace MatchUploader
 		{
 		}
 
-
-
 		public override async Task Initialize()
 		{
+			//don't even bother authorizing anything if there's no associated calendar
+			if( string.IsNullOrEmpty( UploaderSettings.CalendarID ) )
+			{
+				return;
+			}
+
 			string appName = GetType().Assembly.GetName().Name;
 
 			Service = new CalendarService( new BaseClientService.Initializer()
@@ -50,6 +54,11 @@ namespace MatchUploader
 
 		protected override async Task FetchUploads()
 		{
+			if( string.IsNullOrEmpty( UploaderSettings.CalendarID ) )
+			{
+				return;
+			}
+
 			ConcurrentBag<MatchData> uploadableRounds = new ConcurrentBag<MatchData>();
 			await DB.IterateOverAll<MatchData>( async ( matchData ) =>
 			{
@@ -87,6 +96,11 @@ namespace MatchUploader
 
 		protected override async Task<bool> UploadItem( PendingUpload upload )
 		{
+			if( string.IsNullOrEmpty( UploaderSettings.CalendarID ) || Service is null )
+			{
+				return false;
+			}
+
 			Event matchEvent;
 			try
 			{
