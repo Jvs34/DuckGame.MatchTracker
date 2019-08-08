@@ -41,12 +41,12 @@ namespace MatchBot
 				await handler.Initialize();
 
 				Console.WriteLine( "Press a key to stop" );
-				Console.ReadKey();
 			}
 			catch( Exception e )
 			{
 				Console.WriteLine( e );
 			}
+			Console.ReadLine();
 		}
 	}
 }

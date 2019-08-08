@@ -64,7 +64,8 @@ namespace MatchBot
 
 			//TODO:not sure if this has to be any other way, but singleton for now will work
 			Services = new ServiceCollection()
-				.AddSingleton( DB );
+				.AddSingleton( DB )
+				.AddSingleton( Configuration );
 
 			CommandsModule = DiscordInstance.UseCommandsNext( new CommandsNextConfiguration()
 			{

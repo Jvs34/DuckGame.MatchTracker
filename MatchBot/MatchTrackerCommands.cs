@@ -6,8 +6,11 @@ using DSharpPlus.Interactivity;
 using Humanizer;
 using Humanizer.Localisation;
 using MatchTracker;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
 using System;
 using System.Globalization;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -17,10 +20,12 @@ namespace MatchBot
 	public class MatchTrackerCommands : BaseCommandModule
 	{
 		private IGameDatabase DB { get; }
+		private IConfigurationRoot Configuration { get; }
 
-		public MatchTrackerCommands( IGameDatabase database )
+		public MatchTrackerCommands( IGameDatabase database , IConfigurationRoot configuration )
 		{
 			DB = database;
+			Configuration = configuration;
 		}
 
 		#region COMMANDS
@@ -40,6 +45,73 @@ namespace MatchBot
 
 			await message.ModifyAsync( $"There are {uploadsLeft} Youtube videos left to upload, taking {timeSpan.Humanize( culture: GetLocale( ctx.Client ) , maxUnit: TimeUnit.Month )} to upload" );
 		}
+
+#if UPLOADSUPPORT
+		[Command( "Upload" )]
+		public async Task UploadRound( CommandContext ctx , [Description( "The round id to upload" )] string dataID )
+		{
+			RoundData roundData = await DB.GetData<RoundData>( dataID );
+
+			if( roundData is null )
+			{
+				await ctx.RespondAsync( "Please provide a correct round id" );
+				return;
+			}
+
+			if( !string.IsNullOrEmpty( roundData.YoutubeUrl ) )
+			{
+				await ctx.RespondAsync( "Round is already uploaded" );
+				return;
+			}
+
+			MatchUploader.UploaderSettings uploaderSettings = new MatchUploader.UploaderSettings();
+			Configuration.Bind( uploaderSettings );
+
+			if( !uploaderSettings.UploadersInfo.TryGetValue( VideoMirrorType.Youtube , out MatchUploader.UploaderInfo uploaderInfo ) )
+			{
+				uploaderInfo = new MatchUploader.UploaderInfo();
+
+				uploaderSettings.UploadersInfo.TryAdd( VideoMirrorType.Youtube , uploaderInfo );
+			}
+
+			MatchUploader.YoutubeUploader uploader = new MatchUploader.YoutubeUploader( uploaderInfo , DB , uploaderSettings )
+			{
+				DoFetchUploads = false ,
+			};
+
+			uploader.SaveSettingsCallback += () =>
+			{
+			};
+
+			uploader.UpdateStatusCallback += async ( presence ) => await ctx.Client.UpdateStatusAsync( new DiscordActivity( presence ) );
+
+			if( !uploader.Info.HasBeenSetup )
+			{
+				uploader.CreateDefaultInfo();
+				uploader.Info.HasBeenSetup = true;
+			}
+
+			await uploader.Initialize();
+			await uploader.UploadAll();
+
+			roundData = await DB.GetData<RoundData>( dataID );
+
+			if( !string.IsNullOrEmpty( roundData.YoutubeUrl ) )
+			{
+				await ctx.RespondAsync( $"https://www.youtube.com/watch?v={roundData.YoutubeUrl}" );
+			}
+
+			JsonSerializer Serializer = new JsonSerializer()
+			{
+				Formatting = Formatting.Indented
+			};
+
+			using( var writer = File.CreateText( Path.Combine( "Settings" , "uploader.json" ) ) )
+			{
+				Serializer.Serialize( writer , uploaderSettings );
+			}
+		}
+#endif
 
 		[Command( "LastPlayed" ), Description( "Checks when was the last time someone played" )]
 		public async Task LastPlayedCommand( CommandContext ctx , [Description( "Can be left empty" )] params DiscordUser [] targets )
@@ -235,9 +307,9 @@ namespace MatchBot
 		}
 		*/
 
-		#endregion
+#endregion
 
-		#region UTILS
+#region UTILS
 		private async Task<bool> CheckReadOnly( CommandContext ctx )
 		{
 			if( DB.ReadOnly )
@@ -400,6 +472,6 @@ namespace MatchBot
 
 			return (wins, losses);
 		}
-		#endregion
+#endregion
 	}
 }

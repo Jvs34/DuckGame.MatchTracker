@@ -13,6 +13,8 @@ namespace MatchUploader
 
 		public UploaderSettings UploaderSettings { get; }
 
+		public bool DoFetchUploads { get; set; } = true;
+
 		public PendingUpload CurrentUpload
 		{
 			get
@@ -63,6 +65,16 @@ namespace MatchUploader
 
 		protected abstract Task FetchUploads();
 
+		public async Task AddUpload( IDatabaseEntry databaseEntry )
+		{
+			var pendingUpload = await CreatePendingUpload( databaseEntry );
+
+			if( pendingUpload != null )
+			{
+				Uploads.Enqueue( pendingUpload );
+			}
+		}
+
 		protected void CheckLimits()
 		{
 			if( Info.NextResetTime < DateTime.Now )
@@ -87,15 +99,18 @@ namespace MatchUploader
 
 		public virtual async Task UploadAll()
 		{
-			//if there's a valid currentupload, add it here again
-			if( CurrentUpload != null )
+			if( DoFetchUploads )
 			{
-				Uploads.Enqueue( CurrentUpload );
+				await UpdateStatus( $"{GetType().Name}: Fetching uploads" );
+
+				//if there's a valid currentupload, add it here again
+				if( CurrentUpload != null )
+				{
+					Uploads.Enqueue( CurrentUpload );
+				}
+
+				await FetchUploads();
 			}
-
-			await UpdateStatus( $"{GetType().Name}: Fetching uploads" );
-
-			await FetchUploads();
 
 			await UpdateStatus( $"{GetType().Name}: Uploading {Uploads.Count} rounds" );
 

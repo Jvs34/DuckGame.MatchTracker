@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 
 namespace MatchUploader
 {
-	internal static class Program
+	public static class Program
 	{
-		private static async Task Main( string [] args )
+		public static async Task Main( string [] args )
 		{
 			//basically, on linux or specifically debian the IDN resolve fucks up something fierce, so we need to set this to
 			//make YoutubeExplode work properly
