@@ -258,15 +258,31 @@ namespace MatchBot
 			await PaginatorMessage.DeleteAllReactionsAsync();
 		}
 
-		public async Task<PaginationEmojis> GetEmojisAsync() => PaginationEmojis;
+		public async Task<PaginationEmojis> GetEmojisAsync()
+		{
+			await Task.CompletedTask;
+			return PaginationEmojis;
+		}
 
-		public async Task<DiscordMessage> GetMessageAsync() => PaginatorMessage;
+		public async Task<DiscordMessage> GetMessageAsync()
+		{
+			await Task.CompletedTask;
+			return PaginatorMessage;
+		}
 
 		public async Task<Page> GetPageAsync() => await GetPageFromItem();
 
-		public async Task<TaskCompletionSource<bool>> GetTaskCompletionSourceAsync() => CompletitionCondition;
+		public async Task<TaskCompletionSource<bool>> GetTaskCompletionSourceAsync()
+		{
+			await Task.CompletedTask;
+			return CompletitionCondition;
+		}
 
-		public async Task<DiscordUser> GetUserAsync() => User;
+		public async Task<DiscordUser> GetUserAsync()
+		{
+			await Task.CompletedTask;
+			return User;
+		}
 
 		public async Task NextPageAsync()
 		{

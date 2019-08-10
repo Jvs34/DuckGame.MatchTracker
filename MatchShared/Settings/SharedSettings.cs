@@ -29,20 +29,30 @@ namespace MatchTracker
 
 		public string GetPath<T>( string databaseIndex , bool useUrl = false ) where T : IDatabaseEntry
 		{
-			if( string.IsNullOrEmpty( databaseIndex ) )
-			{
-				databaseIndex = typeof( T ).Name;
-			}
-
-			return GetPath( databaseIndex , typeof( T ).Name , useUrl );
+			return GetPath( typeof( T ).Name , databaseIndex , useUrl );
 		}
 
-		public string GetPath( string databaseIndex , string typeName , bool useUrl = false )
+		public string GetPath( string typeName , string databaseIndex , bool useUrl = false )
 		{
+			if( string.IsNullOrEmpty( databaseIndex ) )
+			{
+				databaseIndex = typeName;
+			}
+
 			return Combine( useUrl , GetRecordingFolder( useUrl ) , typeName , databaseIndex );
 		}
 
-		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) where T : IDatabaseEntry => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
+		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) where T : IDatabaseEntry
+		{
+			return Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
+		}
+
+
+		public string GetDataPath( string typeName , string databaseIndex = "" , bool useUrl = false )
+		{
+			return Combine( useUrl , GetPath( typeName , databaseIndex , useUrl ) , DataName );
+		}
+
 
 		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
 

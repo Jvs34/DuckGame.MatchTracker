@@ -66,15 +66,8 @@ namespace MatchRecorder
 				LevelName = lvl.level ,
 				TimeStarted = startTime ,
 				Name = GameDatabase.SharedSettings.DateTimeToString( startTime ) ,
-				IsCustomLevel = false ,
 				RecordingType = RecorderHandler.ResultingRecordingType ,
 			};
-
-
-			if( lvl is GameLevel gl )
-			{
-				CurrentRound.IsCustomLevel = gl.isCustomLevel;
-			}
 
 			if( CurrentMatch != null )
 			{

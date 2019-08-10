@@ -13,6 +13,7 @@ namespace MatchTest
 	{
 		public async Task Run()
 		{
+			await Task.CompletedTask;
 			var settingsPath = Path.Combine( Directory.GetCurrentDirectory() , "Settings" );
 
 			IConfigurationRoot Configuration = new ConfigurationBuilder()
