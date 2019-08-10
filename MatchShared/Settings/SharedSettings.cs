@@ -21,24 +21,28 @@ namespace MatchTracker
 		public string DatabaseFile { get; set; }
 		public string LevelPreviewFile { get; set; }
 
-
 		public string DateTimeToString( DateTime time ) => time.ToString( TimestampFormat );
 
 		public static string Combine( bool isUrl , params string [] paths ) => isUrl ? Url.Combine( paths ) : Path.Combine( paths );
 
 		public string GetRecordingFolder( bool useUrl = false ) => useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
 
-		public string GetPath<T>( string databaseIndex , bool useUrl = false )
+		public string GetPath<T>( string databaseIndex , bool useUrl = false ) where T : IDatabaseEntry
 		{
 			if( string.IsNullOrEmpty( databaseIndex ) )
 			{
 				databaseIndex = typeof( T ).Name;
 			}
 
-			return Combine( useUrl , GetRecordingFolder( useUrl ) , typeof( T ).Name , databaseIndex );
+			return GetPath( databaseIndex , typeof( T ).Name , useUrl );
 		}
 
-		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
+		public string GetPath( string databaseIndex , string typeName , bool useUrl = false )
+		{
+			return Combine( useUrl , GetRecordingFolder( useUrl ) , typeName , databaseIndex );
+		}
+
+		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) where T : IDatabaseEntry => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
 
 		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
 

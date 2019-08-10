@@ -13,24 +13,12 @@ namespace MatchTracker
 
 		public override bool ReadOnly => true;
 
-		public virtual bool InitialLoad { get; set; } = false;
-
-		protected int DefaultCacheExpireTime { get; set; } = 300;
-
 		public HttpGameDatabase( HttpClient httpClient )
 		{
 			Client = httpClient;
 		}
 
-		public override async Task Load()
-		{
-			if( InitialLoad )
-			{
-				await LoadZippedDatabase();
-			}
-		}
-
-		protected virtual async Task<Stream> GetZippedDatabaseStream()
+		protected async Task<Stream> GetZippedDatabaseStream()
 		{
 			//TODO: unhardcode this to not use github
 			string repositoryZipUrl = Url.Combine( "https://github.com" , SharedSettings.RepositoryUser , SharedSettings.RepositoryName , "archive" , "master.zip" );
@@ -45,103 +33,6 @@ namespace MatchTracker
 			return null;
 		}
 
-		protected virtual async Task LoadZippedDatabase()
-		{
-			var zipStream = await GetZippedDatabaseStream();
-
-			if( zipStream != null )
-			{
-				using( var responseStream = zipStream )
-				using( ZipArchive zipArchive = new ZipArchive( responseStream , ZipArchiveMode.Read ) )
-				{
-					CacheEverythingInZip( zipArchive );
-				}
-			}
-		}
-
-		protected void CacheEverythingInZip( ZipArchive zipArchive )
-		{
-			DateTime expireTime = DateTime.UtcNow.AddSeconds( DefaultCacheExpireTime );
-
-			var playersEntry = GetZipEntry<EntryListData>( zipArchive , nameof( PlayerData ) );
-			if( playersEntry != null )
-			{
-				SetCachedItem( playersEntry , expireTime );
-				foreach( var playerName in playersEntry.Entries )
-				{
-					SetCachedItem( GetZipEntry<PlayerData>( zipArchive , playerName ) , expireTime );
-				}
-			}
-
-			var matchesEntry = GetZipEntry<EntryListData>( zipArchive , nameof( MatchData ) );
-			if( matchesEntry != null )
-			{
-				SetCachedItem( matchesEntry , expireTime );
-				foreach( var matchName in matchesEntry.Entries )
-				{
-					SetCachedItem( GetZipEntry<MatchData>( zipArchive , matchName ) , expireTime );
-				}
-			}
-
-			var roundsEntry = GetZipEntry<EntryListData>( zipArchive , nameof( RoundData ) );
-			if( roundsEntry != null )
-			{
-				SetCachedItem( roundsEntry , expireTime );
-				foreach( var roundName in roundsEntry.Entries )
-				{
-					SetCachedItem( GetZipEntry<RoundData>( zipArchive , roundName ) , expireTime );
-				}
-			}
-
-			var levelsEntry = GetZipEntry<EntryListData>( zipArchive , nameof( LevelData ) );
-			if( levelsEntry != null )
-			{
-				SetCachedItem( levelsEntry , expireTime );
-				foreach( var levelName in levelsEntry.Entries )
-				{
-					SetCachedItem( GetZipEntry<LevelData>( zipArchive , levelName ) , expireTime );
-				}
-			}
-
-			var tagsEntry = GetZipEntry<EntryListData>( zipArchive , nameof( TagData ) );
-			if( tagsEntry != null )
-			{
-				SetCachedItem( tagsEntry , expireTime );
-				foreach( var tagName in tagsEntry.Entries )
-				{
-					SetCachedItem( GetZipEntry<TagData>( zipArchive , tagName ) , expireTime );
-				}
-			}
-
-		}
-
-		protected string ToZipPath( ZipArchive zipArchive , string path )
-		{
-			return path
-				.Replace( SharedSettings.BaseRecordingFolder , zipArchive.Entries [0]?.FullName )
-				.Replace( "\\" , "/" )
-				.Replace( "//" , "/" );
-		}
-
-
-		protected T GetZipEntry<T>( ZipArchive zipArchive , string databaseIndex = "" ) where T : IDatabaseEntry
-		{
-			T data = default;
-			var dataPath = ToZipPath( zipArchive , SharedSettings.GetDataPath<T>( databaseIndex ) );
-
-			var zipEntry = zipArchive.GetEntry( dataPath );
-			if( zipEntry != null )
-			{
-				using( var stream = zipEntry.Open() )
-				{
-					data = Deserialize<T>( stream );
-				}
-			}
-
-			return data;
-		}
-
-
 		public override async Task SaveData<T>( T data )
 		{
 			await Task.CompletedTask;
@@ -149,19 +40,14 @@ namespace MatchTracker
 
 		public override async Task<T> GetData<T>( string dataId = "" )
 		{
-			T data = GetCachedItem<T>( dataId );
-
-			bool cacheExpired = IsCachedItemExpired<T>( dataId , DateTime.UtcNow );
+			T data = default;
 
 			string url = SharedSettings.GetDataPath<T>( dataId , true );
 
-			if( cacheExpired )
+			try
 			{
-				Console.WriteLine( $"Loading {dataId} from url because it expired" );
-				try
+				using( var httpResponse = await Client.GetAsync( url , HttpCompletionOption.ResponseHeadersRead ) )
 				{
-					var httpResponse = await Client.GetAsync( url , HttpCompletionOption.ResponseHeadersRead );
-
 					if( httpResponse.IsSuccessStatusCode )
 					{
 						var contentHeaders = httpResponse.Content.Headers;
@@ -171,16 +57,13 @@ namespace MatchTracker
 							data = Deserialize<T>( responseStream );
 						}
 
-						SetCachedItem( data , contentHeaders.Expires.HasValue
-							? contentHeaders.Expires.Value.DateTime
-							: DateTime.UtcNow.AddSeconds( DefaultCacheExpireTime ) );
 					}
 				}
-				catch( HttpRequestException e )
-				{
-					Console.WriteLine( e );
-					System.Diagnostics.Debug.WriteLine( e );
-				}
+			}
+			catch( HttpRequestException e )
+			{
+				Console.WriteLine( e );
+				System.Diagnostics.Debug.WriteLine( e );
 			}
 
 			return data;

@@ -8,11 +8,6 @@ namespace MatchTracker
 	{
 		public override bool ReadOnly => false;
 
-		public override async Task Load()
-		{
-			await Task.CompletedTask;
-		}
-
 		public override async Task SaveData<T>( T data )
 		{
 			await Task.CompletedTask;

@@ -16,6 +16,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CacheCow.Client" Version="2.4.4" />
     <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00600" />
     <PackageReference Include="Google.Apis.Calendar.v3" Version="1.40.3.1669" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.40.3.1663" />
