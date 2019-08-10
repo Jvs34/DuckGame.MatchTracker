@@ -1,14 +1,11 @@
 ﻿using Octokit;
 using Octokit.Internal;
 using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -247,97 +244,6 @@ namespace MatchTracker
 
 		public void SetRequestTimeout( TimeSpan timeout )
 		{
-		}
-	}
-
-
-	internal class Response : IResponse
-	{
-		public object Body { get; private set; }
-		public IReadOnlyDictionary<string , string> Headers { get; private set; }
-		public ApiInfo ApiInfo { get; internal set; }
-		public HttpStatusCode StatusCode { get; private set; }
-		public string ContentType { get; private set; }
-
-
-		public Response() : this( new Dictionary<string , string>() )
-		{
-
-		}
-
-		public Response( IDictionary<string , string> headers )
-		{
-			Headers = new ReadOnlyDictionary<string , string>( headers );
-			ApiInfo = ApiInfoParser.ParseResponseHeaders( headers );
-		}
-
-		public Response( HttpStatusCode statusCode , object body , IDictionary<string , string> headers , string contentType )
-		{
-			StatusCode = statusCode;
-			Body = body;
-			Headers = new ReadOnlyDictionary<string , string>( headers );
-			ApiInfo = ApiInfoParser.ParseResponseHeaders( headers );
-			ContentType = contentType;
-		}
-	}
-
-
-	internal static class ApiInfoParser
-	{
-		const RegexOptions regexOptions = RegexOptions.IgnoreCase;
-
-		static readonly Regex _linkRelRegex = new Regex( "rel=\"(next|prev|first|last)\"" , regexOptions );
-		static readonly Regex _linkUriRegex = new Regex( "<(.+)>" , regexOptions );
-
-		public static ApiInfo ParseResponseHeaders( IDictionary<string , string> responseHeaders )
-		{
-
-			var httpLinks = new Dictionary<string , Uri>();
-			var oauthScopes = new List<string>();
-			var acceptedOauthScopes = new List<string>();
-			string etag = null;
-
-			if( responseHeaders.ContainsKey( "X-Accepted-OAuth-Scopes" ) )
-			{
-				acceptedOauthScopes.AddRange( responseHeaders ["X-Accepted-OAuth-Scopes"]
-					.Split( new [] { ',' } , StringSplitOptions.RemoveEmptyEntries )
-					.Select( x => x.Trim() ) );
-			}
-
-			if( responseHeaders.ContainsKey( "X-OAuth-Scopes" ) )
-			{
-				oauthScopes.AddRange( responseHeaders ["X-OAuth-Scopes"]
-					.Split( new [] { ',' } , StringSplitOptions.RemoveEmptyEntries )
-					.Select( x => x.Trim() ) );
-			}
-
-			if( responseHeaders.ContainsKey( "ETag" ) )
-			{
-				etag = responseHeaders ["ETag"];
-			}
-
-			if( responseHeaders.ContainsKey( "Link" ) )
-			{
-				var links = responseHeaders ["Link"].Split( ',' );
-				foreach( var link in links )
-				{
-					var relMatch = _linkRelRegex.Match( link );
-					if( !relMatch.Success || relMatch.Groups.Count != 2 )
-					{
-						break;
-					}
-
-					var uriMatch = _linkUriRegex.Match( link );
-					if( !uriMatch.Success || uriMatch.Groups.Count != 2 )
-					{
-						break;
-					}
-
-					httpLinks.Add( relMatch.Groups [1].Value , new Uri( uriMatch.Groups [1].Value ) );
-				}
-			}
-
-			return new ApiInfo( httpLinks , oauthScopes , acceptedOauthScopes , etag , new RateLimit( responseHeaders ) );
 		}
 	}
 }
