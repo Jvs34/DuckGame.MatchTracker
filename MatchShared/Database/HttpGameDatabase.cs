@@ -18,7 +18,7 @@ namespace MatchTracker
 			Client = httpClient;
 		}
 
-		protected async Task<Stream> GetZippedDatabaseStream()
+		protected virtual async Task<Stream> GetZippedDatabaseStream()
 		{
 			//TODO: unhardcode this to not use github
 			string repositoryZipUrl = Url.Combine( "https://github.com" , SharedSettings.RepositoryUser , SharedSettings.RepositoryName , "archive" , "master.zip" );
