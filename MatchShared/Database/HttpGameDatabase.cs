@@ -1,11 +1,11 @@
 ﻿using Flurl;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Diagnostics;
 
 namespace MatchTracker
 {

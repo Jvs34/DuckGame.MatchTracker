@@ -326,20 +326,16 @@ namespace MatchRecorder
 		private MatchTracker.LevelData CreateLevelDataFromLevel( string levelId )
 		{
 			DuckGame.LevelData dgLevelData = Content.GetLevel( levelId );
-			if( dgLevelData != null )
-			{
-				return new MatchTracker.LevelData()
-				{
-					LevelName = levelId ,
-					IsOnlineMap = dgLevelData.metaData.online ,
-					FilePath = dgLevelData.GetPath() ,
-					IsCustomMap = dgLevelData.GetLocation() != LevelLocation.Content ,
-					Author = dgLevelData.workshopData?.author ,
-					Description = dgLevelData.workshopData?.description
-				};
-			}
 
-			return null;
+			return dgLevelData is null ? null : new MatchTracker.LevelData()
+			{
+				LevelName = levelId ,
+				IsOnlineMap = dgLevelData.metaData.online ,
+				FilePath = dgLevelData.GetPath() ,
+				IsCustomMap = dgLevelData.GetLocation() != LevelLocation.Content ,
+				Author = dgLevelData.workshopData?.author ,
+				Description = dgLevelData.workshopData?.description
+			};
 		}
 
 		private PlayerData CreatePlayerDataFromProfile( Profile profile , IWinner winnerObject )
@@ -584,8 +580,8 @@ namespace MatchRecorder
 			}
 		}
 	}
-	
-	#if REPLAYRECORDER
+
+#if REPLAYRECORDER
 	[HarmonyPatch( typeof( Level ) , nameof( Level.DrawCurrentLevel ) )]
 	internal static class OnNewRenderingFrame
 	{
@@ -675,7 +671,7 @@ namespace MatchRecorder
 			MatchRecorderMod.Recorder?.OnFinishDrawingObject( __instance );
 		}
 	}
-	#endif
+#endif
 
-#endregion HOOKS
+	#endregion HOOKS
 }
