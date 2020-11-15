@@ -13,7 +13,8 @@ namespace MatchRecorder
 	public class MatchRecorderHandler
 	{
 		private IRecorder RecorderHandler { get; }
-		public BotSettings BotSettings { get; }
+		public BotSettings BotSettings { get; } = new BotSettings();
+		public OBSSettings OBSSettings { get; } = new OBSSettings();
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
 		public IGameDatabase GameDatabase { get; }
@@ -21,13 +22,15 @@ namespace MatchRecorder
 		public string ModPath { get; }
 		private IConfigurationRoot Configuration { get; }
 
+		/// <summary>
+		/// Only used if on the discord steam branch, or the discord version itself I assume?
+		/// </summary>
 		private static readonly PropertyInfo onlineIDField = typeof( Profile ).GetProperty( "onlineID" );
 
 		public MatchRecorderHandler( string modPath )
 		{
 			ModPath = modPath;
 			GameDatabase = new FileSystemGameDatabase();
-			BotSettings = new BotSettings();
 
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( Path.Combine( modPath , "Settings" ) )
@@ -37,17 +40,14 @@ namespace MatchRecorder
 				.AddJsonFile( "shared.json" )
 #endif
 				.AddJsonFile( "bot.json" )
+				.AddJsonFile( "obs.json" )
 			.Build();
 
 			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( BotSettings );
+			Configuration.Bind( OBSSettings );
 
-#if DEBUG
-			RecorderHandler = new ReplayRecorder( this );
-#else
 			RecorderHandler = new ObsRecorder( this );
-#endif
-
 		}
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
@@ -170,7 +170,7 @@ namespace MatchRecorder
 
 		public void Update()
 		{
-#if DEBUG
+#if DEBUGSHIT
 			if( Keyboard.Down( Keys.LeftShift ) && Keyboard.Pressed( Keys.D0 ) )
 			{
 				var levels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
@@ -211,11 +211,12 @@ namespace MatchRecorder
 		private System.Drawing.Bitmap TakeScreenshot( string levelID )
 		{
 			System.Drawing.Bitmap screenshot = null;
+			/*
 			DuckGame.LevelData levelData = Content.GetLevel( levelID );
 
 			if( levelData != null )
 			{
-				var rtTest = Content.GeneratePreview( levelID , null , true );
+				var rtTest = Content.GeneratePreview( levelData , true );
 
 				var imageData = rtTest.GetData();
 
@@ -235,7 +236,7 @@ namespace MatchRecorder
 				}
 
 			}
-
+			*/
 			return screenshot;
 		}
 
@@ -284,10 +285,11 @@ namespace MatchRecorder
 			{
 				levelData = CreateLevelDataFromLevel( levelID );
 
-				GameDatabase.SaveData( levelData ).Wait();
-
-
-				GameDatabase.Add( levelData ).Wait();
+				if( levelData != null )
+				{
+					GameDatabase.SaveData( levelData ).Wait();
+					GameDatabase.Add( levelData ).Wait();
+				}
 			}
 
 		}
@@ -524,7 +526,7 @@ namespace MatchRecorder
 			if( Level.current is null && value != null )
 			{
 				//at the game startup, make screenshots of whatever map we need a preview of
-				MatchRecorderMod.Recorder?.TryTakingScreenshots();
+				//MatchRecorderMod.Recorder?.TryTakingScreenshots();
 			}
 
 
@@ -582,7 +584,8 @@ namespace MatchRecorder
 			}
 		}
 	}
-
+	
+	#if REPLAYRECORDER
 	[HarmonyPatch( typeof( Level ) , nameof( Level.DrawCurrentLevel ) )]
 	internal static class OnNewRenderingFrame
 	{
@@ -620,11 +623,11 @@ namespace MatchRecorder
 	[HarmonyPatch( typeof( SpriteMap ) , nameof( SpriteMap.UltraCheapStaticDraw ) )]
 	internal static class OnStaticDraw
 	{
-		static private bool _drawing = false;
-		static private FieldInfo _batchItemField = typeof( SpriteMap ).GetField( "_batchItem" , BindingFlags.NonPublic | BindingFlags.Instance );
-		static private PropertyInfo _validProperty = typeof( SpriteMap ).GetProperty( "valid" , BindingFlags.NonPublic | BindingFlags.Instance );
+		private static bool _drawing = false;
+		private static FieldInfo _batchItemField = typeof( SpriteMap ).GetField( "_batchItem" , BindingFlags.NonPublic | BindingFlags.Instance );
+		private static PropertyInfo _validProperty = typeof( SpriteMap ).GetProperty( "valid" , BindingFlags.NonPublic | BindingFlags.Instance );
 
-		static private Dictionary<SpriteMap , int> _currentBatches = new Dictionary<SpriteMap , int>();
+		private static Dictionary<SpriteMap , int> _currentBatches = new Dictionary<SpriteMap , int>();
 
 		private static void Prefix( SpriteMap __instance )
 		{
@@ -672,6 +675,7 @@ namespace MatchRecorder
 			MatchRecorderMod.Recorder?.OnFinishDrawingObject( __instance );
 		}
 	}
+	#endif
 
-	#endregion HOOKS
+#endregion HOOKS
 }

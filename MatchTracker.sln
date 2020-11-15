@@ -28,6 +28,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchDiscordRecorder", "Mat
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchOctoKitDatabase", "MatchOctoKitDatabase\MatchOctoKitDatabase.csproj", "{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchMergerTest", "MatchMergerTest\MatchMergerTest.csproj", "{DA9315A2-D705-49F6-8818-D329DDDBA1A3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -99,6 +101,14 @@ Global
 		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Release|x86.ActiveCfg = Release|Any CPU
 		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Release|x86.Build.0 = Release|Any CPU
+		{DA9315A2-D705-49F6-8818-D329DDDBA1A3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DA9315A2-D705-49F6-8818-D329DDDBA1A3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DA9315A2-D705-49F6-8818-D329DDDBA1A3}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{DA9315A2-D705-49F6-8818-D329DDDBA1A3}.Debug|x86.Build.0 = Debug|Any CPU
+		{DA9315A2-D705-49F6-8818-D329DDDBA1A3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DA9315A2-D705-49F6-8818-D329DDDBA1A3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DA9315A2-D705-49F6-8818-D329DDDBA1A3}.Release|x86.ActiveCfg = Release|Any CPU
+		{DA9315A2-D705-49F6-8818-D329DDDBA1A3}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

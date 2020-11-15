@@ -1,5 +1,4 @@
-﻿using CacheCow.Client;
-using DSharpPlus;
+﻿using DSharpPlus;
 using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
@@ -33,10 +32,7 @@ namespace MatchUploader
 		private Dictionary<VideoMirrorType , Uploader> VideoUploaders { get; } = new Dictionary<VideoMirrorType , Uploader>();
 		private List<Uploader> Uploaders { get; } = new List<Uploader>();
 
-		private HttpClient NormalHttpClient { get; } = new HttpClient( new CachingHandler()
-		{
-			InnerHandler = new HttpClientHandler()
-		} );
+		private HttpClient NormalHttpClient { get; } = new HttpClient();
 
 		private JsonSerializer Serializer { get; } = new JsonSerializer()
 		{

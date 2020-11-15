@@ -16,23 +16,16 @@
 
   <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="1.2.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="2.2.4" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="2.2.0" />
-    <ProjectReference Include="..\MatchDiscordRecorder\MatchDiscordRecorder.csproj" />
-    <ProjectReference Include="..\MatchShared.Replay\MatchShared.Replay.csproj" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+    <PackageReference Include="obs-websocket-dotnet" Version="4.8.0" />
+    <!--<ProjectReference Include="..\MatchDiscordRecorder\MatchDiscordRecorder.csproj" />
+    <ProjectReference Include="..\MatchShared.Replay\MatchShared.Replay.csproj" />-->
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
     <Reference Include="DuckGame">
       <HintPath>..\ThirdParty\DuckGame.exe</HintPath>
       <Private>false</Private>
-    </Reference>
-    <Reference Include="obs-websocket-dotnet">
-      <HintPath>..\ThirdParty\obs-websocket-dotnet.dll</HintPath>
-      <Private>true</Private>
-    </Reference>
-    <Reference Include="websocket-sharp">
-      <HintPath>..\ThirdParty\websocket-sharp.dll</HintPath>
-      <Private>true</Private>
     </Reference>
   </ItemGroup>
 

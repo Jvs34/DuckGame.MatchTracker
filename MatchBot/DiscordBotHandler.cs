@@ -1,6 +1,4 @@
-﻿
-using CacheCow.Client;
-using DSharpPlus;
+﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.Entities;
 using DSharpPlus.Interactivity;
@@ -15,10 +13,7 @@ namespace MatchBot
 {
 	public class DiscordBotHandler
 	{
-		private HttpClient HttpClient { get; } = new HttpClient( new CachingHandler()
-		{
-			InnerHandler = new HttpClientHandler()
-		} );
+		private HttpClient HttpClient { get; } = new HttpClient();
 
 		private BotSettings BotSettings { get; } = new BotSettings();
 		private DiscordClient DiscordInstance { get; }

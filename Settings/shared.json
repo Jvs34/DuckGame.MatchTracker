@@ -10,5 +10,5 @@
   "RoundVoiceFile": "voice.ogg",
   "DatabaseFile": "duckgame.db",
   "RoundReplayFile": "replaydata.bin",
-  "RoundReplayFileCompressed": "replaydata.zip",
+  "RoundReplayFileCompressed": "replaydata.zip"
 }

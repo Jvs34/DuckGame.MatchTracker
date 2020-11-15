@@ -1,6 +1,6 @@
-﻿using DuckGame;
-using MatchTracker;
+﻿using MatchTracker;
 using OBSWebsocketDotNet;
+using OBSWebsocketDotNet.Types;
 using System;
 using System.IO;
 
@@ -19,22 +19,12 @@ namespace MatchRecorder
 		{
 			get
 			{
-				switch( recordingState )
+				return recordingState switch
 				{
-					case OutputState.Started:
-					case OutputState.Starting:
-						return true;
-
-					case OutputState.Stopped:
-					case OutputState.Stopping:
-						return false;
-				}
-
-				return false;
-			}
-			//do nothing
-			private set
-			{
+					OutputState.Started or OutputState.Starting => true,
+					OutputState.Stopped or OutputState.Stopping => false,
+					_ => false,
+				};
 			}
 		}
 
@@ -66,12 +56,29 @@ namespace MatchRecorder
 		{
 			try
 			{
-				obsHandler.Connect( "ws://127.0.0.1:4444" , "imgay" );
+				obsHandler.Connect( MainHandler.OBSSettings.WebSocketUri , MainHandler.OBSSettings.WebSocketPassword );
 			}
 			catch( Exception )
 			{
 				DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Could not connect to OBS!!!" );
 			}
+		}
+
+		public bool IsSetupCorrect()
+		{
+			if( !obsHandler.IsConnected )
+			{
+				return false;
+			}
+
+			var scene = obsHandler.GetCurrentScene();
+
+			if( scene is null )
+			{
+				return false;
+			}
+
+			return scene.Name == "Duck Game";
 		}
 
 		public void Update()
@@ -165,7 +172,7 @@ namespace MatchRecorder
 		{
 		}
 
-		public void OnTextureDraw( Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , Depth depth = default )
+		public void OnTextureDraw( DuckGame.Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , DuckGame.Depth depth = default )
 		{
 		}
 

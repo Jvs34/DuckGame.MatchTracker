@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <Description>Uploads recorder matches from MatchRecorder to youtube and github pages.</Description>
   </PropertyGroup>
 
@@ -16,19 +16,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CacheCow.Client" Version="2.4.4" />
-    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00600" />
-    <PackageReference Include="Google.Apis.Calendar.v3" Version="1.40.3.1669" />
-    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.40.3.1663" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.0.0-preview7.19362.4" />
-    <PackageReference Include="Microsoft.Graph" Version="1.16.0" />
-    <PackageReference Include="Microsoft.Identity.Client" Version="4.2.1" />
+    <PackageReference Include="DSharpPlus" Version="4.0.0-nightly-00665" />
+    <PackageReference Include="Google.Apis.Calendar.v3" Version="1.44.0.1886" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.44.0.1869" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.2" />
+    <PackageReference Include="Microsoft.Graph" Version="1.21.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.8.2" />
     <PackageReference Include="NCrontab" Version="3.3.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.0.0-preview7.19362.4" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.0.0-preview7.19362.4" />
-    <PackageReference Include="Xabe.FFmpeg" Version="3.4.0" />
-    <PackageReference Include="YoutubeExplode" Version="4.7.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.2" />
+    <PackageReference Include="Xabe.FFmpeg" Version="3.5.2" />
+    <PackageReference Include="YoutubeExplode" Version="4.7.13" />
     <ProjectReference Include="..\MatchOctoKitDatabase\MatchOctoKitDatabase.csproj" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
   </ItemGroup>

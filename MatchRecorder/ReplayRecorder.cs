@@ -5,6 +5,7 @@ using DSharpPlus.EventArgs;
 using DSharpPlus.VoiceNext;
 using DSharpPlus.VoiceNext.Codec;
 */
+#if REPLAYRECORDER
 using DuckGame;
 using MatchTracker;
 using MatchTracker.Replay;
@@ -576,3 +577,4 @@ namespace MatchRecorder
 		//}
 	}
 }
+#endif

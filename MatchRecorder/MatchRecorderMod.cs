@@ -17,6 +17,7 @@ namespace MatchRecorder
 			AppDomain.CurrentDomain.AssemblyResolve += ModResolve;
 		}
 
+#if DISCORDRECORDER
 		private void CopyDiscordSharpPlusDependencies( string modPath )
 		{
 			var duckgameDir = Directory.GetCurrentDirectory();
@@ -34,6 +35,7 @@ namespace MatchRecorder
 
 			}
 		}
+#endif
 
 		~MatchRecorderMod()
 		{
@@ -42,8 +44,9 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
+#if DISCORDRECORDER
 			CopyDiscordSharpPlusDependencies( configuration.directory );
-
+#endif
 			Recorder = new MatchRecorderHandler( configuration.directory );
 			HarmonyInstance.Create( GetType().Namespace ).PatchAll( Assembly.GetExecutingAssembly() );
 		}

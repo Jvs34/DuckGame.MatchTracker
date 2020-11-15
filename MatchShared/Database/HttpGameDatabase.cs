@@ -1,9 +1,11 @@
 ﻿using Flurl;
+using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Threading.Tasks;
+using System.Diagnostics;
 
 namespace MatchTracker
 {
@@ -36,6 +38,10 @@ namespace MatchTracker
 		public override async Task SaveData<T>( T data )
 		{
 			await Task.CompletedTask;
+			if( ReadOnly )
+			{
+				throw new Exception( $"Cannot save data in {GetType()}, it is read only" );
+			}
 		}
 
 		public override async Task<T> GetData<T>( string dataId = "" )
