@@ -3,6 +3,7 @@ using OBSWebsocketDotNet;
 using OBSWebsocketDotNet.Types;
 using System;
 using System.IO;
+using System.Linq;
 
 namespace MatchRecorder
 {
@@ -10,7 +11,7 @@ namespace MatchRecorder
 	{
 		private MatchRecorderHandler MainHandler { get; }
 		private DateTime nextObsCheck;
-		private OBSWebsocket obsHandler;
+		private readonly OBSWebsocket obsHandler;
 		private OutputState recordingState;
 		private bool requestedRecordingStart;
 		private bool requestedRecordingStop;
@@ -43,7 +44,6 @@ namespace MatchRecorder
 			obsHandler.Connected += OnConnected;
 			obsHandler.Disconnected += OnDisconnected;
 			obsHandler.RecordingStateChanged += OnRecordingStateChanged;
-			//TODO: we will use a password later, but we will read it from secrets.json or something since that will also be required by the youtube uploader
 			TryConnect();
 			nextObsCheck = DateTime.MinValue;
 		}
@@ -60,13 +60,16 @@ namespace MatchRecorder
 			}
 			catch( Exception )
 			{
-				DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Could not connect to OBS!!!" );
+				DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Failed connecting to OBS. Check Settings/obs.json" );
 			}
 		}
 
+		/*
 		public bool IsSetupCorrect()
 		{
-			if( !obsHandler.IsConnected )
+			var profile = obsHandler.GetCurrentProfile();
+
+			if( profile != "Duck Game" )
 			{
 				return false;
 			}
@@ -80,6 +83,22 @@ namespace MatchRecorder
 
 			return scene.Name == "Duck Game";
 		}
+
+		public void SetupOBS()
+		{
+			obsHandler.SetCurrentProfile( "Duck Game" );
+
+			//create the scene if it isn't there
+			var scenes = obsHandler.GetSceneList();
+			var duckgamescene = scenes.Scenes.FirstOrDefault( x => x.Name == "Duck Game" );
+			
+			if( duckgamescene is null )
+			{
+				obsHandler.Add
+			}
+
+		}
+		*/
 
 		public void Update()
 		{

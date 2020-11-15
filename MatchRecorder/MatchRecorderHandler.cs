@@ -90,7 +90,7 @@ namespace MatchRecorder
 				winnerObject.Teams.Add( CreateTeamDataFromTeam( team , winnerObject ) );
 			}
 
-			foreach( Profile pro in Profiles.active )
+			foreach( Profile pro in Profiles.activeNonSpectators )
 			{
 				PlayerData ply = CreatePlayerDataFromProfile( pro , winnerObject );
 				winnerObject.Players.Add( ply.DatabaseIndex );
