@@ -77,7 +77,7 @@ namespace MatchTracker
 		/// <param name="callback"></param>
 		/// <param name="databaseIndexes"></param>
 		/// <returns></returns>
-		public static async Task IterateOver<T>( this IGameDatabase db , Func<T , Task<bool>> callback , params string [] databaseIndexes ) where T : IDatabaseEntry
+		public static async Task IterateOver<T>( this IGameDatabase db , Func<T , Task<bool>> callback , List<string> databaseIndexes ) where T : IDatabaseEntry
 		{
 			List<Task> tasks = new List<Task>();
 
@@ -85,7 +85,7 @@ namespace MatchTracker
 
 			foreach( string dataName in databaseIndexes )
 			{
-				tasks.Add( IteratorTask<T>( db , dataName , callback , tasks , tokenSource ) );
+				tasks.Add( IteratorTask( db , dataName , callback , tasks , tokenSource ) );
 			}
 
 			await Task.WhenAll( tasks );
@@ -93,7 +93,7 @@ namespace MatchTracker
 
 		public static async Task IterateOverAll<T>( this IGameDatabase db , Func<T , Task<bool>> callback ) where T : IDatabaseEntry
 		{
-			await db.IterateOver( callback , ( await db.GetAll<T>() ).ToArray() );
+			await db.IterateOver( callback , await db.GetAll<T>() );
 		}
 
 		/// <summary>

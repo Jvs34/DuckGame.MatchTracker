@@ -12,7 +12,12 @@ namespace MatchTest
 	{
 		private static async Task Main( string [] args )
 		{
+			var fuckshit = "2018-04-28 20-19-04";
 
+			
+
+
+			/*
 			IGameDatabase db = new FileSystemGameDatabase
 			{
 				SharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( Path.Combine( "Settings" , "shared.json" ) ) )
@@ -37,6 +42,7 @@ namespace MatchTest
 
 				return true;
 			} );
+			*/
 
 			/*var backup = await db.GetBackup();
 			foreach( var backupKV in backup )

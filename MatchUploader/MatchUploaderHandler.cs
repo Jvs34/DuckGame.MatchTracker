@@ -7,10 +7,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
-using System.Reflection;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
-using Xabe.FFmpeg.Enums;
+using Xabe.FFmpeg.Downloader;
 
 /*
 Goes through all the folders, puts all rounds and matches into data.json
@@ -54,12 +53,14 @@ namespace MatchUploader
 			Configuration.Bind( UploaderSettings );
 			Configuration.Bind( BotSettings );
 
-			//GameDatabase = new FileSystemGameDatabase();
+			GameDatabase = new FileSystemGameDatabase();
 
+			/*
 			GameDatabase = new OctoKitGameDatabase( NormalHttpClient , UploaderSettings.GitUsername , UploaderSettings.GitPassword )
 			{
 				InitialLoad = true ,
 			};
+			*/
 
 
 			Configuration.Bind( GameDatabase.SharedSettings );
@@ -80,10 +81,12 @@ namespace MatchUploader
 		private void CreateUploaders()
 		{
 			//always create the calendar one
+			/*
 			{
 				Uploader calendar = new CalendarUploader( new UploaderInfo() , GameDatabase , UploaderSettings );
 				Uploaders.Add( calendar );
 			}
+			*/
 
 			//youtube uploader
 			switch( UploaderSettings.VideoMirrorUpload )
@@ -191,6 +194,7 @@ namespace MatchUploader
 			}
 		}
 
+		/*
 		public async Task UploadToDiscordAsync()
 		{
 			var uploadChannel = await DiscordClient.GetChannelAsync( UploaderSettings.DiscordUploadChannel );
@@ -256,7 +260,7 @@ namespace MatchUploader
 				}
 			}
 		}
-
+		*/
 
 		private async Task SetDiscordPresence( string str )
 		{
@@ -273,7 +277,7 @@ namespace MatchUploader
 			await DiscordClient.UpdateStatusAsync( new DSharpPlus.Entities.DiscordActivity( str ) );
 		}
 
-
+		/*
 		private async Task ProcessVideo( string roundName )
 		{
 			RoundData roundData = await GameDatabase.GetData<RoundData>( roundName );
@@ -286,8 +290,8 @@ namespace MatchUploader
 			{
 				Console.WriteLine( $"Converting {roundName}" );
 
-				IMediaInfo mediaInfo = await MediaInfo.Get( videoPath );
-				IConversion newConversion = Conversion.New();
+				IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo( videoPath );
+				IConversion newConversion = FFmpeg.Conversions.New();
 
 				bool abortConversion = mediaInfo.VideoStreams.Any( vid => vid.Bitrate < 6000000 );
 
@@ -299,7 +303,7 @@ namespace MatchUploader
 
 				foreach( var videostream in mediaInfo.VideoStreams )
 				{
-					newConversion.AddStream( videostream.SetCodec( VideoCodec.H264_nvenc ) );
+					newConversion.AddStream( videostream.SetCodec( VideoCodec.h264_nvenc ) );
 				}
 
 				foreach( var audiostream in mediaInfo.AudioStreams )
@@ -320,6 +324,9 @@ namespace MatchUploader
 				Console.WriteLine( outputPath );
 			}
 		}
+		*/
+
+		/*
 		private async Task ProcessVideoFiles()
 		{
 			string tempFFmpegFolder = Path.Combine( Path.GetTempPath() , "ffmpeg" );
@@ -330,8 +337,10 @@ namespace MatchUploader
 				Console.WriteLine( $"Created directory {tempFFmpegFolder}" );
 			}
 
-			FFmpeg.ExecutablesPath = tempFFmpegFolder;
-			await FFmpeg.GetLatestVersion();
+			FFmpeg.SetExecutablesPath( tempFFmpegFolder );
+
+			await FFmpegDownloader.GetLatestVersion( FFmpegVersion.Official , FFmpeg.ExecutablesPath );
+
 
 
 			List<Task> processingTasks = new List<Task>();
@@ -343,5 +352,6 @@ namespace MatchUploader
 
 			await Task.WhenAll( processingTasks );
 		}
+		*/
 	}
 }

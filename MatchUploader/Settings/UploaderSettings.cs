@@ -24,5 +24,6 @@ namespace MatchUploader
 		public string CronSchedule { get; set; }
 		public DateTime LastRan { get; set; } = DateTime.Now.Subtract( TimeSpan.FromSeconds( 1 ) );
 		public bool ScheduleEnabled { get; set; }
+		public uint MaxKilobytesPerSecond { get; set; } = 0;
 	}
 }

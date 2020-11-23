@@ -7,6 +7,7 @@ using MatchTracker;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -113,6 +114,13 @@ namespace MatchUploader
 
 			using( var fileStream = new FileStream( filePath , FileMode.Open ) )
 			{
+				Stream videoStream = fileStream;
+
+				if( UploaderSettings.MaxKilobytesPerSecond > 0 )
+				{
+					videoStream = new ThrottledStream( fileStream , (int) ( 1024 * UploaderSettings.MaxKilobytesPerSecond ) );
+				}
+
 				if( upload.ErrorCount > UploaderSettings.RetryCount )
 				{
 					upload.UploadUrl = null;
@@ -122,7 +130,7 @@ namespace MatchUploader
 				}
 
 				//TODO:Maybe it's possible to create a throttable request by extending the class of this one and initializing it with this one's values
-				var videosInsertRequest = Service.Videos.Insert( videoData , "snippet,status,recordingDetails" , fileStream , "video/*" );
+				var videosInsertRequest = Service.Videos.Insert( videoData , "snippet,status,recordingDetails" , videoStream , "video/*" );
 				videosInsertRequest.ChunkSize = ResumableUpload.MinimumChunkSize;
 				videosInsertRequest.ProgressChanged += OnYoutubeUploadProgress;
 				videosInsertRequest.ResponseReceived += OnYoutubeUploadFinished;
@@ -156,6 +164,12 @@ namespace MatchUploader
 				{
 					//now add it to the playlist of the match
 					await AddRoundToPlaylist( roundData.DatabaseIndex );
+				}
+
+				if( videoStream is ThrottledStream )
+				{
+					videoStream.Dispose();
+					videoStream = null;
 				}
 			}
 
@@ -240,10 +254,11 @@ namespace MatchUploader
 				Status = new VideoStatus()
 				{
 					PrivacyStatus = "unlisted" ,
+					MadeForKids = false,
 				} ,
 				RecordingDetails = new VideoRecordingDetails()
 				{
-					RecordingDate = roundData.TimeStarted ,
+					RecordingDate = roundData.TimeStarted.ToString( "s" , CultureInfo.InvariantCulture ) ,
 				}
 			};
 
