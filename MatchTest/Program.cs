@@ -1,4 +1,5 @@
-﻿using MatchTracker;
+﻿using MatchFlatJsonDatabase;
+using MatchTracker;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -14,8 +15,31 @@ namespace MatchTest
 		{
 			var fuckshit = "2018-04-28 20-19-04";
 
-			
+			IGameDatabase db = new FileSystemGameDatabase
+			{
+				SharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( Path.Combine( "Settings" , "shared.json" ) ) )
+			};
+			await db.Load();
 
+			var jsondb = new FlatJsonGameDatabase()
+			{
+				SharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( Path.Combine( "Settings" , "shared.json" ) ) )
+			};
+
+			jsondb.SharedSettings.BaseRecordingFolder = @"C:\Users\Jvsth.000.000\Desktop\";
+			jsondb.SharedSettings.DatabaseFile = "data.json";
+
+			await jsondb.Load();
+
+
+			var roundData = await jsondb.GetData<RoundData>( fuckshit );
+			int i = 5;
+			/*
+			Console.WriteLine( "Backing up..." );
+			var backup = await db.GetBackup();
+			Console.WriteLine( "Importing the backup..." );
+			await jsondb.ImportBackup( backup );
+			*/
 
 			/*
 			IGameDatabase db = new FileSystemGameDatabase

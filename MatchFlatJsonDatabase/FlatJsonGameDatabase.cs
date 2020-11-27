@@ -37,10 +37,12 @@ namespace MatchFlatJsonDatabase
 		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
 		{
 			await StreamSemaphore.WaitAsync();
+			T data = default;
 			DatabaseStream.Position = 0;
 
+
 			JsonDocument jsonDocument = await JsonDocument.ParseAsync( DatabaseStream , JsonDocumentOptions );
-			T data = default;
+			
 
 			//check if there's a root->TypeName property first, then root->TypeName->DatabaseIndex
 			if( jsonDocument.RootElement.TryGetProperty( typeof( T ).Name , out var prop ) && prop.TryGetProperty( dataId , out var jsonData ) )
