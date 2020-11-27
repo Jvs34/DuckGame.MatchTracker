@@ -10,46 +10,63 @@ namespace MatchTracker
 	{
 		public static async Task<Dictionary<string , Dictionary<string , IDatabaseEntry>>> GetBackup( this IGameDatabase db )
 		{
-			var mainCollection = new Dictionary<string , Dictionary<string , IDatabaseEntry>>();
-
-			mainCollection [nameof( RoundData )] = new Dictionary<string , IDatabaseEntry>();
-			foreach( var roundName in await db.GetAll<RoundData>() )
+			var mainCollection = new Dictionary<string , Dictionary<string , IDatabaseEntry>>
 			{
-				mainCollection [nameof( RoundData )] [roundName] = await db.GetData<RoundData>( roundName );
-			}
+				[nameof( EntryListData )] = new Dictionary<string , IDatabaseEntry>() ,
+				[nameof( RoundData )] = new Dictionary<string , IDatabaseEntry>() ,
+				[nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>() ,
+				[nameof( LevelData )] = new Dictionary<string , IDatabaseEntry>() ,
+				[nameof( TagData )] = new Dictionary<string , IDatabaseEntry>() ,
+				[nameof( PlayerData )] = new Dictionary<string , IDatabaseEntry>() ,
+			};
 
-			mainCollection [nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>();
-			foreach( var matchName in await db.GetAll<MatchData>() )
-			{
-				mainCollection [nameof( MatchData )] [matchName] = await db.GetData<MatchData>( matchName );
-			}
-
-			mainCollection [nameof( LevelData )] = new Dictionary<string , IDatabaseEntry>();
-			foreach( var levelName in await db.GetAll<LevelData>() )
-			{
-				mainCollection [nameof( LevelData )] [levelName] = await db.GetData<LevelData>( levelName );
-			}
-
-			mainCollection [nameof( TagData )] = new Dictionary<string , IDatabaseEntry>();
-			foreach( var tagName in await db.GetAll<TagData>() )
-			{
-				mainCollection [nameof( TagData )] [tagName] = await db.GetData<TagData>( tagName );
-			}
-
-			mainCollection [nameof( PlayerData )] = new Dictionary<string , IDatabaseEntry>();
-			foreach( var playerName in await db.GetAll<PlayerData>() )
-			{
-				mainCollection [nameof( PlayerData )] [playerName] = await db.GetData<PlayerData>( playerName );
-			}
-
-			mainCollection [nameof( EntryListData )] = new Dictionary<string , IDatabaseEntry>();
 			foreach( var entryName in await db.GetAll<EntryListData>() )
 			{
 				mainCollection [nameof( EntryListData )] [entryName] = await db.GetData<EntryListData>( entryName );
 			}
 
+			foreach( var entryName in await db.GetAll<RoundData>() )
+			{
+				mainCollection [nameof( RoundData )] [entryName] = await db.GetData<RoundData>( entryName );
+			}
+
+			foreach( var entryName in await db.GetAll<MatchData>() )
+			{
+				mainCollection [nameof( MatchData )] [entryName] = await db.GetData<MatchData>( entryName );
+			}
+
+			foreach( var entryName in await db.GetAll<LevelData>() )
+			{
+				mainCollection [nameof( LevelData )] [entryName] = await db.GetData<LevelData>( entryName );
+			}
+
+			foreach( var entryName in await db.GetAll<TagData>() )
+			{
+				mainCollection [nameof( TagData )] [entryName] = await db.GetData<TagData>( entryName );
+			}
+
+			foreach( var entryName in await db.GetAll<PlayerData>() )
+			{
+				mainCollection [nameof( PlayerData )] [entryName] = await db.GetData<PlayerData>( entryName );
+			}
+
 			return mainCollection;
 		}
+
+		public static async Task ImportBackup( this IGameDatabase db , Dictionary<string , Dictionary<string , IDatabaseEntry>> backup )
+		{
+			foreach( var dataTypeKV in backup )
+			{
+				var dataTypeName = dataTypeKV.Key;
+				var dataTypeValue = dataTypeKV.Value;
+
+				foreach( var dataEntry in dataTypeValue )
+				{
+					await db.SaveData( dataEntry.Value );
+				}
+			}
+		}
+
 		private static async Task IteratorTask<T>( IGameDatabase db , string dataName , Func<T , Task<bool>> callback , List<Task> tasks , CancellationTokenSource tokenSource ) where T : IDatabaseEntry
 		{
 			if( tokenSource.IsCancellationRequested )
@@ -165,7 +182,7 @@ namespace MatchTracker
 		/// <typeparam name="T"></typeparam>
 		/// <param name="db"></param>
 		/// <param name="databaseIndexes"></param>
-		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db , params string [] databaseIndexes ) where T : IDatabaseEntry
+		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db , List<string> databaseIndexes ) where T : IDatabaseEntry
 		{
 			List<T> dataList = new List<T>();
 
@@ -184,7 +201,7 @@ namespace MatchTracker
 		/// <param name="db"></param>
 		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
-			return await db.GetAllData<T>( ( await db.GetAll<T>() ).ToArray() );
+			return await db.GetAllData<T>( await db.GetAll<T>() );
 		}
 
 		/// <summary>

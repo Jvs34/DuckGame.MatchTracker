@@ -9,7 +9,7 @@ namespace MatchMergerTest
 		{
 			var job = new MergingJob();
 			await job.RunAsync();
-			Console.WriteLine( "Hello World!" );
+			Console.ReadLine();
 		}
 	}
 }

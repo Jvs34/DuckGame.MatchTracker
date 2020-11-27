@@ -51,6 +51,8 @@ namespace MatchUploader
 		protected override async Task FetchUploads()
 		{
 			ConcurrentBag<RoundData> uploadableRounds = new ConcurrentBag<RoundData>();
+			
+			//check if there's any videos to upload singularly
 			await DB.IterateOverAll<RoundData>( async ( roundData ) =>
 			{
 				await Task.CompletedTask;
@@ -95,7 +97,7 @@ namespace MatchUploader
 				return true;
 			}
 
-			Video videoData = await GetVideoDataForRound( roundData );
+			Video videoData = await GetVideoDataForDatabaseItem( roundData );
 			string filePath = DB.SharedSettings.GetRoundVideoPath( roundData.Name );
 
 			if( !File.Exists( filePath ) )
@@ -173,7 +175,14 @@ namespace MatchUploader
 				}
 			}
 
-			await RemoveVideoFile( roundData.DatabaseIndex );
+			if( uploadProgress.Exception != null )
+			{
+				throw uploadProgress.Exception;
+			}
+
+			await RemoveRoundVideoFile( roundData.DatabaseIndex );
+
+
 
 			return uploadProgress.Status == UploadStatus.Completed;
 		}
@@ -227,11 +236,11 @@ namespace MatchUploader
 			return videoInfo;
 		}
 
-		private async Task<Video> GetVideoDataForRound( RoundData roundData )
+		private async Task<Video> GetVideoDataForDatabaseItem<T>( T data ) where T : IPlayersList, IStartEnd, IWinner, IDatabaseEntry
 		{
 			await Task.CompletedTask;
 
-			var playerWinners = await DB.GetAllData<PlayerData>( roundData.GetWinners().ToArray() );
+			var playerWinners = await DB.GetAllData<PlayerData>( data.GetWinners() );
 
 			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
 
@@ -240,13 +249,13 @@ namespace MatchUploader
 				winner = "Nobody";
 			}
 
-			string description = $"Recorded on {DB.SharedSettings.DateTimeToString( roundData.TimeStarted )}\nThe winner is {winner}";
+			string description = $"Recorded on {DB.SharedSettings.DateTimeToString( data.TimeStarted )}\nThe winner is {winner}";
 
 			Video videoData = new Video()
 			{
 				Snippet = new VideoSnippet()
 				{
-					Title = $"{roundData.Name} {winner}" ,
+					Title = $"{data.DatabaseIndex} {winner}" ,
 					Tags = new List<string>() { "duckgame" , "peniscorp" } ,
 					CategoryId = "20" ,
 					Description = description ,
@@ -254,18 +263,18 @@ namespace MatchUploader
 				Status = new VideoStatus()
 				{
 					PrivacyStatus = "unlisted" ,
-					MadeForKids = false,
+					MadeForKids = false ,
 				} ,
 				RecordingDetails = new VideoRecordingDetails()
 				{
-					RecordingDate = roundData.TimeStarted.ToString( "s" , CultureInfo.InvariantCulture ) ,
+					RecordingDate = data.TimeStarted.ToString( "s" , CultureInfo.InvariantCulture ) ,
 				}
 			};
 
 			return videoData;
 		}
 
-		private async Task RemoveVideoFile( string roundName )
+		private async Task RemoveRoundVideoFile( string roundName )
 		{
 			RoundData roundData = await DB.GetData<RoundData>( roundName );
 
@@ -403,7 +412,7 @@ namespace MatchUploader
 		{
 			await Task.CompletedTask;
 
-			var playerWinners = await DB.GetAllData<PlayerData>( matchData.GetWinners().ToArray() );
+			var playerWinners = await DB.GetAllData<PlayerData>( matchData.GetWinners() );
 
 			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
 
@@ -443,6 +452,7 @@ namespace MatchUploader
 					{
 						DataName = roundData.DatabaseIndex ,
 						FileSize = videoInfo.Length ,
+						DataType = nameof( roundData )
 					};
 				}
 			}

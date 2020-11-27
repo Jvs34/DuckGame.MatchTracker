@@ -1,11 +1,15 @@
-﻿using Humanizer.Bytes;
+﻿using Humanizer;
+using Humanizer.Bytes;
 using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
@@ -57,10 +61,11 @@ namespace MatchMergerTest
 
 			//try to find the first match that has all the video files still not uploaded
 			var foundMatches = await GetEligibleMatchNames();
-			var foundMatchName = foundMatches.FirstOrDefault();
-
-			if( !string.IsNullOrEmpty( foundMatchName ) )
+			//var foundMatchName = foundMatches.FirstOrDefault();
+			foreach( var foundMatchName in foundMatches )
 			{
+				var outputPath = $@"C:\Users\Jvsth.000.000\Desktop\Test\{foundMatchName}.mp4";
+
 				//gather all the filenames for the rounds
 				MatchData matchData = await GameDatabase.GetData<MatchData>( foundMatchName );
 
@@ -80,36 +85,37 @@ namespace MatchMergerTest
 					}
 				}
 
-
-				if( roundFiles.Count != matchData.Rounds.Count )
+				if( roundFiles.Count == matchData.Rounds.Count && !File.Exists( outputPath ) )
 				{
-					throw new Exception( "FUCKING GAY" );
+					var orderedRoundFiles = roundFiles.OrderBy( x => x.Key.TimeStarted );
+					var conversion = await FFmpeg.Conversions.FromSnippet.Concatenate(
+						outputPath ,
+						orderedRoundFiles.Select( x => x.Value.FullName ).ToArray()
+					);
+					//conversion.UseMultiThread( true );
+					//conversion.UseHardwareAcceleration( HardwareAccelerator.auto , VideoCodec.h264 , VideoCodec.h264 );
+					Console.WriteLine( $"Starting conversion of {matchData.Name}" );
+					Stopwatch stopwatch = new Stopwatch();
+					stopwatch.Start();
+					await conversion.Start();
+					stopwatch.Stop();
+
+					Console.WriteLine( $"Conversion of {matchData.Name} took {stopwatch.Elapsed.Humanize()}" );
 				}
-
-				var orderedRoundFiles = roundFiles.OrderBy( x => x.Key.TimeStarted );
-				var conversion = await FFmpeg.Conversions.FromSnippet.Concatenate(
-					$@"C:\Users\Jvsth.000.000\Desktop\Test\{foundMatchName}.mp4" ,
-					orderedRoundFiles.Select( x => x.Value.FullName ).ToArray()
-				);
-
-				await conversion.Start();
-
 			}
 
 		}
 
 		public async Task<List<string>> GetEligibleMatchNames()
 		{
-			var matchNamesList = new List<string>();
-			
-			foreach( var matchName in await GameDatabase.GetAll<MatchData>() )
-			{
-				MatchData matchData = await GameDatabase.GetData<MatchData>( matchName );
-				//check if all its rounds have been uploaded
+			var concMatches = new ConcurrentBag<MatchData>();
+			//var concMatchNamesList = new ConcurrentBag<string>();
 
+			await GameDatabase.IterateOverAll<MatchData>( async ( matchData ) =>
+			{
 				bool suitable = matchData.VideoType == VideoType.PlaylistLink;
 
-				if( !suitable )
+				if( suitable )
 				{
 					foreach( var roundName in matchData.Rounds )
 					{
@@ -125,12 +131,13 @@ namespace MatchMergerTest
 
 				if( suitable )
 				{
-					matchNamesList.Add( matchName );
+					concMatches.Add( matchData );
 				}
-			}
-			
+				return true;
+			} );
 
-			return matchNamesList;
+
+			return concMatches.OrderBy( x => x.TimeStarted ).Select( x => x.DatabaseIndex ).ToList();
 		}
 	}
 }

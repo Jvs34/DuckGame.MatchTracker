@@ -26,5 +26,10 @@
 		/// This can get throttled apparently, and it'll spit out a 403
 		/// </summary>
 		OneDrive,
+
+		/// <summary>
+		/// A raw link to the file hosted somewhere
+		/// </summary>
+		Http,
 	}
 }

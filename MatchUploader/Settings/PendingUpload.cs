@@ -10,5 +10,6 @@ namespace MatchUploader
 		public string LastException { get; set; }
 		public Uri UploadUrl { get; set; }
 		public string DataName { get; set; }
+		public string DataType { get; set; }
 	}
 }

@@ -126,7 +126,7 @@ namespace MatchUploader
 		{
 			MatchData matchData = await DB.GetData<MatchData>( matchName );
 
-			var playerWinners = await DB.GetAllData<PlayerData>( matchData.GetWinners().ToArray() );
+			var playerWinners = await DB.GetAllData<PlayerData>( matchData.GetWinners() );
 
 			string winner = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
 
