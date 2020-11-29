@@ -21,7 +21,8 @@ namespace MatchTest
 			};
 			await db.Load();
 
-			var jsondb = new FlatJsonGameDatabase()
+			var jsondb = new FlatJsonNetGameDatabase()
+			//var jsondb = new FlatJsonGameDatabase()
 			{
 				SharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( Path.Combine( "Settings" , "shared.json" ) ) )
 			};
@@ -31,6 +32,7 @@ namespace MatchTest
 
 			await jsondb.Load();
 
+			await jsondb.SaveData( await db.GetData<RoundData>( fuckshit ) );
 
 			var roundData = await jsondb.GetData<RoundData>( fuckshit );
 			int i = 5;

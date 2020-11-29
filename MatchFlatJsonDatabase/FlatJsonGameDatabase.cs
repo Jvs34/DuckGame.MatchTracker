@@ -40,10 +40,8 @@ namespace MatchFlatJsonDatabase
 			T data = default;
 			DatabaseStream.Position = 0;
 
-
 			JsonDocument jsonDocument = await JsonDocument.ParseAsync( DatabaseStream , JsonDocumentOptions );
 			
-
 			//check if there's a root->TypeName property first, then root->TypeName->DatabaseIndex
 			if( jsonDocument.RootElement.TryGetProperty( typeof( T ).Name , out var prop ) && prop.TryGetProperty( dataId , out var jsonData ) )
 			{
@@ -195,7 +193,6 @@ namespace MatchFlatJsonDatabase
 			{
 				if( disposing )
 				{
-					// TODO: dispose managed state (managed objects)
 					DatabaseStream?.Dispose();
 					DatabaseStream = null;
 				}
