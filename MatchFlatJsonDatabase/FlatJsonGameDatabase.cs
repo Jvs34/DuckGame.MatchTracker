@@ -16,6 +16,7 @@ namespace MatchFlatJsonDatabase
 		public SharedSettings SharedSettings { get; set; }
 		public bool ReadOnly => false;
 		private Stream DatabaseStream { get; set; }
+
 		private JsonSerializerOptions JsonSerializerOptions { get; } = new JsonSerializerOptions( JsonSerializerDefaults.Web )
 		{
 			AllowTrailingCommas = true ,
@@ -28,18 +29,20 @@ namespace MatchFlatJsonDatabase
 
 		SemaphoreSlim StreamSemaphore { get; } = new SemaphoreSlim( 1 , 1 );
 
-		public async Task Load()
+		public Task Load()
 		{
 			DatabaseStream = File.Open( SharedSettings.GetDatabasePath() , FileMode.OpenOrCreate , FileAccess.ReadWrite , FileShare.Read );
-			await Task.CompletedTask;
+
+			return Task.CompletedTask;
 		}
+
+
 
 		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
 		{
 			await StreamSemaphore.WaitAsync();
-			T data = default;
-			DatabaseStream.Position = 0;
-
+			T data = GetDataFromStream<T>( dataId );
+			/*
 			JsonDocument jsonDocument = await JsonDocument.ParseAsync( DatabaseStream , JsonDocumentOptions );
 			
 			//check if there's a root->TypeName property first, then root->TypeName->DatabaseIndex
@@ -47,8 +50,42 @@ namespace MatchFlatJsonDatabase
 			{
 				data = JsonSerializer.Deserialize<T>( jsonData.GetRawText() , JsonSerializerOptions );
 			}
-
+			*/
 			StreamSemaphore.Release();
+			return data;
+		}
+
+		private T GetDataFromStream<T>( string dataname = "" )
+		{
+			T data = default;
+			DatabaseStream.Position = 0;
+			var reader = new Utf8JsonStreamReader.Utf8JsonStreamReader( DatabaseStream , 1024 );
+
+			string property = string.Empty;
+			int depth = 0;
+
+			while( reader.Read() )
+			{
+				if( reader.TokenType == JsonTokenType.PropertyName )
+				{
+					property = reader.GetString();
+					depth = reader.CurrentDepth;
+				}
+
+				/*
+				if( !string.IsNullOrEmpty( property ) && reader.CurrentDepth > depth )
+				{
+					//we should be inside the property value now if it's not null,
+
+
+
+				}
+				*/
+
+			}
+
+			reader.Dispose();
+
 			return data;
 		}
 

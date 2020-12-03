@@ -94,6 +94,9 @@ namespace MatchTracker
 
 				await writer.WriteStartObjectAsync();
 
+				//go through all the top properties, MatchData etc
+
+				
 
 
 
@@ -110,12 +113,12 @@ namespace MatchTracker
 			StreamSemaphore.Release();
 		}
 
-		protected async Task CopyJsonProperty( JsonReader reader , JsonWriter writer )
+		private async Task CopyJsonProperty( JsonReader reader , JsonWriter writer )
 		{
 
 		}
 
-		protected async Task CopyDatabaseTo( string pathto )
+		private async Task CopyDatabaseTo( string pathto )
 		{
 			DatabaseStream.Position = 0;
 			using( var tostream = File.OpenWrite( pathto ) )

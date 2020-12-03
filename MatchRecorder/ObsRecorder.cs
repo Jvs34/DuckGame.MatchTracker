@@ -181,48 +181,5 @@ namespace MatchRecorder
 		{
 			recordingState = type;
 		}
-
-		public void StartFrame()
-		{
-
-		}
-
-		public void EndFrame()
-		{
-		}
-
-		public void OnTextureDraw( DuckGame.Tex2D texture , DuckGame.Vec2 position , DuckGame.Rectangle? sourceRectangle , DuckGame.Color color , float rotation , DuckGame.Vec2 origin , DuckGame.Vec2 scale , int effects , DuckGame.Depth depth = default )
-		{
-		}
-
-		public int OnStartStaticDraw()
-		{
-			return 0;
-		}
-
-		public void OnFinishStaticDraw()
-		{
-		}
-
-		public void OnStaticDraw( int id )
-		{
-		}
-
-		public bool WantsTexture( object tex )
-		{
-			return false;
-		}
-
-		public void SendTextureData( object tex , int width , int height , byte [] data )
-		{
-		}
-
-		public void OnStartDrawingObject( object obj )
-		{
-		}
-
-		public void OnFinishDrawingObject( object obj )
-		{
-		}
 	}
 }

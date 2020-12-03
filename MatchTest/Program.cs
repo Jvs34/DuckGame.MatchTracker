@@ -1,16 +1,22 @@
-﻿using MatchFlatJsonDatabase;
-using MatchTracker;
+﻿using MatchTracker;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-using System;
 using System.IO;
-using System.Net.Http;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MatchTest
 {
 	internal static class Program
 	{
+		private static void Mainfff( string [] args )
+		{
+			System.Text.Json.Utf8JsonReader _jsonReader = default;
+			if( !_jsonReader.Read() )
+			{
+
+			}
+		}
+
 		private static async Task Main( string [] args )
 		{
 			var fuckshit = "2018-04-28 20-19-04";
@@ -20,6 +26,10 @@ namespace MatchTest
 				SharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( Path.Combine( "Settings" , "shared.json" ) ) )
 			};
 			await db.Load();
+
+
+			fuckshit = ( await db.GetAll<RoundData>() ).Last();
+
 
 			var jsondb = new FlatJsonNetGameDatabase()
 			//var jsondb = new FlatJsonGameDatabase()
@@ -32,7 +42,7 @@ namespace MatchTest
 
 			await jsondb.Load();
 
-			await jsondb.SaveData( await db.GetData<RoundData>( fuckshit ) );
+			//await jsondb.SaveData( await db.GetData<RoundData>( fuckshit ) );
 
 			var roundData = await jsondb.GetData<RoundData>( fuckshit );
 			int i = 5;
