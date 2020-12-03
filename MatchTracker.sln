@@ -22,10 +22,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchShared", "MatchShared\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchTest", "MatchTest\MatchTest.csproj", "{D84BD08E-C03F-4AD8-B1D0-F3CB02EA5D98}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchShared.Replay", "MatchShared.Replay\MatchShared.Replay.csproj", "{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchDiscordRecorder", "MatchDiscordRecorder\MatchDiscordRecorder.csproj", "{F966E071-3A9B-40D6-AC66-C5642059EF92}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchOctoKitDatabase", "MatchOctoKitDatabase\MatchOctoKitDatabase.csproj", "{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchMergerTest", "MatchMergerTest\MatchMergerTest.csproj", "{DA9315A2-D705-49F6-8818-D329DDDBA1A3}"
@@ -81,22 +77,6 @@ Global
 		{D84BD08E-C03F-4AD8-B1D0-F3CB02EA5D98}.Release|Any CPU.Build.0 = Release|Any CPU
 		{D84BD08E-C03F-4AD8-B1D0-F3CB02EA5D98}.Release|x86.ActiveCfg = Release|Any CPU
 		{D84BD08E-C03F-4AD8-B1D0-F3CB02EA5D98}.Release|x86.Build.0 = Release|Any CPU
-		{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}.Debug|x86.Build.0 = Debug|Any CPU
-		{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}.Release|x86.ActiveCfg = Release|Any CPU
-		{5D2C9F0D-F2BE-4C14-8D13-BB1EF430624C}.Release|x86.Build.0 = Release|Any CPU
-		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Debug|x86.Build.0 = Debug|Any CPU
-		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Release|x86.ActiveCfg = Release|Any CPU
-		{F966E071-3A9B-40D6-AC66-C5642059EF92}.Release|x86.Build.0 = Release|Any CPU
 		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D42BFA8A-8DC5-4786-BC94-ECAA00EDB59A}.Debug|x86.ActiveCfg = Debug|Any CPU

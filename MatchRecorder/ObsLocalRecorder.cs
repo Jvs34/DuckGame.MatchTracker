@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace MatchRecorder
 {
-	internal class ObsRecorder : IRecorder
+	internal class ObsLocalRecorder : IRecorder
 	{
 		private MatchRecorderHandler MainHandler { get; }
 		private DateTime nextObsCheck;
@@ -31,7 +31,7 @@ namespace MatchRecorder
 
 		public RecordingType ResultingRecordingType { get; set; }
 
-		public ObsRecorder( MatchRecorderHandler parent )
+		public ObsLocalRecorder( MatchRecorderHandler parent )
 		{
 			ResultingRecordingType = RecordingType.Video;
 			MainHandler = parent;
@@ -48,7 +48,7 @@ namespace MatchRecorder
 			nextObsCheck = DateTime.MinValue;
 		}
 
-		public void StartRecording() => requestedRecordingStart = true;
+		public void StartRecording( bool matchrecording = false ) => requestedRecordingStart = true;
 
 		public void StopRecording() => requestedRecordingStop = true;
 

@@ -47,7 +47,7 @@ namespace MatchRecorder
 			Configuration.Bind( BotSettings );
 			Configuration.Bind( OBSSettings );
 
-			RecorderHandler = new ObsRecorder( this );
+			RecorderHandler = new ObsLocalRecorder( this );
 		}
 
 		//only record game levels for now since we're kind of tied to the gounvirtual stuff
@@ -77,7 +77,7 @@ namespace MatchRecorder
 			return CurrentRound;
 		}
 
-		public void StartRecording()
+		public void StartRecording( bool matchrecording = false )
 		{
 			HUD.CloseCorner( HUDCorner.TopLeft );
 			RecorderHandler?.StartRecording();
@@ -143,7 +143,7 @@ namespace MatchRecorder
 			return newRoundData;
 		}
 
-		public void StopRecording()
+		public void StopRecording( bool matchrecording = false )
 		{
 			if( CurrentRound != null )
 			{
@@ -152,8 +152,6 @@ namespace MatchRecorder
 			}
 
 			RecorderHandler?.StopRecording();
-
-
 		}
 
 		public void TryCollectingMatchData()
@@ -440,7 +438,7 @@ namespace MatchRecorder
 		}
 	}
 	#region HOOKS
-
+	#pragma warning disable IDE0051 // Remove unused private members
 	//save the video and stop recording
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
 	internal static class Level_SetCurrent
@@ -449,16 +447,14 @@ namespace MatchRecorder
 		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
 		private static void Prefix( Level value )
 		{
-
 			if( Level.current is null && value != null )
 			{
 				//at the game startup, make screenshots of whatever map we need a preview of
 				//MatchRecorderMod.Recorder?.TryTakingScreenshots();
 			}
 
-
 			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
-			if( MatchRecorderMod.Recorder.IsRecording )
+			if( MatchRecorderMod.Recorder?.IsRecording == true )
 			{
 				MatchRecorderMod.Recorder?.StopRecording();
 			}
@@ -469,7 +465,7 @@ namespace MatchRecorder
 			{
 				Level oldValue = Level.current;
 				Level newValue = value;
-				if( oldValue is RockScoreboard && MatchRecorderMod.Recorder.IsLevelRecordable( newValue ) )
+				if( oldValue is RockScoreboard && MatchRecorderMod.Recorder?.IsLevelRecordable( newValue ) == true )
 				{
 					MatchRecorderMod.Recorder?.TryCollectingMatchData();
 				}
@@ -511,6 +507,6 @@ namespace MatchRecorder
 			}
 		}
 	}
-
+	#pragma warning restore IDE0051 // Remove unused private members
 	#endregion HOOKS
 }

@@ -7,7 +7,7 @@ namespace MatchRecorder
 	{
 		bool IsRecording { get; }
 		RecordingType ResultingRecordingType { get; set; }
-		void StartRecording();
+		void StartRecording( bool matchrecording = false );
 		void StopRecording();
 		void Update();
 	}
