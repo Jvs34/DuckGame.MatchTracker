@@ -16,18 +16,12 @@ namespace MatchRecorder
 		private bool requestedRecordingStart;
 		private bool requestedRecordingStop;
 
-		public bool IsRecording
+		public bool IsRecording => recordingState switch
 		{
-			get
-			{
-				return recordingState switch
-				{
-					OutputState.Started or OutputState.Starting => true,
-					OutputState.Stopped or OutputState.Stopping => false,
-					_ => false,
-				};
-			}
-		}
+			OutputState.Started or OutputState.Starting => true,
+			OutputState.Stopped or OutputState.Stopping => false,
+			_ => false,
+		};
 
 		public RecordingType ResultingRecordingType { get; set; }
 
@@ -167,19 +161,8 @@ namespace MatchRecorder
 			}
 		}
 
-		private void OnConnected( object sender , EventArgs e )
-		{
-			MainHandler.ShowHUDmessage( "Connected to OBS." );
-		}
-
-		private void OnDisconnected( object sender , EventArgs e )
-		{
-			MainHandler.ShowHUDmessage( "Disconnected from OBS." );
-		}
-
-		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type )
-		{
-			recordingState = type;
-		}
+		private void OnConnected( object sender , EventArgs e ) => MainHandler.ShowHUDmessage( "Connected to OBS." );
+		private void OnDisconnected( object sender , EventArgs e ) => MainHandler.ShowHUDmessage( "Disconnected from OBS." );
+		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type ) => recordingState = type;
 	}
 }
