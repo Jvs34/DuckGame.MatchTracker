@@ -25,12 +25,10 @@ namespace MatchTracker
 		/// </summary>
 		public bool IsOnlineMap { get; set; }
 
-
 		/// <summary>
 		/// Description of the level, if there's any
 		/// </summary>
 		public string Description { get; set; }
-
 
 		/// <summary>
 		/// Author of the level, if there's any

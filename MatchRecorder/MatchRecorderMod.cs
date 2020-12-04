@@ -17,26 +17,6 @@ namespace MatchRecorder
 			AppDomain.CurrentDomain.AssemblyResolve += ModResolve;
 		}
 
-#if DISCORDRECORDER
-		private void CopyDiscordSharpPlusDependencies( string modPath )
-		{
-			var duckgameDir = Directory.GetCurrentDirectory();
-
-			foreach( var fileName in MatchDiscordRecorder.DiscordRecorder.DSharpRequirements )
-			{
-				//can't exactly do it any other way, duck game mods are loaded by copying the dll into memory
-				var thirdPartyFile = Path.Combine( modPath , "ThirdParty" , fileName );
-				var outputFile = Path.Combine( duckgameDir , fileName );
-
-				if( File.Exists( thirdPartyFile ) && !File.Exists( outputFile ) )
-				{
-					File.Copy( thirdPartyFile , outputFile );
-				}
-
-			}
-		}
-#endif
-
 		~MatchRecorderMod()
 		{
 			AppDomain.CurrentDomain.AssemblyResolve -= ModResolve;
@@ -44,9 +24,6 @@ namespace MatchRecorder
 
 		protected override void OnPreInitialize()
 		{
-#if DISCORDRECORDER
-			CopyDiscordSharpPlusDependencies( configuration.directory );
-#endif
 			Recorder = new MatchRecorderHandler( configuration.directory );
 			HarmonyInstance.Create( GetType().Namespace ).PatchAll( Assembly.GetExecutingAssembly() );
 		}
@@ -56,7 +33,6 @@ namespace MatchRecorder
 			string dllFolder = Path.GetFileNameWithoutExtension( GetType().Assembly.ManifestModule?.ScopeName ?? GetType().Namespace );
 			string cleanName = args.Name.Split( ',' ) [0];
 			//now try to load the requested assembly
-
 
 			string assemblyFolder = Path.Combine( configuration.directory , dllFolder , "Output" , "net471" );
 			string assemblyPath = Path.GetFullPath( Path.Combine( assemblyFolder , cleanName + ".dll" ) );

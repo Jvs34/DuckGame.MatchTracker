@@ -18,14 +18,10 @@ namespace MatchRecorder
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
 		public IGameDatabase GameDatabase { get; }
-		public bool IsRecording => RecorderHandler.IsRecording;
+		public bool IsRecordingRound => RecorderHandler.IsRecording;
+		public bool IsRecordingMatch { get; set; }
 		public string ModPath { get; }
 		private IConfigurationRoot Configuration { get; }
-
-		/// <summary>
-		/// Only used if on the discord steam branch, or the discord version itself I assume?
-		/// </summary>
-		private static readonly PropertyInfo onlineIDField = typeof( Profile ).GetProperty( "onlineID" );
 
 		public MatchRecorderHandler( string modPath )
 		{
@@ -50,10 +46,38 @@ namespace MatchRecorder
 			RecorderHandler = new ObsLocalRecorder( this );
 		}
 
-		//only record game levels for now since we're kind of tied to the gounvirtual stuff
-		public bool IsLevelRecordable( Level level )
+		public void StartRecordingRound()
 		{
-			return level is GameLevel;
+			RecorderHandler?.StartRecordingRound();
+		}
+
+		public void StopRecordingRound()
+		{
+			if( CurrentRound != null )
+			{
+				ShowHUDmessage( $"Recorded {CurrentRound.Name}" );
+			}
+
+			RecorderHandler?.StopRecordingRound();
+		}
+
+		internal void StartRecordingMatch()
+		{
+			if( CurrentRound != null )
+			{
+				ShowHUDmessage( $"Recorded {CurrentRound.Name}" );
+			}
+			RecorderHandler?.StartRecordingMatch();
+		}
+
+		internal void StopRecordingMatch()
+		{
+			if( CurrentMatch != null )
+			{
+				ShowHUDmessage( $"Recorded Match{CurrentMatch.Name}" );
+			}
+
+			RecorderHandler?.StopRecordingMatch();
 		}
 
 		public RoundData StartCollectingRoundData( DateTime startTime )
@@ -75,38 +99,6 @@ namespace MatchRecorder
 			}
 
 			return CurrentRound;
-		}
-
-		public void StartRecording( bool matchrecording = false )
-		{
-			HUD.CloseCorner( HUDCorner.TopLeft );
-			RecorderHandler?.StartRecording();
-		}
-
-		public void AddTeamAndPlayerData( IWinner winnerObject )
-		{
-			foreach( Team team in Teams.active )
-			{
-				winnerObject.Teams.Add( CreateTeamDataFromTeam( team , winnerObject ) );
-			}
-
-			foreach( Profile pro in Profiles.activeNonSpectators )
-			{
-				PlayerData ply = CreatePlayerDataFromProfile( pro , winnerObject );
-				winnerObject.Players.Add( ply.DatabaseIndex );
-			}
-
-			foreach( TeamData teamData in winnerObject.Teams )
-			{
-				Team team = Teams.active.Find( x => x.name == teamData.HatName );
-				if( team != null )
-				{
-					foreach( Profile pro in team.activeProfiles )
-					{
-						teamData.Players.Add( CreatePlayerDataFromProfile( pro , winnerObject ).DatabaseIndex );
-					}
-				}
-			}
 		}
 
 		public RoundData StopCollectingRoundData( DateTime endTime )
@@ -143,41 +135,88 @@ namespace MatchRecorder
 			return newRoundData;
 		}
 
-		public void StopRecording( bool matchrecording = false )
+		public MatchData StartCollectingMatchData()
 		{
-			if( CurrentRound != null )
+			CurrentMatch = new MatchData
 			{
-				var cornerMessage = HUD.AddCornerMessage( HUDCorner.TopLeft , $"Recorded {CurrentRound.Name}" );
-				cornerMessage.slide = 1;
-			}
+				TimeStarted = DateTime.Now ,
+				Name = GameDatabase.SharedSettings.DateTimeToString( DateTime.Now ) ,
+			};
 
-			RecorderHandler?.StopRecording();
+			return CurrentMatch;
 		}
 
-		public void TryCollectingMatchData()
+		public MatchData StopCollectingMatchData()
 		{
-			//try saving the match if there's one and it's got at least one round
-			if( CurrentMatch?.Rounds.Count > 0 )
+			if( CurrentMatch == null )
 			{
-				StopCollectingMatchData();
+				return null;
 			}
 
-			//try starting to collect match data regardless, it'll only be saved if there's at least one round later on
-			StartCollectingMatchData();
+			CurrentMatch.TimeEnded = DateTime.Now;
+
+			AddTeamAndPlayerData( CurrentMatch );
+
+			Team winner = null;
+
+			if( Teams.winning.Count > 0 )
+			{
+				winner = Teams.winning.FirstOrDefault();
+			}
+
+			if( winner != null )
+			{
+				CurrentMatch.Winner = CreateTeamDataFromTeam( winner , CurrentMatch );
+			}
+
+			GameDatabase.SaveData( CurrentMatch ).Wait();
+			GameDatabase.Add( CurrentMatch ).Wait();
+
+			MatchData newMatchData = CurrentMatch;
+
+			CurrentMatch = null;
+
+			return newMatchData;
 		}
 
-		public void Update()
+		public void Update() => RecorderHandler?.Update();
+
+		#region UTILITY
+
+		public void ShowHUDmessage( string message , float lifetime = 1f )
 		{
-#if DEBUGSHIT
-			if( Keyboard.Down( Keys.LeftShift ) && Keyboard.Pressed( Keys.D0 ) )
+			var cornerMessage = HUD.AddCornerMessage( HUDCorner.TopLeft , message );
+			cornerMessage.slide = 1;
+			cornerMessage.willDie = true;
+			cornerMessage.life = lifetime;
+		}
+
+		public bool IsLevelRecordable( Level level ) => level is GameLevel;
+
+		public void AddTeamAndPlayerData( IWinner winnerObject )
+		{
+			foreach( Team team in Teams.active )
 			{
-				var levels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
-				//TryTakingScreenshots();
+				winnerObject.Teams.Add( CreateTeamDataFromTeam( team , winnerObject ) );
 			}
-#endif
 
+			foreach( Profile pro in Profiles.activeNonSpectators )
+			{
+				PlayerData ply = CreatePlayerDataFromProfile( pro , winnerObject );
+				winnerObject.Players.Add( ply.DatabaseIndex );
+			}
 
-			RecorderHandler?.Update();
+			foreach( TeamData teamData in winnerObject.Teams )
+			{
+				Team team = Teams.active.Find( x => x.name == teamData.HatName );
+				if( team != null )
+				{
+					foreach( Profile pro in team.activeProfiles )
+					{
+						teamData.Players.Add( CreatePlayerDataFromProfile( pro , winnerObject ).DatabaseIndex );
+					}
+				}
+			}
 		}
 
 		public void TryTakingScreenshots()
@@ -238,41 +277,6 @@ namespace MatchRecorder
 			return screenshot;
 		}
 
-		/*
-		private void TryTakingScreenshots()
-		{
-			string levelPath = Path.Combine( GameDatabase.SharedSettings.GetRecordingFolder() , GameDatabase.SharedSettings.LevelsPreviewFolder );
-
-			var levels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
-
-			foreach( string levelid in levels )
-			{
-				DuckGame.LevelData levelData = Content.GetLevel( levelid , LevelLocation.Content );
-
-				var rtTest = Content.GeneratePreview( levelid , null , true );
-
-				var imageData = rtTest.GetData();
-
-				int w = rtTest.width;
-				int h = rtTest.height;
-
-				System.Drawing.Bitmap pic = new System.Drawing.Bitmap( w , h , System.Drawing.Imaging.PixelFormat.Format32bppArgb );
-
-				for( int x = 0; x < w; x++ )
-				{
-					for( int y = 0; y < h; y++ )
-					{
-						int arrayIndex = ( y * w ) + x;
-						DuckGame.Color c = imageData [arrayIndex];
-						pic.SetPixel( x , y , System.Drawing.Color.FromArgb( c.a , c.r , c.g , c.b ) );
-					}
-				}
-
-				pic.Save( Path.Combine( levelPath , $"{levelid}.png" ) , System.Drawing.Imaging.ImageFormat.Png );
-			}
-		}
-		*/
-
 		public void GatherLevelData( Level level )
 		{
 			string levelID = level.level;
@@ -289,39 +293,9 @@ namespace MatchRecorder
 					GameDatabase.Add( levelData ).Wait();
 				}
 			}
-
 		}
 
-		/*
-		public void GatherLevelData()
-		{
-			MatchTracker.GlobalData globalData = GameDatabase.GetData<MatchTracker.GlobalData>().Result;
-
-			var deathmatchLevels = Content.GetLevels( "deathmatch" , LevelLocation.Content );
-
-			//
-			//go through each level and see if its info has been added to the database
-
-			foreach( string levelId in deathmatchLevels )
-			{
-				MatchTracker.LevelData mtLevelData = globalData.Levels.FirstOrDefault( x => x.LevelName == levelId );
-
-				if( mtLevelData == null )
-				{
-					mtLevelData = CreateLevelDataFromLevel( levelId );
-					if( mtLevelData != null )
-					{
-						globalData.Levels.Add( mtLevelData );
-					}
-				}
-
-			}
-
-			GameDatabase.SaveData( globalData );
-		}
-		*/
-
-		private MatchTracker.LevelData CreateLevelDataFromLevel( string levelId )
+		private static MatchTracker.LevelData CreateLevelDataFromLevel( string levelId )
 		{
 			DuckGame.LevelData dgLevelData = Content.GetLevel( levelId );
 
@@ -338,12 +312,9 @@ namespace MatchRecorder
 
 		private PlayerData CreatePlayerDataFromProfile( Profile profile , IWinner winnerObject )
 		{
+			string onlineID = profile.steamID.ToString();
 
-			string discordOrSteamID = onlineIDField != null
-				? onlineIDField.GetValue( profile ).ToString()
-				: profile.steamID.ToString();
-
-			string userId = Network.isActive ? discordOrSteamID : profile.id;
+			string userId = Network.isActive ? onlineID : profile.id;
 
 			PlayerData pd = GameDatabase.GetData<PlayerData>( userId ).Result;
 
@@ -392,53 +363,11 @@ namespace MatchRecorder
 
 			return td;
 		}
+		#endregion UTILITY
 
-		private MatchData StartCollectingMatchData()
-		{
-			CurrentMatch = new MatchData
-			{
-				TimeStarted = DateTime.Now ,
-				Name = GameDatabase.SharedSettings.DateTimeToString( DateTime.Now ) ,
-			};
-
-			return CurrentMatch;
-		}
-
-		private MatchData StopCollectingMatchData()
-		{
-			if( CurrentMatch == null )
-			{
-				return null;
-			}
-
-			CurrentMatch.TimeEnded = DateTime.Now;
-
-			AddTeamAndPlayerData( CurrentMatch );
-
-			Team winner = null;
-
-			if( Teams.winning.Count > 0 )
-			{
-				winner = Teams.winning.FirstOrDefault();
-			}
-
-			if( winner != null )
-			{
-				CurrentMatch.Winner = CreateTeamDataFromTeam( winner , CurrentMatch );
-			}
-
-			GameDatabase.SaveData( CurrentMatch ).Wait();
-			GameDatabase.Add( CurrentMatch ).Wait();
-
-			MatchData newMatchData = CurrentMatch;
-
-			CurrentMatch = null;
-
-			return newMatchData;
-		}
 	}
 	#region HOOKS
-	#pragma warning disable IDE0051 // Remove unused private members
+#pragma warning disable IDE0051 // Remove unused private members
 	//save the video and stop recording
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
 	internal static class Level_SetCurrent
@@ -453,22 +382,17 @@ namespace MatchRecorder
 				//MatchRecorderMod.Recorder?.TryTakingScreenshots();
 			}
 
-			//regardless if the current level can be recorded or not, we're done with the current recording so just save and stop
-			if( MatchRecorderMod.Recorder?.IsRecording == true )
+			//regardless if the current level can be recorded or not, we're done with the current round recording so just save and stop
+			if( MatchRecorderMod.Recorder?.IsRecordingRound == true )
 			{
-				MatchRecorderMod.Recorder?.StopRecording();
+				MatchRecorderMod.Recorder?.StopRecordingRound();
 			}
 
-			//only really useful in multiplayer, since continuing a match from the endgame screen doesn't trigger ResetMatchStuff on other clients
-			//so unfortunately we have to do this hack
-			if( Network.isActive && Network.isClient && !Level.core.gameInProgress )
+			//seems like we launched a match just now, start recording
+			if( MatchRecorderMod.Recorder?.IsLevelRecordable( value ) == true && MatchRecorderMod.Recorder?.IsRecordingMatch == false )
 			{
-				Level oldValue = Level.current;
-				Level newValue = value;
-				if( oldValue is RockScoreboard && MatchRecorderMod.Recorder?.IsLevelRecordable( newValue ) == true )
-				{
-					MatchRecorderMod.Recorder?.TryCollectingMatchData();
-				}
+				MatchRecorderMod.Recorder.IsRecordingMatch = true;
+				MatchRecorderMod.Recorder.StartRecordingMatch();
 			}
 		}
 	}
@@ -480,7 +404,11 @@ namespace MatchRecorder
 	{
 		private static void Prefix()
 		{
-			MatchRecorderMod.Recorder?.TryCollectingMatchData();
+			if( MatchRecorderMod.Recorder?.IsRecordingMatch == true )
+			{
+				MatchRecorderMod.Recorder.IsRecordingMatch = false;
+				MatchRecorderMod.Recorder.StopRecordingMatch();
+			}
 		}
 	}
 
@@ -493,7 +421,7 @@ namespace MatchRecorder
 		}
 	}
 
-	//start recording
+	//start recording a round
 	[HarmonyPatch( typeof( VirtualTransition ) , nameof( VirtualTransition.GoUnVirtual ) )]
 	internal static class VirtualTransition_GoUnVirtual
 	{
@@ -502,11 +430,12 @@ namespace MatchRecorder
 			//only bother if the current level is something we care about
 			if( MatchRecorderMod.Recorder.IsLevelRecordable( Level.current ) )
 			{
-				MatchRecorderMod.Recorder?.StartRecording();
+				MatchRecorderMod.Recorder?.StartRecordingRound();
 				MatchRecorderMod.Recorder.GatherLevelData( Level.current );
 			}
 		}
 	}
-	#pragma warning restore IDE0051 // Remove unused private members
+
+#pragma warning restore IDE0051 // Remove unused private members
 	#endregion HOOKS
 }

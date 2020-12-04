@@ -1,5 +1,4 @@
-﻿using Steamworks;
-using System;
+﻿using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace MatchRecorderOOP
@@ -8,11 +7,7 @@ namespace MatchRecorderOOP
 	{
 		static async Task Main( string [] args )
 		{
-			SteamClient.Init( 312530 );
 
-			Console.WriteLine( "Hello World!" );
-
-			Console.ReadLine();
 		}
 	}
 }

@@ -48,9 +48,13 @@ namespace MatchRecorder
 			nextObsCheck = DateTime.MinValue;
 		}
 
-		public void StartRecording( bool matchrecording = false ) => requestedRecordingStart = true;
+		public void StartRecordingMatch() => MainHandler.StartCollectingMatchData();
 
-		public void StopRecording() => requestedRecordingStop = true;
+		public void StopRecordingMatch() => MainHandler.StopCollectingMatchData();
+
+		public void StartRecordingRound() => requestedRecordingStart = true;
+
+		public void StopRecordingRound() => requestedRecordingStop = true;
 
 		public void TryConnect()
 		{
@@ -60,7 +64,7 @@ namespace MatchRecorder
 			}
 			catch( Exception )
 			{
-				DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Failed connecting to OBS. Check Settings/obs.json" );
+				MainHandler.ShowHUDmessage( "Failed connecting to OBS. Check Settings/obs.json" );
 			}
 		}
 
@@ -143,17 +147,13 @@ namespace MatchRecorder
 							try
 							{
 								DateTime recordingTime = DateTime.Now;
-
 								string recordingTimeString = MainHandler.GameDatabase.SharedSettings.DateTimeToString( recordingTime );
-
 								string roundPath = MainHandler.GameDatabase.SharedSettings.GetPath<RoundData>( recordingTimeString );
 
 								//try setting the recording folder first, then create it before we start recording
 
 								Directory.CreateDirectory( roundPath );
-
 								obsHandler.SetRecordingFolder( roundPath );
-
 								obsHandler.StartRecording();
 								requestedRecordingStart = false;
 								MainHandler.StartCollectingRoundData( recordingTime );
@@ -169,12 +169,12 @@ namespace MatchRecorder
 
 		private void OnConnected( object sender , EventArgs e )
 		{
-			DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Connected to OBS!!!" );
+			MainHandler.ShowHUDmessage( "Connected to OBS." );
 		}
 
 		private void OnDisconnected( object sender , EventArgs e )
 		{
-			DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopRight , "Disconnected from OBS!!!" );
+			MainHandler.ShowHUDmessage( "Disconnected from OBS." );
 		}
 
 		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type )
