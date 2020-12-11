@@ -80,14 +80,6 @@ namespace MatchUploader
 
 		private void CreateUploaders()
 		{
-			//always create the calendar one
-			/*
-			{
-				Uploader calendar = new CalendarUploader( new UploaderInfo() , GameDatabase , UploaderSettings );
-				Uploaders.Add( calendar );
-			}
-			*/
-
 			//youtube uploader
 			switch( UploaderSettings.VideoMirrorUpload )
 			{

@@ -29,7 +29,9 @@ namespace MatchUploader
 			Service = new YouTubeService( new BaseClientService.Initializer()
 			{
 				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( UploaderSettings.Secrets ,
-					new [] { YouTubeService.Scope.Youtube } ,
+					new [] {
+						YouTubeService.Scope.Youtube
+					} ,
 					"youtube" ,
 					CancellationToken.None ,
 					UploaderSettings.DataStore
@@ -51,7 +53,7 @@ namespace MatchUploader
 		protected override async Task FetchUploads()
 		{
 			ConcurrentBag<RoundData> uploadableRounds = new ConcurrentBag<RoundData>();
-			
+
 			//check if there's any videos to upload singularly
 			await DB.IterateOverAll<RoundData>( async ( roundData ) =>
 			{
@@ -133,7 +135,7 @@ namespace MatchUploader
 
 				//TODO:Maybe it's possible to create a throttable request by extending the class of this one and initializing it with this one's values
 				var videosInsertRequest = Service.Videos.Insert( videoData , "snippet,status,recordingDetails" , videoStream , "video/*" );
-				videosInsertRequest.ChunkSize = ResumableUpload.MinimumChunkSize;
+				videosInsertRequest.ChunkSize = ResumableUpload.DefaultChunkSize;
 				videosInsertRequest.ProgressChanged += OnYoutubeUploadProgress;
 				videosInsertRequest.ResponseReceived += OnYoutubeUploadFinished;
 				videosInsertRequest.UploadSessionData += OnYoutubeUploadStart;
@@ -158,7 +160,6 @@ namespace MatchUploader
 				videosInsertRequest.ProgressChanged -= OnYoutubeUploadProgress;
 				videosInsertRequest.ResponseReceived -= OnYoutubeUploadFinished;
 				videosInsertRequest.UploadSessionData -= OnYoutubeUploadStart;
-
 
 				//fetch the data again if it was modified
 				roundData = await DB.GetData<RoundData>( upload.DataName );

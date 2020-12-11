@@ -2,14 +2,14 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <!--<ProjectReference Include="..\MatchFlatJsonDatabase\MatchFlatJsonDatabase.csproj" />-->
     <ProjectReference Include="..\MatchOctoKitDatabase\MatchOctoKitDatabase.csproj" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />

@@ -58,7 +58,7 @@ namespace MatchBot
 				TokenType = TokenType.Bot ,
 				Token = BotSettings.DiscordToken ,
 #if DEBUG
-				LogLevel = LogLevel.Debug ,
+				MinimumLogLevel = Microsoft.Extensions.Logging.LogLevel.Debug ,
 #endif
 			} );
 

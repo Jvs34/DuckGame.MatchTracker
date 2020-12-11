@@ -15,9 +15,9 @@ namespace MatchUploader
 				AppContext.SetSwitch( "System.Net.Http.UseSocketsHttpHandler" , false );
 			}
 
-			UploaderScheduler scheduler = new UploaderScheduler( args );
+			var uploader = new MatchUploaderHandler( args );
 
-			await scheduler.RunAsync();
+			await uploader.RunAsync();
 		}
 	}
 }

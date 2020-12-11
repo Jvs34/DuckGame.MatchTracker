@@ -155,7 +155,7 @@ namespace MatchBot
 
 			if( itemData is IWinner winner )
 			{
-				var playerWinners = await DB.GetAllData<PlayerData>( winner.GetWinners().ToArray() );
+				var playerWinners = await DB.GetAllData<PlayerData>( winner.GetWinners() );
 
 				string winnerName = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
 
@@ -188,12 +188,9 @@ namespace MatchBot
 				{
 					case VideoType.VideoLink:
 						{
-							embed.Url = $"https://www.youtube.com/watch?v={videoUpload.YoutubeUrl}";
-
-							embed.ThumbnailUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg";
-
-							//embed.ImageUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg";
-							//embed.ThumbnailUrl = $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/0.jpg";
+							embed
+								.WithUrl( $"https://www.youtube.com/watch?v={videoUpload.YoutubeUrl}" )
+								.WithThumbnail( $"https://img.youtube.com/vi/{videoUpload.YoutubeUrl}/maxresdefault.jpg" );
 						}
 						break;
 

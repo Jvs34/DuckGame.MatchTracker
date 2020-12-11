@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -51,6 +52,52 @@ namespace MatchTracker
 			}
 
 			return mainCollection;
+		}
+
+		public static async Task<Dictionary<string , Dictionary<string , IDatabaseEntry>>> GetBackupAllOut( this IGameDatabase db )
+		{
+			var backupTasks = new List<Task<Dictionary<string , IDatabaseEntry>>>()
+			{
+				db.GetBackup<EntryListData>(),
+				db.GetBackup<RoundData>(),
+				db.GetBackup<MatchData>(),
+				db.GetBackup<LevelData>(),
+				db.GetBackup<TagData>(),
+				db.GetBackup<PlayerData>(),
+			};
+
+			await Task.WhenAll( backupTasks );
+
+			return new Dictionary<string , Dictionary<string , IDatabaseEntry>>()
+			{
+				[nameof( EntryListData )] = await backupTasks [0] ,
+				[nameof( RoundData )] = await backupTasks [1] ,
+				[nameof( MatchData )] = await backupTasks [2] ,
+				[nameof( LevelData )] = await backupTasks [3] ,
+				[nameof( TagData )] = await backupTasks [4] ,
+				[nameof( PlayerData )] = await backupTasks [5] ,
+			};
+		}
+
+		public static async Task<Dictionary<string , IDatabaseEntry>> GetBackup<T>( this IGameDatabase db ) where T : IDatabaseEntry
+		{
+			var entryNames = await db.GetAll<T>();
+			var dataTasks = new List<Task<T>>();
+
+			foreach( var entryName in entryNames )
+			{
+				dataTasks.Add( db.GetData<T>( entryName ) );
+			}
+
+			await Task.WhenAll( dataTasks );
+
+			var allData = dataTasks.Select( x =>
+			{
+				var value = x.Result;
+				return new KeyValuePair<string , IDatabaseEntry>( value.DatabaseIndex , value );
+			} ).ToDictionary( x => x.Key , x => x.Value );
+
+			return allData;
 		}
 
 		public static async Task ImportBackup( this IGameDatabase db , Dictionary<string , Dictionary<string , IDatabaseEntry>> backup )

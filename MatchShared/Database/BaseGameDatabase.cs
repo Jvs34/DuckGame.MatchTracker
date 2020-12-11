@@ -30,9 +30,9 @@ namespace MatchTracker
 		/// Loads everything from the EntryData tree
 		/// </summary>
 		/// <returns></returns>
-		protected virtual async Task LoadEverything()
+		protected virtual Task LoadEverything()
 		{
-
+			return Task.CompletedTask;
 		}
 
 		#region JSON

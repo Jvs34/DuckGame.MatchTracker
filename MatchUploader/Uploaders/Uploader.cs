@@ -112,7 +112,7 @@ namespace MatchUploader
 				await FetchUploads();
 			}
 
-			await UpdateStatus( $"{GetType().Name}: Uploading {Uploads.Count} rounds" );
+			await UpdateStatus( $"{GetType().Name}: Uploading {Uploads.Count} items" );
 
 			while( Uploads.Count > 0 && CanUpload() )
 			{

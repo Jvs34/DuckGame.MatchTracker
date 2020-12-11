@@ -11,7 +11,7 @@ namespace MatchTracker
 	public sealed class FlatJsonNetGameDatabase : IGameDatabase, IDisposable
 	{
 		private bool disposedValue;
-		public SharedSettings SharedSettings { get; set; }
+		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
 		public bool ReadOnly => false;
 		private Stream DatabaseStream { get; set; }
 		SemaphoreSlim StreamSemaphore { get; } = new SemaphoreSlim( 1 , 1 );
@@ -28,6 +28,11 @@ namespace MatchTracker
 
 		public async Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
 		{
+			if( string.IsNullOrEmpty( dataId ) )
+			{
+				dataId = typeof( T ).Name;
+			}
+
 			await StreamSemaphore.WaitAsync();
 			T data = default;
 			DatabaseStream.Position = 0;
@@ -96,7 +101,7 @@ namespace MatchTracker
 
 				//go through all the top properties, MatchData etc
 
-				
+
 
 
 
@@ -115,7 +120,7 @@ namespace MatchTracker
 
 		private async Task CopyJsonProperty( JsonReader reader , JsonWriter writer )
 		{
-
+			await Task.CompletedTask;
 		}
 
 		private async Task CopyDatabaseTo( string pathto )

@@ -8,9 +8,9 @@
   <ItemGroup>
     <PackageReference Include="Humanizer.Core" Version="2.8.26" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="3.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="3.1.2" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Xabe.FFmpeg" Version="4.3.1" />
     <PackageReference Include="Xabe.FFmpeg.Downloader" Version="4.3.1" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
