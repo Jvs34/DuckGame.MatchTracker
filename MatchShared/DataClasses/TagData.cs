@@ -2,7 +2,7 @@
 
 namespace MatchTracker
 {
-	public class TagData : IDatabaseEntry, IEquatable<TagData>
+	public class TagData : IDatabaseEntry
 	{
 		/// <summary>
 		/// Used for id of the emoji
@@ -14,17 +14,11 @@ namespace MatchTracker
 		/// </summary>
 		public string Emoji { get; set; }
 
-
 		/// <summary>
 		/// Stuff like :joy:
 		/// </summary>
 		public string FancyName { get; set; }
 
 		public string DatabaseIndex => Name;
-
-		public bool Equals( TagData other )
-		{
-			return Name.Equals( other.Name );
-		}
 	}
 }

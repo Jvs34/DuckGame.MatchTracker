@@ -58,7 +58,6 @@ namespace MatchUploader
 
 		public virtual void CreateDefaultInfo()
 		{
-
 		}
 
 		protected abstract Task<PendingUpload> CreatePendingUpload( IDatabaseEntry entry );

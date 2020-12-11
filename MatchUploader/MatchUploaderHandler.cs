@@ -54,15 +54,6 @@ namespace MatchUploader
 			Configuration.Bind( BotSettings );
 
 			GameDatabase = new FileSystemGameDatabase();
-
-			/*
-			GameDatabase = new OctoKitGameDatabase( NormalHttpClient , UploaderSettings.GitUsername , UploaderSettings.GitPassword )
-			{
-				InitialLoad = true ,
-			};
-			*/
-
-
 			Configuration.Bind( GameDatabase.SharedSettings );
 
 			if( !string.IsNullOrEmpty( BotSettings.DiscordToken ) )
@@ -99,13 +90,6 @@ namespace MatchUploader
 						VideoUploaders.TryAdd( VideoMirrorType.Youtube , youtube );
 					}
 					break;
-
-				case VideoMirrorType.Discord:
-					{
-
-					}
-					break;
-
 				default:
 					break;
 			}
@@ -137,15 +121,6 @@ namespace MatchUploader
 				await DiscordClient.ConnectAsync();
 				await DiscordClient.InitializeAsync();
 			}
-
-			/*
-			Microsoft.Graph.GraphServiceClient graphService = new Microsoft.Graph.GraphServiceClient(
-					"https://graph.microsoft.com/v1.0/" ,
-					new Microsoft.Graph.DelegateAuthenticationProvider(
-						async ( requestMessage ) => requestMessage.Headers.Authorization = new AuthenticationHeaderValue( "bearer" , userCredentials.AccessToken )
-					)
-				);
-			*/
 		}
 
 		public async Task LoadDatabase()
@@ -268,82 +243,5 @@ namespace MatchUploader
 
 			await DiscordClient.UpdateStatusAsync( new DSharpPlus.Entities.DiscordActivity( str ) );
 		}
-
-		/*
-		private async Task ProcessVideo( string roundName )
-		{
-			RoundData roundData = await GameDatabase.GetData<RoundData>( roundName );
-
-			string videoPath = GameDatabase.SharedSettings.GetRoundVideoPath( roundName );
-
-			string outputPath = Path.ChangeExtension( videoPath , "converted.mp4" );
-
-			if( roundData.RecordingType == RecordingType.Video && File.Exists( videoPath ) && !File.Exists( outputPath ) )
-			{
-				Console.WriteLine( $"Converting {roundName}" );
-
-				IMediaInfo mediaInfo = await FFmpeg.GetMediaInfo( videoPath );
-				IConversion newConversion = FFmpeg.Conversions.New();
-
-				bool abortConversion = mediaInfo.VideoStreams.Any( vid => vid.Bitrate < 6000000 );
-
-				//only continue if these are videos with 6 megabits of bitrate
-				if( abortConversion )
-				{
-					return;
-				}
-
-				foreach( var videostream in mediaInfo.VideoStreams )
-				{
-					newConversion.AddStream( videostream.SetCodec( VideoCodec.h264_nvenc ) );
-				}
-
-				foreach( var audiostream in mediaInfo.AudioStreams )
-				{
-					newConversion.AddStream( audiostream );
-				}
-
-				newConversion.SetOverwriteOutput( true );
-
-				newConversion.SetOutput( outputPath );
-
-				newConversion.AddParameter( "-crf 23 -maxrate 2000k -bufsize 4000k" );
-
-				newConversion.SetPreset( ConversionPreset.Slow );
-				Console.WriteLine( newConversion.Build() );
-				await newConversion.Start();
-
-				Console.WriteLine( outputPath );
-			}
-		}
-		*/
-
-		/*
-		private async Task ProcessVideoFiles()
-		{
-			string tempFFmpegFolder = Path.Combine( Path.GetTempPath() , "ffmpeg" );
-
-			if( !Directory.Exists( tempFFmpegFolder ) )
-			{
-				Directory.CreateDirectory( tempFFmpegFolder );
-				Console.WriteLine( $"Created directory {tempFFmpegFolder}" );
-			}
-
-			FFmpeg.SetExecutablesPath( tempFFmpegFolder );
-
-			await FFmpegDownloader.GetLatestVersion( FFmpegVersion.Official , FFmpeg.ExecutablesPath );
-
-
-
-			List<Task> processingTasks = new List<Task>();
-
-			foreach( string roundName in await GameDatabase.GetAll<RoundData>() )
-			{
-				processingTasks.Add( ProcessVideo( roundName ) );
-			}
-
-			await Task.WhenAll( processingTasks );
-		}
-		*/
 	}
 }

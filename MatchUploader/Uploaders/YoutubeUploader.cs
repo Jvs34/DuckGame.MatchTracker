@@ -453,7 +453,7 @@ namespace MatchUploader
 					{
 						DataName = roundData.DatabaseIndex ,
 						FileSize = videoInfo.Length ,
-						DataType = nameof( roundData )
+						DataType = nameof( RoundData )
 					};
 				}
 			}

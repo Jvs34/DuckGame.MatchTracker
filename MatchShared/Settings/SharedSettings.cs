@@ -22,15 +22,9 @@ namespace MatchTracker
 		public string LevelPreviewFile { get; set; }
 
 		public string DateTimeToString( DateTime time ) => time.ToString( TimestampFormat );
-
 		public static string Combine( bool isUrl , params string [] paths ) => isUrl ? Url.Combine( paths ) : Path.Combine( paths );
-
 		public string GetRecordingFolder( bool useUrl = false ) => useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
-
-		public string GetPath<T>( string databaseIndex , bool useUrl = false ) where T : IDatabaseEntry
-		{
-			return GetPath( typeof( T ).Name , databaseIndex , useUrl );
-		}
+		public string GetPath<T>( string databaseIndex , bool useUrl = false ) where T : IDatabaseEntry => GetPath( typeof( T ).Name , databaseIndex , useUrl );
 
 		public string GetPath( string typeName , string databaseIndex , bool useUrl = false )
 		{
@@ -42,26 +36,11 @@ namespace MatchTracker
 			return Combine( useUrl , GetRecordingFolder( useUrl ) , typeName , databaseIndex );
 		}
 
-		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) where T : IDatabaseEntry
-		{
-			return Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
-		}
-
-
-		public string GetDataPath( string typeName , string databaseIndex = "" , bool useUrl = false )
-		{
-			return Combine( useUrl , GetPath( typeName , databaseIndex , useUrl ) , DataName );
-		}
-
-
+		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) where T : IDatabaseEntry => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
+		public string GetDataPath( string typeName , string databaseIndex = "" , bool useUrl = false ) => Combine( useUrl , GetPath( typeName , databaseIndex , useUrl ) , DataName );
 		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
-
 		public string GetRoundVideoPath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundVideoFile );
-
-		public string GetRoundVoicePath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundVoiceFile );
-
-		public string GetRoundReplayPath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundReplayFileCompressed );
-
+		public string GetMatchVideoPath( string matchName , bool useUrl = false ) => Combine( useUrl , GetPath<MatchData>( matchName , useUrl ) , RoundVideoFile );
 		public string GetLevelPreviewPath( string levelName , bool useUrl = false ) => Combine( useUrl , GetPath<LevelData>( levelName , useUrl ) , LevelPreviewFile );
 	}
 }
