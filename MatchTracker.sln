@@ -26,8 +26,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchMergerTest", "MatchMer
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorderOOP", "MatchRecorderOOP\MatchRecorderOOP.csproj", "{317BD903-A8A0-4109-8428-8F833601B4DC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchFlatJsonDatabase", "MatchFlatJsonDatabase\MatchFlatJsonDatabase.csproj", "{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -91,14 +89,6 @@ Global
 		{317BD903-A8A0-4109-8428-8F833601B4DC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{317BD903-A8A0-4109-8428-8F833601B4DC}.Release|x86.ActiveCfg = Release|Any CPU
 		{317BD903-A8A0-4109-8428-8F833601B4DC}.Release|x86.Build.0 = Release|Any CPU
-		{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}.Debug|x86.Build.0 = Debug|Any CPU
-		{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}.Release|x86.ActiveCfg = Release|Any CPU
-		{E2D5EDC6-4265-40AA-AA75-CC36106C8C79}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
