@@ -39,7 +39,13 @@ namespace MatchBot
 
 			if( BotSettings.UseRemoteDatabase )
 			{
+				/*
 				DB = new OctoKitGameDatabase( HttpClient , Configuration ["GitUsername"] , Configuration ["GitPassword"] )
+				{
+					InitialLoad = true ,
+				};
+				*/
+				DB = new HttpGameDatabase( HttpClient )
 				{
 					InitialLoad = true ,
 				};

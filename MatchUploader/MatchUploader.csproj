@@ -16,7 +16,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DSharpPlus" Version="4.0.0-rc1" />
     <PackageReference Include="Google.Apis.YouTube.v3" Version="1.49.0.2168" />
     <PackageReference Include="Humanizer.Core" Version="2.8.26" />
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
@@ -25,8 +24,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Xabe.FFmpeg" Version="4.3.1" />
     <PackageReference Include="Xabe.FFmpeg.Downloader" Version="4.3.1" />
-    <PackageReference Include="YoutubeExplode" Version="5.1.8" />
-    <ProjectReference Include="..\MatchOctoKitDatabase\MatchOctoKitDatabase.csproj" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
   </ItemGroup>
 

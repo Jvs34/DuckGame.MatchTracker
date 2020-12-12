@@ -1,9 +1,5 @@
-﻿using Flurl;
-using Newtonsoft.Json.Linq;
-using System;
+﻿using System;
 using System.Diagnostics;
-using System.IO;
-using System.IO.Compression;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -18,21 +14,6 @@ namespace MatchTracker
 		public HttpGameDatabase( HttpClient httpClient )
 		{
 			Client = httpClient;
-		}
-
-		protected virtual async Task<Stream> GetZippedDatabaseStream()
-		{
-			//TODO: unhardcode this to not use github
-			string repositoryZipUrl = Url.Combine( "https://github.com" , SharedSettings.RepositoryUser , SharedSettings.RepositoryName , "archive" , "master.zip" );
-
-			var httpResponse = await Client.GetAsync( repositoryZipUrl , HttpCompletionOption.ResponseHeadersRead );
-
-			if( httpResponse.IsSuccessStatusCode )
-			{
-				return await httpResponse.Content.ReadAsStreamAsync();
-			}
-
-			return null;
 		}
 
 		public override async Task SaveData<T>( T data )
@@ -69,11 +50,13 @@ namespace MatchTracker
 			catch( HttpRequestException e )
 			{
 				Console.WriteLine( e );
-				System.Diagnostics.Debug.WriteLine( e );
 			}
 
 			return data;
 		}
 
+		public override void Dispose()
+		{
+		}
 	}
 }

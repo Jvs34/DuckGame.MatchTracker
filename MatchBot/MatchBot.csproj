@@ -16,7 +16,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="3.1.2" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="3.1.2" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
-    <ProjectReference Include="..\MatchOctoKitDatabase\MatchOctoKitDatabase.csproj" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
 
   </ItemGroup>

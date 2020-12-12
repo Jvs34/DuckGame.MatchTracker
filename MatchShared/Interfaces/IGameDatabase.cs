@@ -1,9 +1,10 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 namespace MatchTracker
 {
 
-	public interface IGameDatabase
+	public interface IGameDatabase : IDisposable
 	{
 		SharedSettings SharedSettings { get; set; }
 

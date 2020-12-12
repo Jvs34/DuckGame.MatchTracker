@@ -10,11 +10,11 @@ using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
 
-namespace MatchUploader.Uploaders
+namespace MatchUploader
 {
 	class MatchMerger : Uploader, IProgress<ProgressInfo>
 	{
-		public MatchMerger( UploaderInfo uploaderInfo , IGameDatabase gameDatabase , UploaderSettings settings ) : base( uploaderInfo , gameDatabase , settings )
+		public MatchMerger( IGameDatabase gameDatabase , UploaderSettings settings ) : base( gameDatabase , settings )
 		{
 		}
 
@@ -34,7 +34,7 @@ namespace MatchUploader.Uploaders
 			await FFmpegDownloader.GetLatestVersion( FFmpegVersion.Official , FFmpeg.ExecutablesPath , this );
 		}
 
-		public override void CreateDefaultInfo()
+		public override void SetupDefaultInfo()
 		{
 			Info.HasApiLimit = false;
 			Info.Retries = 0;

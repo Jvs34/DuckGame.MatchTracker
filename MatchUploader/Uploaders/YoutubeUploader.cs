@@ -19,7 +19,7 @@ namespace MatchUploader
 	{
 		public YouTubeService Service { get; private set; }
 
-		public YoutubeUploader( UploaderInfo uploaderInfo , IGameDatabase gameDatabase , UploaderSettings settings ) : base( uploaderInfo , gameDatabase , settings )
+		public YoutubeUploader( IGameDatabase gameDatabase , UploaderSettings settings ) : base( gameDatabase , settings )
 		{
 		}
 
@@ -28,13 +28,13 @@ namespace MatchUploader
 			string appName = GetType().Assembly.GetName().Name;
 			Service = new YouTubeService( new BaseClientService.Initializer()
 			{
-				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( UploaderSettings.Secrets ,
+				HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( UploaderSettings.GoogleSecrets ,
 					new [] {
 						YouTubeService.Scope.Youtube
 					} ,
 					"youtube" ,
 					CancellationToken.None ,
-					UploaderSettings.DataStore
+					UploaderSettings.GoogleDataStore
 				) ,
 				ApplicationName = appName ,
 				GZipEnabled = true ,
@@ -42,7 +42,7 @@ namespace MatchUploader
 			Service.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
 		}
 
-		public override void CreateDefaultInfo()
+		public override void SetupDefaultInfo()
 		{
 			Info.HasApiLimit = true;
 			Info.NextReset = TimeSpan.FromHours( 24 );

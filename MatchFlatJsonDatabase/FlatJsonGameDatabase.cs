@@ -10,7 +10,7 @@ using System.Threading.Tasks;
 
 namespace MatchFlatJsonDatabase
 {
-	public sealed class FlatJsonGameDatabase : IGameDatabase, IDisposable
+	public sealed class FlatJsonGameDatabase : IGameDatabase
 	{
 		private bool disposedValue;
 		public SharedSettings SharedSettings { get; set; }

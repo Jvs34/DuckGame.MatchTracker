@@ -4,6 +4,7 @@ namespace MatchUploader
 {
 	public class UploaderInfo
 	{
+		public bool Enabled { get; set; }
 		public bool HasBeenSetup { get; set; }
 
 		/// <summary>

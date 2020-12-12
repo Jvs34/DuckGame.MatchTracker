@@ -47,5 +47,9 @@ namespace MatchTracker
 
 			return data;
 		}
+
+		public override void Dispose()
+		{
+		}
 	}
 }

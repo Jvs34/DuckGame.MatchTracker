@@ -34,6 +34,7 @@ namespace MatchRecorder
 			string cleanName = args.Name.Split( ',' ) [0];
 			//now try to load the requested assembly
 
+			//TODO: check if there's any way to obtain this path in a better way
 			string assemblyFolder = Path.Combine( configuration.directory , dllFolder , "Output" , "net471" );
 			string assemblyPath = Path.GetFullPath( Path.Combine( assemblyFolder , cleanName + ".dll" ) );
 

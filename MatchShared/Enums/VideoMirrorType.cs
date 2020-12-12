@@ -2,6 +2,8 @@
 {
 	public enum VideoMirrorType
 	{
+		None = -1,
+
 		/// <summary>
 		/// Default behaviour
 		/// </summary>

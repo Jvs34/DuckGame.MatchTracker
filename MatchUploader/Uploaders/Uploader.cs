@@ -7,12 +7,10 @@ namespace MatchUploader
 {
 	public abstract class Uploader
 	{
-		public UploaderInfo Info { get; }
+		public UploaderInfo Info { get; set; } = new UploaderInfo();
 		protected IGameDatabase DB { get; }
 		protected Queue<PendingUpload> Uploads { get; } = new Queue<PendingUpload>();
-
-		public UploaderSettings UploaderSettings { get; }
-
+		public UploaderSettings UploaderSettings { get; } = new UploaderSettings();
 		public bool DoFetchUploads { get; set; } = true;
 
 		public PendingUpload CurrentUpload
@@ -47,16 +45,15 @@ namespace MatchUploader
 
 		public event Func<string , Task> UpdateStatusCallback;
 
-		protected Uploader( UploaderInfo uploaderInfo , IGameDatabase gameDatabase , UploaderSettings settings )
+		protected Uploader( IGameDatabase gameDatabase , UploaderSettings settings )
 		{
-			Info = uploaderInfo;
 			DB = gameDatabase;
 			UploaderSettings = settings;
 		}
 
 		public abstract Task Initialize();
 
-		public virtual void CreateDefaultInfo()
+		public virtual void SetupDefaultInfo()
 		{
 		}
 

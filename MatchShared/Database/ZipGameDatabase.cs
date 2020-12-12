@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public class ZipGameDatabase : BaseGameDatabase, IDisposable
+	public class ZipGameDatabase : BaseGameDatabase
 	{
 		public override bool ReadOnly => Archive?.Mode == ZipArchiveMode.Read;
 		public ZipArchive Archive { get; protected set; }
@@ -81,7 +81,7 @@ namespace MatchTracker
 		//     Dispose(disposing: false);
 		// }
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
 			Dispose( disposing: true );

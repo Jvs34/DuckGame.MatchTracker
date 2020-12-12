@@ -11,7 +11,6 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.CommandLine" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <!--<ProjectReference Include="..\MatchFlatJsonDatabase\MatchFlatJsonDatabase.csproj" />-->
-    <ProjectReference Include="..\MatchOctoKitDatabase\MatchOctoKitDatabase.csproj" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
   </ItemGroup>
 

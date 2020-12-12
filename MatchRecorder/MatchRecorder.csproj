@@ -10,10 +10,6 @@
     <OutputPath>Output\</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-    <Optimize>false</Optimize>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="1.2.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
