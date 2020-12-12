@@ -28,7 +28,6 @@ namespace MatchUploader
 
 		public MatchUploaderHandler( string [] args )
 		{
-
 			SettingsFolder = Path.Combine( Directory.GetCurrentDirectory() , "Settings" );
 			Configuration = new ConfigurationBuilder()
 				.SetBasePath( SettingsFolder )
@@ -137,13 +136,6 @@ namespace MatchUploader
 				disposedValue = true;
 			}
 		}
-
-		// // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-		// ~MatchUploaderHandler()
-		// {
-		//     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-		//     Dispose(disposing: false);
-		// }
 
 		public void Dispose()
 		{

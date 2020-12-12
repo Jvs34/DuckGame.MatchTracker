@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchTracker
@@ -11,13 +12,19 @@ namespace MatchTracker
 	public class ZipGameDatabase : BaseGameDatabase
 	{
 		public override bool ReadOnly => Archive?.Mode == ZipArchiveMode.Read;
+		public Stream ArchiveStream { get; set; }
 		public ZipArchive Archive { get; protected set; }
+		SemaphoreSlim StreamSemaphore { get; } = new SemaphoreSlim( 1 , 1 );
 		private bool disposedValue;
 
 		public override async Task Load()
 		{
-			Archive = new ZipArchive( File.Open( SharedSettings.GetDatabasePath() , FileMode.Open ) , ZipArchiveMode.Update , false );
-			await base.Load();
+			if( ArchiveStream is null )
+			{
+				ArchiveStream = File.Open( SharedSettings.GetDatabasePath() , FileMode.Open );
+			}
+
+			Archive = new ZipArchive( ArchiveStream , ZipArchiveMode.Update , true );
 		}
 
 		protected string ToZipPath( ZipArchive zipArchive , string path )
@@ -28,8 +35,10 @@ namespace MatchTracker
 				.Replace( "//" , "/" );
 		}
 
-		public override Task<T> GetData<T>( string dataId = "" )
+		public override async Task<T> GetData<T>( string dataId = "" )
 		{
+			await StreamSemaphore.WaitAsync();
+
 			T data = default;
 			var dataPath = ToZipPath( Archive , SharedSettings.GetDataPath<T>( dataId ) );
 
@@ -40,11 +49,15 @@ namespace MatchTracker
 				data = Deserialize<T>( stream );
 			}
 
-			return Task.FromResult( data );
+			StreamSemaphore.Release();
+
+			return data;
 		}
 
-		public override Task SaveData<T>( T data )
+		public override async Task SaveData<T>( T data )
 		{
+			await StreamSemaphore.WaitAsync();
+
 			var dataPath = ToZipPath( Archive , SharedSettings.GetDataPath<T>( data.DatabaseIndex ) );
 			var zipEntry = Archive.GetEntry( dataPath ) ?? Archive.CreateEntry( dataPath );
 
@@ -52,10 +65,11 @@ namespace MatchTracker
 			using( var writer = new StreamWriter( entryStream ) )
 			{
 				Serialize( data , writer );
+				entryStream.SetLength( entryStream.Position );
 			}
 
 			zipEntry.LastWriteTime = DateTime.Now;
-			return Task.CompletedTask;
+			StreamSemaphore.Release();
 		}
 
 		protected virtual void Dispose( bool disposing )
@@ -66,6 +80,7 @@ namespace MatchTracker
 				{
 					// TODO: dispose managed state (managed objects)
 					Archive?.Dispose();
+					ArchiveStream?.Dispose();
 				}
 
 				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
@@ -73,13 +88,6 @@ namespace MatchTracker
 				disposedValue = true;
 			}
 		}
-
-		// // TODO: override finalizer only if 'Dispose(bool disposing)' has code to free unmanaged resources
-		// ~ZipGameDatabase()
-		// {
-		//     // Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-		//     Dispose(disposing: false);
-		// }
 
 		public override void Dispose()
 		{
