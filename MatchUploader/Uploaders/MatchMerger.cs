@@ -72,7 +72,7 @@ namespace MatchUploader
 
 			await DB.IterateOverAll<MatchData>( async ( matchData ) =>
 			{
-				bool suitable = matchData.VideoType == VideoType.PlaylistLink && string.IsNullOrEmpty( matchData.YoutubeUrl );
+				bool suitable = matchData.VideoType == VideoType.PlaylistLink && string.IsNullOrEmpty( matchData.YoutubeUrl ) && !File.Exists( DB.SharedSettings.GetMatchVideoPath( matchData.Name ) );
 
 				if( suitable )
 				{
@@ -145,7 +145,8 @@ namespace MatchUploader
 			if( success )
 			{
 				File.Move( videoFileTempName , videoFileName );
-				//TODO: delete all the video files of the rounds, then set their type as mergedvideolink
+
+				// delete all the video files of the rounds, then set their type as mergedvideolink
 				//and set their respective timespan times of when they appear in the videos
 
 				var matchData = await DB.GetData<MatchData>( upload.DataName );

@@ -8,15 +8,6 @@ namespace MatchTest
 {
 	internal static class Program
 	{
-		private static void Mainfff( string [] args )
-		{
-			System.Text.Json.Utf8JsonReader _jsonReader = default;
-			if( !_jsonReader.Read() )
-			{
-
-			}
-		}
-
 		private static async Task Main( string [] args )
 		{
 			var fuckshit = "2018-04-28 20-19-04";
