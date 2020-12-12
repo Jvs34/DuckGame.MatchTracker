@@ -72,7 +72,7 @@ namespace MatchUploader
 
 			await DB.IterateOverAll<MatchData>( async ( matchData ) =>
 			{
-				bool suitable = matchData.VideoType == VideoType.PlaylistLink;
+				bool suitable = matchData.VideoType == VideoType.PlaylistLink && string.IsNullOrEmpty( matchData.YoutubeUrl );
 
 				if( suitable )
 				{
@@ -80,7 +80,7 @@ namespace MatchUploader
 					{
 						RoundData roundData = await DB.GetData<RoundData>( roundName );
 
-						if( !string.IsNullOrEmpty( roundData.YoutubeUrl ) || !File.Exists( DB.SharedSettings.GetRoundVideoPath( roundName ) ) )
+						if( roundData.RecordingType != RecordingType.Video || !string.IsNullOrEmpty( roundData.YoutubeUrl ) || !File.Exists( DB.SharedSettings.GetRoundVideoPath( roundName ) ) )
 						{
 							suitable = false;
 							break;
