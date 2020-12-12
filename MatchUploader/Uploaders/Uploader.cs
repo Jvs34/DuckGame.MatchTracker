@@ -162,7 +162,11 @@ namespace MatchUploader
 		protected async Task UpdateStatus( string status )
 		{
 			Console.WriteLine( status );
-			await UpdateStatusCallback.Invoke( status );
+
+			if( UpdateStatusCallback != null )
+			{
+				await UpdateStatusCallback?.Invoke( status );
+			}
 		}
 	}
 }

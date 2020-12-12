@@ -115,7 +115,7 @@ namespace MatchUploader
 		protected override async Task<bool> UploadItem( PendingUpload upload )
 		{
 			var videoFileName = DB.SharedSettings.GetMatchVideoPath( upload.DataName );
-			var videoFileTempName = Path.ChangeExtension( DB.SharedSettings.GetMatchVideoPath( upload.DataName ) , "temp" );
+			var videoFileTempName = Path.ChangeExtension( DB.SharedSettings.GetMatchVideoPath( upload.DataName ) , ".temp.mp4" );
 
 			bool success = false;
 
@@ -129,7 +129,7 @@ namespace MatchUploader
 				var matchData = await DB.GetData<MatchData>( upload.DataName );
 				var conversion = await FFmpeg.Conversions.FromSnippet.Concatenate(
 					videoFileTempName ,
-					matchData.Rounds.Select( x => DB.SharedSettings.GetRoundVideoPath( x ) ).ToArray()
+					matchData.Rounds.Select( roundName => DB.SharedSettings.GetRoundVideoPath( roundName ) ).ToArray()
 				);
 
 				await conversion.Start();
@@ -138,6 +138,7 @@ namespace MatchUploader
 			}
 			catch( Exception e )
 			{
+				Console.WriteLine( e );
 				success = false;
 			}
 
@@ -148,28 +149,32 @@ namespace MatchUploader
 				//and set their respective timespan times of when they appear in the videos
 
 				var matchData = await DB.GetData<MatchData>( upload.DataName );
-				//matchData.VideoType = VideoType.MergedVideoLink;
+				matchData.VideoType = VideoType.MergedVideoLink;
+				matchData.VideoStartTime = TimeSpan.Zero;
+				matchData.VideoEndTime = matchData.GetDuration();
 				await DB.SaveData( matchData );
 
-				/*
+				TimeSpan currentTime = TimeSpan.Zero;
+
 				foreach( var roundName in matchData.Rounds )
 				{
 					var roundVideoFile = DB.SharedSettings.GetRoundVideoPath( roundName );
+
 					if( File.Exists( roundVideoFile ) )
 					{
 						File.Delete( roundVideoFile );
 					}
-				}
-				*/
 
-				/*
-				await DB.IterateOver<RoundData>( async ( roundData ) =>
-				{
+					var roundData = await DB.GetData<RoundData>( roundName );
+
 					roundData.VideoType = VideoType.MergedVideoLink;
+					roundData.VideoStartTime = currentTime;
+					roundData.VideoEndTime = currentTime + roundData.GetDuration();
+
 					await DB.SaveData( roundData );
-					return true;
-				} , matchData.Rounds );
-				*/
+
+					currentTime += roundData.GetDuration();
+				}
 
 			}
 			else

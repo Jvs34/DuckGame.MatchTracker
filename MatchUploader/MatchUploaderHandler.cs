@@ -92,11 +92,8 @@ namespace MatchUploader
 		{
 			await LoadDatabase();
 			await Initialize();
-
 			SaveSettings();
-
 			await Upload();
-
 			SaveSettings();
 		}
 
@@ -111,13 +108,10 @@ namespace MatchUploader
 			}
 		}
 
-		//in this context, settings are only the uploaderSettings
 		public void SaveSettings()
 		{
-			using( var writer = File.CreateText( Path.Combine( SettingsFolder , "uploader.json" ) ) )
-			{
-				Serializer.Serialize( writer , UploaderSettings );
-			}
+			using var writer = File.CreateText( Path.Combine( SettingsFolder , "uploader.json" ) );
+			Serializer.Serialize( writer , UploaderSettings );
 		}
 
 		private void Dispose( bool disposing )

@@ -63,7 +63,7 @@ namespace MatchUploader
 					return false;
 				}
 
-				if( roundData.RecordingType == RecordingType.Video && string.IsNullOrEmpty( roundData.YoutubeUrl ) )
+				if( roundData.RecordingType == RecordingType.Video && string.IsNullOrEmpty( roundData.YoutubeUrl ) && roundData.VideoType == VideoType.VideoLink )
 				{
 					//check if there's any video files too first
 					FileInfo fileInfo = GetVideoFileInfo( roundData );
