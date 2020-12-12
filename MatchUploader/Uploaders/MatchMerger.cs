@@ -72,7 +72,7 @@ namespace MatchUploader
 
 			await DB.IterateOverAll<MatchData>( async ( matchData ) =>
 			{
-				bool suitable = matchData.VideoType == VideoType.PlaylistLink && string.IsNullOrEmpty( matchData.YoutubeUrl ) && !File.Exists( DB.SharedSettings.GetMatchVideoPath( matchData.Name ) );
+				bool suitable = matchData.VideoType == VideoType.PlaylistLink && string.IsNullOrEmpty( matchData.YoutubeUrl ) && !File.Exists( DB.SharedSettings.GetMatchVideoPath( matchData.Name ) ) && matchData.Rounds.Count > 1;
 
 				if( suitable )
 				{
@@ -122,6 +122,11 @@ namespace MatchUploader
 			if( File.Exists( videoFileName ) )
 			{
 				return true;
+			}
+
+			if( File.Exists( videoFileTempName ) )
+			{
+				File.Delete( videoFileTempName );
 			}
 
 			try
