@@ -7,6 +7,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
+    <PackageReference Include="Lib.Harmony" Version="2.0.4" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
+    <PackageReference Include="obs-websocket-dotnet" Version="4.8.1" />
+    <PackageReference Include="Google.Apis.YouTube.v3" Version="1.49.0.2168" />
   </ItemGroup>
 
 </Project>

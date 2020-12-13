@@ -1,4 +1,4 @@
-﻿using Harmony;
+﻿using HarmonyLib;
 using System;
 using System.IO;
 using System.Reflection;
@@ -7,29 +7,31 @@ namespace MatchRecorder
 {
 	public class MatchRecorderMod : DuckGame.DisabledMod
 	{
-		public static MatchRecorderHandler Recorder { get; set; }
+		public static MatchRecorderMod Instance => DuckGame.ModLoader.GetMod<MatchRecorderMod>();
+		public MatchRecorderHandler Recorder { get; set; }
+		private Harmony HarmonyInstance { get; set; }
 
-		public MatchRecorderMod()
+		static MatchRecorderMod()
 		{
 #if DEBUG
 			System.Diagnostics.Debugger.Launch();
 #endif
-			AppDomain.CurrentDomain.AssemblyResolve += ModResolve;
+			AppDomain.CurrentDomain.AssemblyResolve += ModResolveStatic;
 		}
 
-		~MatchRecorderMod()
+		protected override void OnPostInitialize()
 		{
-			AppDomain.CurrentDomain.AssemblyResolve -= ModResolve;
-		}
-
-		protected override void OnPreInitialize()
-		{
+			HarmonyInstance = new Harmony( GetType().Namespace );
+			HarmonyInstance.PatchAll( Assembly.GetExecutingAssembly() );
 			Recorder = new MatchRecorderHandler( configuration.directory );
-			HarmonyInstance.Create( GetType().Namespace ).PatchAll( Assembly.GetExecutingAssembly() );
 		}
 
-		private Assembly ModResolve( object sender , ResolveEventArgs args )
+		private static Assembly ModResolveStatic( object sender , ResolveEventArgs args ) => Instance?.ModResolveInstance( sender , args );
+
+		private Assembly ModResolveInstance( object sender , ResolveEventArgs args )
 		{
+			return null;
+
 			string dllFolder = Path.GetFileNameWithoutExtension( GetType().Assembly.ManifestModule?.ScopeName ?? GetType().Namespace );
 			string cleanName = args.Name.Split( ',' ) [0];
 			//now try to load the requested assembly
@@ -47,5 +49,6 @@ namespace MatchRecorder
 
 			return null;
 		}
+
 	}
 }

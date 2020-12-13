@@ -36,7 +36,6 @@ namespace MatchTest
 			//await jsondb.SaveData( await db.GetData<RoundData>( fuckshit ) );
 
 			var roundData = await jsondb.GetData<RoundData>( fuckshit );
-			int i = 5;
 			/*
 			Console.WriteLine( "Backing up..." );
 			var backup = await db.GetBackup();

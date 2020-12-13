@@ -25,6 +25,7 @@ namespace MatchTracker
 			}
 
 			Archive = new ZipArchive( ArchiveStream , ZipArchiveMode.Update , true );
+			await Task.CompletedTask;
 		}
 
 		protected string ToZipPath( ZipArchive zipArchive , string path )
