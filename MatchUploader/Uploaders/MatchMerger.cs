@@ -1,4 +1,5 @@
-﻿using Humanizer.Bytes;
+﻿using Humanizer;
+using Humanizer.Bytes;
 using MatchTracker;
 using System;
 using System.Collections.Concurrent;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xabe.FFmpeg;
 using Xabe.FFmpeg.Downloader;
+using Xabe.FFmpeg.Events;
 
 namespace MatchUploader
 {
@@ -136,8 +138,18 @@ namespace MatchUploader
 					videoFileTempName ,
 					matchData.Rounds.Select( roundName => DB.SharedSettings.GetRoundVideoPath( roundName ) ).ToArray()
 				);
+				Console.WriteLine( $"Starting conversion of {matchData.Name} with {matchData.Rounds.Count} rounds" );
+
+				var stopwatch = new System.Diagnostics.Stopwatch();
+
+				stopwatch.Start();
+
 
 				await conversion.Start();
+
+				stopwatch.Stop();
+
+				Console.WriteLine( $"Conversion of {matchData.Name} took {stopwatch.Elapsed.Humanize()}" );
 
 				success = true;
 			}
@@ -149,6 +161,8 @@ namespace MatchUploader
 
 			if( success )
 			{
+				Console.WriteLine( "Applying changes and removing leftover videos..." );
+
 				File.Move( videoFileTempName , videoFileName );
 
 				// delete all the video files of the rounds, then set their type as mergedvideolink
@@ -182,6 +196,7 @@ namespace MatchUploader
 					currentTime += roundData.GetDuration();
 				}
 
+				Console.WriteLine( "Done applying changes." );
 			}
 			else
 			{
@@ -191,4 +206,6 @@ namespace MatchUploader
 			return success;
 		}
 	}
+
+
 }

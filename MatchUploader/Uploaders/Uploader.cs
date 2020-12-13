@@ -12,27 +12,13 @@ namespace MatchUploader
 		protected Queue<PendingUpload> Uploads { get; } = new Queue<PendingUpload>();
 		public UploaderSettings UploaderSettings { get; } = new UploaderSettings();
 		public bool DoFetchUploads { get; set; } = true;
-
 		public PendingUpload CurrentUpload
 		{
-			get
-			{
-				return Info.CurrentUpload;
-			}
-			private set
-			{
-				Info.CurrentUpload = value;
-			}
+			get => Info.CurrentUpload;
+			private set => Info.CurrentUpload = value;
 		}
-
-		public double Progress
-		{
-			get
-			{
-				return CurrentUpload != null ? Math.Round( CurrentUpload.BytesSent / (double) CurrentUpload.FileSize * 100f , 2 ) : 0;
-			}
-		}
-
+		public int Progress { get; set; }
+		//public double Progress => CurrentUpload != null ? Math.Round( CurrentUpload.BytesSent / (double) CurrentUpload.FileSize * 100f , 2 ) : 0;
 		public int Remaining
 		{
 			get
@@ -40,9 +26,7 @@ namespace MatchUploader
 				return Uploads.Count;
 			}
 		}
-
 		public event Action SaveSettingsCallback;
-
 		public event Func<string , Task> UpdateStatusCallback;
 
 		protected Uploader( IGameDatabase gameDatabase , UploaderSettings settings )
@@ -126,6 +110,7 @@ namespace MatchUploader
 					Info.CurrentUploads++;
 
 					await UpdateStatus( $"{GetType().Name}:  {Info.CurrentUploads} / {Info.UploadsBeforeReset}" );
+					Progress = 0;
 					uploadCompleted = await UploadItem( upload );
 
 					upload.ErrorCount = uploadCompleted ? 0 : upload.ErrorCount + 1;
@@ -156,7 +141,10 @@ namespace MatchUploader
 
 		protected void SaveSettings()
 		{
-			SaveSettingsCallback.Invoke();
+			if( SaveSettingsCallback != null )
+			{
+				SaveSettingsCallback.Invoke();
+			}
 		}
 
 		protected async Task UpdateStatus( string status )
