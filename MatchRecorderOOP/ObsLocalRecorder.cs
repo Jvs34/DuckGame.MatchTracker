@@ -5,6 +5,7 @@ using System;
 using System.IO;
 using System.Linq;
 
+
 namespace MatchRecorder
 {
 	internal sealed class ObsLocalRecorder : IRecorder

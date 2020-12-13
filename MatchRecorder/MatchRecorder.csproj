@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <PackageReference Include="Lib.Harmony" Version="2.0.4" />
+    <PackageReference Include="Ninja.WebSockets" Version="1.1.8" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
     <Reference Include="DuckGame">
       <HintPath>..\ThirdParty\DuckGame.exe</HintPath>

@@ -6,6 +6,6 @@ namespace MatchRecorderShared.Messages
 {
 	public class BaseMessage
 	{
-		public virtual string MessageType { get; set; } = typeof( BaseMessage ).Name;
+		public virtual string MessageType { get; set; } = nameof( BaseMessage );
 	}
 }
