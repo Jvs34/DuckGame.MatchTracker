@@ -8,7 +8,7 @@ namespace MatchRecorder
 	public class MatchRecorderMod : DuckGame.DisabledMod
 	{
 		public static MatchRecorderMod Instance => DuckGame.ModLoader.GetMod<MatchRecorderMod>();
-		public MatchRecorderHandler Recorder { get; set; }
+		public MatchRecorderClient Recorder { get; set; }
 		private Harmony HarmonyInstance { get; set; }
 
 		static MatchRecorderMod()
@@ -23,7 +23,7 @@ namespace MatchRecorder
 		{
 			HarmonyInstance = new Harmony( GetType().Namespace );
 			HarmonyInstance.PatchAll( Assembly.GetExecutingAssembly() );
-			Recorder = new MatchRecorderHandler( configuration.directory );
+			Recorder = new MatchRecorderClient( configuration.directory );
 		}
 
 		private static Assembly ModResolveStatic( object sender , ResolveEventArgs args ) => Instance?.ModResolveInstance( sender , args );

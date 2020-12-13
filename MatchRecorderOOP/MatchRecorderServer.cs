@@ -6,8 +6,9 @@ using System.Linq;
 
 namespace MatchRecorder
 {
-	public class MatchRecorderHandler
+	public class MatchRecorderServer : IDisposable
 	{
+		private bool disposedValue;
 		private IRecorder RecorderHandler { get; }
 		public BotSettings BotSettings { get; } = new BotSettings();
 		public OBSSettings OBSSettings { get; } = new OBSSettings();
@@ -16,16 +17,16 @@ namespace MatchRecorder
 		public IGameDatabase GameDatabase { get; }
 		public bool IsRecordingRound => RecorderHandler.IsRecording;
 		public bool IsRecordingMatch { get; set; }
-		public string ModPath { get; }
+		public string SettingsPath { get; }
 		private IConfigurationRoot Configuration { get; }
 
-		public MatchRecorderHandler( string modPath )
+		public MatchRecorderServer( string settingsPath )
 		{
-			ModPath = modPath;
+			SettingsPath = settingsPath;
 			GameDatabase = new FileSystemGameDatabase();
 
 			Configuration = new ConfigurationBuilder()
-				.SetBasePath( Path.Combine( modPath , "Settings" ) )
+				.SetBasePath( Path.Combine( settingsPath , "Settings" ) )
 #if DEBUG
 				.AddJsonFile( "shared_debug.json" )
 #else
@@ -78,7 +79,7 @@ namespace MatchRecorder
 
 		public RoundData StartCollectingRoundData( DateTime startTime )
 		{
-			Level lvl = Level.current;
+			DuckGame.Level lvl = DuckGame.Level.current;
 
 			CurrentRound = new RoundData()
 			{
@@ -106,11 +107,11 @@ namespace MatchRecorder
 
 			AddTeamAndPlayerData( CurrentRound );
 
-			Team winner = null;
+			DuckGame.Team winner = null;
 
-			if( GameMode.lastWinners.Count > 0 )
+			if( DuckGame.GameMode.lastWinners.Count > 0 )
 			{
-				winner = GameMode.lastWinners.First()?.team;
+				winner = DuckGame.GameMode.lastWinners.First()?.team;
 			}
 
 			if( winner != null )
@@ -153,11 +154,11 @@ namespace MatchRecorder
 
 			AddTeamAndPlayerData( CurrentMatch );
 
-			Team winner = null;
+			DuckGame.Team winner = null;
 
-			if( Teams.winning.Count > 0 )
+			if( DuckGame.Teams.winning.Count > 0 )
 			{
-				winner = Teams.winning.FirstOrDefault();
+				winner = DuckGame.Teams.winning.FirstOrDefault();
 			}
 
 			if( winner != null )
@@ -181,22 +182,22 @@ namespace MatchRecorder
 
 		public void ShowHUDmessage( string message , float lifetime = 1f )
 		{
-			var cornerMessage = HUD.AddCornerMessage( HUDCorner.TopLeft , message );
+			var cornerMessage = DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopLeft , message );
 			cornerMessage.slide = 1;
 			cornerMessage.willDie = true;
 			cornerMessage.life = lifetime;
 		}
 
-		public bool IsLevelRecordable( Level level ) => level is GameLevel;
+		public bool IsLevelRecordable( DuckGame.Level level ) => level is DuckGame.GameLevel;
 
 		public void AddTeamAndPlayerData( IWinner winnerObject )
 		{
-			foreach( Team team in Teams.active )
+			foreach( DuckGame.Team team in DuckGame.Teams.active )
 			{
 				winnerObject.Teams.Add( CreateTeamDataFromTeam( team , winnerObject ) );
 			}
 
-			foreach( Profile pro in Profiles.activeNonSpectators )
+			foreach( DuckGame.Profile pro in DuckGame.Profiles.activeNonSpectators )
 			{
 				PlayerData ply = CreatePlayerDataFromProfile( pro , winnerObject );
 				winnerObject.Players.Add( ply.DatabaseIndex );
@@ -204,10 +205,10 @@ namespace MatchRecorder
 
 			foreach( TeamData teamData in winnerObject.Teams )
 			{
-				Team team = Teams.active.Find( x => x.name == teamData.HatName );
+				DuckGame.Team team = DuckGame.Teams.active.Find( x => x.name == teamData.HatName );
 				if( team != null )
 				{
-					foreach( Profile pro in team.activeProfiles )
+					foreach( DuckGame.Profile pro in team.activeProfiles )
 					{
 						teamData.Players.Add( CreatePlayerDataFromProfile( pro , winnerObject ).DatabaseIndex );
 					}
@@ -215,65 +216,7 @@ namespace MatchRecorder
 			}
 		}
 
-		public void TryTakingScreenshots()
-		{
-			//get all the levels that are currently saved in the database and make a thumbnail out of it
-
-			foreach( var levelID in GameDatabase.GetAll<MatchTracker.LevelData>().Result )
-			{
-				string levelPreviewFile = GameDatabase.SharedSettings.GetLevelPreviewPath( levelID );
-
-				if( File.Exists( levelPreviewFile ) )
-				{
-					continue;
-				}
-
-				var bitmap = TakeScreenshot( levelID );
-
-				if( bitmap != null )
-				{
-					using( var fileStream = File.Create( levelPreviewFile ) )
-					{
-						bitmap.Save( fileStream , System.Drawing.Imaging.ImageFormat.Png );
-					}
-				}
-
-			}
-		}
-
-		private System.Drawing.Bitmap TakeScreenshot( string levelID )
-		{
-			System.Drawing.Bitmap screenshot = null;
-			/*
-			DuckGame.LevelData levelData = Content.GetLevel( levelID );
-
-			if( levelData != null )
-			{
-				var rtTest = Content.GeneratePreview( levelData , true );
-
-				var imageData = rtTest.GetData();
-
-				int w = rtTest.width;
-				int h = rtTest.height;
-
-				screenshot = new System.Drawing.Bitmap( w , h , System.Drawing.Imaging.PixelFormat.Format32bppArgb );
-
-				for( int x = 0; x < w; x++ )
-				{
-					for( int y = 0; y < h; y++ )
-					{
-						int arrayIndex = ( y * w ) + x;
-						DuckGame.Color c = imageData [arrayIndex];
-						screenshot.SetPixel( x , y , System.Drawing.Color.FromArgb( c.a , c.r , c.g , c.b ) );
-					}
-				}
-
-			}
-			*/
-			return screenshot;
-		}
-
-		public void GatherLevelData( Level level )
+		public void GatherLevelData( DuckGame.Level level )
 		{
 			string levelID = level.level;
 
@@ -293,24 +236,24 @@ namespace MatchRecorder
 
 		private static MatchTracker.LevelData CreateLevelDataFromLevel( string levelId )
 		{
-			DuckGame.LevelData dgLevelData = Content.GetLevel( levelId );
+			DuckGame.LevelData dgLevelData = DuckGame.Content.GetLevel( levelId );
 
 			return dgLevelData is null ? null : new MatchTracker.LevelData()
 			{
 				LevelName = levelId ,
 				IsOnlineMap = dgLevelData.metaData.online ,
 				FilePath = dgLevelData.GetPath() ,
-				IsCustomMap = dgLevelData.GetLocation() != LevelLocation.Content ,
+				IsCustomMap = dgLevelData.GetLocation() != DuckGame.LevelLocation.Content ,
 				Author = dgLevelData.workshopData?.author ,
 				Description = dgLevelData.workshopData?.description
 			};
 		}
 
-		private PlayerData CreatePlayerDataFromProfile( Profile profile , IWinner winnerObject )
+		private PlayerData CreatePlayerDataFromProfile( DuckGame.Profile profile , IWinner winnerObject )
 		{
 			string onlineID = profile.steamID.ToString();
 
-			string userId = Network.isActive ? onlineID : profile.id;
+			string userId = DuckGame.Network.isActive ? onlineID : profile.id;
 
 			PlayerData pd = GameDatabase.GetData<PlayerData>( userId ).Result;
 
@@ -336,7 +279,7 @@ namespace MatchRecorder
 			return pd;
 		}
 
-		private TeamData CreateTeamDataFromTeam( Team team , IWinner winnerObject )
+		private TeamData CreateTeamDataFromTeam( DuckGame.Team team , IWinner winnerObject )
 		{
 			//try to find a teamobject that's already there
 			TeamData td = null;
@@ -359,8 +302,30 @@ namespace MatchRecorder
 
 			return td;
 		}
-		#endregion UTILITY
 
+		protected virtual void Dispose( bool disposing )
+		{
+			if( !disposedValue )
+			{
+				if( disposing )
+				{
+					// TODO: dispose managed state (managed objects)
+					GameDatabase?.Dispose();
+				}
+
+				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
+				// TODO: set large fields to null
+				disposedValue = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose( disposing: true );
+			GC.SuppressFinalize( this );
+		}
+		#endregion UTILITY
 	}
 
 }

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.IO;
 using System.Threading.Tasks;
 
 namespace MatchRecorderOOP
@@ -7,7 +8,7 @@ namespace MatchRecorderOOP
 	{
 		static async Task Main( string [] args )
 		{
-
+			using var recorderHandler = new MatchRecorder.MatchRecorderServer( Directory.GetCurrentDirectory() );
 		}
 	}
 }

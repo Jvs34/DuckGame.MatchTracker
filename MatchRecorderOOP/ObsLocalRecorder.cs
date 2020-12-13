@@ -9,7 +9,7 @@ namespace MatchRecorder
 {
 	internal sealed class ObsLocalRecorder : IRecorder
 	{
-		private MatchRecorderHandler MainHandler { get; }
+		private MatchRecorderServer MainHandler { get; }
 		private OBSWebsocket ObsHandler { get; }
 		private OutputState RecordingState { get; set; }
 		private bool RequestedRecordingStart { get; set; }
@@ -25,7 +25,7 @@ namespace MatchRecorder
 		private TimeSpan MergedRoundDuration { get; set; } = TimeSpan.Zero;
 
 
-		public ObsLocalRecorder( MatchRecorderHandler parent )
+		public ObsLocalRecorder( MatchRecorderServer parent )
 		{
 			ResultingRecordingType = RecordingType.Video;
 			MainHandler = parent;

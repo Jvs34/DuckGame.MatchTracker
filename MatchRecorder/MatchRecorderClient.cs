@@ -1,15 +1,21 @@
 ﻿using DuckGame;
 using HarmonyLib;
+using System;
 
 namespace MatchRecorder
 {
-	public class MatchRecorderHandler
+	public class MatchRecorderClient
 	{
 		public string ModPath { get; }
 
-		public MatchRecorderHandler( string directory )
+		public MatchRecorderClient( string directory )
 		{
 			ModPath = directory;
+		}
+
+		internal void Update()
+		{
+
 		}
 	}
 
@@ -77,7 +83,7 @@ namespace MatchRecorder
 				return;
 			}
 
-			//MatchRecorderMod.Instance.Recorder.Update();
+			MatchRecorderMod.Instance.Recorder.Update();
 		}
 	}
 

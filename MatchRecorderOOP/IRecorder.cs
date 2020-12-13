@@ -1,5 +1,4 @@
-﻿using DuckGame;
-using MatchTracker;
+﻿using MatchTracker;
 
 namespace MatchRecorder
 {
