@@ -25,7 +25,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchTest", "MatchTest\Matc
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorderOOP", "MatchRecorderOOP\MatchRecorderOOP.csproj", "{317BD903-A8A0-4109-8428-8F833601B4DC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchRecorderShared", "MatchRecorderShared\MatchRecorderShared.csproj", "{334BF617-4AB5-4CC9-8C37-46D412E3BDA5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorderShared", "MatchRecorderShared\MatchRecorderShared.csproj", "{334BF617-4AB5-4CC9-8C37-46D412E3BDA5}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +36,7 @@ Global
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{E4AB7ED5-3306-4688-98FA-01FE183532F3}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{E4AB7ED5-3306-4688-98FA-01FE183532F3}.Debug|Any CPU.Build.0 = Debug|x86
 		{E4AB7ED5-3306-4688-98FA-01FE183532F3}.Debug|x86.ActiveCfg = Debug|x86
 		{E4AB7ED5-3306-4688-98FA-01FE183532F3}.Debug|x86.Build.0 = Debug|x86
 		{E4AB7ED5-3306-4688-98FA-01FE183532F3}.Release|Any CPU.ActiveCfg = Release|x86

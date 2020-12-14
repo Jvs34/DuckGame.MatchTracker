@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -15,16 +16,20 @@ namespace MatchRecorderShared
 	public sealed class WebsocketHandler : IDisposable
 	{
 		private bool disposedValue;
-		private WebSocket WebSocket { get; }
-		private byte [] ByteBuffer { get; } = new byte [4096 * 10];
-		private ConcurrentQueue<BaseMessage> MessagesToSend { get; } = new ConcurrentQueue<BaseMessage>();
+		public WebSocket WebSocket { get; }
+		private byte [] SendByteBuffer { get; } = new byte [4096 * 10];
+		private byte [] ReceiveByteBuffer { get; } = new byte [4096 * 10];
+		private ConcurrentQueue<BaseMessage> SendMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
+		private ConcurrentQueue<BaseMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
 		public JsonSerializer Serializer { get; } = JsonSerializer.CreateDefault();
-
+		public bool Compress { get; }
 		public event Action<BaseMessage> OnReceiveMessage;
+		public bool IsClosed => WebSocket.State == WebSocketState.Aborted || WebSocket.State == WebSocketState.Aborted;
 
-		public WebsocketHandler( WebSocket websocket )
+		public WebsocketHandler( WebSocket websocket , bool compress = false )
 		{
 			WebSocket = websocket;
+			Compress = compress;
 		}
 
 
@@ -35,55 +40,85 @@ namespace MatchRecorderShared
 		/// <returns></returns>
 		public void SendMessage( BaseMessage message )
 		{
-			MessagesToSend.Enqueue( message );
+			SendMessagesQueue.Enqueue( message );
 		}
 
 		/// <summary>
 		/// Call this every frame to send and receive websocket messages
 		/// </summary>
 		/// <returns></returns>
-		public async Task<bool> UpdateLoop()
+		public async Task UpdateLoop()
 		{
 			await SendLoop();
-			return await ReceiveLoop();
+			ReceiveLoop();
 		}
 
 		private async Task SendLoop()
 		{
-			while( MessagesToSend.TryDequeue( out var message ) )
+			while( SendMessagesQueue.TryDequeue( out var message ) )
 			{
 				int bytesWritten = 0;
-				using( var memStream = new MemoryStream( ByteBuffer , 0 , ByteBuffer.Length , true ) )
-				using( var streamWriter = new StreamWriter( memStream ) )
-				using( var jsonWriter = new JsonTextWriter( streamWriter ) )
+				using( var memStream = new MemoryStream( SendByteBuffer , 0 , SendByteBuffer.Length , true ) )
 				{
-					Serializer.Serialize( jsonWriter , message );
-					bytesWritten = (int) memStream.Position;
+					Stream chosenStream = memStream;
+
+					if( Compress )
+					{
+						chosenStream = new GZipStream( memStream , CompressionMode.Compress );
+					}
+
+					using( var streamWriter = new StreamWriter( chosenStream ) )
+					using( var jsonWriter = new JsonTextWriter( streamWriter ) )
+					{
+						Serializer.Serialize( jsonWriter , message );
+						bytesWritten = (int) chosenStream.Position;
+					}
+
+					if( Compress )
+					{
+						chosenStream.Dispose();
+					}
 				}
 
-				var arraySegment = new ArraySegment<byte>( ByteBuffer , 0 , bytesWritten );
-				await WebSocket.SendAsync( arraySegment , WebSocketMessageType.Text , true , CancellationToken.None );
+				var arraySegment = new ArraySegment<byte>( SendByteBuffer , 0 , bytesWritten );
+				await WebSocket.SendAsync( arraySegment , Compress ? WebSocketMessageType.Binary : WebSocketMessageType.Text , true , CancellationToken.None );
 			}
 		}
 
-		private async Task<bool> ReceiveLoop()
+		private void ReceiveLoop()
 		{
-			var arraySegment = new ArraySegment<byte>( ByteBuffer , 0 , ByteBuffer.Length );
-			WebSocketReceiveResult result = await WebSocket.ReceiveAsync( arraySegment , CancellationToken.None );
+			while( ReceiveMessagesQueue.TryDequeue( out var message ) )
+			{
+				OnReceiveMessage?.Invoke( message );
+			}
+		}
+
+		public async Task<bool> ThreadedReceiveLoop( CancellationToken token = default )
+		{
+			var arraySegment = new ArraySegment<byte>( ReceiveByteBuffer , 0 , ReceiveByteBuffer.Length );
+			WebSocketReceiveResult result = await WebSocket.ReceiveAsync( arraySegment , token );
 
 			if( result.MessageType == WebSocketMessageType.Close )
 			{
 				return false;
 			}
 
-			if( result.MessageType == WebSocketMessageType.Text )
+			var decompressMessage = result.MessageType == WebSocketMessageType.Binary;
+
+			BaseMessage message = null;
+			using( var memStream = new MemoryStream( ReceiveByteBuffer , 0 , result.Count , false ) )
 			{
-				BaseMessage message = null;
-				using( var memStream = new MemoryStream( ByteBuffer , 0 , result.Count , false ) )
-				//TODO: using( var compressedStream = new GZipStream( memStream , CompressionMode.Decompress ) )
-				using( var streamReader = new StreamReader( memStream ) ) //TODO: StreamReader( compressedStream )
+				Stream chosenStream = memStream;
+
+				if( decompressMessage )
+				{
+					chosenStream = new GZipStream( memStream , CompressionMode.Decompress );
+				}
+
+				using( var streamReader = new StreamReader( chosenStream ) )
 				using( var jsonReader = new JsonTextReader( streamReader ) )
 				{
+					//TODO: try to make this less wasteful
 					JObject json = await JObject.LoadAsync( jsonReader );
 					if( json.TryGetValue( nameof( BaseMessage.MessageType ) , StringComparison.InvariantCultureIgnoreCase , out var value ) && value.Type == JTokenType.String )
 					{
@@ -116,14 +151,19 @@ namespace MatchRecorderShared
 					}
 				}
 
-				if( message != null && OnReceiveMessage != null )
+				if( decompressMessage )
 				{
-					OnReceiveMessage( message );
+					chosenStream.Dispose();
 				}
 			}
+
+			if( message != null )
+			{
+				ReceiveMessagesQueue.Enqueue( message );
+			}
+
 			return true;
 		}
-
 		private void Dispose( bool disposing )
 		{
 			if( !disposedValue )

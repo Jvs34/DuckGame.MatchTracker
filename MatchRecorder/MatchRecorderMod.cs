@@ -30,8 +30,6 @@ namespace MatchRecorder
 
 		private Assembly ModResolveInstance( object sender , ResolveEventArgs args )
 		{
-			return null;
-
 			string dllFolder = Path.GetFileNameWithoutExtension( GetType().Assembly.ManifestModule?.ScopeName ?? GetType().Namespace );
 			string cleanName = args.Name.Split( ',' ) [0];
 			//now try to load the requested assembly

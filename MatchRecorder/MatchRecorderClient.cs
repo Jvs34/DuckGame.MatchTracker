@@ -1,21 +1,71 @@
 ﻿using DuckGame;
 using HarmonyLib;
+using MatchRecorderShared;
+using Ninja.WebSockets;
 using System;
+using System.Diagnostics;
+using System.IO;
+using System.Net.WebSockets;
+using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
 	public class MatchRecorderClient
 	{
 		public string ModPath { get; }
+		public WebSocketClientFactory WebSocketFactory { get; } = new WebSocketClientFactory();
+		private WebsocketHandler WebSocketHandler { get; set; }
+		private Task<WebSocket> WebSocketConnectionTask { get; set; }
+		private Process RecorderProcess { get; set; }
 
-		public MatchRecorderClient( string directory )
-		{
-			ModPath = directory;
-		}
+		public MatchRecorderClient( string directory ) => ModPath = directory;
 
 		internal void Update()
 		{
+			CheckRecorderProcess();
 
+			if( WebSocketHandler?.IsClosed == true )
+			{
+				WebSocketHandler.Dispose();
+				WebSocketHandler = null;
+			}
+
+			if( WebSocketConnectionTask?.IsCompleted == true )
+			{
+				if( WebSocketConnectionTask.Status == TaskStatus.RanToCompletion )
+				{
+					WebSocketHandler = new WebsocketHandler( WebSocketConnectionTask.Result );
+				}
+
+				WebSocketConnectionTask = null;
+			}
+
+
+			//start connecting now
+			if( WebSocketConnectionTask is null && WebSocketHandler is null )
+			{
+				WebSocketConnectionTask = WebSocketFactory.ConnectAsync( new Uri( "ws://127.0.0.1:6969" ) , new WebSocketClientOptions()
+				{
+					KeepAliveInterval = TimeSpan.FromSeconds( 1 ) ,
+				} );
+			}
+
+			
+			WebSocketHandler?.UpdateLoop().Wait();
+		}
+
+		private void CheckRecorderProcess()
+		{
+			if( RecorderProcess is null || RecorderProcess.HasExited )
+			{
+				RecorderProcess = Process.Start( new ProcessStartInfo()
+				{
+					FileName = Path.Combine( ModPath , @"MatchRecorderOOP\bin\Debug\net5.0\MatchRecorderOOP.exe" ) ,
+					WorkingDirectory = ModPath ,
+					CreateNoWindow = false ,
+					//TODO: Arguments
+				} );
+			}
 		}
 	}
 
