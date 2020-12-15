@@ -1,7 +1,7 @@
 ﻿using DuckGame;
 using HarmonyLib;
 using MatchRecorderShared;
-using Ninja.WebSockets;
+using MatchRecorderShared.Messages;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -13,45 +13,48 @@ namespace MatchRecorder
 	public class MatchRecorderClient
 	{
 		public string ModPath { get; }
-		public WebSocketClientFactory WebSocketFactory { get; } = new WebSocketClientFactory();
-		private WebsocketHandler WebSocketHandler { get; set; }
-		private Task<WebSocket> WebSocketConnectionTask { get; set; }
 		private Process RecorderProcess { get; set; }
+		private MessageHandler MessageHandler { get; }
+		private Task MessageHandlerTask { get; set; }
+		public MatchRecorderClient( string directory )
+		{
+			ModPath = directory;
+			MessageHandler = new MessageHandler( false );
+			MessageHandler.OnReceiveMessage += OnReceiveMessage;
+		}
 
-		public MatchRecorderClient( string directory ) => ModPath = directory;
+		private void OnReceiveMessage( BaseMessage message )
+		{
+			if( message is ShowHUDTextMessage hudtext )
+			{
+				var cornerMessage = DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopLeft , message );
+				cornerMessage.slide = 1;
+				cornerMessage.willDie = true;
+				cornerMessage.life = 1;
+				
+			}
+		}
 
 		internal void Update()
 		{
 			CheckRecorderProcess();
 
-			if( WebSocketHandler?.IsClosed == true )
+			if( ( MessageHandlerTask is null || MessageHandlerTask.IsCompleted == true ) && MessageHandler != null )
 			{
-				WebSocketHandler.Dispose();
-				WebSocketHandler = null;
-			}
-
-			if( WebSocketConnectionTask?.IsCompleted == true )
-			{
-				if( WebSocketConnectionTask.Status == TaskStatus.RanToCompletion )
+				MessageHandlerTask = Task.Run( async () =>
 				{
-					WebSocketHandler = new WebsocketHandler( WebSocketConnectionTask.Result );
-				}
-
-				WebSocketConnectionTask = null;
-			}
-
-
-			//start connecting now
-			if( WebSocketConnectionTask is null && WebSocketHandler is null )
-			{
-				WebSocketConnectionTask = WebSocketFactory.ConnectAsync( new Uri( "ws://127.0.0.1:6969" ) , new WebSocketClientOptions()
-				{
-					KeepAliveInterval = TimeSpan.FromSeconds( 1 ) ,
+					try
+					{
+						await MessageHandler.ThreadedLoop();
+					}
+					catch( Exception e )
+					{
+						System.Diagnostics.Debug.WriteLine( e );
+					}
 				} );
 			}
 
-			
-			WebSocketHandler?.UpdateLoop().Wait();
+			MessageHandler?.CheckMessages();
 		}
 
 		private void CheckRecorderProcess()
@@ -67,6 +70,29 @@ namespace MatchRecorder
 				} );
 			}
 		}
+
+		internal void StartRecordingRound()
+		{
+			MessageHandler?.SendMessage( new StartRoundMessage()
+			{
+				Level = Level.current.level ,
+			} );
+		}
+
+		internal void StopRecordingRound()
+		{
+
+		}
+
+		internal void StartRecordingMatch()
+		{
+
+		}
+
+		internal void StopRecordingMatch()
+		{
+
+		}
 	}
 
 	#region HOOKS
@@ -77,27 +103,22 @@ namespace MatchRecorder
 	{
 		//changed the Postfix to a Prefix so we can get the Level.current before it's changed to the new one
 		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
-		private static void Prefix( Level value )
+		private static void Postfix()
 		{
 			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
 			{
 				return;
 			}
 
-			//regardless if the current level can be recorded or not, we're done with the current round recording so just save and stop
-			/*
-			if( MatchRecorderMod.Instance.Recorder.IsRecordingRound == true )
-			{
-				MatchRecorderMod.Instance.Recorder.StopRecordingRound();
-			}
 
-			//seems like we launched a match just now, start recording
-			if( MatchRecorderMod.Instance.Recorder.IsLevelRecordable( value ) == true && MatchRecorderMod.Instance.Recorder.IsRecordingMatch == false )
+			//regardless if the current level can be recorded or not, we're done with the current round recording so just save and stop
+
+			MatchRecorderMod.Instance.Recorder.StopRecordingRound();
+
+			if( Level.current is GameLevel )
 			{
-				MatchRecorderMod.Instance.Recorder.IsRecordingMatch = true;
 				MatchRecorderMod.Instance.Recorder.StartRecordingMatch();
 			}
-			*/
 		}
 	}
 
@@ -113,13 +134,8 @@ namespace MatchRecorder
 				return;
 			}
 
-			/*
-			if( MatchRecorderMod.Instance.Recorder.IsRecordingMatch == true )
-			{
-				MatchRecorderMod.Instance.Recorder.IsRecordingMatch = false;
-				MatchRecorderMod.Instance.Recorder.StopRecordingMatch();
-			}
-			*/
+			MatchRecorderMod.Instance.Recorder.StopRecordingMatch();
+
 		}
 	}
 
@@ -149,13 +165,11 @@ namespace MatchRecorder
 			}
 
 			//only bother if the current level is something we care about
-			/*
-			if( MatchRecorderMod.Instance.Recorder.IsLevelRecordable( Level.current ) )
+
+			if( Level.current is GameLevel )
 			{
 				MatchRecorderMod.Instance.Recorder.StartRecordingRound();
-				MatchRecorderMod.Instance.Recorder.GatherLevelData( Level.current );
 			}
-			*/
 		}
 	}
 

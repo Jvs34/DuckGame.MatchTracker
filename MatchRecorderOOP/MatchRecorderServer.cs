@@ -1,4 +1,6 @@
-﻿using MatchTracker;
+﻿using MatchRecorderShared;
+using MatchRecorderShared.Messages;
+using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
@@ -14,14 +16,26 @@ namespace MatchRecorder
 		public OBSSettings OBSSettings { get; } = new OBSSettings();
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
+
+		/// <summary>
+		/// Data that has arrived from network messages yet to be processed
+		/// </summary>
+		private MatchData PendingMatchData { get; set; }
+
+		/// <summary>
+		/// Data that has arrived from network messages yet to be processed
+		/// </summary>
+		private RoundData PendingRoundData { get; set; }
 		public IGameDatabase GameDatabase { get; }
 		public bool IsRecordingRound => RecorderHandler.IsRecording;
 		public bool IsRecordingMatch { get; set; }
 		public string SettingsPath { get; }
 		private IConfigurationRoot Configuration { get; }
+		private MessageHandler MessageHandler { get; }
 
-		public MatchRecorderServer( string settingsPath )
+		public MatchRecorderServer( string settingsPath , MessageHandler handler )
 		{
+			MessageHandler = handler;
 			SettingsPath = settingsPath;
 			GameDatabase = new FileSystemGameDatabase();
 
@@ -46,6 +60,45 @@ namespace MatchRecorder
 		public void StartRecordingRound()
 		{
 			RecorderHandler?.StartRecordingRound();
+		}
+
+		public void OnReceiveMessage( BaseMessage message )
+		{
+			switch( message )
+			{
+				case StartMatchMessage smm:
+					{
+						IsRecordingMatch = true;
+						StartRecordingMatch();
+						break;
+					}
+				case EndMatchMessage emm:
+					{
+						if( IsRecordingMatch )
+						{
+							IsRecordingMatch = false;
+							StopRecordingMatch();
+						}
+
+						break;
+					}
+				case StartRoundMessage srm:
+					{
+						StartRecordingRound();
+						break;
+					}
+				case EndRoundMessage erm:
+					{
+						if( IsRecordingRound )
+						{
+							StopRecordingRound();
+						}
+
+						break;
+					}
+				default:
+					break;
+			}
 		}
 
 		public void StopRecordingRound()
@@ -129,6 +182,9 @@ namespace MatchRecorder
 
 			CurrentRound = null;
 
+
+			PendingRoundData = new RoundData();
+
 			return newRoundData;
 		}
 
@@ -172,7 +228,7 @@ namespace MatchRecorder
 			MatchData newMatchData = CurrentMatch;
 
 			CurrentMatch = null;
-
+			PendingMatchData = new MatchData();
 			return newMatchData;
 		}
 
@@ -180,12 +236,12 @@ namespace MatchRecorder
 
 		#region UTILITY
 
-		public void ShowHUDmessage( string message , float lifetime = 1f )
+		public void ShowHUDmessage( string message )
 		{
-			var cornerMessage = DuckGame.HUD.AddCornerMessage( DuckGame.HUDCorner.TopLeft , message );
-			cornerMessage.slide = 1;
-			cornerMessage.willDie = true;
-			cornerMessage.life = lifetime;
+			MessageHandler.SendMessage( new ShowHUDTextMessage()
+			{
+				Text = message
+			} );
 		}
 
 		public bool IsLevelRecordable( DuckGame.Level level ) => level is DuckGame.GameLevel;
@@ -216,6 +272,8 @@ namespace MatchRecorder
 			}
 		}
 
+		//TODO: implement this
+		/*
 		public void GatherLevelData( DuckGame.Level level )
 		{
 			string levelID = level.level;
@@ -248,7 +306,9 @@ namespace MatchRecorder
 				Description = dgLevelData.workshopData?.description
 			};
 		}
+		*/
 
+		/*
 		private PlayerData CreatePlayerDataFromProfile( DuckGame.Profile profile , IWinner winnerObject )
 		{
 			string onlineID = profile.steamID.ToString();
@@ -302,6 +362,7 @@ namespace MatchRecorder
 
 			return td;
 		}
+		*/
 
 		protected virtual void Dispose( bool disposing )
 		{
