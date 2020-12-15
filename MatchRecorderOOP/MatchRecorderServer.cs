@@ -5,10 +5,11 @@ using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	public class MatchRecorderServer : IDisposable
+	internal class MatchRecorderServer : IDisposable
 	{
 		private bool disposedValue;
 		private IRecorder RecorderHandler { get; }
@@ -32,10 +33,12 @@ namespace MatchRecorder
 		public string SettingsPath { get; }
 		private IConfigurationRoot Configuration { get; }
 		private MessageHandler MessageHandler { get; }
+		private Task MessageHandlerTask { get; set; }
 
-		public MatchRecorderServer( string settingsPath , MessageHandler handler )
+		public MatchRecorderServer( string settingsPath )
 		{
-			MessageHandler = handler;
+			MessageHandler = new MessageHandler( true );
+
 			SettingsPath = settingsPath;
 			GameDatabase = new FileSystemGameDatabase();
 
@@ -55,11 +58,41 @@ namespace MatchRecorder
 			Configuration.Bind( OBSSettings );
 
 			RecorderHandler = new ObsLocalRecorder( this );
+			MessageHandler.OnReceiveMessage += OnReceiveMessage;
+
+			/*
+			handler.
+
+			var loopTask = Task.Run( async () => await handler.ThreadedLoop() );
+
+			while( !loopTask.IsCompleted )
+			{
+				Console.WriteLine( "Checking for new messages" );
+				handler.CheckMessages();
+
+				await Task.Delay( TimeSpan.FromSeconds( 4 ) );
+			}
+
+			 */
 		}
 
-		public void StartRecordingRound()
+		public async Task RunAsync( System.Threading.CancellationToken token = default )
 		{
-			RecorderHandler?.StartRecordingRound();
+#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+
+			while( !token.IsCancellationRequested )
+			{
+				if( MessageHandlerTask is null | MessageHandlerTask.IsCompleted )
+				{
+					Task.Run( async () => await MessageHandler.ThreadedLoop( token ) , token );
+				}
+
+				MessageHandler.CheckMessages();
+				RecorderHandler?.Update();
+
+				await Task.Delay( 100 , token );
+			}
+#pragma warning restore CS4014
 		}
 
 		public void OnReceiveMessage( BaseMessage message )
@@ -122,17 +155,7 @@ namespace MatchRecorder
 			}
 		}
 
-		public void StopRecordingRound()
-		{
-			if( CurrentRound != null )
-			{
-				ShowHUDmessage( $"Recorded {CurrentRound.Name}" );
-			}
-
-			RecorderHandler?.StopRecordingRound();
-		}
-
-		internal void StartRecordingMatch()
+		private void StartRecordingMatch()
 		{
 			if( CurrentRound != null )
 			{
@@ -141,7 +164,7 @@ namespace MatchRecorder
 			RecorderHandler?.StartRecordingMatch();
 		}
 
-		internal void StopRecordingMatch()
+		private void StopRecordingMatch()
 		{
 			if( CurrentMatch != null )
 			{
@@ -151,7 +174,22 @@ namespace MatchRecorder
 			RecorderHandler?.StopRecordingMatch();
 		}
 
-		public MatchData StartCollectingMatchData( DateTime time )
+		private void StartRecordingRound()
+		{
+			RecorderHandler?.StartRecordingRound();
+		}
+
+		private void StopRecordingRound()
+		{
+			if( CurrentRound != null )
+			{
+				ShowHUDmessage( $"Recorded {CurrentRound.Name}" );
+			}
+
+			RecorderHandler?.StopRecordingRound();
+		}
+
+		internal MatchData StartCollectingMatchData( DateTime time )
 		{
 			CurrentMatch = new MatchData
 			{
@@ -162,7 +200,7 @@ namespace MatchRecorder
 			return CurrentMatch;
 		}
 
-		public MatchData StopCollectingMatchData( DateTime time )
+		internal MatchData StopCollectingMatchData( DateTime time )
 		{
 			if( CurrentMatch == null )
 			{
@@ -184,7 +222,7 @@ namespace MatchRecorder
 			return newMatchData;
 		}
 
-		public RoundData StartCollectingRoundData( DateTime startTime )
+		internal RoundData StartCollectingRoundData( DateTime startTime )
 		{
 			CurrentRound = new RoundData()
 			{
@@ -205,7 +243,7 @@ namespace MatchRecorder
 			return CurrentRound;
 		}
 
-		public RoundData StopCollectingRoundData( DateTime endTime )
+		internal RoundData StopCollectingRoundData( DateTime endTime )
 		{
 			if( CurrentRound == null )
 			{
@@ -227,7 +265,6 @@ namespace MatchRecorder
 			return newRoundData;
 		}
 
-		public void Update() => RecorderHandler?.Update();
 
 		#region UTILITY
 
@@ -246,6 +283,7 @@ namespace MatchRecorder
 				if( disposing )
 				{
 					GameDatabase?.Dispose();
+					MessageHandler?.Dispose();
 				}
 
 				disposedValue = true;

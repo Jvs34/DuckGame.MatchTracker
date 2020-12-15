@@ -9,7 +9,7 @@ using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchRecorderOOP
+namespace MatchRecorder
 {
 	class Program
 	{
@@ -18,20 +18,11 @@ namespace MatchRecorderOOP
 #if DEBUG
 			Debugger.Launch();
 #endif
-			using var handler = new MessageHandler( true );
-			handler.OnReceiveMessage += OnReceiveMessage;
+			using var recorderHandler = new MatchRecorderServer( Directory.GetCurrentDirectory() );
 
-			var loopTask = Task.Run( async () => await handler.ThreadedLoop() );
+			await recorderHandler.RunAsync( CancellationToken.None );
 
-			while( !loopTask.IsCompleted )
-			{
-				Console.WriteLine( "Checking for new messages" );
-				handler.CheckMessages();
-
-				await Task.Delay( TimeSpan.FromSeconds( 4 ) );
-			}
-
-			//using var recorderHandler = new MatchRecorder.MatchRecorderServer( Directory.GetCurrentDirectory() );
+			Console.WriteLine( "Finished running program" );
 			Console.ReadLine();
 		}
 
