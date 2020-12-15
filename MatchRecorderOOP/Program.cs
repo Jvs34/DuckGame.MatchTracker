@@ -16,15 +16,22 @@ namespace MatchRecorder
 		static async Task Main( string [] args )
 		{
 #if DEBUG
-			Debugger.Launch();
+			//Debugger.Launch();
 #endif
-			using var recorderHandler = new MatchRecorderServer( Directory.GetCurrentDirectory() );
+			CancellationTokenSource tokenSource = new CancellationTokenSource();
 
-			await recorderHandler.RunAsync( CancellationToken.None );
+			Console.CancelKeyPress += ( object sender , ConsoleCancelEventArgs e ) =>
+			{
+				tokenSource.Cancel();
+			};
+
+			using var recorderHandler = new MatchRecorderServer( Directory.GetCurrentDirectory() );
+			await recorderHandler.RunAsync( tokenSource.Token );
 
 			Console.WriteLine( "Finished running program" );
 			Console.ReadLine();
 		}
+
 
 		static void OnReceiveMessage( BaseMessage message )
 		{

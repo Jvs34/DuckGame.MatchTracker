@@ -59,57 +59,67 @@ namespace MatchRecorder
 
 			RecorderHandler = new ObsLocalRecorder( this );
 			MessageHandler.OnReceiveMessage += OnReceiveMessage;
-
-			/*
-			handler.
-
-			var loopTask = Task.Run( async () => await handler.ThreadedLoop() );
-
-			while( !loopTask.IsCompleted )
-			{
-				Console.WriteLine( "Checking for new messages" );
-				handler.CheckMessages();
-
-				await Task.Delay( TimeSpan.FromSeconds( 4 ) );
-			}
-
-			 */
 		}
 
 		public async Task RunAsync( System.Threading.CancellationToken token = default )
 		{
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
+			Console.WriteLine( $"Started {nameof( MatchRecorderServer.RunAsync )}" );
+			token.Register( () =>
+			{
+				StopRecordingRound();
+				StopRecordingMatch();
+			} );
 
 			while( !token.IsCancellationRequested )
 			{
 				if( MessageHandlerTask is null || MessageHandlerTask.IsCompleted )
 				{
-					Task.Run( async () => await MessageHandler.ThreadedLoop( token ) , token );
+					Console.WriteLine( "Starting MessageHandler task" );
+					MessageHandlerTask = Task.Run( async () =>
+					{
+						try
+						{
+							await MessageHandler.ThreadedLoop( token );
+						}
+						catch( Exception e )
+						{
+							Console.WriteLine( e );
+							System.Diagnostics.Debug.WriteLine( e );
+						}
+					} , token );
 				}
 
 				MessageHandler.CheckMessages();
 				RecorderHandler?.Update();
 
-				await Task.Delay( 100 , token );
+				//await Task.Delay( 100 , token );
 			}
+
+			await Task.CompletedTask;
 #pragma warning restore CS4014
 		}
 
 		public void OnReceiveMessage( BaseMessage message )
 		{
+			Console.WriteLine( $"Received a message of type {message.GetType()}" );
+
 			switch( message )
 			{
 				case StartMatchMessage smm:
 					{
-						IsRecordingMatch = true;
+						if( !IsRecordingMatch )
+						{
 
-						PendingMatchData.Players = smm.Players;
-						PendingMatchData.Teams = smm.Teams;
 
-						//TODO: check if PlayersData exists in the database and add them otherwise
-						//smm.PlayersData
+							PendingMatchData.Players = smm.Players;
+							PendingMatchData.Teams = smm.Teams;
 
-						StartRecordingMatch();
+							//TODO: check if PlayersData exists in the database and add them otherwise
+
+							IsRecordingMatch = true;
+							StartRecordingMatch();
+						}
 						break;
 					}
 				case EndMatchMessage emm:

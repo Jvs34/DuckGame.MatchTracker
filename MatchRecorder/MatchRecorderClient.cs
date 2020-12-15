@@ -28,6 +28,7 @@ namespace MatchRecorder
 
 		private void OnReceiveMessage( BaseMessage message )
 		{
+			System.Diagnostics.Debug.WriteLine( $"Receiving a message of type {message.GetType()}" );
 			if( message is ShowHUDTextMessage hudtext )
 			{
 				ShowHUDMessage( hudtext.Text );
@@ -48,6 +49,7 @@ namespace MatchRecorder
 
 			if( ( MessageHandlerTask is null || MessageHandlerTask.IsCompleted == true ) && MessageHandler != null )
 			{
+				System.Diagnostics.Debug.WriteLine( "Starting MessageHandler task" );
 				MessageHandlerTask = Task.Run( async () =>
 				{
 					try
@@ -153,8 +155,6 @@ namespace MatchRecorder
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
 	internal static class Level_SetCurrent
 	{
-		//changed the Postfix to a Prefix so we can get the Level.current before it's changed to the new one
-		//as we use it to check if the nextlevel is going to be a GameLevel if this one is a RockScoreboard, then we try collecting matchdata again
 		private static void Postfix()
 		{
 			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
@@ -164,44 +164,12 @@ namespace MatchRecorder
 
 
 			//regardless if the current level can be recorded or not, we're done with the current round recording so just save and stop
-
 			MatchRecorderMod.Instance.Recorder.StopRecordingRound();
 
 			if( Level.current is GameLevel )
 			{
 				MatchRecorderMod.Instance.Recorder.StartRecordingMatch();
 			}
-		}
-	}
-
-	//this is called once when a new match starts, but not if you're a client and in multiplayer and the host decides to continue from the endgame screen instead of going
-	//back to lobby first
-	[HarmonyPatch( typeof( Main ) , "ResetMatchStuff" )]
-	internal static class Main_ResetMatchStuff
-	{
-		private static void Prefix()
-		{
-			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
-			{
-				return;
-			}
-
-			MatchRecorderMod.Instance.Recorder.StopRecordingMatch();
-
-		}
-	}
-
-	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
-	internal static class UpdateLoop
-	{
-		private static void Prefix()
-		{
-			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
-			{
-				return;
-			}
-
-			MatchRecorderMod.Instance.Recorder.Update();
 		}
 	}
 
@@ -225,6 +193,37 @@ namespace MatchRecorder
 		}
 	}
 
-#pragma warning restore IDE0051 // Remove unused private members
+	//this is called once when a new match starts, but not if you're a client and in multiplayer and the host decides to continue from the endgame screen instead of going
+	//back to lobby first
+	[HarmonyPatch( typeof( Main ) , "ResetMatchStuff" )]
+	internal static class Main_ResetMatchStuff
+	{
+		private static void Prefix()
+		{
+			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
+			{
+				return;
+			}
+
+			MatchRecorderMod.Instance.Recorder.StopRecordingMatch();
+		}
+	}
+
+
+	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
+	internal static class UpdateLoop
+	{
+		private static void Prefix()
+		{
+			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
+			{
+				return;
+			}
+
+			MatchRecorderMod.Instance.Recorder.Update();
+		}
+	}
+
+#pragma warning restore IDE0051
 	#endregion HOOKS
 }

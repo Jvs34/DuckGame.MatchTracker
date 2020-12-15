@@ -6,8 +6,9 @@ using System.Text;
 
 namespace MatchRecorderShared
 {
-	internal interface IMessageHandler
+	public interface IMessageHandler
 	{
 		void OnReceiveMessageInternal( JObject message );
+		event Action<BaseMessage> OnReceiveMessage;
 	}
 }

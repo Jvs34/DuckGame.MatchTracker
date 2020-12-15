@@ -36,6 +36,7 @@ namespace MatchRecorderShared
 
 		public void SendMessage( BaseMessage message )
 		{
+			System.Diagnostics.Debug.WriteLine( $"Sending a message of type {message.GetType()}" );
 			SendMessagesQueue.Enqueue( message );
 		}
 
