@@ -11,7 +11,7 @@ namespace MatchRecorderShared.Messages
 		public TeamData Winner { get; set; }
 		public List<string> Players { get; set; }
 		public List<TeamData> Teams { get; set; }
-
+		public List<PlayerData> PlayersData { get; set; }
 		public List<string> GetWinners() => Winner?.Players ?? new List<string>();
 	}
 }

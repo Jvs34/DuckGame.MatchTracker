@@ -20,12 +20,12 @@ namespace MatchRecorder
 		/// <summary>
 		/// Data that has arrived from network messages yet to be processed
 		/// </summary>
-		private MatchData PendingMatchData { get; set; }
+		private MatchData PendingMatchData { get; set; } = new MatchData();
 
 		/// <summary>
 		/// Data that has arrived from network messages yet to be processed
 		/// </summary>
-		private RoundData PendingRoundData { get; set; }
+		private RoundData PendingRoundData { get; set; } = new RoundData();
 		public IGameDatabase GameDatabase { get; }
 		public bool IsRecordingRound => RecorderHandler.IsRecording;
 		public bool IsRecordingMatch { get; set; }
@@ -181,8 +181,6 @@ namespace MatchRecorder
 			RoundData newRoundData = CurrentRound;
 
 			CurrentRound = null;
-
-
 			PendingRoundData = new RoundData();
 
 			return newRoundData;
@@ -244,8 +242,7 @@ namespace MatchRecorder
 			} );
 		}
 
-		public bool IsLevelRecordable( DuckGame.Level level ) => level is DuckGame.GameLevel;
-
+		/*
 		public void AddTeamAndPlayerData( IWinner winnerObject )
 		{
 			foreach( DuckGame.Team team in DuckGame.Teams.active )
@@ -273,7 +270,7 @@ namespace MatchRecorder
 		}
 
 		//TODO: implement this
-		/*
+		
 		public void GatherLevelData( DuckGame.Level level )
 		{
 			string levelID = level.level;
@@ -306,9 +303,7 @@ namespace MatchRecorder
 				Description = dgLevelData.workshopData?.description
 			};
 		}
-		*/
 
-		/*
 		private PlayerData CreatePlayerDataFromProfile( DuckGame.Profile profile , IWinner winnerObject )
 		{
 			string onlineID = profile.steamID.ToString();
