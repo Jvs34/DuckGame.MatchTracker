@@ -82,7 +82,7 @@ namespace MatchRecorder
 
 			while( !token.IsCancellationRequested )
 			{
-				if( MessageHandlerTask is null | MessageHandlerTask.IsCompleted )
+				if( MessageHandlerTask is null || MessageHandlerTask.IsCompleted )
 				{
 					Task.Run( async () => await MessageHandler.ThreadedLoop( token ) , token );
 				}
