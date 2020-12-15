@@ -2,7 +2,6 @@
 
 namespace MatchTracker
 {
-	//TODO
 	public class LevelData : ITagsList, IDatabaseEntry
 	{
 		/// <summary>

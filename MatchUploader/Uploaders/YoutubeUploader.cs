@@ -133,7 +133,6 @@ namespace MatchUploader
 					upload.LastException = string.Empty;
 				}
 
-				//TODO:Maybe it's possible to create a throttable request by extending the class of this one and initializing it with this one's values
 				var videosInsertRequest = Service.Videos.Insert( videoData , "snippet,status,recordingDetails" , videoStream , "video/*" );
 				videosInsertRequest.ChunkSize = ResumableUpload.DefaultChunkSize;
 				videosInsertRequest.ProgressChanged += OnYoutubeUploadProgress;

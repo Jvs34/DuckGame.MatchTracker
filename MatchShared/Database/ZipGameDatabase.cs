@@ -79,13 +79,10 @@ namespace MatchTracker
 			{
 				if( disposing )
 				{
-					// TODO: dispose managed state (managed objects)
 					Archive?.Dispose();
 					ArchiveStream?.Dispose();
 				}
 
-				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
-				// TODO: set large fields to null
 				disposedValue = true;
 			}
 		}

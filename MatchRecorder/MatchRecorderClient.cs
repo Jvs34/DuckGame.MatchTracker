@@ -82,7 +82,7 @@ namespace MatchRecorder
 		{
 			MessageHandler?.SendMessage( new StartRoundMessage()
 			{
-				Level = Level.current.level ,
+				LevelName = Level.current.level ,
 				Teams = Teams.active.Select( x => ConvertDuckGameTeamToTeamData( x ) ).ToList() ,
 				Players = Profiles.activeNonSpectators.Select( x => GetPlayerID( x ) ).ToList() ,
 			} );
