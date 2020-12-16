@@ -37,7 +37,7 @@ namespace MatchRecorder
 
 		public MatchRecorderServer( string settingsPath )
 		{
-			MessageHandler = new MessageHandler( true );
+			MessageHandler = new MessageHandler();
 
 			SettingsPath = settingsPath;
 			GameDatabase = new FileSystemGameDatabase();
@@ -80,7 +80,7 @@ namespace MatchRecorder
 					{
 						try
 						{
-							await MessageHandler.ThreadedLoop( token );
+							//await MessageHandler.ThreadedLoop( token );
 						}
 						catch( Exception e )
 						{

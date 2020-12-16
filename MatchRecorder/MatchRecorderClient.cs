@@ -17,12 +17,12 @@ namespace MatchRecorder
 	{
 		public string ModPath { get; }
 		private Process RecorderProcess { get; set; }
-		private MessageHandler MessageHandler { get; }
+		private ClientMessageHandler MessageHandler { get; }
 		private Task MessageHandlerTask { get; set; }
 		public MatchRecorderClient( string directory )
 		{
 			ModPath = directory;
-			MessageHandler = new MessageHandler( false );
+			MessageHandler = new ClientMessageHandler();
 			MessageHandler.OnReceiveMessage += OnReceiveMessage;
 		}
 
@@ -54,7 +54,7 @@ namespace MatchRecorder
 				{
 					try
 					{
-						await MessageHandler.ThreadedLoop();
+						//await MessageHandler.ThreadedLoop();
 					}
 					catch( Exception e )
 					{
