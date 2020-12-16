@@ -8,15 +8,17 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	internal sealed class ClientMessageHandler
+	internal sealed class ClientMessageHandler : IMessageHandler
 	{
 		public bool Connected => HubConnection.State == HubConnectionState.Connected;
 		public event Action<BaseMessage> OnReceiveMessage;
 		private HubConnection HubConnection { get; }
+		private ConcurrentQueue<BaseMessage> SendMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
 		private ConcurrentQueue<BaseMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
 
 		public ClientMessageHandler()
@@ -25,6 +27,12 @@ namespace MatchRecorder
 				.WithUrl( "http://localhost:6969/MatchRecorderHub" )
 				.WithAutomaticReconnect( new TimeSpan [] { TimeSpan.FromSeconds( 1 ) } )
 				.Build();
+
+			HubConnection.On<StartMatchMessage>( nameof( ReceiveStartMatchMessage ) , ReceiveStartMatchMessage );
+			HubConnection.On<EndMatchMessage>( nameof( ReceiveEndMatchMessage ) , ReceiveEndMatchMessage );
+			HubConnection.On<StartRoundMessage>( nameof( ReceiveStartRoundMessage ) , ReceiveStartRoundMessage );
+			HubConnection.On<EndRoundMessage>( nameof( ReceiveEndRoundMessage ) , ReceiveEndRoundMessage );
+			HubConnection.On<ShowHUDTextMessage>( nameof( ReceiveShowHUDTextMessage ) , ReceiveShowHUDTextMessage );
 		}
 
 		public async Task ConnectAsync()
@@ -37,27 +45,85 @@ namespace MatchRecorder
 
 		public void SendMessage( BaseMessage message )
 		{
-
+			SendMessagesQueue.Enqueue( message );
 		}
+
 		internal void CheckMessages()
 		{
-
+			while( ReceiveMessagesQueue.TryDequeue( out var message ) )
+			{
+				OnReceiveMessage?.Invoke( message );
+			}
 		}
 
-		private async Task OnConnectionClosed( Exception exception )
+		internal async Task ThreadedLoop( CancellationToken token = default )
 		{
-			Console.WriteLine( exception );
-			Debug.WriteLine( exception );
-			await Task.Delay( 500 );
-			await HubConnection.StartAsync();
+			while( !token.IsCancellationRequested )
+			{
+				while( SendMessagesQueue.TryDequeue( out var message ) )
+				{
+					switch( message )
+					{
+						case StartMatchMessage smm:
+							{
+								await HubConnection.InvokeAsync( nameof( ReceiveStartMatchMessage ) , smm );
+								break;
+							}
+						case EndMatchMessage emm:
+							{
+								await HubConnection.InvokeAsync( nameof( ReceiveEndMatchMessage ) , emm );
+								break;
+							}
+						case StartRoundMessage srm:
+							{
+								await HubConnection.InvokeAsync( nameof( ReceiveStartRoundMessage ) , srm );
+								break;
+							}
+						case EndRoundMessage erm:
+							{
+								await HubConnection.InvokeAsync( nameof( ReceiveEndRoundMessage ) , erm );
+								break;
+							}
+						case ShowHUDTextMessage shtm:
+							{
+								await HubConnection.InvokeAsync( nameof( ReceiveShowHUDTextMessage ) , shtm );
+								break;
+							}
+						default:
+							break;
+					}
+				}
+			}
 		}
 
-
-		public void OnReceiveMessageInternal( JObject message )
+		public async Task ReceiveStartMatchMessage( StartMatchMessage message )
 		{
-
+			ReceiveMessagesQueue.Enqueue( message );
+			await Task.CompletedTask;
 		}
 
+		public async Task ReceiveEndMatchMessage( EndMatchMessage message )
+		{
+			ReceiveMessagesQueue.Enqueue( message );
+			await Task.CompletedTask;
+		}
 
+		public async Task ReceiveStartRoundMessage( StartRoundMessage message )
+		{
+			ReceiveMessagesQueue.Enqueue( message );
+			await Task.CompletedTask;
+		}
+
+		public async Task ReceiveEndRoundMessage( EndRoundMessage message )
+		{
+			ReceiveMessagesQueue.Enqueue( message );
+			await Task.CompletedTask;
+		}
+
+		public async Task ReceiveShowHUDTextMessage( ShowHUDTextMessage message )
+		{
+			ReceiveMessagesQueue.Enqueue( message );
+			await Task.CompletedTask;
+		}
 	}
 }

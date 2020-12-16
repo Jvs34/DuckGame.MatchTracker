@@ -45,7 +45,7 @@ namespace MatchRecorder
 
 		internal void Update()
 		{
-			CheckRecorderProcess();
+			//CheckRecorderProcess();
 
 			if( ( MessageHandlerTask is null || MessageHandlerTask.IsCompleted == true ) && MessageHandler != null )
 			{
@@ -54,7 +54,8 @@ namespace MatchRecorder
 				{
 					try
 					{
-						//await MessageHandler.ThreadedLoop();
+						await MessageHandler.ConnectAsync();
+						await MessageHandler.ThreadedLoop();
 					}
 					catch( Exception e )
 					{
@@ -169,6 +170,11 @@ namespace MatchRecorder
 			if( Level.current is GameLevel )
 			{
 				MatchRecorderMod.Instance.Recorder.StartRecordingMatch();
+			}
+
+			if( Level.current is TitleScreen )
+			{
+				MatchRecorderMod.Instance.Recorder.StopRecordingMatch();
 			}
 		}
 	}

@@ -1,42 +1,26 @@
-﻿using MatchRecorderShared;
-using MatchRecorderShared.Messages;
-using System;
-using System.Diagnostics;
-using System.IO;
-using System.Net;
-using System.Net.Sockets;
-using System.Net.WebSockets;
-using System.Threading;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
 	class Program
 	{
-		static async Task Main( string [] args )
-		{
-#if DEBUG
-			//Debugger.Launch();
-#endif
-			CancellationTokenSource tokenSource = new CancellationTokenSource();
+		public static async Task Main( string [] args ) => await CreateHostBuilder( args ).Build().RunAsync();
 
-			Console.CancelKeyPress += ( object sender , ConsoleCancelEventArgs e ) =>
-			{
-				tokenSource.Cancel();
-			};
-
-			using var recorderHandler = new MatchRecorderServer( Directory.GetCurrentDirectory() );
-			await recorderHandler.RunAsync( tokenSource.Token );
-
-			Console.WriteLine( "Finished running program" );
-			Console.ReadLine();
-		}
-
-
-		static void OnReceiveMessage( BaseMessage message )
-		{
-			Console.WriteLine( $"Receive message of type {message.GetType()}" );
-		}
-
+		public static IHostBuilder CreateHostBuilder( string [] args ) =>
+			Host
+				.CreateDefaultBuilder( args )
+				.ConfigureLogging( logging =>
+				{
+					logging.ClearProviders();
+					logging.AddConsole();
+				} )
+				.ConfigureWebHostDefaults( webBuilder =>
+				{
+					webBuilder.UseUrls( "http://localhost:6969/" );
+					webBuilder.UseStartup<Startup>();
+				} );
 	}
 }

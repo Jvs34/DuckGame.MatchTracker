@@ -1,15 +1,18 @@
 ﻿using MatchRecorderShared;
 using MatchRecorderShared.Messages;
 using MatchTracker;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	internal class MatchRecorderServer : IDisposable
+	internal class MatchRecorderServer : BackgroundService, IDisposable
 	{
 		private bool disposedValue;
 		private IRecorder RecorderHandler { get; }
@@ -30,20 +33,19 @@ namespace MatchRecorder
 		public IGameDatabase GameDatabase { get; }
 		public bool IsRecordingRound => RecorderHandler.IsRecording;
 		public bool IsRecordingMatch { get; set; }
+		public IMessageQueue MessageQueue { get; }
 		public string SettingsPath { get; }
 		private IConfigurationRoot Configuration { get; }
-		private MessageHandler MessageHandler { get; }
 		private Task MessageHandlerTask { get; set; }
 
-		public MatchRecorderServer( string settingsPath )
+		public MatchRecorderServer( IMessageQueue messageQueue )
 		{
-			MessageHandler = new MessageHandler();
-
-			SettingsPath = settingsPath;
+			MessageQueue = messageQueue;
+			SettingsPath = Directory.GetCurrentDirectory();
 			GameDatabase = new FileSystemGameDatabase();
 
 			Configuration = new ConfigurationBuilder()
-				.SetBasePath( Path.Combine( settingsPath , "Settings" ) )
+				.SetBasePath( Path.Combine( SettingsPath , "Settings" ) )
 #if DEBUG
 				.AddJsonFile( "shared_debug.json" )
 #else
@@ -58,46 +60,37 @@ namespace MatchRecorder
 			Configuration.Bind( OBSSettings );
 
 			RecorderHandler = new ObsLocalRecorder( this );
-			MessageHandler.OnReceiveMessage += OnReceiveMessage;
 		}
 
-		public async Task RunAsync( System.Threading.CancellationToken token = default )
+		protected override async Task ExecuteAsync( CancellationToken token )
 		{
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-			Console.WriteLine( $"Started {nameof( MatchRecorderServer.RunAsync )}" );
-			token.Register( () =>
-			{
-				StopRecordingRound();
-				StopRecordingMatch();
-			} );
+			Console.WriteLine( $"Started {nameof( MatchRecorderServer.ExecuteAsync )}" );
 
-			while( !token.IsCancellationRequested )
+			Task.Factory.StartNew( async() =>
 			{
-				if( MessageHandlerTask is null || MessageHandlerTask.IsCompleted )
+				while( !token.IsCancellationRequested )
 				{
-					Console.WriteLine( "Starting MessageHandler task" );
-					MessageHandlerTask = Task.Run( async () =>
-					{
-						try
-						{
-							//await MessageHandler.ThreadedLoop( token );
-						}
-						catch( Exception e )
-						{
-							Console.WriteLine( e );
-							System.Diagnostics.Debug.WriteLine( e );
-						}
-					} , token );
+					CheckMessages();
+					RecorderHandler?.Update();
+					await Task.Delay( 100 , token );
 				}
 
-				MessageHandler.CheckMessages();
-				RecorderHandler?.Update();
+				StopRecordingRound();
+				StopRecordingMatch();
+			} , token , TaskCreationOptions.LongRunning , TaskScheduler.Default );
 
-				//await Task.Delay( 100 , token );
-			}
 
 			await Task.CompletedTask;
 #pragma warning restore CS4014
+		}
+
+		internal void CheckMessages()
+		{
+			while( MessageQueue.ReceiveMessagesQueue.TryDequeue( out var message ) )
+			{
+				OnReceiveMessage( message );
+			}
 		}
 
 		public void OnReceiveMessage( BaseMessage message )
@@ -110,8 +103,6 @@ namespace MatchRecorder
 					{
 						if( !IsRecordingMatch )
 						{
-
-
 							PendingMatchData.Players = smm.Players;
 							PendingMatchData.Teams = smm.Teams;
 
@@ -280,7 +271,7 @@ namespace MatchRecorder
 
 		public void ShowHUDmessage( string message )
 		{
-			MessageHandler.SendMessage( new ShowHUDTextMessage()
+			MessageQueue.SendMessagesQueue.Enqueue( new ShowHUDTextMessage()
 			{
 				Text = message
 			} );
@@ -293,19 +284,19 @@ namespace MatchRecorder
 				if( disposing )
 				{
 					GameDatabase?.Dispose();
-					MessageHandler?.Dispose();
 				}
 
 				disposedValue = true;
 			}
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
 			Dispose( disposing: true );
 			GC.SuppressFinalize( this );
 		}
+
 		#endregion UTILITY
 	}
 

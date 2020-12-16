@@ -61,6 +61,10 @@ namespace MatchRecorder
 		public void StartRecordingRound()
 		{
 			var round = MainHandler.StartCollectingRoundData( DateTime.Now );
+			if( round is null )
+			{
+				return;
+			}
 			round.VideoType = VideoType.MergedVideoLink;
 			round.VideoStartTime = MergedRoundDuration;
 		}
@@ -68,6 +72,11 @@ namespace MatchRecorder
 		public void StopRecordingRound()
 		{
 			var round = MainHandler.StopCollectingRoundData( DateTime.Now );
+			if( round is null )
+			{
+				return;
+			}
+
 			MergedRoundDuration = +round.GetDuration();
 			round.VideoEndTime = MergedRoundDuration;
 		}
@@ -104,7 +113,6 @@ namespace MatchRecorder
 			{
 				case OutputState.Started:
 					{
-
 						if( RequestedRecordingStop )
 						{
 							try
@@ -112,7 +120,12 @@ namespace MatchRecorder
 								DateTime endTime = DateTime.Now;
 								ObsHandler.StopRecording();
 								RequestedRecordingStop = false;
-								MainHandler.StopCollectingMatchData( endTime );
+								var match = MainHandler.StopCollectingMatchData( endTime );
+								if( match is null )
+								{
+									break;
+								}
+
 							}
 							catch( Exception )
 							{
@@ -139,6 +152,12 @@ namespace MatchRecorder
 								ObsHandler.StartRecording();
 								RequestedRecordingStart = false;
 								var match = MainHandler.StartCollectingMatchData( recordingTime );
+
+								if( match is null )
+								{
+									break;
+								}
+
 								match.VideoType = VideoType.MergedVideoLink;
 								match.VideoEndTime = match.GetDuration();
 								MergedRoundDuration = TimeSpan.Zero;
