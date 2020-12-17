@@ -10,7 +10,7 @@ namespace MatchRecorder
 {
 	internal sealed class ObsLocalRecorder : IRecorder
 	{
-		private MatchRecorderServer MainHandler { get; }
+		private MatchRecorderService MainHandler { get; }
 		private OBSWebsocket ObsHandler { get; }
 		private OutputState RecordingState { get; set; }
 		private bool RequestedRecordingStart { get; set; }
@@ -26,7 +26,7 @@ namespace MatchRecorder
 		private TimeSpan MergedRoundDuration { get; set; } = TimeSpan.Zero;
 
 
-		public ObsLocalRecorder( MatchRecorderServer parent )
+		public ObsLocalRecorder( MatchRecorderService parent )
 		{
 			ResultingRecordingType = RecordingType.Video;
 			MainHandler = parent;
@@ -77,7 +77,7 @@ namespace MatchRecorder
 				return;
 			}
 
-			MergedRoundDuration = +round.GetDuration();
+			MergedRoundDuration += round.GetDuration();
 			round.VideoEndTime = MergedRoundDuration;
 		}
 

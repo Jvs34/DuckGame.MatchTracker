@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Builder;
+﻿using MatchRecorder.Initializers;
+using MatchTracker;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -11,11 +13,15 @@ namespace MatchRecorder
 		public void ConfigureServices( IServiceCollection services )
 		{
 			services.AddSignalR();
-			
+			services.AddAsyncInitializer<IGameDatabaseInitializer>();
+
+			//database
+			services.AddSingleton<IGameDatabase , FileSystemGameDatabase>();
+
 			//recorder
-			services.AddSingleton<IMessageQueue , MessageQueue>();
-			services.AddHostedService<MatchRecorderServer>();
-			services.AddHostedService<MessageSender>();
+			services.AddSingleton<IModToRecorderMessageQueue , ModToRecorderMessageQueue>();
+			services.AddHostedService<MatchRecorderService>();
+			services.AddHostedService<RecorderToModSenderService>();
 		}
 
 		// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

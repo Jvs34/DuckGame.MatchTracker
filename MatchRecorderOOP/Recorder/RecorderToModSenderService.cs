@@ -10,13 +10,13 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	internal class MessageSender : BackgroundService
+	internal class RecorderToModSenderService : BackgroundService
 	{
 		private ILogger MyLogger { get; }
-		private IMessageQueue MessageQueue { get; }
+		private IModToRecorderMessageQueue MessageQueue { get; }
 		private IHubContext<MatchRecorderHub> MatchRecorderHub { get; }
 
-		public MessageSender( ILogger<MessageSender> logger , IMessageQueue messageQueue , IHubContext<MatchRecorderHub> hub )
+		public RecorderToModSenderService( ILogger<RecorderToModSenderService> logger , IModToRecorderMessageQueue messageQueue , IHubContext<MatchRecorderHub> hub )
 		{
 			MyLogger = logger;
 			MessageQueue = messageQueue;
@@ -70,6 +70,7 @@ namespace MatchRecorder
 						default:
 							break;
 					}
+					await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , token );
 				}
 			}
 		}

@@ -7,16 +7,15 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	public interface IMessageQueue
+	internal interface IModToRecorderMessageQueue
 	{
 		ConcurrentQueue<BaseMessage> SendMessagesQueue { get; }
 		ConcurrentQueue<BaseMessage> ReceiveMessagesQueue { get; }
 	}
 
-	public class MessageQueue : IMessageQueue
+	internal class ModToRecorderMessageQueue : IModToRecorderMessageQueue
 	{
 		public ConcurrentQueue<BaseMessage> SendMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
-
 		public ConcurrentQueue<BaseMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
 	}
 }

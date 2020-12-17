@@ -12,9 +12,9 @@ namespace MatchRecorder
 	internal class MatchRecorderHub : Hub<IMessageHandler>, IMessageHandler
 	{
 		private ILogger MyLogger { get; }
-		private IMessageQueue MessageQueue { get; }
+		private IModToRecorderMessageQueue MessageQueue { get; }
 
-		public MatchRecorderHub( ILogger<MatchRecorderHub> logger , IMessageQueue messageQueue )
+		public MatchRecorderHub( ILogger<MatchRecorderHub> logger , IModToRecorderMessageQueue messageQueue )
 		{
 			MyLogger = logger;
 			MessageQueue = messageQueue;

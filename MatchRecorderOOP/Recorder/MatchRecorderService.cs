@@ -12,9 +12,8 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	internal class MatchRecorderServer : BackgroundService, IDisposable
+	internal class MatchRecorderService : BackgroundService
 	{
-		private bool disposedValue;
 		private IRecorder RecorderHandler { get; }
 		public BotSettings BotSettings { get; } = new BotSettings();
 		public OBSSettings OBSSettings { get; } = new OBSSettings();
@@ -33,29 +32,17 @@ namespace MatchRecorder
 		public IGameDatabase GameDatabase { get; }
 		public bool IsRecordingRound => RecorderHandler.IsRecording;
 		public bool IsRecordingMatch { get; set; }
-		public IMessageQueue MessageQueue { get; }
-		public string SettingsPath { get; }
-		private IConfigurationRoot Configuration { get; }
+		public IModToRecorderMessageQueue MessageQueue { get; }
+		private IConfiguration Configuration { get; }
 		private Task MessageHandlerTask { get; set; }
 
-		public MatchRecorderServer( IMessageQueue messageQueue )
+		public MatchRecorderService( IModToRecorderMessageQueue messageQueue , IGameDatabase db , IConfiguration configuration )
 		{
 			MessageQueue = messageQueue;
-			SettingsPath = Directory.GetCurrentDirectory();
-			GameDatabase = new FileSystemGameDatabase();
+			GameDatabase = db;
 
-			Configuration = new ConfigurationBuilder()
-				.SetBasePath( Path.Combine( SettingsPath , "Settings" ) )
-#if DEBUG
-				.AddJsonFile( "shared_debug.json" )
-#else
-				.AddJsonFile( "shared.json" )
-#endif
-				.AddJsonFile( "bot.json" )
-				.AddJsonFile( "obs.json" )
-			.Build();
+			Configuration = configuration;
 
-			Configuration.Bind( GameDatabase.SharedSettings );
 			Configuration.Bind( BotSettings );
 			Configuration.Bind( OBSSettings );
 
@@ -65,15 +52,15 @@ namespace MatchRecorder
 		protected override async Task ExecuteAsync( CancellationToken token )
 		{
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-			Console.WriteLine( $"Started {nameof( MatchRecorderServer.ExecuteAsync )}" );
+			Console.WriteLine( $"Started {nameof( MatchRecorderService.ExecuteAsync )}" );
 
-			Task.Factory.StartNew( async() =>
+			Task.Factory.StartNew( async () =>
 			{
 				while( !token.IsCancellationRequested )
 				{
 					CheckMessages();
 					RecorderHandler?.Update();
-					await Task.Delay( 100 , token );
+					await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , token );
 				}
 
 				StopRecordingRound();
@@ -275,26 +262,6 @@ namespace MatchRecorder
 			{
 				Text = message
 			} );
-		}
-
-		protected virtual void Dispose( bool disposing )
-		{
-			if( !disposedValue )
-			{
-				if( disposing )
-				{
-					GameDatabase?.Dispose();
-				}
-
-				disposedValue = true;
-			}
-		}
-
-		public override void Dispose()
-		{
-			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-			Dispose( disposing: true );
-			GC.SuppressFinalize( this );
 		}
 
 		#endregion UTILITY
