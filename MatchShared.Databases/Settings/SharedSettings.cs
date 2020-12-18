@@ -25,17 +25,7 @@ namespace MatchTracker
 		public static string Combine( bool isUrl , params string [] paths ) => isUrl ? Url.Combine( paths ) : Path.Combine( paths );
 		public string GetRecordingFolder( bool useUrl = false ) => useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
 		public string GetPath<T>( string databaseIndex , bool useUrl = false ) where T : IDatabaseEntry => GetPath( typeof( T ).Name , databaseIndex , useUrl );
-
-		public string GetPath( string typeName , string databaseIndex , bool useUrl = false )
-		{
-			if( string.IsNullOrEmpty( databaseIndex ) )
-			{
-				databaseIndex = typeName;
-			}
-
-			return Combine( useUrl , GetRecordingFolder( useUrl ) , typeName , databaseIndex );
-		}
-
+		public string GetPath( string typeName , string databaseIndex , bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , typeName , string.IsNullOrEmpty( databaseIndex ) ? typeName : databaseIndex );
 		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) where T : IDatabaseEntry => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
 		public string GetDataPath( string typeName , string databaseIndex = "" , bool useUrl = false ) => Combine( useUrl , GetPath( typeName , databaseIndex , useUrl ) , DataName );
 		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );

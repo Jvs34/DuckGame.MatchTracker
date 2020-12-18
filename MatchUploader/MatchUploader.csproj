@@ -24,10 +24,12 @@
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="5.0.0" />
     <PackageReference Include="Xabe.FFmpeg" Version="4.3.1" />
     <PackageReference Include="Xabe.FFmpeg.Downloader" Version="4.3.1" />
+    <ProjectReference Include="..\MatchShared.Databases\MatchShared.Databases.csproj" />
     <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Interfaces\" />
     <Folder Include="Utility\" />
   </ItemGroup>
 

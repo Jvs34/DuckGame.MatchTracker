@@ -1,7 +1,6 @@
 ﻿using MatchRecorderShared;
 using MatchRecorderShared.Messages;
 using Microsoft.AspNetCore.SignalR.Client;
-using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;

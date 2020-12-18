@@ -1,10 +1,7 @@
-﻿using Newtonsoft.Json;
-
-namespace MatchTracker
+﻿namespace MatchTracker
 {
 	public interface IDatabaseEntry
 	{
-		[JsonIgnore]
 		string DatabaseIndex { get; }
 	}
 }

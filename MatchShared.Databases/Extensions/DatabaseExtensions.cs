@@ -298,5 +298,23 @@ namespace MatchTracker
 
 			await db.SaveData( entryListData );
 		}
+
+		public static async Task CallForRegisteredTypes( this IGameDatabase db , Func<Type , Task> method )
+		{
+			var registeredTypes = new List<Type>()
+			{
+				typeof( EntryListData ),
+				typeof( RoundData ),
+				typeof( MatchData ),
+				typeof( LevelData ),
+				typeof( TagData ),
+				typeof( PlayerData ),
+			};
+
+			foreach( var registeredType in registeredTypes )
+			{
+				await method.Invoke( registeredType );
+			}
+		}
 	}
 }

@@ -161,6 +161,8 @@ namespace MatchRecorder
 								match.VideoType = VideoType.MergedVideoLink;
 								match.VideoEndTime = match.GetDuration();
 								MergedRoundDuration = TimeSpan.Zero;
+
+								MainHandler.GameDatabase.SaveData( match ).Wait();
 							}
 							catch( Exception )
 							{
