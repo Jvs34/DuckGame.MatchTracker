@@ -16,7 +16,7 @@ namespace MatchRecorder
 			services.AddAsyncInitializer<IGameDatabaseInitializer>();
 
 			//database
-			services.AddSingleton<IGameDatabase , FileSystemGameDatabase>();
+			services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
 
 			//recorder
 			services.AddSingleton<IModToRecorderMessageQueue , ModToRecorderMessageQueue>();

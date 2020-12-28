@@ -39,7 +39,7 @@ namespace MatchUploader
 
 			Configuration.Bind( UploaderSettings );
 
-			GameDatabase = new FileSystemGameDatabase();
+			GameDatabase = new LiteDBGameDatabase();
 			Configuration.Bind( GameDatabase.SharedSettings );
 
 			CreateUploaders();
@@ -93,7 +93,7 @@ namespace MatchUploader
 			await LoadDatabase();
 			await Initialize();
 			SaveSettings();
-			await Upload();
+			//await Upload();
 			SaveSettings();
 		}
 

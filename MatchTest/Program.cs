@@ -1,5 +1,7 @@
 ﻿using MatchTracker;
 using Newtonsoft.Json;
+using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,15 +12,20 @@ namespace MatchTest
 	{
 		private static async Task Main( string [] args )
 		{
-			var fuckshit = "2018-04-28 20-19-04";
 
-			IGameDatabase db = new FileSystemGameDatabase
+			using IGameDatabase litedb = new LiteDBGameDatabase()
 			{
 				SharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( Path.Combine( "Settings" , "shared.json" ) ) )
 			};
-			await db.Load();
+			await litedb.Load();
 
+			var data = await litedb.GetData<RoundData>( "2018-09-24 22-53-23" );
 
+			Console.ReadKey();
+			//await CopyDatabaseOverTo( filedb , litedb );
+			//await DeleteAllJsonFiles( filedb as FileSystemGameDatabase );
+			/*
+			var fuckshit = "2018-04-28 20-19-04";
 			fuckshit = ( await db.GetAll<RoundData>() ).Last();
 
 
@@ -28,6 +35,7 @@ namespace MatchTest
 				SharedSettings = JsonConvert.DeserializeObject<SharedSettings>( File.ReadAllText( Path.Combine( "Settings" , "shared.json" ) ) )
 			};
 
+			/*
 			jsondb.SharedSettings.BaseRecordingFolder = @"C:\Users\Jvsth.000.000\Desktop\";
 			jsondb.SharedSettings.DatabaseFile = "data.json";
 
@@ -79,6 +87,24 @@ namespace MatchTest
 				}
 			}
 			*/
+		}
+
+		private static async Task DeleteAllJsonFiles( FileSystemGameDatabase fileSystemGameDatabase )
+		{
+			var mainpath = fileSystemGameDatabase.SharedSettings.BaseRecordingFolder;
+			var filestodelete = Directory.EnumerateFiles( mainpath , "*.json" , new EnumerationOptions()
+			{
+				RecurseSubdirectories = true ,
+				ReturnSpecialDirectories = false
+			} ).ToList();
+
+			filestodelete.ForEach( x => File.Delete( x ) );
+		}
+
+		private static async Task CopyDatabaseOverTo( IGameDatabase from , IGameDatabase to )
+		{
+			var backup = await from.GetBackupAllOut();
+			await to.ImportBackup( backup );
 		}
 	}
 }

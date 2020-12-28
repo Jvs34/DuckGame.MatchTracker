@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MatchRecorderShared.Messages
 {
-	public class BaseMessage
+	public abstract class BaseMessage
 	{
 		public virtual string MessageType { get; set; } = nameof( BaseMessage );
 	}

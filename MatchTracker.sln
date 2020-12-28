@@ -27,7 +27,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorderOOP", "MatchRe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorderShared", "MatchRecorderShared\MatchRecorderShared.csproj", "{334BF617-4AB5-4CC9-8C37-46D412E3BDA5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MatchShared.Databases", "MatchShared.Databases\MatchShared.Databases.csproj", "{E37BEDE5-4525-4DE1-982D-92C7CE0DCFEA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchShared.Databases", "MatchShared.Databases\MatchShared.Databases.csproj", "{E37BEDE5-4525-4DE1-982D-92C7CE0DCFEA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
