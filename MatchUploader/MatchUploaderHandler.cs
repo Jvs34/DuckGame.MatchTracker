@@ -48,7 +48,8 @@ namespace MatchUploader
 		private void CreateUploaders()
 		{
 			AddUploader( new MatchMerger( GameDatabase , UploaderSettings ) );
-			AddUploader( new YoutubeUploader( GameDatabase , UploaderSettings ) );
+			AddUploader( new YoutubeMatchUpdater( GameDatabase , UploaderSettings ) );
+			//AddUploader( new YoutubeRoundUploader( GameDatabase , UploaderSettings ) );
 		}
 
 		private void AddUploader( Uploader uploader )
@@ -58,6 +59,7 @@ namespace MatchUploader
 			if( !UploaderSettings.UploadersInfo.TryGetValue( typeName , out var uploaderInfo ) )
 			{
 				UploaderSettings.UploadersInfo.TryAdd( typeName , uploader.Info );
+				uploaderInfo = uploader.Info;
 			}
 
 			uploader.Info = uploaderInfo;
@@ -93,7 +95,7 @@ namespace MatchUploader
 			await LoadDatabase();
 			await Initialize();
 			SaveSettings();
-			//await Upload();
+			await Upload();
 			SaveSettings();
 		}
 

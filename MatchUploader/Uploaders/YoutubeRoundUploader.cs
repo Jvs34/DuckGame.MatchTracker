@@ -15,11 +15,12 @@ using System.Threading.Tasks;
 
 namespace MatchUploader
 {
-	public class YoutubeUploader : Uploader
+	[Obsolete( "Please use MatchMerger and YoutubeMatchUploader instead, as this is hard to use with the new youtube api change" )]
+	public class YoutubeRoundUploader : Uploader
 	{
 		public YouTubeService Service { get; private set; }
 
-		public YoutubeUploader( IGameDatabase gameDatabase , UploaderSettings settings ) : base( gameDatabase , settings )
+		public YoutubeRoundUploader( IGameDatabase gameDatabase , UploaderSettings settings ) : base( gameDatabase , settings )
 		{
 		}
 
@@ -40,69 +41,9 @@ namespace MatchUploader
 				GZipEnabled = true ,
 			} );
 			Service.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
-
-			/*
-			var pageToken = string.Empty;
-
-			while( pageToken != null )
-			{
-				var req = Service.Search.List( "snippet" );
-				req.Q = string.Empty;
-				req.ForMine = true;
-				req.PageToken = pageToken;
-				req.MaxResults = 50;
-				req.Type = "video";
-
-				var resp = await req.ExecuteAsync();
-
-				var foundVideos = resp.Items.Where( x => x.Snippet.Title == "2020-01-13 21-00-57 Nobody" );
-
-
-
-				pageToken = resp.NextPageToken;
-
-			}
-			*/
-
-			var data = await DB.GetData<MatchData>( "2018-10-23 22-11-52" );
-			var res = await FindYoutubeDraft( new List<IDatabaseEntry>() { data } );
-
-
 		}
 
-		private async Task<Dictionary<IDatabaseEntry , ResourceId>> FindYoutubeDraft( List<IDatabaseEntry> databaseEntries )
-		{
-			var resources = new Dictionary<IDatabaseEntry , ResourceId>();
 
-			var pageToken = string.Empty;
-
-			while( pageToken != null )
-			{
-				var req = Service.Search.List( "snippet" );
-				req.Q = string.Empty;
-				req.ForMine = true;
-				req.PageToken = pageToken;
-				req.MaxResults = 50;
-				req.Type = "video";
-
-				var resp = await req.ExecuteAsync();
-
-				foreach( var item in resp.Items )
-				{
-					var dataEntry = databaseEntries.FirstOrDefault( data => data.DatabaseIndex.Replace( '-' , ' ' ) == item.Snippet.Title );
-
-					if( dataEntry != null )
-					{
-						resources.Add( dataEntry , item.Id );
-					}
-				}
-
-				pageToken = resp.NextPageToken;
-
-			}
-
-			return resources;
-		}
 
 		public override void SetupDefaultInfo()
 		{
@@ -243,9 +184,6 @@ namespace MatchUploader
 			}
 
 			await RemoveRoundVideoFile( roundData.DatabaseIndex );
-
-
-
 			return uploadProgress.Status == UploadStatus.Completed;
 		}
 
