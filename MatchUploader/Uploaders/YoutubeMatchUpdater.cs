@@ -45,18 +45,10 @@ namespace MatchUploader
 			} );
 			Service.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
 
-
-			var data = await DB.GetData<MatchData>( "2018-10-23 22-11-52" );
-			data.YoutubeUrl = "LcLkMn3Duw0";
-			await DB.SaveData( data );
-			/*
-			var newVideoData = await UploaderUtils.GetVideoDataForDatabaseItem( DB , data );
-			await UploaderUtils.UpdateVideoData( Service , "LcLkMn3Duw0" , newVideoData );
-			*/
-			//var stuff2 = await UploaderUtils.GetVideoData( Service , "LcLkMn3Duw0" );
-			/*
-			var res = await FindYoutubeDrafts( new List<IDatabaseEntry>() { data } );
-			*/
+			if( !Directory.Exists( Path.Combine( Path.GetTempPath() , "MatchUploader" ) ) )
+			{
+				Directory.CreateDirectory( Path.Combine( Path.GetTempPath() , "MatchUploader" ) );
+			}
 		}
 
 		private async Task<ResourceId> FindYoutubeDraft( IDatabaseEntry entry ) => await FindYoutubeDraft( entry.DatabaseIndex );
@@ -68,10 +60,11 @@ namespace MatchUploader
 			var req = Service.Search.List( "snippet" );
 			req.Q = strippedName;
 			req.ForMine = true;
-			req.MaxResults = 1;
+			req.MaxResults = 50; //max results to 50, just in case there might be a couple of duplicates
 			req.Type = "video";
 
 			var resp = await req.ExecuteAsync();
+			//duplicate videos do not have a snippet, so filter them out
 			return resp.Items.FirstOrDefault( item => item.Snippet != null && strippedName == item.Snippet.Title )?.Id;
 		}
 
@@ -120,47 +113,101 @@ namespace MatchUploader
 
 		protected override async Task FetchUploads()
 		{
-			var testdata = await DB.GetData<MatchData>( "2018-10-23 22-11-52" );
-			var testUpload = await CreatePendingUpload( testdata );
-			//testUpload.UploadUrl = new Uri( $"https://www.youtube.com/watch?v={await FindYoutubeDraft( testdata )}" );
-			Uploads.Enqueue( testUpload );
-
-			return;
-			/*
 			//try to find any matches that are merged videos and that have a "video.mp4" video in it
 			var concMatches = new ConcurrentBag<MatchData>();
 
+			var toCleanup = new ConcurrentBag<MatchData>();
+
 			await DB.IterateOverAll<MatchData>( ( matchData ) =>
 			{
-				if( matchData.VideoType == VideoType.MergedVideoLink && string.IsNullOrEmpty( matchData.YoutubeUrl ) )
+				if( matchData.VideoType == VideoType.MergedVideoLink )
 				{
-					concMatches.Add( matchData );
+
+					if( string.IsNullOrEmpty( matchData.YoutubeUrl ) )
+					{
+						concMatches.Add( matchData );
+					}
+					else
+					{
+						if( File.Exists( DB.SharedSettings.GetMatchVideoPath( matchData.DatabaseIndex ) ) )
+						{
+							toCleanup.Add( matchData );
+						}
+					}
 				}
 
 				return Task.FromResult( true );
 			} );
 
-			var matchesList = concMatches.ToList<IDatabaseEntry>();
+			foreach( var data in toCleanup )
+			{
+				if( File.Exists( DB.SharedSettings.GetMatchVideoPath( data.DatabaseIndex ) ) )
+				{
+					File.Delete( DB.SharedSettings.GetMatchVideoPath( data.DatabaseIndex ) );
+				}
 
-			var foundVideos = await FindYoutubeDrafts( matchesList );
+				//now check the temp folder too
 
-			foreach( var data in matchesList )
+				if( File.Exists( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{data.DatabaseIndex}.mp4" ) ) )
+				{
+					File.Delete( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{data.DatabaseIndex}.mp4" ) );
+				}
+			}
+
+			foreach( var data in concMatches )
 			{
 				var pendingUpload = await CreatePendingUpload( data );
 
-				if( pendingUpload != null && foundVideos.TryGetValue( data.DatabaseIndex , out var resource ) )
+				if( pendingUpload != null )
 				{
-					pendingUpload.UploadUrl = new Uri( $"https://www.youtube.com/watch?v={resource.VideoId}" );
 					Uploads.Enqueue( pendingUpload );
+
+					//now add the file to the temp path if it doesn't exist
+					if( !File.Exists( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{data.DatabaseIndex}.mp4" ) ) )
+					{
+						File.Copy( DB.SharedSettings.GetMatchVideoPath( data.DatabaseIndex ) , Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{data.DatabaseIndex}.mp4" ) );
+					}
 				}
 			}
-			*/
 		}
 
 		protected override async Task<bool> UploadItem( PendingUpload upload )
 		{
 			var matchData = await DB.GetData<MatchData>( upload.DataName );
 			var videoResource = await FindYoutubeDraft( matchData );
+
+			if( videoResource is null )
+			{
+				return false;
+			}
+
+			//now override the match data to publish the item
+			try
+			{
+				matchData.YoutubeUrl = videoResource.VideoId;
+				var matchVideoData = await UploaderUtils.GetVideoDataForDatabaseItem( DB , matchData );
+				await UploaderUtils.UpdateVideoData( Service , videoResource.VideoId , matchVideoData );
+				await DB.SaveData( matchData );
+
+				//now delete the file in the temp folder and in the normal path
+				if( File.Exists( DB.SharedSettings.GetMatchVideoPath( matchData.DatabaseIndex ) ) )
+				{
+					File.Delete( DB.SharedSettings.GetMatchVideoPath( matchData.DatabaseIndex ) );
+				}
+
+				//now check the temp folder too
+
+				if( File.Exists( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{matchData.DatabaseIndex}.mp4" ) ) )
+				{
+					File.Delete( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{matchData.DatabaseIndex}.mp4" ) );
+				}
+
+				return true;
+			}
+			catch( Exception e )
+			{
+				Console.WriteLine( e );
+			}
 
 			return false;
 		}
