@@ -153,7 +153,7 @@ namespace MatchUploader
 				}
 			}
 
-			foreach( var data in concMatches )
+			foreach( var data in concMatches.OrderBy( x => x.TimeStarted ) )
 			{
 				var pendingUpload = await CreatePendingUpload( data );
 
