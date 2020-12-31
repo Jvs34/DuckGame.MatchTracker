@@ -180,6 +180,14 @@ namespace MatchUploader
 				return false;
 			}
 
+			var draftVideoData = await UploaderUtils.GetVideoData( Service , videoResource.VideoId );
+
+			//ignore videos that haven't been fully uploaded/processed yet
+			if( draftVideoData is null || draftVideoData.ProcessingDetails.ProcessingStatus != "succeeded" )
+			{
+				return false;
+			}
+
 			//now override the match data to publish the item
 			try
 			{

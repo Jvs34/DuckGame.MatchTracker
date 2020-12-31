@@ -106,7 +106,7 @@ namespace MatchUploader
 
 		internal static async Task<Video> GetVideoData( YouTubeService service , string youtubeId )
 		{
-			var req = service.Videos.List( new string [] { "snippet" , "status" } );
+			var req = service.Videos.List( new string [] { "snippet" , "status" , "processingDetails" } );
 			req.Id = youtubeId;
 
 			var resp = await req.ExecuteAsync();
