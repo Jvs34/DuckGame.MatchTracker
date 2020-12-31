@@ -122,7 +122,6 @@ namespace MatchUploader
 			{
 				if( matchData.VideoType == VideoType.MergedVideoLink )
 				{
-
 					if( string.IsNullOrEmpty( matchData.YoutubeUrl ) )
 					{
 						concMatches.Add( matchData );
@@ -188,6 +187,20 @@ namespace MatchUploader
 				var matchVideoData = await UploaderUtils.GetVideoDataForDatabaseItem( DB , matchData );
 				await UploaderUtils.UpdateVideoData( Service , videoResource.VideoId , matchVideoData );
 				await DB.SaveData( matchData );
+
+				//also update the youtubeurl on all the linked rounds
+
+				await DB.IterateOver<RoundData>( async ( roundData ) =>
+				{
+					if( roundData.VideoType == VideoType.MergedVideoLink && string.IsNullOrEmpty( roundData.YoutubeUrl ) )
+					{
+						roundData.YoutubeUrl = videoResource.VideoId;
+						await DB.SaveData( roundData );
+					}
+
+					return true;
+				} , matchData.Rounds );
+
 
 				//now delete the file in the temp folder and in the normal path
 				if( File.Exists( DB.SharedSettings.GetMatchVideoPath( matchData.DatabaseIndex ) ) )
