@@ -45,7 +45,7 @@ namespace MatchRecorder
 
 		internal void Update()
 		{
-			//CheckRecorderProcess();
+			CheckRecorderProcess();
 
 			if( ( MessageHandlerTask is null || MessageHandlerTask.IsCompleted == true ) && MessageHandler != null )
 			{
@@ -76,7 +76,7 @@ namespace MatchRecorder
 					FileName = Path.Combine( ModPath , @"MatchRecorderOOP\bin\Debug\net5.0\MatchRecorderOOP.exe" ) ,
 					WorkingDirectory = ModPath ,
 					CreateNoWindow = false ,
-					//TODO: Arguments
+					Arguments = $"--{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
 				} );
 			}
 		}

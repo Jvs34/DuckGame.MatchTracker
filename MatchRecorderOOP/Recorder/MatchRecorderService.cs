@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -17,6 +18,7 @@ namespace MatchRecorder
 		private IRecorder RecorderHandler { get; }
 		public BotSettings BotSettings { get; } = new BotSettings();
 		public OBSSettings OBSSettings { get; } = new OBSSettings();
+		public RecorderSettings RecorderSettings { get; } = new RecorderSettings();
 		public MatchData CurrentMatch { get; private set; }
 		public RoundData CurrentRound { get; private set; }
 
@@ -32,12 +34,15 @@ namespace MatchRecorder
 		public IGameDatabase GameDatabase { get; }
 		public bool IsRecordingRound => RecorderHandler.IsRecording;
 		public bool IsRecordingMatch { get; set; }
+		public IHostApplicationLifetime AppLifeTime { get; }
 		public IModToRecorderMessageQueue MessageQueue { get; }
 		private IConfiguration Configuration { get; }
 		private Task MessageHandlerTask { get; set; }
+		private Process DuckGameProcess { get; }
 
-		public MatchRecorderService( IModToRecorderMessageQueue messageQueue , IGameDatabase db , IConfiguration configuration )
+		public MatchRecorderService( IModToRecorderMessageQueue messageQueue , IGameDatabase db , IConfiguration configuration , IHostApplicationLifetime lifetime )
 		{
+			AppLifeTime = lifetime;
 			MessageQueue = messageQueue;
 			GameDatabase = db;
 
@@ -45,12 +50,23 @@ namespace MatchRecorder
 
 			Configuration.Bind( BotSettings );
 			Configuration.Bind( OBSSettings );
+			Configuration.Bind( RecorderSettings );
 
 			RecorderHandler = new ObsLocalRecorder( this );
+
+			if( RecorderSettings.DuckGameProcessID > 0 )
+			{
+				DuckGameProcess = Process.GetProcessById( RecorderSettings.DuckGameProcessID );
+			}
 		}
 
 		protected override async Task ExecuteAsync( CancellationToken token )
 		{
+			if( !RecorderSettings.RecordingEnabled )
+			{
+				return;
+			}
+
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 			Console.WriteLine( $"Started {nameof( MatchRecorderService.ExecuteAsync )}" );
 
@@ -60,13 +76,29 @@ namespace MatchRecorder
 				{
 					CheckMessages();
 					RecorderHandler?.Update();
+					if( DuckGameProcess == null || DuckGameProcess.HasExited )
+					{
+						break;
+					}
 					await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , token );
 				}
 
+				//wait 5 seconds for stuff to completely be done
+				CancellationTokenSource fiveSecondsSource = new CancellationTokenSource();
+				fiveSecondsSource.CancelAfter( TimeSpan.FromSeconds( 5 ) );
+
 				StopRecordingRound();
 				StopRecordingMatch();
-			} , token , TaskCreationOptions.LongRunning , TaskScheduler.Default );
 
+				while( RecorderHandler.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
+				{
+					RecorderHandler?.Update();
+					await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , fiveSecondsSource.Token );
+				}
+
+				//request the app host to close the process
+				AppLifeTime.StopApplication();
+			} , token , TaskCreationOptions.LongRunning , TaskScheduler.Default );
 
 			await Task.CompletedTask;
 #pragma warning restore CS4014
