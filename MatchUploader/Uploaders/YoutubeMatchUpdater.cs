@@ -60,7 +60,7 @@ namespace MatchUploader
 			var req = Service.Search.List( "snippet" );
 			req.Q = strippedName;
 			req.ForMine = true;
-			req.MaxResults = 50; //max results to 50, just in case there might be a couple of duplicates
+			req.MaxResults = 3; //max results to 3, just in case there might be a couple of duplicates
 			req.Type = "video";
 
 			var resp = await req.ExecuteAsync();

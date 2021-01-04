@@ -101,7 +101,7 @@ namespace MatchUploader
 				CurrentUpload = upload;
 
 				SaveSettings();
-				bool uploadCompleted;
+				bool uploadCompleted = false;
 				bool shouldRetry;
 
 				do
@@ -109,9 +109,17 @@ namespace MatchUploader
 					Info.LastUploadTime = DateTime.Now;
 					Info.CurrentUploads++;
 
-					await UpdateStatus( $"{GetType().Name}:  {Info.CurrentUploads} / {Info.UploadsBeforeReset}" );
+					await UpdateStatus( $"{GetType().Name}: {CurrentUpload.DataName} {Info.CurrentUploads} / {Info.UploadsBeforeReset}" );
 					Progress = 0;
-					uploadCompleted = await UploadItem( upload );
+
+					try
+					{
+						uploadCompleted = await UploadItem( upload );
+					}
+					catch( Exception e )
+					{
+						CurrentUpload.LastException = e.Message;
+					}
 
 					upload.ErrorCount = uploadCompleted ? 0 : upload.ErrorCount + 1;
 
@@ -129,6 +137,14 @@ namespace MatchUploader
 						shouldRetry = false;
 					}
 
+					if( uploadCompleted )
+					{
+						await UpdateStatus( $"{GetType().Name}: {CurrentUpload.DataName} Finished upload" );
+					}
+					else
+					{
+						await UpdateStatus( $"{GetType().Name}: {CurrentUpload.DataName} Failed to upload: {CurrentUpload.LastException}" );
+					}
 				}
 				while( shouldRetry );
 
