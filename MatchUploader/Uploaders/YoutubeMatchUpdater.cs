@@ -177,6 +177,7 @@ namespace MatchUploader
 
 			if( videoResource is null )
 			{
+				upload.LastException = "Could not find associated youtube video";
 				return false;
 			}
 
@@ -185,6 +186,7 @@ namespace MatchUploader
 			//ignore videos that haven't been fully uploaded/processed yet
 			if( draftVideoData is null || draftVideoData.ProcessingDetails.ProcessingStatus != "succeeded" )
 			{
+				upload.LastException = "Video is still processing or is a duplicate";
 				return false;
 			}
 
@@ -227,7 +229,7 @@ namespace MatchUploader
 			}
 			catch( Exception e )
 			{
-				Console.WriteLine( e );
+				upload.LastException = e.ToString();
 			}
 
 			return false;

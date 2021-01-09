@@ -22,7 +22,7 @@ namespace MatchUploader
 		{
 			string winners = string.Empty;
 			var playerWinners = await DB.GetAllData<PlayerData>( data.GetWinners() );
-			winners = string.Join( " " , playerWinners.Select( x => x.GetName() ) );
+			winners = string.Join( " " , playerWinners.Select( x => x?.GetName() ) );
 
 			if( string.IsNullOrEmpty( winners ) )
 			{
