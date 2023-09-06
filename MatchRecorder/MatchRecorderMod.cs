@@ -1,6 +1,7 @@
 ﻿using HarmonyLib;
 using System;
 using System.IO;
+using System.Net.WebSockets;
 using System.Reflection;
 
 namespace MatchRecorder

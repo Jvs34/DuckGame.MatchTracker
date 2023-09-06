@@ -1,9 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <RootNamespace>MatchTracker</RootNamespace>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.0;netstandard1.2</TargetFrameworks>
+		<RootNamespace>MatchTracker</RootNamespace>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 
 </Project>
