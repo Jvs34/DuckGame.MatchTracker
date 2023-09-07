@@ -4,6 +4,7 @@ using MatchTracker;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -35,14 +36,16 @@ namespace MatchRecorder
 		public bool IsRecordingRound => RecorderHandler.IsRecording;
 		public bool IsRecordingMatch { get; set; }
 		public IHostApplicationLifetime AppLifeTime { get; }
-		public IModToRecorderMessageQueue MessageQueue { get; }
+		private ILogger<MatchRecorderService> Logger { get; }
+		public ModMessageQueue MessageQueue { get; }
 		private IConfiguration Configuration { get; }
 		private Task MessageHandlerTask { get; set; }
 		private Process DuckGameProcess { get; }
 
-		public MatchRecorderService( IModToRecorderMessageQueue messageQueue , IGameDatabase db , IConfiguration configuration , IHostApplicationLifetime lifetime )
+		public MatchRecorderService( ILogger<MatchRecorderService> logger , ModMessageQueue messageQueue , IGameDatabase db , IConfiguration configuration , IHostApplicationLifetime lifetime )
 		{
 			AppLifeTime = lifetime;
+			Logger = logger;
 			MessageQueue = messageQueue;
 			GameDatabase = db;
 
@@ -68,7 +71,7 @@ namespace MatchRecorder
 			}
 
 #pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
-			Console.WriteLine( $"Started {nameof( MatchRecorderService.ExecuteAsync )}" );
+			Logger.LogInformation( $"Started {nameof( MatchRecorderService.ExecuteAsync )}" );
 
 			Task.Factory.StartNew( async () =>
 			{
@@ -84,7 +87,7 @@ namespace MatchRecorder
 				}
 
 				//wait 5 seconds for stuff to completely be done
-				CancellationTokenSource fiveSecondsSource = new CancellationTokenSource();
+				var fiveSecondsSource = new CancellationTokenSource();
 				fiveSecondsSource.CancelAfter( TimeSpan.FromSeconds( 5 ) );
 
 				StopRecordingRound();
@@ -106,7 +109,7 @@ namespace MatchRecorder
 
 		internal void CheckMessages()
 		{
-			while( MessageQueue.ReceiveMessagesQueue.TryDequeue( out var message ) )
+			while( MessageQueue.MessageQueue.TryDequeue( out var message ) )
 			{
 				OnReceiveMessage( message );
 			}
@@ -114,7 +117,7 @@ namespace MatchRecorder
 
 		public void OnReceiveMessage( BaseMessage message )
 		{
-			Console.WriteLine( $"Received a message of type {message.GetType()}" );
+			Logger.LogInformation( "Received a message of type {messageType}" , message.MessageType );
 
 			switch( message )
 			{
@@ -179,7 +182,7 @@ namespace MatchRecorder
 		{
 			if( CurrentRound != null )
 			{
-				ShowHUDmessage( $"Recorded {CurrentRound.Name}" );
+				ShowHUDmessage( $"Recording {CurrentRound.Name}" );
 			}
 			RecorderHandler?.StartRecordingMatch();
 		}
@@ -290,10 +293,7 @@ namespace MatchRecorder
 
 		public void ShowHUDmessage( string message )
 		{
-			MessageQueue.SendMessagesQueue.Enqueue( new ShowHUDTextMessage()
-			{
-				Text = message
-			} );
+			Logger.LogInformation( "" );
 		}
 
 		#endregion UTILITY

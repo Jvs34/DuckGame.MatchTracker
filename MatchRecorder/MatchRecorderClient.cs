@@ -23,16 +23,6 @@ namespace MatchRecorder
 		{
 			ModPath = directory;
 			MessageHandler = new ClientMessageHandler();
-			MessageHandler.OnReceiveMessage += OnReceiveMessage;
-		}
-
-		private void OnReceiveMessage( BaseMessage message )
-		{
-			System.Diagnostics.Debug.WriteLine( $"Receiving a message of type {message.GetType()}" );
-			if( message is ShowHUDTextMessage hudtext )
-			{
-				ShowHUDMessage( hudtext.Text );
-			}
 		}
 
 		public static void ShowHUDMessage( string text , float lifetime = 1f )
@@ -161,7 +151,6 @@ namespace MatchRecorder
 			{
 				return;
 			}
-
 
 			//regardless if the current level can be recorded or not, we're done with the current round recording so just save and stop
 			MatchRecorderMod.Instance.Recorder.StopRecordingRound();

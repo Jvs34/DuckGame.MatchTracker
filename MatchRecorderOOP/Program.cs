@@ -1,11 +1,13 @@
 ﻿using MatchRecorder;
 using MatchRecorder.Initializers;
+using MatchRecorderShared;
+using MatchRecorderShared.Messages;
 using MatchTracker;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.IO;
-
 
 var host = WebApplication.CreateBuilder( args );
 
@@ -21,20 +23,22 @@ host.Configuration
 	.AddJsonFile( Path.Combine( path , "Settings" , "uploader.json" ) )
 	.AddCommandLine( args );
 
-var services = host.Services;
-
-services.AddAsyncInitializer<GameDatabaseInitializer>();
-
-//database
-services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
-
-//recorder
-services.AddSingleton<IModToRecorderMessageQueue , ModToRecorderMessageQueue>();
-services.AddHostedService<MatchRecorderService>();
-services.AddHostedService<RecorderToModSenderService>();
-
+host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
+host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
+host.Services.AddSingleton<ModMessageQueue>();
+host.Services.AddHostedService<MatchRecorderService>();
 
 var app = host.Build();
 
+app.MapPost( $"/api/{nameof( EndMatchMessage ).ToLowerInvariant()}" , ( EndMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
+app.MapPost( $"/api/{nameof( EndRoundMessage ).ToLowerInvariant()}" , ( EndRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
+app.MapPost( $"/api/{nameof( StartMatchMessage ).ToLowerInvariant()}" , ( StartMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
+app.MapPost( $"/api/{nameof( StartRoundMessage ).ToLowerInvariant()}" , ( StartRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
 
 await app.RunAsync();
+
+static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
+{
+	queue.MessageQueue.Enqueue( message );
+	return Results.Ok();
+}

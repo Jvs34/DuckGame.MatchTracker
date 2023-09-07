@@ -14,7 +14,6 @@ namespace MatchRecorder
 	internal sealed class ClientMessageHandler
 	{
 		//public bool Connected => HubConnection.State == HubConnectionState.Connected;
-		public event Action<BaseMessage> OnReceiveMessage;
 		//private HubConnection HubConnection { get; }
 		private ConcurrentQueue<BaseMessage> SendMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
 		private ConcurrentQueue<BaseMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
@@ -82,22 +81,11 @@ namespace MatchRecorder
 								//await HubConnection.InvokeAsync( nameof( ReceiveEndRoundMessage ) , erm );
 								break;
 							}
-						case ShowHUDTextMessage shtm:
-							{
-								//await HubConnection.InvokeAsync( nameof( ReceiveShowHUDTextMessage ) , shtm );
-								break;
-							}
 						default:
 							break;
 					}
 				}
 			}
-		}
-
-		public Task ReceiveShowHUDTextMessage( ShowHUDTextMessage message )
-		{
-			ReceiveMessagesQueue.Enqueue( message );
-			return Task.FromResult( 0 );
 		}
 	}
 }

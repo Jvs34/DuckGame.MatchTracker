@@ -25,7 +25,6 @@ namespace MatchRecorder
 		private DateTime NextObsCheck { get; set; }
 		private TimeSpan MergedRoundDuration { get; set; } = TimeSpan.Zero;
 
-
 		public ObsLocalRecorder( MatchRecorderService parent )
 		{
 			ResultingRecordingType = RecordingType.Video;
