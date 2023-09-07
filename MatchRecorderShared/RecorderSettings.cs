@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MatchTracker;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,5 +9,6 @@ namespace MatchRecorderShared
 	{
 		public int DuckGameProcessID { get; set; }
 		public bool RecordingEnabled { get; set; }
+		public RecorderType RecorderType { get; set; }
 	}
 }

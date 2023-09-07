@@ -12,9 +12,9 @@ using WebSocketSharp;
 
 namespace MatchRecorder.Recorders
 {
-	internal sealed class ObsLocalRecorder : BaseRecorder
+	internal sealed class OBSLocalRecorder : BaseRecorder
 	{
-		public OBSSettings OBSSettings { get; }
+		private OBSSettings OBSSettings { get; }
 		private OBSWebsocket ObsHandler { get; }
 		private OutputState RecordingState { get; set; }
 		private bool RequestedRecordingStart { get; set; }
@@ -30,7 +30,7 @@ namespace MatchRecorder.Recorders
 		private DateTime NextObsCheck { get; set; }
 		private TimeSpan MergedRoundDuration { get; set; } = TimeSpan.Zero;
 
-		public ObsLocalRecorder(
+		public OBSLocalRecorder(
 			ILogger<BaseRecorder> logger ,
 			ModMessageQueue messageQueue ,
 			IOptions<OBSSettings> obsSettings ,
@@ -168,7 +168,7 @@ namespace MatchRecorder.Recorders
 								match.VideoEndTime = match.GetDuration();
 								MergedRoundDuration = TimeSpan.Zero;
 
-								GameDatabase.SaveData( match ).Wait();
+								await GameDatabase.SaveData( match );
 							}
 							catch( Exception )
 							{

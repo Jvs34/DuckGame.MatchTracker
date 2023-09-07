@@ -17,13 +17,10 @@ namespace MatchRecorder.Services
 	{
 		private BaseRecorder Recorder { get; }
 		private RecorderSettings RecorderSettings { get; }
-
 		private IGameDatabase GameDatabase { get; }
-
 		private IHostApplicationLifetime AppLifeTime { get; }
 		private ILogger<MatchRecorderBackgroundService> Logger { get; }
 		private ModMessageQueue MessageQueue { get; }
-		private Task MessageHandlerTask { get; set; }
 		private Process DuckGameProcess { get; }
 
 		public MatchRecorderBackgroundService( ILogger<MatchRecorderBackgroundService> logger ,
@@ -48,42 +45,35 @@ namespace MatchRecorder.Services
 
 		protected override async Task ExecuteAsync( CancellationToken token )
 		{
-			if( !RecorderSettings.RecordingEnabled )
-			{
-				return;
-			}
-
 			Logger.LogInformation( $"Started {nameof( ExecuteAsync )}" );
 
-			var task = Task.Factory.StartNew( async () =>
+			while( !token.IsCancellationRequested )
 			{
-				while( !token.IsCancellationRequested )
+				CheckMessages();
+				await Recorder?.Update();
+				if( DuckGameProcess == null || DuckGameProcess.HasExited )
 				{
-					CheckMessages();
-					await Recorder?.Update();
-					if( DuckGameProcess == null || DuckGameProcess.HasExited )
-					{
-						break;
-					}
-					await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , token );
+					break;
 				}
+				await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , token );
+			}
 
-				//wait 5 seconds for stuff to completely be done
-				var fiveSecondsSource = new CancellationTokenSource();
-				fiveSecondsSource.CancelAfter( TimeSpan.FromSeconds( 5 ) );
+			//wait 5 seconds for stuff to completely be done
+			var fiveSecondsSource = new CancellationTokenSource();
+			fiveSecondsSource.CancelAfter( TimeSpan.FromSeconds( 5 ) );
 
-				Recorder?.StopRecordingRound();
-				Recorder?.StopRecordingMatch();
+			Recorder?.StopRecordingRound();
+			Recorder?.StopRecordingMatch();
 
-				while( Recorder.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
-				{
-					Recorder?.Update();
-					await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , fiveSecondsSource.Token );
-				}
+			while( Recorder.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
+			{
+				Recorder?.Update();
+				await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , fiveSecondsSource.Token );
+			}
 
-				//request the app host to close the process
-				AppLifeTime.StopApplication();
-			} , token , TaskCreationOptions.LongRunning , TaskScheduler.Default );
+			//request the app host to close the process
+			AppLifeTime.StopApplication();
+
 
 			await Task.CompletedTask;
 		}
@@ -103,26 +93,14 @@ namespace MatchRecorder.Services
 			switch( message )
 			{
 				case StartMatchMessage smm:
-					{
-						Recorder?.StartRecordingMatch( smm , smm );
-						break;
-					}
+					Recorder?.StartRecordingMatch( smm , smm ); break;
 				case EndMatchMessage emm:
-					{
-						//TODO: check if PlayersData exists in the database and add them otherwise
-						Recorder?.StopRecordingMatch( emm , emm , emm );
-						break;
-					}
+					//TODO: check if PlayersData exists in the database and add them otherwise
+					Recorder?.StopRecordingMatch( emm , emm , emm ); break;
 				case StartRoundMessage srm:
-					{
-						Recorder?.StartRecordingRound( srm , srm , srm );
-						break;
-					}
+					Recorder?.StartRecordingRound( srm , srm , srm ); break;
 				case EndRoundMessage erm:
-					{
-						Recorder?.StopRecordingRound( erm , erm , erm );
-						break;
-					}
+					Recorder?.StopRecordingRound( erm , erm , erm ); break;
 				default:
 					break;
 			}

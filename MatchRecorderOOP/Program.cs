@@ -29,10 +29,19 @@ host.Services.AddOptions<OBSSettings>().BindConfiguration( string.Empty );
 host.Services.AddOptions<RecorderSettings>().BindConfiguration( string.Empty );
 host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
 host.Services.AddSingleton<ModMessageQueue>();
-host.Services.AddSingleton<BaseRecorder , ObsLocalRecorder>();
+
+{
+	var rec = host.Configuration.Get<RecorderSettings>();
+
+	switch( rec.RecorderType )
+	{
+		case RecorderType.OBSMergedVideo: host.Services.AddSingleton<BaseRecorder , OBSLocalRecorder>(); break;
+		default: host.Services.AddSingleton<BaseRecorder , NoVideoRecorder>(); break;
+	}
+}
+
 host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
 host.Services.AddHostedService<MatchRecorderBackgroundService>();
-
 
 var app = host.Build();
 

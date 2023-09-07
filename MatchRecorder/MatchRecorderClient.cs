@@ -72,7 +72,7 @@ namespace MatchRecorder
 					FileName = Path.Combine( ModPath , @"MatchRecorderOOP\bin\Debug\net7.0\MatchRecorderOOP.exe" ) ,
 					WorkingDirectory = ModPath ,
 					CreateNoWindow = false ,
-					Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
+					Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} OBSMergedVideo --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
 				} );
 			}
 		}
