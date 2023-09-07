@@ -1,47 +1,40 @@
-﻿using Microsoft.AspNetCore.Hosting;
+﻿using MatchRecorder;
+using MatchRecorder.Initializers;
+using MatchTracker;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
 using System.IO;
-using System.Threading.Tasks;
 
-namespace MatchRecorder
-{
-	class Program
-	{
-		public static async Task Main( string [] args )
-		{
-			var host = CreateHostBuilder( args ).Build();
-			await host.InitAsync();
-			await host.RunAsync();
-		}
 
-		public static IHostBuilder CreateHostBuilder( string [] args ) =>
-			Host
-				.CreateDefaultBuilder( args )
-				.ConfigureAppConfiguration( ( hostingContext , config ) =>
-				{
-					var path = Directory.GetCurrentDirectory();
-					config
+var host = WebApplication.CreateBuilder( args );
+
+var path = Directory.GetCurrentDirectory();
+
+host.Configuration
+	.AddJsonFile( Path.Combine( path , "Settings" , "shared.json" ) )
 #if DEBUG
-					.AddJsonFile( Path.Combine( path , "Settings" , "shared_debug.json" ) )
-#else
-					.AddJsonFile( Path.Combine( path , "Settings" , "shared.json" ) )
+	.AddJsonFile( Path.Combine( path , "Settings" , "shared_debug.json" ) )
 #endif
-					.AddJsonFile( Path.Combine( path , "Settings" , "bot.json" ) )
-					.AddJsonFile( Path.Combine( path , "Settings" , "obs.json" ) )
-					.AddJsonFile( Path.Combine( path , "Settings" , "uploader.json" ) )
-					.AddCommandLine( args );
-				} )
-				.ConfigureLogging( logging =>
-				{
-					logging.ClearProviders();
-					logging.AddConsole();
-				} )
-				.ConfigureWebHostDefaults( webBuilder =>
-				{
-					webBuilder.UseUrls( "http://localhost:6969/" );
-					webBuilder.UseStartup<Startup>();
-				} );
-	}
-}
+	.AddJsonFile( Path.Combine( path , "Settings" , "bot.json" ) )
+	.AddJsonFile( Path.Combine( path , "Settings" , "obs.json" ) )
+	.AddJsonFile( Path.Combine( path , "Settings" , "uploader.json" ) )
+	.AddCommandLine( args );
+
+var services = host.Services;
+
+services.AddAsyncInitializer<GameDatabaseInitializer>();
+
+//database
+services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
+
+//recorder
+services.AddSingleton<IModToRecorderMessageQueue , ModToRecorderMessageQueue>();
+services.AddHostedService<MatchRecorderService>();
+services.AddHostedService<RecorderToModSenderService>();
+
+
+var app = host.Build();
+
+
+await app.RunAsync();

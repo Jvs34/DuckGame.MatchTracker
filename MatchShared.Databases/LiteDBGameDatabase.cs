@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchTracker
@@ -13,7 +14,7 @@ namespace MatchTracker
 
 		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
 		public bool ReadOnly => false;
-		protected LiteDatabase Database { get; set; }
+		public LiteDatabase Database { get; protected set; }
 		protected BsonMapper Mapper { get; } = new BsonMapper();
 
 		public LiteDBGameDatabase()
@@ -29,7 +30,7 @@ namespace MatchTracker
 
 		protected void DefineMapping<T>() where T : IDatabaseEntry => Mapper.Entity<T>().Id( x => x.DatabaseIndex );
 
-		public Task Load()
+		public Task Load( CancellationToken token = default )
 		{
 			Database = new LiteDatabase( SharedSettings.GetDatabasePath() , Mapper );
 			return Task.CompletedTask;

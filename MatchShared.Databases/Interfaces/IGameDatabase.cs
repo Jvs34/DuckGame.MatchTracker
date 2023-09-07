@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchTracker
@@ -10,7 +11,7 @@ namespace MatchTracker
 
 		bool ReadOnly { get; }
 
-		Task Load();
+		Task Load( CancellationToken token = default );
 
 		Task SaveData<T>( T data ) where T : IDatabaseEntry;
 

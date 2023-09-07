@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchTracker
@@ -11,11 +12,11 @@ namespace MatchTracker
 		public virtual bool ReadOnly => false;
 		public virtual bool InitialLoad { get; set; }
 
-		public virtual async Task Load()
+		public virtual async Task Load( CancellationToken token = default )
 		{
 			if( InitialLoad )
 			{
-				await LoadEverything();
+				await LoadEverything( token );
 			}
 		}
 
@@ -23,7 +24,7 @@ namespace MatchTracker
 		/// Loads everything from the EntryData tree
 		/// </summary>
 		/// <returns></returns>
-		protected virtual Task LoadEverything()
+		protected virtual Task LoadEverything( CancellationToken token = default )
 		{
 			return Task.CompletedTask;
 		}

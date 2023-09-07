@@ -1,29 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net471</TargetFramework>
-    <Platforms>x86</Platforms>
-    <DebugType>full</DebugType>
-    <Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them to your desired repo</Description>
-    <RunPostBuildEvent>Always</RunPostBuildEvent>
-    <LangVersion>latest</LangVersion>
-    <OutputPath>Output\</OutputPath>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net452</TargetFramework>
+		<Platforms>x86</Platforms>
+		<Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them.</Description>
+		<RunPostBuildEvent>Always</RunPostBuildEvent>
+		<LangVersion>latest</LangVersion>
+		<DebugType>pdbonly</DebugType>
+		<DebugSymbols>true</DebugSymbols>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Lib.Harmony" Version="2.0.4" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="5.0.1" />
-    <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
-    <ProjectReference Include="..\MatchRecorderShared\MatchRecorderShared.csproj" />
-    <Reference Include="DuckGame">
-      <HintPath>..\ThirdParty\DuckGame.exe</HintPath>
-      <Private>false</Private>
-    </Reference>
-  </ItemGroup>
+	<ItemGroup>
+		<ModContent 
+			Include="..\**\*.*" 
+			Exclude="..\Directory.Build.props;..\*.sln;..\.git\**\*.*;..\.*;..\*.md;..\Match*\**\*.*;..\.vs*\**\*.*;..\ThirdParty\**\*.*" />
 
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="copy /Y &quot;$(OutDir)\$(TargetName).dll&quot; &quot;$(SolutionDir)\$(SolutionName).dll&quot;&#xD;&#xA;copy /Y &quot;$(OutDir)\$(TargetName).pdb&quot; &quot;$(SolutionDir)\$(SolutionName).pdb&quot;" />
-  </Target>
+		<PackageReference Include="ILRepack" Version="2.0.18" />
+		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
+		<ProjectReference Include="..\MatchShared\MatchShared.csproj" />
+		<ProjectReference Include="..\MatchRecorderShared\MatchRecorderShared.csproj" />
+		<Reference Include="DuckGame">
+			<HintPath>..\ThirdParty\DuckGame.exe</HintPath>
+			<Private>false</Private>
+		</Reference>
+	</ItemGroup>
+
+	<Target Name="RepackDlls" AfterTargets="PostBuildEvent">
+		<Exec Command="$(ILRepack) /out:$(ProjectDir)\..\$(ProjectName).dll $(OutDir)\$(ProjectName).dll $(OutDir)\0Harmony.dll $(OutDir)\MatchRecorderShared.dll $(OutDir)\MatchShared.dll $(OutDir)\System.Runtime.InteropServices.RuntimeInformation.dll" />
+	</Target>
+
+	<Target Name="CopyToModsFolder" AfterTargets="RepackDlls">
+		<Copy SourceFiles="@(ModContent)" DestinationFolder="$(AppData)\DuckGame\Mods\$(ProjectName)\%(RecursiveDir)" />
+	</Target>
 
 
 </Project>

@@ -73,7 +73,7 @@ namespace MatchRecorder
 			{
 				RecorderProcess = Process.Start( new ProcessStartInfo()
 				{
-					FileName = Path.Combine( ModPath , @"MatchRecorderOOP\bin\Debug\net5.0\MatchRecorderOOP.exe" ) ,
+					FileName = Path.Combine( ModPath , @"MatchRecorderOOP\bin\Debug\net7.0\MatchRecorderOOP.exe" ) ,
 					WorkingDirectory = ModPath ,
 					CreateNoWindow = false ,
 					Arguments = $"--{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
@@ -151,7 +151,6 @@ namespace MatchRecorder
 	}
 
 	#region HOOKS
-#pragma warning disable IDE0051 // Remove unused private members
 	//save the video and stop recording
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
 	internal static class Level_SetCurrent
@@ -230,6 +229,5 @@ namespace MatchRecorder
 		}
 	}
 
-#pragma warning restore IDE0051
 	#endregion HOOKS
 }
