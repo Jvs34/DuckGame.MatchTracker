@@ -22,6 +22,10 @@ host.Configuration
 	.AddJsonFile( Path.Combine( path , "Settings" , "obs.json" ) )
 	.AddCommandLine( args );
 
+host.Services.AddOptions<OBSSettings>().BindConfiguration("");
+host.Services.AddOptions<RecorderSettings>().BindConfiguration( "" );
+host.Services.AddOptions<SharedSettings>().BindConfiguration( "" );
+
 host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
 host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
 host.Services.AddSingleton<ModMessageQueue>();

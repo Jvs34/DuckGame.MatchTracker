@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
 using System.IO;
@@ -37,21 +38,21 @@ namespace MatchRecorder
 		public IHostApplicationLifetime AppLifeTime { get; }
 		private ILogger<MatchRecorderService> Logger { get; }
 		public ModMessageQueue MessageQueue { get; }
-		private IConfiguration Configuration { get; }
 		private Task MessageHandlerTask { get; set; }
 		private Process DuckGameProcess { get; }
 
-		public MatchRecorderService( ILogger<MatchRecorderService> logger , ModMessageQueue messageQueue , IGameDatabase db , IConfiguration configuration , IHostApplicationLifetime lifetime )
+		public MatchRecorderService( ILogger<MatchRecorderService> logger ,
+			ModMessageQueue messageQueue , IGameDatabase db ,
+			IHostApplicationLifetime lifetime ,
+			IOptions<OBSSettings> obsSettings,
+			IOptions<RecorderSettings> recorderSettings )
 		{
 			AppLifeTime = lifetime;
 			Logger = logger;
 			MessageQueue = messageQueue;
 			GameDatabase = db;
-
-			Configuration = configuration;
-
-			Configuration.Bind( OBSSettings );
-			Configuration.Bind( RecorderSettings );
+			OBSSettings = obsSettings.Value;
+			RecorderSettings = recorderSettings.Value;
 
 			RecorderHandler = new ObsLocalRecorder( this );
 
@@ -68,10 +69,9 @@ namespace MatchRecorder
 				return;
 			}
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
 			Logger.LogInformation( $"Started {nameof( MatchRecorderService.ExecuteAsync )}" );
 
-			Task.Factory.StartNew( async () =>
+			var task = Task.Factory.StartNew( async () =>
 			{
 				while( !token.IsCancellationRequested )
 				{
@@ -102,7 +102,6 @@ namespace MatchRecorder
 			} , token , TaskCreationOptions.LongRunning , TaskScheduler.Default );
 
 			await Task.CompletedTask;
-#pragma warning restore CS4014
 		}
 
 		internal void CheckMessages()
