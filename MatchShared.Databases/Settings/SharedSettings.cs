@@ -16,8 +16,6 @@ namespace MatchTracker
 		public string TimestampFormat { get; set; }
 		public string RoundReplayFile { get; set; }
 		public string RoundReplayFileCompressed { get; set; }
-		public string RepositoryUser { get; set; }
-		public string RepositoryName { get; set; }
 		public string DatabaseFile { get; set; }
 		public string LevelPreviewFile { get; set; }
 

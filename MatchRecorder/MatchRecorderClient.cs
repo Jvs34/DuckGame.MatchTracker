@@ -19,6 +19,8 @@ namespace MatchRecorder
 		private Process RecorderProcess { get; set; }
 		private ClientMessageHandler MessageHandler { get; }
 		private Task MessageHandlerTask { get; set; }
+		public string RecorderUrl { get; set; } = "http://localhost:6969";
+
 		public MatchRecorderClient( string directory )
 		{
 			ModPath = directory;
@@ -66,7 +68,7 @@ namespace MatchRecorder
 					FileName = Path.Combine( ModPath , @"MatchRecorderOOP\bin\Debug\net7.0\MatchRecorderOOP.exe" ) ,
 					WorkingDirectory = ModPath ,
 					CreateNoWindow = false ,
-					Arguments = $"--{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
+					Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
 				} );
 			}
 		}

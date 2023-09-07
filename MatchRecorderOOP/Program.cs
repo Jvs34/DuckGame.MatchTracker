@@ -26,9 +26,14 @@ host.Configuration
 host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
 host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
 host.Services.AddSingleton<ModMessageQueue>();
-host.Services.AddHostedService<MatchRecorderService>();
+//host.Services.AddHostedService<MatchRecorderService>();
 
 var app = host.Build();
+
+app.MapGet( "/api/ping" , () =>
+{
+	Results.Ok();
+} );
 
 app.MapPost( $"/api/{nameof( EndMatchMessage ).ToLowerInvariant()}" , ( EndMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
 app.MapPost( $"/api/{nameof( EndRoundMessage ).ToLowerInvariant()}" , ( EndRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
