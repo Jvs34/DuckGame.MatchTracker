@@ -31,7 +31,7 @@ namespace MatchRecorder.Recorders
 
 		public ObsLocalRecorder(
 			ILogger<IRecorder> logger ,
-			ModMessageQueue messageQueue,
+			ModMessageQueue messageQueue ,
 			IOptions<OBSSettings> obsSettings ,
 			IGameDatabase db ) : base( logger , db , messageQueue )
 		{
@@ -51,19 +51,16 @@ namespace MatchRecorder.Recorders
 			NextObsCheck = DateTime.MinValue;
 		}
 
-		public override async Task StartRecordingMatch()
+		public override Task StartRecordingMatch()
 		{
 			RequestedRecordingStart = true;
-			/*
-			var match = MainHandler.StartCollectingMatchData();
-			match.VideoType = VideoType.MergedVideoLink;
-			*/
+			return Task.CompletedTask;
 		}
 
-		public override async Task StopRecordingMatch()
+		public override Task StopRecordingMatch()
 		{
 			RequestedRecordingStop = true;
-			//MainHandler.StopCollectingMatchData();
+			return Task.CompletedTask;
 		}
 
 		public override async Task StartRecordingRound()
