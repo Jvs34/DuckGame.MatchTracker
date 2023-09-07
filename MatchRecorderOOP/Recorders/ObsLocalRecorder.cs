@@ -31,7 +31,7 @@ namespace MatchRecorder.Recorders
 		private TimeSpan MergedRoundDuration { get; set; } = TimeSpan.Zero;
 
 		public ObsLocalRecorder(
-			ILogger<IRecorder> logger ,
+			ILogger<BaseRecorder> logger ,
 			ModMessageQueue messageQueue ,
 			IOptions<OBSSettings> obsSettings ,
 			IGameDatabase db ) : base( logger , db , messageQueue )
