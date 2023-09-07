@@ -9,9 +9,8 @@ namespace MatchRecorder.Recorders
 {
 	internal sealed class NoVideoRecorder : BaseRecorder
 	{
-		public override bool IsRecordingRound => IsRecording;
-		public override bool IsRecording => IsRecordingRoundInternal;
-
+		public override bool IsRecording => IsRecordingMatch;
+		public override bool IsRecordingRound => IsRecordingRoundInternal;
 		private bool IsRecordingRoundInternal { get; set; }
 
 		public NoVideoRecorder( ILogger<BaseRecorder> logger , IGameDatabase db , ModMessageQueue messageQueue ) : base( logger , db , messageQueue )
@@ -47,11 +46,13 @@ namespace MatchRecorder.Recorders
 			{
 				return;
 			}
+			IsRecordingRoundInternal = true;
 			round.VideoType = VideoType.None;
 		}
 
 		protected override async Task StopRecordingRoundInternal()
 		{
+			IsRecordingRoundInternal = false;
 			await StopCollectingRoundData( DateTime.Now );
 		}
 	}
