@@ -4,6 +4,7 @@
 		<TargetFrameworks>netstandard2.0;netstandard1.2</TargetFrameworks>
 		<RootNamespace>MatchTracker</RootNamespace>
 		<LangVersion>latest</LangVersion>
+		<DebugType>full</DebugType>
 	</PropertyGroup>
 
 </Project>

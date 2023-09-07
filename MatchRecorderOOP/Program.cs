@@ -12,37 +12,34 @@ using System.IO;
 
 var host = WebApplication.CreateBuilder( args );
 
-var path = Directory.GetCurrentDirectory();
-
 host.Configuration
-	.AddJsonFile( Path.Combine( path , "Settings" , "shared.json" ) )
+	.AddJsonFile( Path.Combine( "Settings" , "shared.json" ) )
 #if DEBUG
-	.AddJsonFile( Path.Combine( path , "Settings" , "shared_debug.json" ) )
+	.AddJsonFile( Path.Combine( "Settings" , "shared_debug.json" ) )
 #endif
-	.AddJsonFile( Path.Combine( path , "Settings" , "obs.json" ) )
+	.AddJsonFile( Path.Combine( "Settings" , "obs.json" ) )
 	.AddCommandLine( args );
 
-host.Services.AddOptions<OBSSettings>().BindConfiguration("");
-host.Services.AddOptions<RecorderSettings>().BindConfiguration( "" );
-host.Services.AddOptions<SharedSettings>().BindConfiguration( "" );
+host.Services.AddOptions<SharedSettings>().BindConfiguration( string.Empty );
+host.Services.AddOptions<OBSSettings>().BindConfiguration( string.Empty );
+host.Services.AddOptions<RecorderSettings>().BindConfiguration( string.Empty );
 
 host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
 host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
 host.Services.AddSingleton<ModMessageQueue>();
 host.Services.AddHostedService<MatchRecorderService>();
 
-
 var app = host.Build();
 
-app.MapGet( "/api/ping" , () =>
+app.MapGet( "/ping" , () =>
 {
 	Results.Ok();
 } );
 
-app.MapPost( $"/api/{nameof( EndMatchMessage ).ToLowerInvariant()}" , ( EndMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
-app.MapPost( $"/api/{nameof( EndRoundMessage ).ToLowerInvariant()}" , ( EndRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
-app.MapPost( $"/api/{nameof( StartMatchMessage ).ToLowerInvariant()}" , ( StartMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
-app.MapPost( $"/api/{nameof( StartRoundMessage ).ToLowerInvariant()}" , ( StartRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
+app.MapPost( $"/{nameof( EndMatchMessage ).ToLowerInvariant()}" , ( EndMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
+app.MapPost( $"/{nameof( EndRoundMessage ).ToLowerInvariant()}" , ( EndRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
+app.MapPost( $"/{nameof( StartMatchMessage ).ToLowerInvariant()}" , ( StartMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
+app.MapPost( $"/{nameof( StartRoundMessage ).ToLowerInvariant()}" , ( StartRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
 
 await app.InitAsync();
 
