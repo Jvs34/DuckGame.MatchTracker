@@ -19,6 +19,6 @@ namespace MatchRecorder.Initializers
 			config.Bind( Database.SharedSettings );
 		}
 
-		public async Task InitializeAsync( CancellationToken token ) => await Database.Load();
+		public async Task InitializeAsync( CancellationToken token ) => await Database.Load( token );
 	}
 }

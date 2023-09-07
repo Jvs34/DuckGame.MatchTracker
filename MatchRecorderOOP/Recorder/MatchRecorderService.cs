@@ -17,7 +17,6 @@ namespace MatchRecorder
 	internal class MatchRecorderService : BackgroundService
 	{
 		private IRecorder RecorderHandler { get; }
-		public BotSettings BotSettings { get; } = new BotSettings();
 		public OBSSettings OBSSettings { get; } = new OBSSettings();
 		public RecorderSettings RecorderSettings { get; } = new RecorderSettings();
 		public MatchData CurrentMatch { get; private set; }
@@ -51,7 +50,6 @@ namespace MatchRecorder
 
 			Configuration = configuration;
 
-			Configuration.Bind( BotSettings );
 			Configuration.Bind( OBSSettings );
 			Configuration.Bind( RecorderSettings );
 
