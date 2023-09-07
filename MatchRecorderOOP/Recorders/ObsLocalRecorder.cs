@@ -19,6 +19,7 @@ namespace MatchRecorder.Recorders
 		private OutputState RecordingState { get; set; }
 		private bool RequestedRecordingStart { get; set; }
 		private bool RequestedRecordingStop { get; set; }
+		public override bool IsRecordingRound => IsRecording;
 		public override bool IsRecording => RecordingState switch
 		{
 			OutputState.Started or OutputState.Starting => true,
@@ -51,19 +52,19 @@ namespace MatchRecorder.Recorders
 			NextObsCheck = DateTime.MinValue;
 		}
 
-		public override Task StartRecordingMatch()
+		protected override Task StartRecordingMatchInternal()
 		{
 			RequestedRecordingStart = true;
 			return Task.CompletedTask;
 		}
 
-		public override Task StopRecordingMatch()
+		protected override Task StopRecordingMatchInternal()
 		{
 			RequestedRecordingStop = true;
 			return Task.CompletedTask;
 		}
 
-		public override async Task StartRecordingRound()
+		protected override async Task StartRecordingRoundInternal()
 		{
 			var round = await StartCollectingRoundData( DateTime.Now );
 			if( round is null )
@@ -74,7 +75,7 @@ namespace MatchRecorder.Recorders
 			round.VideoStartTime = MergedRoundDuration;
 		}
 
-		public override async Task StopRecordingRound()
+		protected override async Task StopRecordingRoundInternal()
 		{
 			var round = await StopCollectingRoundData( DateTime.Now );
 			if( round is null )

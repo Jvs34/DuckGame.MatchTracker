@@ -2,7 +2,7 @@
 
 namespace MatchTracker
 {
-	public class LevelData : ITagsList, IDatabaseEntry
+	public class LevelData : ITagsList, IDatabaseEntry, ILevelName
 	{
 		/// <summary>
 		/// The level's guid

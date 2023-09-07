@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders
 {
-	internal abstract class BaseRecorder : IRecorder
+	internal abstract class BaseRecorder
 	{
-		public abstract bool IsRecording { get; }
-		public abstract RecordingType ResultingRecordingType { get; set; }
+		public virtual bool IsRecording { get; }
+		public virtual RecordingType ResultingRecordingType { get; set; }
+		public virtual bool IsRecordingRound { get; }
+		public bool IsRecordingMatch { get; set; }
 		public MatchData CurrentMatch { get; set; }
 		public RoundData CurrentRound { get; set; }
 
@@ -24,12 +26,12 @@ namespace MatchRecorder.Recorders
 		/// </summary>
 		protected RoundData PendingRoundData { get; set; } = new RoundData();
 
-		protected ILogger<IRecorder> Logger { get; set; }
+		protected ILogger<BaseRecorder> Logger { get; set; }
 		protected IGameDatabase GameDatabase { get; set; }
 		protected ModMessageQueue MessageQueue { get; set; }
 
 		public BaseRecorder(
-			ILogger<IRecorder> logger ,
+			ILogger<BaseRecorder> logger ,
 			IGameDatabase db ,
 			ModMessageQueue messageQueue
 			)
@@ -39,13 +41,61 @@ namespace MatchRecorder.Recorders
 			MessageQueue = messageQueue;
 		}
 
+		public async Task StartRecordingMatch( IPlayersList playersList , ITeamsList teamsList )
+		{
+			if( IsRecordingMatch )
+			{
+				return;
+			}
 
+			IsRecordingMatch = true;
+
+			PendingMatchData.Players = playersList.Players;
+			PendingMatchData.Teams = teamsList.Teams;
+			await StartRecordingMatchInternal();
+		}
+
+		public async Task StopRecordingMatch( IPlayersList playersList = null , ITeamsList teamsList = null , IWinner winner = null )
+		{
+			if( !IsRecordingMatch )
+			{
+				return;
+			}
+
+			IsRecordingMatch = false;
+
+			PendingMatchData.Players = playersList.Players ?? new();
+			PendingMatchData.Teams = teamsList.Teams ?? new();
+			PendingMatchData.Winner = winner.Winner ?? new();
+			await StopRecordingMatchInternal();
+		}
+
+		public async Task StartRecordingRound( ILevelName levelName , IPlayersList playersList , ITeamsList teamsList )
+		{
+			PendingRoundData.LevelName = levelName.LevelName;
+			PendingRoundData.Players = playersList.Players;
+			PendingRoundData.Teams = teamsList.Teams;
+			await StartRecordingRoundInternal();
+		}
+
+		public async Task StopRecordingRound( IPlayersList playersList = null , ITeamsList teamsList = null , IWinner winner = null )
+		{
+			if( !IsRecordingRound )
+			{
+				return;
+			}
+
+			PendingRoundData.Players = playersList.Players ?? new();
+			PendingRoundData.Teams = teamsList.Teams ?? new();
+			PendingRoundData.Winner = winner.Winner ?? new();
+			await StopRecordingRoundInternal();
+		}
 
 		#region ABSTRACT
-		public abstract Task StartRecordingMatch();
-		public abstract Task StartRecordingRound();
-		public abstract Task StopRecordingMatch();
-		public abstract Task StopRecordingRound();
+		protected abstract Task StartRecordingMatchInternal();
+		protected abstract Task StartRecordingRoundInternal();
+		protected abstract Task StopRecordingMatchInternal();
+		protected abstract Task StopRecordingRoundInternal();
 		public abstract Task Update();
 		#endregion
 
@@ -100,7 +150,7 @@ namespace MatchRecorder.Recorders
 				CurrentMatch.Rounds.Add( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted ) );
 			}
 
-			return Task.FromResult(CurrentRound);
+			return Task.FromResult( CurrentRound );
 		}
 
 		internal async Task<RoundData> StopCollectingRoundData( DateTime endTime )

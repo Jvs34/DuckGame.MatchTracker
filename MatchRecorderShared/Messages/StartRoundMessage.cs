@@ -5,7 +5,7 @@ using System.Text;
 
 namespace MatchRecorderShared.Messages
 {
-	public class StartRoundMessage : BaseMessage, ITeamsList , IPlayersList
+	public class StartRoundMessage : BaseMessage, ITeamsList, IPlayersList, ILevelName
 	{
 		public override string MessageType { get; set; } = nameof( StartRoundMessage );
 		public string LevelName { get; set; }

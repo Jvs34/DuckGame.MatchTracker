@@ -29,7 +29,7 @@ host.Services.AddOptions<OBSSettings>().BindConfiguration( string.Empty );
 host.Services.AddOptions<RecorderSettings>().BindConfiguration( string.Empty );
 host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
 host.Services.AddSingleton<ModMessageQueue>();
-host.Services.AddSingleton<IRecorder , ObsLocalRecorder>();
+host.Services.AddSingleton<BaseRecorder , ObsLocalRecorder>();
 host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
 host.Services.AddHostedService<MatchRecorderBackgroundService>();
 

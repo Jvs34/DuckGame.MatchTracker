@@ -15,24 +15,11 @@ namespace MatchRecorder.Services
 {
 	internal sealed class MatchRecorderBackgroundService : BackgroundService
 	{
-		private IRecorder Recorder { get; }
+		private BaseRecorder Recorder { get; }
 		private RecorderSettings RecorderSettings { get; }
-		private MatchData CurrentMatch { get; set; }
-		private RoundData CurrentRound { get; set; }
-
-		/// <summary>
-		/// Data that has arrived from network messages yet to be processed
-		/// </summary>
-		private MatchData PendingMatchData { get; set; } = new MatchData();
-
-		/// <summary>
-		/// Data that has arrived from network messages yet to be processed
-		/// </summary>
-		private RoundData PendingRoundData { get; set; } = new RoundData();
 
 		private IGameDatabase GameDatabase { get; }
-		private bool IsRecordingRound => Recorder.IsRecording;
-		private bool IsRecordingMatch { get; set; }
+
 		private IHostApplicationLifetime AppLifeTime { get; }
 		private ILogger<MatchRecorderBackgroundService> Logger { get; }
 		private ModMessageQueue MessageQueue { get; }
@@ -43,7 +30,7 @@ namespace MatchRecorder.Services
 			ModMessageQueue messageQueue ,
 			IGameDatabase db ,
 			IOptions<RecorderSettings> recorderSettings ,
-			IRecorder recorder ,
+			BaseRecorder recorder ,
 			IHostApplicationLifetime lifetime )
 		{
 			AppLifeTime = lifetime;
@@ -85,8 +72,8 @@ namespace MatchRecorder.Services
 				var fiveSecondsSource = new CancellationTokenSource();
 				fiveSecondsSource.CancelAfter( TimeSpan.FromSeconds( 5 ) );
 
-				StopRecordingRound();
-				StopRecordingMatch();
+				Recorder?.StopRecordingRound();
+				Recorder?.StopRecordingMatch();
 
 				while( Recorder.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
 				{
@@ -117,107 +104,29 @@ namespace MatchRecorder.Services
 			{
 				case StartMatchMessage smm:
 					{
-						if( !IsRecordingMatch )
-						{
-							PendingMatchData.Players = smm.Players;
-							PendingMatchData.Teams = smm.Teams;
-
-							//TODO: check if PlayersData exists in the database and add them otherwise
-
-							IsRecordingMatch = true;
-							StartRecordingMatch();
-						}
+						Recorder?.StartRecordingMatch( smm , smm );
 						break;
 					}
 				case EndMatchMessage emm:
 					{
-						if( IsRecordingMatch )
-						{
-							PendingMatchData.Players = emm.Players;
-							PendingMatchData.Teams = emm.Teams;
-							PendingMatchData.Winner = emm.Winner;
-
-							//TODO: check if PlayersData exists in the database and add them otherwise
-
-							IsRecordingMatch = false;
-							StopRecordingMatch();
-						}
-
+						//TODO: check if PlayersData exists in the database and add them otherwise
+						Recorder?.StopRecordingMatch( emm , emm , emm );
 						break;
 					}
 				case StartRoundMessage srm:
 					{
-						PendingRoundData.LevelName = srm.LevelName;
-						PendingRoundData.Players = srm.Players;
-						PendingRoundData.Teams = srm.Teams;
-
-						StartRecordingRound();
+						Recorder?.StartRecordingRound( srm , srm , srm );
 						break;
 					}
 				case EndRoundMessage erm:
 					{
-						if( IsRecordingRound )
-						{
-							PendingRoundData.Players = erm.Players;
-							PendingRoundData.Teams = erm.Teams;
-							PendingRoundData.Winner = erm.Winner;
-
-							StopRecordingRound();
-						}
-
+						Recorder?.StopRecordingRound( erm , erm , erm );
 						break;
 					}
 				default:
 					break;
 			}
 		}
-
-		private void StartRecordingMatch()
-		{
-			if( CurrentRound != null )
-			{
-				SendHUDmessage( $"Recording {CurrentRound.Name}" );
-			}
-			Recorder?.StartRecordingMatch();
-		}
-
-		private void StopRecordingMatch()
-		{
-			if( CurrentMatch != null )
-			{
-				SendHUDmessage( $"Recorded Match{CurrentMatch.Name}" );
-			}
-
-			Recorder?.StopRecordingMatch();
-		}
-
-		private void StartRecordingRound()
-		{
-			Recorder?.StartRecordingRound();
-		}
-
-		private void StopRecordingRound()
-		{
-			if( CurrentRound != null )
-			{
-				SendHUDmessage( $"Recorded {CurrentRound.Name}" );
-			}
-
-			Recorder?.StopRecordingRound();
-		}
-
-		#region UTILITY
-
-		public void SendHUDmessage( string message )
-		{
-			Logger.LogInformation( "" );
-			MessageQueue.ClientMessageQueue.Enqueue( new ClientHUDMessage()
-			{
-				Message = message
-			} );
-		}
-
-		#endregion UTILITY
 	}
 
 }
