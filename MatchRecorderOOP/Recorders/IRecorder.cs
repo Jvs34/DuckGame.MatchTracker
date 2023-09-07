@@ -1,4 +1,5 @@
 ﻿using MatchTracker;
+using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders
 {
@@ -9,10 +10,10 @@ namespace MatchRecorder.Recorders
 		/// </summary>
 		bool IsRecording { get; }
 		RecordingType ResultingRecordingType { get; set; }
-		void StartRecordingMatch();
-		void StopRecordingMatch();
-		void StartRecordingRound();
-		void StopRecordingRound();
-		void Update();
+		Task StartRecordingMatch();
+		Task StopRecordingMatch();
+		Task StartRecordingRound();
+		Task StopRecordingRound();
+		Task Update();
 	}
 }

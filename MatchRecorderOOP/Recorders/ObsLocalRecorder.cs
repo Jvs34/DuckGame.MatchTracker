@@ -1,40 +1,41 @@
 ﻿using MatchRecorder.Services;
 using MatchTracker;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OBSWebsocketDotNet;
 using OBSWebsocketDotNet.Types;
 using System;
 using System.IO;
 using System.Linq;
-
+using System.Threading.Tasks;
+using WebSocketSharp;
 
 namespace MatchRecorder.Recorders
 {
-	internal sealed class ObsLocalRecorder : IRecorder
+	internal sealed class ObsLocalRecorder : BaseRecorder
 	{
-		private MatchRecorderBackgroundService RecorderService { get; }
-		private IGameDatabase GameDatabase { get; }
 		public OBSSettings OBSSettings { get; }
 		private OBSWebsocket ObsHandler { get; }
 		private OutputState RecordingState { get; set; }
 		private bool RequestedRecordingStart { get; set; }
 		private bool RequestedRecordingStop { get; set; }
-		public bool IsRecording => RecordingState switch
+		public override bool IsRecording => RecordingState switch
 		{
 			OutputState.Started or OutputState.Starting => true,
 			OutputState.Stopped or OutputState.Stopping => false,
 			_ => false,
 		};
-		public RecordingType ResultingRecordingType { get; set; }
+		public override RecordingType ResultingRecordingType { get; set; }
 		private DateTime NextObsCheck { get; set; }
 		private TimeSpan MergedRoundDuration { get; set; } = TimeSpan.Zero;
 
-		public ObsLocalRecorder( MatchRecorderBackgroundService recorderService , 
-			IOptions<OBSSettings> obsSettings,
-			IGameDatabase db )
+		public ObsLocalRecorder(
+			ILogger<IRecorder> logger ,
+			ModMessageQueue messageQueue,
+			IOptions<OBSSettings> obsSettings ,
+			IGameDatabase db ) : base( logger , db , messageQueue )
 		{
 			ResultingRecordingType = RecordingType.Video;
-			RecorderService = recorderService;
 			OBSSettings = obsSettings.Value;
 			GameDatabase = db;
 			RecordingState = OutputState.Stopped;
@@ -50,7 +51,7 @@ namespace MatchRecorder.Recorders
 			NextObsCheck = DateTime.MinValue;
 		}
 
-		public void StartRecordingMatch()
+		public override async Task StartRecordingMatch()
 		{
 			RequestedRecordingStart = true;
 			/*
@@ -59,15 +60,15 @@ namespace MatchRecorder.Recorders
 			*/
 		}
 
-		public void StopRecordingMatch()
+		public override async Task StopRecordingMatch()
 		{
 			RequestedRecordingStop = true;
 			//MainHandler.StopCollectingMatchData();
 		}
 
-		public void StartRecordingRound()
+		public override async Task StartRecordingRound()
 		{
-			var round = RecorderService.StartCollectingRoundData( DateTime.Now );
+			var round = await StartCollectingRoundData( DateTime.Now );
 			if( round is null )
 			{
 				return;
@@ -76,9 +77,9 @@ namespace MatchRecorder.Recorders
 			round.VideoStartTime = MergedRoundDuration;
 		}
 
-		public void StopRecordingRound()
+		public override async Task StopRecordingRound()
 		{
-			var round = RecorderService.StopCollectingRoundData( DateTime.Now );
+			var round = await StopCollectingRoundData( DateTime.Now );
 			if( round is null )
 			{
 				return;
@@ -96,11 +97,11 @@ namespace MatchRecorder.Recorders
 			}
 			catch( Exception )
 			{
-				RecorderService.SendHUDmessage( "Failed connecting to OBS. Check Settings/obs.json" );
+				SendHUDmessage( "Failed connecting to OBS. Check Settings/obs.json" );
 			}
 		}
 
-		public void Update()
+		public override async Task Update()
 		{
 			if( !ObsHandler.IsConnected )
 			{
@@ -127,7 +128,7 @@ namespace MatchRecorder.Recorders
 								DateTime endTime = DateTime.Now;
 								ObsHandler.StopRecording();
 								RequestedRecordingStop = false;
-								var match = RecorderService.StopCollectingMatchData( endTime );
+								var match = await StopCollectingMatchData( endTime );
 								if( match is null )
 								{
 									break;
@@ -158,7 +159,7 @@ namespace MatchRecorder.Recorders
 								ObsHandler.SetRecordingFolder( matchPath );
 								ObsHandler.StartRecording();
 								RequestedRecordingStart = false;
-								var match = RecorderService.StartCollectingMatchData( recordingTime );
+								var match = await StartCollectingMatchData( recordingTime );
 
 								if( match is null )
 								{
@@ -181,8 +182,8 @@ namespace MatchRecorder.Recorders
 			}
 		}
 
-		private void OnConnected( object sender , EventArgs e ) => RecorderService.SendHUDmessage( "Connected to OBS." );
-		private void OnDisconnected( object sender , EventArgs e ) => RecorderService.SendHUDmessage( "Disconnected from OBS." );
+		private void OnConnected( object sender , EventArgs e ) => SendHUDmessage( "Connected to OBS." );
+		private void OnDisconnected( object sender , EventArgs e ) => SendHUDmessage( "Disconnected from OBS." );
 		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type ) => RecordingState = type;
 	}
 }

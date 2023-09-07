@@ -2,6 +2,8 @@
 using MatchRecorderShared.Messages;
 using MatchTracker;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders
 {
@@ -28,7 +30,7 @@ namespace MatchRecorder.Recorders
 
 		public BaseRecorder(
 			ILogger<IRecorder> logger ,
-			IGameDatabase db,
+			IGameDatabase db ,
 			ModMessageQueue messageQueue
 			)
 		{
@@ -37,13 +39,92 @@ namespace MatchRecorder.Recorders
 			MessageQueue = messageQueue;
 		}
 
+
+
 		#region ABSTRACT
-		public abstract void StartRecordingMatch();
-		public abstract void StartRecordingRound();
-		public abstract void StopRecordingMatch();
-		public abstract void StopRecordingRound();
-		public abstract void Update();
+		public abstract Task StartRecordingMatch();
+		public abstract Task StartRecordingRound();
+		public abstract Task StopRecordingMatch();
+		public abstract Task StopRecordingRound();
+		public abstract Task Update();
 		#endregion
+
+		internal Task<MatchData> StartCollectingMatchData( DateTime time )
+		{
+			CurrentMatch = new MatchData
+			{
+				TimeStarted = time ,
+				Name = GameDatabase.SharedSettings.DateTimeToString( time ) ,
+			};
+
+			return Task.FromResult( CurrentMatch );
+		}
+
+		internal async Task<MatchData> StopCollectingMatchData( DateTime time )
+		{
+			if( CurrentMatch == null )
+			{
+				return null;
+			}
+
+			CurrentMatch.TimeEnded = time;
+			CurrentMatch.Players = PendingMatchData.Players;
+			CurrentMatch.Teams = PendingMatchData.Teams;
+			CurrentMatch.Winner = PendingMatchData.Winner;
+
+			await GameDatabase.SaveData( CurrentMatch );
+			await GameDatabase.Add( CurrentMatch );
+
+			MatchData newMatchData = CurrentMatch;
+
+			CurrentMatch = null;
+			PendingMatchData = new MatchData();
+			return newMatchData;
+		}
+
+		internal Task<RoundData> StartCollectingRoundData( DateTime startTime )
+		{
+			CurrentRound = new RoundData()
+			{
+				MatchName = CurrentMatch?.Name ,
+				LevelName = PendingRoundData.LevelName ,
+				TimeStarted = startTime ,
+				Name = GameDatabase.SharedSettings.DateTimeToString( startTime ) ,
+				RecordingType = ResultingRecordingType ,
+				Players = PendingRoundData.Players ,
+				Teams = PendingRoundData.Teams ,
+			};
+
+			if( CurrentMatch != null )
+			{
+				CurrentMatch.Rounds.Add( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted ) );
+			}
+
+			return Task.FromResult(CurrentRound);
+		}
+
+		internal async Task<RoundData> StopCollectingRoundData( DateTime endTime )
+		{
+			if( CurrentRound == null )
+			{
+				return null;
+			}
+
+			CurrentRound.Players = PendingRoundData.Players;
+			CurrentRound.Teams = PendingRoundData.Teams;
+			CurrentRound.Winner = PendingRoundData.Winner;
+			CurrentRound.TimeEnded = endTime;
+
+			await GameDatabase.SaveData( CurrentRound );
+			await GameDatabase.Add( CurrentRound );
+
+			RoundData newRoundData = CurrentRound;
+
+			CurrentRound = null;
+			PendingRoundData = new RoundData();
+
+			return newRoundData;
+		}
 
 		public void SendHUDmessage( string message )
 		{
