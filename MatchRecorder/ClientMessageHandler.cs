@@ -5,6 +5,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,41 +17,18 @@ namespace MatchRecorder
 		//public bool Connected => HubConnection.State == HubConnectionState.Connected;
 		//private HubConnection HubConnection { get; }
 		private ConcurrentQueue<BaseMessage> SendMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
-		private ConcurrentQueue<BaseMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
+		private HttpClient HttpClient { get; }
 
-		public ClientMessageHandler()
+		//private ConcurrentQueue<BaseMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
+
+		public ClientMessageHandler( HttpClient httpClient )
 		{
-			//HubConnection = new HubConnectionBuilder()
-			//	.WithUrl( "http://localhost:6969/MatchRecorderHub" )
-			//	.WithAutomaticReconnect( new TimeSpan [] { TimeSpan.FromSeconds( 1 ) } )
-			//	.Build();
-
-			//HubConnection.On<StartMatchMessage>( nameof( ReceiveStartMatchMessage ) , ReceiveStartMatchMessage );
-			//HubConnection.On<EndMatchMessage>( nameof( ReceiveEndMatchMessage ) , ReceiveEndMatchMessage );
-			//HubConnection.On<StartRoundMessage>( nameof( ReceiveStartRoundMessage ) , ReceiveStartRoundMessage );
-			//HubConnection.On<EndRoundMessage>( nameof( ReceiveEndRoundMessage ) , ReceiveEndRoundMessage );
-			//HubConnection.On<ShowHUDTextMessage>( nameof( ReceiveShowHUDTextMessage ) , ReceiveShowHUDTextMessage );
-		}
-
-		public async Task ConnectAsync()
-		{
-			//if( HubConnection.State != HubConnectionState.Connected && HubConnection.State != HubConnectionState.Connecting )
-			//{
-			//	await HubConnection.StartAsync();
-			//}
+			HttpClient = httpClient;
 		}
 
 		public void SendMessage( BaseMessage message )
 		{
 			SendMessagesQueue.Enqueue( message );
-		}
-
-		internal void CheckMessages()
-		{
-			while( ReceiveMessagesQueue.TryDequeue( out var message ) )
-			{
-				OnReceiveMessage?.Invoke( message );
-			}
 		}
 
 		internal async Task ThreadedLoop( CancellationToken token = default )
@@ -87,5 +65,7 @@ namespace MatchRecorder
 				}
 			}
 		}
+
+
 	}
 }

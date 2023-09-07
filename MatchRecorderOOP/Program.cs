@@ -1,5 +1,7 @@
 ﻿using MatchRecorder;
 using MatchRecorder.Initializers;
+using MatchRecorder.Recorders;
+using MatchRecorder.Services;
 using MatchRecorderShared;
 using MatchRecorderShared.Messages;
 using MatchTracker;
@@ -9,6 +11,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using System.IO;
+using System.Linq;
+using System.Net.Mime;
 
 var host = WebApplication.CreateBuilder( args );
 
@@ -23,17 +27,21 @@ host.Configuration
 host.Services.AddOptions<SharedSettings>().BindConfiguration( string.Empty );
 host.Services.AddOptions<OBSSettings>().BindConfiguration( string.Empty );
 host.Services.AddOptions<RecorderSettings>().BindConfiguration( string.Empty );
-
-host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
 host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
 host.Services.AddSingleton<ModMessageQueue>();
-host.Services.AddHostedService<MatchRecorderService>();
+host.Services.AddSingleton<IRecorder , ObsLocalRecorder>();
+host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
+host.Services.AddHostedService<MatchRecorderBackgroundService>();
+
 
 var app = host.Build();
 
-app.MapGet( "/ping" , () =>
+app.MapGet( "/ping" , () => Results.Ok() );
+app.MapGet( "/messages" , ( ModMessageQueue queue ) =>
 {
-	Results.Ok();
+	var hudMessages = queue.ClientMessageQueue.ToList();
+	queue.ClientMessageQueue.Clear();
+	return Results.Json( hudMessages , contentType: MediaTypeNames.Application.Json );
 } );
 
 app.MapPost( $"/{nameof( EndMatchMessage ).ToLowerInvariant()}" , ( EndMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
@@ -42,11 +50,10 @@ app.MapPost( $"/{nameof( StartMatchMessage ).ToLowerInvariant()}" , ( StartMatch
 app.MapPost( $"/{nameof( StartRoundMessage ).ToLowerInvariant()}" , ( StartRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
 
 await app.InitAsync();
-
 await app.RunAsync();
 
 static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
 {
-	queue.MessageQueue.Enqueue( message );
+	queue.RecorderMessageQueue.Enqueue( message );
 	return Results.Ok();
 }

@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading.Tasks;
 
@@ -20,11 +21,17 @@ namespace MatchRecorder
 		private ClientMessageHandler MessageHandler { get; }
 		private Task MessageHandlerTask { get; set; }
 		public string RecorderUrl { get; set; } = "http://localhost:6969";
+		private HttpClient HttpClient { get; }
 
 		public MatchRecorderClient( string directory )
 		{
+			HttpClient = new HttpClient()
+			{
+				BaseAddress = new Uri( RecorderUrl )
+			};
+
 			ModPath = directory;
-			MessageHandler = new ClientMessageHandler();
+			MessageHandler = new ClientMessageHandler( HttpClient );
 		}
 
 		public static void ShowHUDMessage( string text , float lifetime = 1f )
@@ -46,7 +53,6 @@ namespace MatchRecorder
 				{
 					try
 					{
-						await MessageHandler.ConnectAsync();
 						await MessageHandler.ThreadedLoop();
 					}
 					catch( Exception e )
@@ -55,8 +61,6 @@ namespace MatchRecorder
 					}
 				} );
 			}
-
-			MessageHandler?.CheckMessages();
 		}
 
 		private void CheckRecorderProcess()

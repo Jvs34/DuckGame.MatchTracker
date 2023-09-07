@@ -1,27 +1,24 @@
-﻿using MatchRecorderShared;
+﻿using MatchRecorder.Recorders;
+using MatchRecorderShared;
 using MatchRecorderShared.Messages;
 using MatchTracker;
-using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Diagnostics;
-using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchRecorder
+namespace MatchRecorder.Services
 {
-	internal class MatchRecorderService : BackgroundService
+	internal sealed class MatchRecorderBackgroundService : BackgroundService
 	{
-		private IRecorder RecorderHandler { get; }
-		public OBSSettings OBSSettings { get; } = new OBSSettings();
-		public RecorderSettings RecorderSettings { get; } = new RecorderSettings();
-		public MatchData CurrentMatch { get; private set; }
-		public RoundData CurrentRound { get; private set; }
+		private IRecorder Recorder { get; }
+		private RecorderSettings RecorderSettings { get; }
+		private MatchData CurrentMatch { get; set; }
+		private RoundData CurrentRound { get; set; }
 
 		/// <summary>
 		/// Data that has arrived from network messages yet to be processed
@@ -32,29 +29,29 @@ namespace MatchRecorder
 		/// Data that has arrived from network messages yet to be processed
 		/// </summary>
 		private RoundData PendingRoundData { get; set; } = new RoundData();
-		public IGameDatabase GameDatabase { get; }
-		public bool IsRecordingRound => RecorderHandler.IsRecording;
-		public bool IsRecordingMatch { get; set; }
-		public IHostApplicationLifetime AppLifeTime { get; }
-		private ILogger<MatchRecorderService> Logger { get; }
-		public ModMessageQueue MessageQueue { get; }
+
+		private IGameDatabase GameDatabase { get; }
+		private bool IsRecordingRound => Recorder.IsRecording;
+		private bool IsRecordingMatch { get; set; }
+		private IHostApplicationLifetime AppLifeTime { get; }
+		private ILogger<MatchRecorderBackgroundService> Logger { get; }
+		private ModMessageQueue MessageQueue { get; }
 		private Task MessageHandlerTask { get; set; }
 		private Process DuckGameProcess { get; }
 
-		public MatchRecorderService( ILogger<MatchRecorderService> logger ,
-			ModMessageQueue messageQueue , IGameDatabase db ,
-			IHostApplicationLifetime lifetime ,
-			IOptions<OBSSettings> obsSettings,
-			IOptions<RecorderSettings> recorderSettings )
+		public MatchRecorderBackgroundService( ILogger<MatchRecorderBackgroundService> logger ,
+			ModMessageQueue messageQueue ,
+			IGameDatabase db ,
+			IOptions<RecorderSettings> recorderSettings ,
+			IRecorder recorder ,
+			IHostApplicationLifetime lifetime )
 		{
 			AppLifeTime = lifetime;
 			Logger = logger;
 			MessageQueue = messageQueue;
 			GameDatabase = db;
-			OBSSettings = obsSettings.Value;
 			RecorderSettings = recorderSettings.Value;
-
-			RecorderHandler = new ObsLocalRecorder( this );
+			Recorder = recorder;
 
 			if( RecorderSettings.DuckGameProcessID > 0 )
 			{
@@ -69,14 +66,14 @@ namespace MatchRecorder
 				return;
 			}
 
-			Logger.LogInformation( $"Started {nameof( MatchRecorderService.ExecuteAsync )}" );
+			Logger.LogInformation( $"Started {nameof( ExecuteAsync )}" );
 
 			var task = Task.Factory.StartNew( async () =>
 			{
 				while( !token.IsCancellationRequested )
 				{
 					CheckMessages();
-					RecorderHandler?.Update();
+					Recorder?.Update();
 					if( DuckGameProcess == null || DuckGameProcess.HasExited )
 					{
 						break;
@@ -91,9 +88,9 @@ namespace MatchRecorder
 				StopRecordingRound();
 				StopRecordingMatch();
 
-				while( RecorderHandler.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
+				while( Recorder.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
 				{
-					RecorderHandler?.Update();
+					Recorder?.Update();
 					await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , fiveSecondsSource.Token );
 				}
 
@@ -106,7 +103,7 @@ namespace MatchRecorder
 
 		internal void CheckMessages()
 		{
-			while( MessageQueue.MessageQueue.TryDequeue( out var message ) )
+			while( MessageQueue.RecorderMessageQueue.TryDequeue( out var message ) )
 			{
 				OnReceiveMessage( message );
 			}
@@ -179,34 +176,34 @@ namespace MatchRecorder
 		{
 			if( CurrentRound != null )
 			{
-				ShowHUDmessage( $"Recording {CurrentRound.Name}" );
+				SendHUDmessage( $"Recording {CurrentRound.Name}" );
 			}
-			RecorderHandler?.StartRecordingMatch();
+			Recorder?.StartRecordingMatch();
 		}
 
 		private void StopRecordingMatch()
 		{
 			if( CurrentMatch != null )
 			{
-				ShowHUDmessage( $"Recorded Match{CurrentMatch.Name}" );
+				SendHUDmessage( $"Recorded Match{CurrentMatch.Name}" );
 			}
 
-			RecorderHandler?.StopRecordingMatch();
+			Recorder?.StopRecordingMatch();
 		}
 
 		private void StartRecordingRound()
 		{
-			RecorderHandler?.StartRecordingRound();
+			Recorder?.StartRecordingRound();
 		}
 
 		private void StopRecordingRound()
 		{
 			if( CurrentRound != null )
 			{
-				ShowHUDmessage( $"Recorded {CurrentRound.Name}" );
+				SendHUDmessage( $"Recorded {CurrentRound.Name}" );
 			}
 
-			RecorderHandler?.StopRecordingRound();
+			Recorder?.StopRecordingRound();
 		}
 
 		internal MatchData StartCollectingMatchData( DateTime time )
@@ -250,7 +247,7 @@ namespace MatchRecorder
 				LevelName = PendingRoundData.LevelName ,
 				TimeStarted = startTime ,
 				Name = GameDatabase.SharedSettings.DateTimeToString( startTime ) ,
-				RecordingType = RecorderHandler.ResultingRecordingType ,
+				RecordingType = Recorder.ResultingRecordingType ,
 				Players = PendingRoundData.Players ,
 				Teams = PendingRoundData.Teams ,
 			};
@@ -288,9 +285,13 @@ namespace MatchRecorder
 
 		#region UTILITY
 
-		public void ShowHUDmessage( string message )
+		public void SendHUDmessage( string message )
 		{
 			Logger.LogInformation( "" );
+			MessageQueue.ClientMessageQueue.Enqueue( new ClientHUDMessage()
+			{
+				Message = message
+			} );
 		}
 
 		#endregion UTILITY

@@ -1,6 +1,6 @@
 ﻿using MatchTracker;
 
-namespace MatchRecorder
+namespace MatchRecorder.Recorders
 {
 	internal interface IRecorder
 	{
