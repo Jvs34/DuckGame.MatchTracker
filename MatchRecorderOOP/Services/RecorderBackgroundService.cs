@@ -13,17 +13,17 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder.Services
 {
-	internal sealed class MatchRecorderBackgroundService : BackgroundService
+	internal sealed class RecorderBackgroundService : BackgroundService
 	{
 		private BaseRecorder Recorder { get; }
 		private RecorderSettings RecorderSettings { get; }
 		private IGameDatabase GameDatabase { get; }
 		private IHostApplicationLifetime AppLifeTime { get; }
-		private ILogger<MatchRecorderBackgroundService> Logger { get; }
+		private ILogger<RecorderBackgroundService> Logger { get; }
 		private ModMessageQueue MessageQueue { get; }
 		private Process DuckGameProcess { get; }
 
-		public MatchRecorderBackgroundService( ILogger<MatchRecorderBackgroundService> logger ,
+		public RecorderBackgroundService( ILogger<RecorderBackgroundService> logger ,
 			ModMessageQueue messageQueue ,
 			IGameDatabase db ,
 			IOptions<RecorderSettings> recorderSettings ,
@@ -49,8 +49,8 @@ namespace MatchRecorder.Services
 
 			while( !token.IsCancellationRequested )
 			{
-				CheckMessages();
-				await Recorder?.Update();
+				await CheckMessages();
+				await Recorder.Update();
 				if( DuckGameProcess == null || DuckGameProcess.HasExited )
 				{
 					break;
@@ -62,45 +62,42 @@ namespace MatchRecorder.Services
 			var fiveSecondsSource = new CancellationTokenSource();
 			fiveSecondsSource.CancelAfter( TimeSpan.FromSeconds( 5 ) );
 
-			Recorder?.StopRecordingRound();
-			Recorder?.StopRecordingMatch();
+			await Recorder.StopRecordingRound();
+			await Recorder.StopRecordingMatch();
 
 			while( Recorder.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
 			{
-				Recorder?.Update();
+				await Recorder.Update();
 				await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , fiveSecondsSource.Token );
 			}
 
 			//request the app host to close the process
 			AppLifeTime.StopApplication();
-
-
-			await Task.CompletedTask;
 		}
 
-		internal void CheckMessages()
+		internal async Task CheckMessages()
 		{
 			while( MessageQueue.RecorderMessageQueue.TryDequeue( out var message ) )
 			{
-				OnReceiveMessage( message );
+				await OnReceiveMessage( message );
 			}
 		}
 
-		public void OnReceiveMessage( BaseMessage message )
+		public async Task OnReceiveMessage( BaseMessage message )
 		{
 			Logger.LogInformation( "Received a message of type {messageType}" , message.MessageType );
 
 			switch( message )
 			{
 				case StartMatchMessage smm:
-					Recorder?.StartRecordingMatch( smm , smm ); break;
+					await Recorder.StartRecordingMatch( smm , smm ); break;
 				case EndMatchMessage emm:
 					//TODO: check if PlayersData exists in the database and add them otherwise
-					Recorder?.StopRecordingMatch( emm , emm , emm ); break;
+					await Recorder.StopRecordingMatch( emm , emm , emm ); break;
 				case StartRoundMessage srm:
-					Recorder?.StartRecordingRound( srm , srm , srm ); break;
+					await Recorder.StartRecordingRound( srm , srm , srm ); break;
 				case EndRoundMessage erm:
-					Recorder?.StopRecordingRound( erm , erm , erm ); break;
+					await Recorder.StopRecordingRound( erm , erm , erm ); break;
 				default:
 					break;
 			}

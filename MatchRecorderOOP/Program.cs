@@ -41,7 +41,7 @@ host.Services.AddSingleton<ModMessageQueue>();
 }
 
 host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
-host.Services.AddHostedService<MatchRecorderBackgroundService>();
+host.Services.AddHostedService<RecorderBackgroundService>();
 
 var app = host.Build();
 

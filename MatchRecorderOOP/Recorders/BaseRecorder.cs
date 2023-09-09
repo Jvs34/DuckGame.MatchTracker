@@ -145,10 +145,7 @@ namespace MatchRecorder.Recorders
 				Teams = PendingRoundData.Teams ,
 			};
 
-			if( CurrentMatch != null )
-			{
-				CurrentMatch.Rounds.Add( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted ) );
-			}
+			CurrentMatch?.Rounds.Add( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted ) );
 
 			return Task.FromResult( CurrentRound );
 		}

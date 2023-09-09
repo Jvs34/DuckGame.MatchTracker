@@ -15,7 +15,6 @@ Settings/*.json
 .vs/*
 ThirdParty/ffmpeg.exe
 UploaderTask/
-*/Properties/*
 .vscode/
 /MatchRecorder.dll
 /MatchRecorder.pdb

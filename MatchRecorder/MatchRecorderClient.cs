@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	public class MatchRecorderClient
+	public sealed class MatchRecorderClient
 	{
 		public string ModPath { get; }
 		private Process RecorderProcess { get; set; }
@@ -27,11 +27,18 @@ namespace MatchRecorder
 		{
 			HttpClient = new HttpClient()
 			{
-				BaseAddress = new Uri( RecorderUrl )
+				BaseAddress = new Uri( RecorderUrl ) ,
+				Timeout = TimeSpan.FromSeconds( 1 )
 			};
 
 			ModPath = directory;
 			MessageHandler = new ClientMessageHandler( HttpClient );
+			MessageHandler.OnReceiveMessage += OnReceiveMessage;
+		}
+
+		private void OnReceiveMessage( ClientHUDMessage message )
+		{
+			ShowHUDMessage( message.Message );
 		}
 
 		public static void ShowHUDMessage( string text , float lifetime = 1f )
@@ -45,38 +52,56 @@ namespace MatchRecorder
 		internal void Update()
 		{
 			CheckRecorderProcess();
+			MessageHandler.UpdateMessages();
 
 			if( ( MessageHandlerTask is null || MessageHandlerTask.IsCompleted == true ) && MessageHandler != null )
 			{
-				System.Diagnostics.Debug.WriteLine( "Starting MessageHandler task" );
-				MessageHandlerTask = Task.Run( async () =>
-				{
-					try
-					{
-						await MessageHandler.ThreadedLoop();
-					}
-					catch( Exception e )
-					{
-						System.Diagnostics.Debug.WriteLine( e );
-					}
-				} );
+				StartMessageHandlerTask();
 			}
+		}
+
+		private void StartMessageHandlerTask()
+		{
+			System.Diagnostics.Debug.WriteLine( "Starting MessageHandler task" );
+			//TODO: switch to a thread? tasks are not guaranteed to be ran in their own thread
+			MessageHandlerTask = Task.Run( async () =>
+			{
+				try
+				{
+					await MessageHandler.ThreadedLoop();
+				}
+				catch( Exception e )
+				{
+					System.Diagnostics.Debug.WriteLine( e );
+				}
+			} );
 		}
 
 		private void CheckRecorderProcess()
 		{
-			if( RecorderProcess is null || RecorderProcess.HasExited )
+			if( !IsRecorderProcessAlive() )
 			{
-				RecorderProcess = Process.Start( new ProcessStartInfo()
-				{
-					FileName = Path.Combine( ModPath , @"MatchRecorderOOP\bin\Debug\net7.0\MatchRecorderOOP.exe" ) ,
-					WorkingDirectory = ModPath ,
-					CreateNoWindow = false ,
-					Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} OBSMergedVideo --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
-				} );
+				StartRecorderProcess();
 			}
 		}
 
+		private bool IsRecorderProcessAlive()
+		{
+			return RecorderProcess != null && !RecorderProcess.HasExited;
+		}
+
+		private void StartRecorderProcess()
+		{
+			RecorderProcess = Process.Start( new ProcessStartInfo()
+			{
+				FileName = Path.Combine( ModPath , "MatchRecorderOOP" , "MatchRecorderOOP.exe" ) ,
+				WorkingDirectory = ModPath ,
+				CreateNoWindow = false ,
+				Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} {RecorderType.NoVideo} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
+			} );
+		}
+
+		#region MATCHTRACKING
 		internal void StartRecordingRound()
 		{
 			MessageHandler?.SendMessage( new StartRoundMessage()
@@ -143,6 +168,7 @@ namespace MatchRecorder
 		{
 			return Network.isActive ? profile.steamID.ToString() : profile.id;
 		}
+		#endregion MATCHTRACKING
 
 	}
 
