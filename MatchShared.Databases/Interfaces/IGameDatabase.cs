@@ -13,8 +13,8 @@ namespace MatchTracker
 
 		Task Load( CancellationToken token = default );
 
-		Task SaveData<T>( T data ) where T : IDatabaseEntry;
+		Task SaveData<T>( T data , CancellationToken token = default ) where T : IDatabaseEntry;
 
-		Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry;
+		Task<T> GetData<T>( string dataId = "" , CancellationToken token = default ) where T : IDatabaseEntry;
 	}
 }

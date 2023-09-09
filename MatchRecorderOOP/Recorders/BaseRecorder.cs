@@ -3,6 +3,7 @@ using MatchRecorderShared.Messages;
 using MatchTracker;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders
@@ -41,7 +42,27 @@ namespace MatchRecorder.Recorders
 			MessageQueue = messageQueue;
 		}
 
-		public async Task StartRecordingMatch( IPlayersList playersList , ITeamsList teamsList )
+		private async Task AddOrUpdateMissingPlayers( List<PlayerData> players )
+		{
+			foreach( var player in players )
+			{
+				await GameDatabase.Add( player );
+
+				var dbPlayerData = await GameDatabase.GetData<PlayerData>( player.DatabaseIndex );
+				
+				if( dbPlayerData != null )
+				{
+					dbPlayerData.Name = player.Name;
+					await GameDatabase.SaveData( dbPlayerData );
+				}
+				else
+				{
+					await GameDatabase.SaveData( player );
+				}
+			}
+		}
+
+		public async Task StartRecordingMatch( IPlayersList playersList , ITeamsList teamsList , List<PlayerData> players )
 		{
 			if( IsRecordingMatch )
 			{
@@ -53,9 +74,10 @@ namespace MatchRecorder.Recorders
 			PendingMatchData.Players = playersList.Players;
 			PendingMatchData.Teams = teamsList.Teams;
 			await StartRecordingMatchInternal();
+			await AddOrUpdateMissingPlayers( players );
 		}
 
-		public async Task StopRecordingMatch( IPlayersList playersList = null , ITeamsList teamsList = null , IWinner winner = null )
+		public async Task StopRecordingMatch( IPlayersList playersList = null , ITeamsList teamsList = null , IWinner winner = null , List<PlayerData> players = null )
 		{
 			if( !IsRecordingMatch )
 			{
@@ -68,6 +90,7 @@ namespace MatchRecorder.Recorders
 			PendingMatchData.Teams = teamsList.Teams ?? new();
 			PendingMatchData.Winner = winner.Winner ?? new();
 			await StopRecordingMatchInternal();
+			await AddOrUpdateMissingPlayers( players );
 		}
 
 		public async Task StartRecordingRound( ILevelName levelName , IPlayersList playersList , ITeamsList teamsList )

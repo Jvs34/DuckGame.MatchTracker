@@ -90,9 +90,9 @@ namespace MatchRecorder.Services
 			switch( message )
 			{
 				case StartMatchMessage smm:
-					await Recorder.StartRecordingMatch( smm , smm ); break;
+					await Recorder.StartRecordingMatch( smm , smm , smm.PlayersData ); break;
 				case EndMatchMessage emm:
-					await Recorder.StopRecordingMatch( emm , emm , emm ); break;
+					await Recorder.StopRecordingMatch( emm , emm , emm , emm.PlayersData ); break;
 				case StartRoundMessage srm:
 					await Recorder.StartRecordingRound( srm , srm , srm ); break;
 				case EndRoundMessage erm:

@@ -31,14 +31,11 @@ host.Services.AddOptions<RecorderSettings>().BindConfiguration( string.Empty );
 host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
 host.Services.AddSingleton<ModMessageQueue>();
 
-{
-	var rec = host.Configuration.Get<RecorderSettings>();
 
-	switch( rec.RecorderType )
-	{
-		case RecorderType.OBSMergedVideo: host.Services.AddSingleton<BaseRecorder , OBSLocalRecorder>(); break;
-		default: host.Services.AddSingleton<BaseRecorder , NoVideoRecorder>(); break;
-	}
+switch( host.Configuration.Get<RecorderSettings>().RecorderType )
+{
+	case RecorderType.OBSMergedVideo: host.Services.AddSingleton<BaseRecorder , OBSLocalRecorder>(); break;
+	default: host.Services.AddSingleton<BaseRecorder , NoVideoRecorder>(); break;
 }
 
 host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
@@ -49,7 +46,7 @@ var app = host.Build();
 app.MapGet( "/ping" , () => Results.Ok() );
 app.MapGet( "/messages" , ( ModMessageQueue queue ) =>
 {
-	var hudMessages = queue.ClientMessageQueue.ToList();
+	var hudMessages = queue.ClientMessageQueue.ToArray();
 	queue.ClientMessageQueue.Clear();
 	return Results.Json( hudMessages , contentType: MediaTypeNames.Application.Json );
 } );
@@ -68,11 +65,6 @@ await app.RunAsync();
 
 static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
 {
-	if( message is null )
-	{
-		return Results.Ok();
-	}
-
 	queue.RecorderMessageQueue.Enqueue( message );
 	return Results.Ok();
 }

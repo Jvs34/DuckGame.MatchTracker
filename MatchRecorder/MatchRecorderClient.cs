@@ -104,33 +104,13 @@ namespace MatchRecorder
 		}
 
 		#region MATCHTRACKING
-		internal void StartRecordingRound()
-		{
-			MessageHandler?.SendMessage( new StartRoundMessage()
-			{
-				LevelName = Level.current.level ,
-				Teams = Teams.active.Select( x => ConvertDuckGameTeamToTeamData( x ) ).ToList() ,
-				Players = Profiles.activeNonSpectators.Select( x => GetPlayerID( x ) ).ToList() ,
-			} );
-		}
-
-		internal void StopRecordingRound()
-		{
-			MessageHandler?.SendMessage( new EndRoundMessage()
-			{
-				Teams = Teams.active.Select( x => ConvertDuckGameTeamToTeamData( x ) ).ToList() ,
-				Players = Profiles.activeNonSpectators.Select( x => GetPlayerID( x ) ).ToList() ,
-				Winner = ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ) ,
-			} );
-		}
-
 		internal void StartRecordingMatch()
 		{
 			MessageHandler?.SendMessage( new StartMatchMessage()
 			{
-				Teams = Teams.active.Select( x => ConvertDuckGameTeamToTeamData( x ) ).ToList() ,
-				Players = Profiles.activeNonSpectators.Select( x => GetPlayerID( x ) ).ToList() ,
-				PlayersData = Profiles.activeNonSpectators.Select( x => ConvertDuckGameProfileToPlayerData( x ) ).ToList() ,
+				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
+				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+				PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
 			} );
 		}
 
@@ -138,10 +118,30 @@ namespace MatchRecorder
 		{
 			MessageHandler?.SendMessage( new EndMatchMessage()
 			{
-				Teams = Teams.active.Select( x => ConvertDuckGameTeamToTeamData( x ) ).ToList() ,
-				Players = Profiles.activeNonSpectators.Select( x => GetPlayerID( x ) ).ToList() ,
-				PlayersData = Profiles.activeNonSpectators.Select( x => ConvertDuckGameProfileToPlayerData( x ) ).ToList() ,
+				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
+				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+				PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
 				Winner = ConvertDuckGameTeamToTeamData( Teams.winning.FirstOrDefault() ) ,
+			} );
+		}
+
+		internal void StartRecordingRound()
+		{
+			MessageHandler?.SendMessage( new StartRoundMessage()
+			{
+				LevelName = Level.current.level ,
+				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
+				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+			} );
+		}
+
+		internal void StopRecordingRound()
+		{
+			MessageHandler?.SendMessage( new EndRoundMessage()
+			{
+				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
+				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+				Winner = ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ) ,
 			} );
 		}
 
@@ -168,7 +168,21 @@ namespace MatchRecorder
 
 		private string GetPlayerID( Profile profile )
 		{
-			return Network.isActive ? profile.steamID.ToString() : profile.id;
+			var id = profile.id;
+
+			if( Network.isActive )
+			{
+				var steamid = profile.steamID.ToString();
+
+				id = steamid;
+
+				if( profile.isRemoteLocalDuck )
+				{
+					id = $"{steamid}_{profile.name}";
+				}
+			}
+
+			return id;
 		}
 		#endregion MATCHTRACKING
 

@@ -36,7 +36,7 @@ namespace MatchTracker
 			return Task.CompletedTask;
 		}
 
-		public Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry
+		public Task<T> GetData<T>( string dataId = "" , CancellationToken token = default ) where T : IDatabaseEntry
 		{
 			if( string.IsNullOrEmpty( dataId ) )
 			{
@@ -49,7 +49,7 @@ namespace MatchTracker
 			return Task.FromResult( data );
 		}
 
-		public Task SaveData<T>( T data ) where T : IDatabaseEntry
+		public Task SaveData<T>( T data , CancellationToken token = default ) where T : IDatabaseEntry
 		{
 			var collection = Database.GetCollection<T>( data.GetType().Name );
 			collection.Upsert( data );

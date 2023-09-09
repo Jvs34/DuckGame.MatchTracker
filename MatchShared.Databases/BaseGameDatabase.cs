@@ -30,8 +30,8 @@ namespace MatchTracker
 		}
 
 		#region INTERFACE
-		public abstract Task<T> GetData<T>( string dataId = "" ) where T : IDatabaseEntry;
-		public abstract Task SaveData<T>( T data ) where T : IDatabaseEntry;
+		public abstract Task<T> GetData<T>( string dataId = "" , CancellationToken token = default ) where T : IDatabaseEntry;
+		public abstract Task SaveData<T>( T data , CancellationToken token = default ) where T : IDatabaseEntry;
 		public abstract void Dispose();
 		#endregion
 	}
