@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Mime;
@@ -58,11 +59,20 @@ app.MapPost( $"/{nameof( EndRoundMessage ).ToLowerInvariant()}" , ( EndRoundMess
 app.MapPost( $"/{nameof( StartMatchMessage ).ToLowerInvariant()}" , ( StartMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
 app.MapPost( $"/{nameof( StartRoundMessage ).ToLowerInvariant()}" , ( StartRoundMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
 
+#if DEBUG
+//Debugger.Launch();
+#endif
+
 await app.InitAsync();
 await app.RunAsync();
 
 static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
 {
+	if( message is null )
+	{
+		return Results.Ok();
+	}
+
 	queue.RecorderMessageQueue.Enqueue( message );
 	return Results.Ok();
 }

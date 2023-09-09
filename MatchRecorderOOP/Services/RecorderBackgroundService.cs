@@ -92,7 +92,6 @@ namespace MatchRecorder.Services
 				case StartMatchMessage smm:
 					await Recorder.StartRecordingMatch( smm , smm ); break;
 				case EndMatchMessage emm:
-					//TODO: check if PlayersData exists in the database and add them otherwise
 					await Recorder.StopRecordingMatch( emm , emm , emm ); break;
 				case StartRoundMessage srm:
 					await Recorder.StartRecordingRound( srm , srm , srm ); break;

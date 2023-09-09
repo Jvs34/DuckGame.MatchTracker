@@ -47,20 +47,16 @@ namespace MatchRecorder
 
 		private async Task SendRecorderMessage( BaseMessage message , CancellationToken token = default )
 		{
-			var uri = new Uri( message.MessageType.ToLower() , UriKind.Relative );
-			using var postRequest = new HttpRequestMessage( HttpMethod.Post , uri );
-
 			var stringBuilder = new StringBuilder( 1024 );
 			using var sw = new StringWriter( stringBuilder , CultureInfo.InvariantCulture );
 			using var jsonTextWriter = new JsonTextWriter( sw );
 
 			Serializer.Serialize( jsonTextWriter , message );
 
-			using var stringContent = new StringContent( stringBuilder.ToString() );
-
-			stringContent.Headers.ContentType = MediaTypeHeaderValue.Parse( "application/json" );
-
-			using var httpPost = await HttpClient.SendAsync( postRequest , HttpCompletionOption.ResponseHeadersRead , token );
+			using var httpPost = await HttpClient.PostAsync( 
+				message.MessageType.ToLower() , 
+				new StringContent( stringBuilder.ToString() , Encoding.UTF8 , "application/json" ) , 
+				token );
 		}
 
 		private async Task GetAllPendingClientMessages( CancellationToken token = default )
@@ -98,7 +94,7 @@ namespace MatchRecorder
 					await SendRecorderMessage( message , token );
 				}
 
-				await GetAllPendingClientMessages();
+				//await GetAllPendingClientMessages();
 				await Task.Delay( 100 );
 			}
 		}
