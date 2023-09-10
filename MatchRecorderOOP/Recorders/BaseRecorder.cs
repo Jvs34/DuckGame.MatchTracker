@@ -49,7 +49,7 @@ namespace MatchRecorder.Recorders
 				await GameDatabase.Add( player );
 
 				var dbPlayerData = await GameDatabase.GetData<PlayerData>( player.DatabaseIndex );
-				
+
 				if( dbPlayerData != null )
 				{
 					dbPlayerData.Name = player.Name;
@@ -95,6 +95,11 @@ namespace MatchRecorder.Recorders
 
 		public async Task StartRecordingRound( ILevelName levelName , IPlayersList playersList , ITeamsList teamsList )
 		{
+			if( !IsRecordingMatch )
+			{
+				return;
+			}
+
 			PendingRoundData.LevelName = levelName.LevelName;
 			PendingRoundData.Players = playersList.Players;
 			PendingRoundData.Teams = teamsList.Teams;
@@ -103,7 +108,7 @@ namespace MatchRecorder.Recorders
 
 		public async Task StopRecordingRound( IPlayersList playersList = null , ITeamsList teamsList = null , IWinner winner = null )
 		{
-			if( !IsRecordingRound )
+			if( !IsRecordingRound || !IsRecordingMatch )
 			{
 				return;
 			}

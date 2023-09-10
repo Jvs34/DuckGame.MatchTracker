@@ -12,6 +12,11 @@ namespace MatchTracker
 		public virtual bool ReadOnly => false;
 		public virtual bool InitialLoad { get; set; }
 
+		protected BaseGameDatabase( SharedSettings sharedSettings )
+		{
+			SharedSettings = sharedSettings;
+		}
+
 		public virtual async Task Load( CancellationToken token = default )
 		{
 			if( InitialLoad )

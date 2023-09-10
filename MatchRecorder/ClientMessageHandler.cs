@@ -53,10 +53,12 @@ namespace MatchRecorder
 
 			Serializer.Serialize( jsonTextWriter , message );
 
-			using var httpPost = await HttpClient.PostAsync( 
-				message.MessageType.ToLower() , 
-				new StringContent( stringBuilder.ToString() , Encoding.UTF8 , "application/json" ) , 
+			using var response = await HttpClient.PostAsync(
+				message.MessageType.ToLower() ,
+				new StringContent( stringBuilder.ToString() , Encoding.UTF8 , "application/json" ) ,
 				token );
+
+			await ParseResponseMessages( response );
 		}
 
 		private async Task GetAllPendingClientMessages( CancellationToken token = default )
@@ -68,11 +70,16 @@ namespace MatchRecorder
 				return;
 			}
 
+			await ParseResponseMessages( response );
+		}
+
+		private async Task ParseResponseMessages( HttpResponseMessage response )
+		{
 			using var responseContent = await response.Content.ReadAsStreamAsync();
 			using var reader = new StreamReader( responseContent );
 			using var jsonReader = new JsonTextReader( reader );
 
-			var clientMessages = Serializer.Deserialize<List<ClientHUDMessage>>( jsonReader );
+			var clientMessages = Serializer.Deserialize<ClientHUDMessage []>( jsonReader );
 
 			if( clientMessages == null )
 			{

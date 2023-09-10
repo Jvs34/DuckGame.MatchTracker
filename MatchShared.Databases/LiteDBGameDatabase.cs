@@ -8,16 +8,14 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public class LiteDBGameDatabase : IGameDatabase, IDisposable
+	public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 	{
 		private bool disposedValue;
-
-		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
-		public bool ReadOnly => false;
+		public override bool ReadOnly => false;
 		public LiteDatabase Database { get; protected set; }
 		protected BsonMapper Mapper { get; } = new BsonMapper();
 
-		public LiteDBGameDatabase()
+		public LiteDBGameDatabase( SharedSettings sharedSettings ) : base( sharedSettings )
 		{
 			DefineMapping<IDatabaseEntry>();
 			DefineMapping<EntryListData>();
@@ -30,13 +28,13 @@ namespace MatchTracker
 
 		protected void DefineMapping<T>() where T : IDatabaseEntry => Mapper.Entity<T>().Id( x => x.DatabaseIndex );
 
-		public Task Load( CancellationToken token = default )
+		public override Task Load( CancellationToken token = default )
 		{
 			Database = new LiteDatabase( SharedSettings.GetDatabasePath() , Mapper );
 			return Task.CompletedTask;
 		}
 
-		public Task<T> GetData<T>( string dataId = "" , CancellationToken token = default ) where T : IDatabaseEntry
+		public override Task<T> GetData<T>( string dataId = "" , CancellationToken token = default )
 		{
 			if( string.IsNullOrEmpty( dataId ) )
 			{
@@ -49,7 +47,7 @@ namespace MatchTracker
 			return Task.FromResult( data );
 		}
 
-		public Task SaveData<T>( T data , CancellationToken token = default ) where T : IDatabaseEntry
+		public override Task SaveData<T>( T data , CancellationToken token = default )
 		{
 			var collection = Database.GetCollection<T>( data.GetType().Name );
 			collection.Upsert( data );
@@ -68,7 +66,7 @@ namespace MatchTracker
 			}
 		}
 
-		public void Dispose()
+		public override void Dispose()
 		{
 			Dispose( disposing: true );
 			GC.SuppressFinalize( this );

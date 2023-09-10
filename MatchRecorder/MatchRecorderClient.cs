@@ -30,7 +30,6 @@ namespace MatchRecorder
 				BaseAddress = new Uri( RecorderUrl ) ,
 				Timeout = TimeSpan.FromSeconds( 1 )
 			};
-
 			HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd( "duckgame-matchrecorder/1.0" );
 
 			ModPath = directory;

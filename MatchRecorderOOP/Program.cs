@@ -46,9 +46,7 @@ var app = host.Build();
 app.MapGet( "/ping" , () => Results.Ok() );
 app.MapGet( "/messages" , ( ModMessageQueue queue ) =>
 {
-	var hudMessages = queue.ClientMessageQueue.ToArray();
-	queue.ClientMessageQueue.Clear();
-	return Results.Json( hudMessages , contentType: MediaTypeNames.Application.Json );
+	return ReturnQueuedMessages( queue );
 } );
 
 app.MapPost( $"/{nameof( EndMatchMessage ).ToLowerInvariant()}" , ( EndMatchMessage message , ModMessageQueue queue ) => QueueAndReturnOK( message , queue ) );
@@ -66,5 +64,13 @@ await app.RunAsync();
 static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
 {
 	queue.RecorderMessageQueue.Enqueue( message );
-	return Results.Ok();
+	//Results.Ok();
+	return ReturnQueuedMessages(queue);
+}
+
+static IResult ReturnQueuedMessages( ModMessageQueue queue )
+{
+	var hudMessages = queue.ClientMessageQueue.ToArray();
+	queue.ClientMessageQueue.Clear();
+	return Results.Json( hudMessages , contentType: MediaTypeNames.Application.Json );
 }
