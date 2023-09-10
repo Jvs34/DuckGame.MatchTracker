@@ -10,31 +10,22 @@ namespace MatchTracker
 	{
 		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
 		public virtual bool ReadOnly => false;
-		public virtual bool InitialLoad { get; set; }
 
-		protected BaseGameDatabase( SharedSettings sharedSettings )
+		protected BaseGameDatabase()
 		{
-			SharedSettings = sharedSettings;
+			DefineMapping<IDatabaseEntry>();
+			DefineMapping<EntryListData>();
+			DefineMapping<RoundData>();
+			DefineMapping<MatchData>();
+			DefineMapping<LevelData>();
+			DefineMapping<TagData>();
+			DefineMapping<PlayerData>();
 		}
 
-		public virtual async Task Load( CancellationToken token = default )
-		{
-			if( InitialLoad )
-			{
-				await LoadEverything( token );
-			}
-		}
-
-		/// <summary>
-		/// Loads everything from the EntryData tree
-		/// </summary>
-		/// <returns></returns>
-		protected virtual Task LoadEverything( CancellationToken token = default )
-		{
-			return Task.CompletedTask;
-		}
+		public abstract Task Load( CancellationToken token = default );
 
 		#region INTERFACE
+		protected abstract void DefineMapping<T>() where T : IDatabaseEntry;
 		public abstract Task<T> GetData<T>( string dataId = "" , CancellationToken token = default ) where T : IDatabaseEntry;
 		public abstract Task SaveData<T>( T data , CancellationToken token = default ) where T : IDatabaseEntry;
 		public abstract void Dispose();

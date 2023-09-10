@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,10 +27,13 @@ namespace MatchRecorder
 		private ConcurrentQueue<ClientHUDMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<ClientHUDMessage>();
 		private JsonSerializer Serializer { get; } = JsonSerializer.CreateDefault();
 		private HttpClient HttpClient { get; }
+		private ClientWebSocket WebSocket { get; }
+
 
 		public ClientMessageHandler( HttpClient httpClient )
 		{
 			HttpClient = httpClient;
+			WebSocket = new ClientWebSocket();
 		}
 
 		public void SendMessage( BaseMessage message )

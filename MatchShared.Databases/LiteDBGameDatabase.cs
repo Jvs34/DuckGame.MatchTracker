@@ -15,18 +15,12 @@ namespace MatchTracker
 		public LiteDatabase Database { get; protected set; }
 		protected BsonMapper Mapper { get; } = new BsonMapper();
 
-		public LiteDBGameDatabase( SharedSettings sharedSettings ) : base( sharedSettings )
+		public LiteDBGameDatabase()
 		{
-			DefineMapping<IDatabaseEntry>();
-			DefineMapping<EntryListData>();
-			DefineMapping<RoundData>();
-			DefineMapping<MatchData>();
-			DefineMapping<LevelData>();
-			DefineMapping<TagData>();
-			DefineMapping<PlayerData>();
+
 		}
 
-		protected void DefineMapping<T>() where T : IDatabaseEntry => Mapper.Entity<T>().Id( x => x.DatabaseIndex );
+		protected override void DefineMapping<T>() => Mapper.Entity<T>().Id( x => x.DatabaseIndex );
 
 		public override Task Load( CancellationToken token = default )
 		{

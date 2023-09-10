@@ -72,7 +72,7 @@ namespace MatchRecorder.Services
 			}
 
 			//request the app host to close the process
-			AppLifeTime.StopApplication();
+			//AppLifeTime.StopApplication();
 		}
 
 		internal async Task CheckMessages()
