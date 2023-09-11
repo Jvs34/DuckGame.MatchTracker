@@ -45,7 +45,7 @@ namespace MatchRecorder.Services
 
 		protected override async Task ExecuteAsync( CancellationToken token )
 		{
-			Logger.LogInformation( $"Started {nameof( ExecuteAsync )}" );
+			Logger.LogInformation( $"Started {nameof( RecorderBackgroundService )}" );
 
 			while( !token.IsCancellationRequested )
 			{
@@ -85,7 +85,7 @@ namespace MatchRecorder.Services
 
 		public async Task OnReceiveMessage( BaseMessage message )
 		{
-			Logger.LogInformation( "Received a message of type {messageType}" , message.MessageType );
+			Logger.LogInformation( "Received a {messageType} message " , message.MessageType );
 
 			switch( message )
 			{
@@ -97,6 +97,8 @@ namespace MatchRecorder.Services
 					await Recorder.StartRecordingRound( srm , srm , srm ); break;
 				case EndRoundMessage erm:
 					await Recorder.StopRecordingRound( erm , erm , erm ); break;
+				case TextMessage txtm:
+					Logger.LogInformation( "Received: {message}" , txtm.Message ); break;
 				default:
 					break;
 			}

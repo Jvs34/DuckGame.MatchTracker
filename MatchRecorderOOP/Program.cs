@@ -49,28 +49,30 @@ host.Services.AddHostedService<RecorderBackgroundService>();
 
 var app = host.Build();
 
-//app.UseWebSockets();
+#if WEBSOCKETSUPPORT
+app.UseWebSockets();
 
-//app.Map( "/ws" , async ( context ) =>
-//{
-//	if( context.Request.Path == "/ws" )
-//	{
-//		if( context.WebSockets.IsWebSocketRequest )
-//		{
-//			using var webSocket = await context.WebSockets.AcceptWebSocketAsync( new WebSocketAcceptContext()
-//			{
-//				KeepAliveInterval = TimeSpan.FromSeconds( 30 )
-//			} );
-//			await Echo( webSocket );
-			
-//		}
-//		else
-//		{
-//			context.Response.StatusCode = StatusCodes.Status400BadRequest;
-//		}
-//	}
-//} );
-app.MapGet( "/ping" , () => Results.Ok() );
+app.Map( "/ws" , async ( context ) =>
+{
+	if( context.Request.Path == "/ws" )
+	{
+		if( context.WebSockets.IsWebSocketRequest )
+		{
+			using var webSocket = await context.WebSockets.AcceptWebSocketAsync( new WebSocketAcceptContext()
+			{
+				KeepAliveInterval = TimeSpan.FromSeconds( 30 )
+			} );
+			await Echo( webSocket );
+
+		}
+		else
+		{
+			context.Response.StatusCode = StatusCodes.Status400BadRequest;
+		}
+	}
+} );
+#endif
+
 app.MapGet( "/messages" , ( ModMessageQueue queue ) =>
 {
 	return ReturnQueuedMessages( queue );
@@ -87,7 +89,7 @@ app.MapPost( $"/{nameof( StartRoundMessage ).ToLowerInvariant()}" , ( StartRound
 await app.InitAsync();
 await app.RunAsync();
 
-
+#if WEBSOCKETSUPPORT
 static async Task Echo( WebSocket webSocket )
 {
 	var buffer = new byte [1024 * 4];
@@ -111,6 +113,7 @@ static async Task Echo( WebSocket webSocket )
 		receiveResult.CloseStatusDescription ,
 		CancellationToken.None );
 }
+#endif
 
 static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
 {
