@@ -1,8 +1,6 @@
 ﻿using MatchTracker;
 using Microsoft.Extensions.Logging;
-using OBSWebsocketDotNet.Types;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders

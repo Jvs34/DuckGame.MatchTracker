@@ -14,13 +14,6 @@ namespace MatchRecorder
 
 		public ModMessageQueue()
 		{
-			for( int i = 0; i < 5; i++ )
-			{
-				ClientMessageQueue.Enqueue( new TextMessage()
-				{
-					Message = $"Test {i}"
-				} );
-			}
 		}
 
 	}

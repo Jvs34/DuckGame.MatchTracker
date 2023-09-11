@@ -109,12 +109,6 @@ namespace MatchRecorder
 
 			using var jsonReader = new JsonTextReader( reader );
 
-			using( var writer = File.AppendText( @"C:\Users\Jvsth\Desktop\test.txt" ) )
-			{
-				await writer.WriteAsync( $"{responseString ?? "actually empty lol"}\n");
-				await writer.FlushAsync();
-			}
-
 			var clientMessages = Serializer.Deserialize<List<TextMessage>>( jsonReader );
 			
 			if( clientMessages == null )

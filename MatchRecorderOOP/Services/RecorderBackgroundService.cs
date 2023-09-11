@@ -49,8 +49,15 @@ namespace MatchRecorder.Services
 
 			while( !token.IsCancellationRequested )
 			{
+				try { 
 				await CheckMessages();
 				await Recorder.Update();
+				}
+				catch( Exception e )
+				{
+					Console.WriteLine( e );
+				}
+
 				if( DuckGameProcess == null || DuckGameProcess.HasExited )
 				{
 					break;

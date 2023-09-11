@@ -2,28 +2,28 @@
 using MatchTracker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OBSWebsocketDotNet;
-using OBSWebsocketDotNet.Types;
+using ObsStrawket;
+using ObsStrawket.DataTypes.Predefineds;
 using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using WebSocketSharp;
+using System.Threading.Tasks.Sources;
 
 namespace MatchRecorder.Recorders
 {
 	internal sealed class OBSLocalRecorder : BaseRecorder
 	{
 		private OBSSettings OBSSettings { get; }
-		private OBSWebsocket ObsHandler { get; }
-		private OutputState RecordingState { get; set; }
-		private bool RequestedRecordingStart { get; set; }
-		private bool RequestedRecordingStop { get; set; }
+		private ObsClientSocket ObsHandler { get; }
+		private ObsOutputState RecordingState { get; set; }
 		public override bool IsRecordingRound => IsRecording;
 		public override bool IsRecording => RecordingState switch
 		{
-			OutputState.Started or OutputState.Starting => true,
-			OutputState.Stopped or OutputState.Stopping => false,
+			ObsOutputState.Started or ObsOutputState.Starting => true,
+			ObsOutputState.Stopped or ObsOutputState.Stopping => false,
 			_ => false,
 		};
 		public override RecordingType ResultingRecordingType { get; set; }
@@ -39,29 +39,75 @@ namespace MatchRecorder.Recorders
 			ResultingRecordingType = RecordingType.Video;
 			OBSSettings = obsSettings.Value;
 			GameDatabase = db;
-			RecordingState = OutputState.Stopped;
-			ObsHandler = new OBSWebsocket()
-			{
-				WSTimeout = TimeSpan.FromSeconds( 30 ) ,
-			};
+			RecordingState = ObsOutputState.Stopped;
+			ObsHandler = new ObsClientSocket();
 
 			ObsHandler.Connected += OnConnected;
 			ObsHandler.Disconnected += OnDisconnected;
-			ObsHandler.RecordingStateChanged += OnRecordingStateChanged;
-			TryConnect();
+			ObsHandler.RecordStateChanged += OnRecordingStateChanged;
 			NextObsCheck = DateTime.MinValue;
 		}
 
-		protected override Task StartRecordingMatchInternal()
+		private async Task WaitUntilRecordingState( ObsOutputState desiredRecordingState )
 		{
-			RequestedRecordingStart = true;
-			return Task.CompletedTask;
+			using var timeoutCancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 10 ) );
+
+			//https://stackoverflow.com/questions/31787840/taskcompletionsource-throws-an-attempt-was-made-to-transition-a-task-to-a-final
+			var tempTaskCompletionSource = new TaskCompletionSource<bool>();
+
+			void recordStateChangedDelegate( RecordStateChanged recordStateChanged )
+			{
+				if( recordStateChanged.OutputState == desiredRecordingState )
+				{
+					ObsHandler.RecordStateChanged -= recordStateChangedDelegate;
+					tempTaskCompletionSource.TrySetResult( true );
+				}
+			}
+
+			//a timeout just in case
+			timeoutCancellationTokenSource.Token.Register( () =>
+			{
+				ObsHandler.RecordStateChanged -= recordStateChangedDelegate;
+				tempTaskCompletionSource.TrySetCanceled( timeoutCancellationTokenSource.Token );
+			} );
+
+			ObsHandler.RecordStateChanged += recordStateChangedDelegate;
+
+			await tempTaskCompletionSource.Task;
 		}
 
-		protected override Task StopRecordingMatchInternal()
+		private async Task SetRecordDirectoryWorkaroundAsync( string recordingFolder )
 		{
-			RequestedRecordingStop = true;
-			return Task.CompletedTask;
+			await ObsHandler.SetProfileParameterAsync( "AdvOut" , "RecFilePath" , recordingFolder );
+			await ObsHandler.SetProfileParameterAsync( "SimpleOutput" , "FilePath" , recordingFolder );
+		}
+
+		protected override async Task StartRecordingMatchInternal()
+		{
+			DateTime recordingTime = DateTime.Now;
+			string recordingTimeString = GameDatabase.SharedSettings.DateTimeToString( recordingTime );
+			string matchPath = GameDatabase.SharedSettings.GetPath<MatchData>( recordingTimeString );
+
+			//try setting the recording folder first, then create it before we start recording
+
+			Directory.CreateDirectory( matchPath );
+			await SetRecordDirectoryWorkaroundAsync( matchPath );
+			await ObsHandler.StartRecordAsync();
+			await WaitUntilRecordingState( ObsOutputState.Started );
+			var match = await StartCollectingMatchData( recordingTime );
+			match.VideoType = VideoType.MergedVideoLink;
+			match.VideoEndTime = match.GetDuration();
+			MergedRoundDuration = TimeSpan.Zero;
+
+			await GameDatabase.SaveData( match );
+		}
+
+		protected override async Task StopRecordingMatchInternal()
+		{
+			DateTime endTime = DateTime.Now;
+			await ObsHandler.StopRecordAsync();
+			await WaitUntilRecordingState( ObsOutputState.Stopped );
+			var match = await StopCollectingMatchData( endTime );
 		}
 
 		protected override async Task StartRecordingRoundInternal()
@@ -87,11 +133,11 @@ namespace MatchRecorder.Recorders
 			round.VideoEndTime = MergedRoundDuration;
 		}
 
-		public void TryConnect()
+		public async Task TryConnect()
 		{
 			try
 			{
-				ObsHandler.Connect( OBSSettings.WebSocketUri , OBSSettings.WebSocketPassword );
+				await ObsHandler.ConnectAsync( new Uri( OBSSettings.WebSocketUri ) , OBSSettings.WebSocketPassword );
 			}
 			catch( Exception )
 			{
@@ -107,81 +153,16 @@ namespace MatchRecorder.Recorders
 
 				if( NextObsCheck < DateTime.Now )
 				{
-					TryConnect();
+					await TryConnect();
 
 					NextObsCheck = DateTime.Now.AddSeconds( 5 );
 				}
-
-				return;
-			}
-
-			switch( RecordingState )
-			{
-				case OutputState.Started:
-					{
-						if( RequestedRecordingStop )
-						{
-							try
-							{
-								DateTime endTime = DateTime.Now;
-								ObsHandler.StopRecording();
-								RequestedRecordingStop = false;
-								var match = await StopCollectingMatchData( endTime );
-								if( match is null )
-								{
-									break;
-								}
-
-							}
-							catch( Exception )
-							{
-							}
-						}
-
-
-						break;
-					}
-				case OutputState.Stopped:
-					{
-						if( RequestedRecordingStart )
-						{
-							try
-							{
-								DateTime recordingTime = DateTime.Now;
-								string recordingTimeString = GameDatabase.SharedSettings.DateTimeToString( recordingTime );
-								string matchPath = GameDatabase.SharedSettings.GetPath<MatchData>( recordingTimeString );
-
-								//try setting the recording folder first, then create it before we start recording
-
-								Directory.CreateDirectory( matchPath );
-								ObsHandler.SetRecordingFolder( matchPath );
-								ObsHandler.StartRecording();
-								RequestedRecordingStart = false;
-								var match = await StartCollectingMatchData( recordingTime );
-
-								if( match is null )
-								{
-									break;
-								}
-
-								match.VideoType = VideoType.MergedVideoLink;
-								match.VideoEndTime = match.GetDuration();
-								MergedRoundDuration = TimeSpan.Zero;
-
-								await GameDatabase.SaveData( match );
-							}
-							catch( Exception )
-							{
-							}
-						}
-
-						break;
-					}
 			}
 		}
 
-		private void OnConnected( object sender , EventArgs e ) => SendHUDmessage( "Connected to OBS." );
-		private void OnDisconnected( object sender , EventArgs e ) => SendHUDmessage( "Disconnected from OBS." );
-		private void OnRecordingStateChanged( OBSWebsocket sender , OutputState type ) => RecordingState = type;
+		private void OnConnected( Uri uri ) => SendHUDmessage( "Connected to OBS." );
+		private void OnDisconnected( Exception exception ) => SendHUDmessage( "Disconnected from OBS." );
+		private void OnRecordingStateChanged( RecordStateChanged changed ) => RecordingState = changed.OutputState;
+
 	}
 }

@@ -18,7 +18,6 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Net.WebSockets;
-using WebSocketSharp.Server;
 
 var host = WebApplication.CreateBuilder( args );
 
@@ -119,7 +118,6 @@ static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
 {
 	queue.RecorderMessageQueue.Enqueue( message );
 	return Results.Ok();
-	//return ReturnQueuedMessages( queue );
 }
 
 static IResult ReturnQueuedMessages( ModMessageQueue queue )
