@@ -2,7 +2,9 @@
 using MatchRecorderShared;
 using MatchRecorderShared.Messages;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Bson;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,6 +15,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.WebSockets;
+using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,20 +23,26 @@ using static DuckGame.RasterFont;
 
 namespace MatchRecorder
 {
+	//internal sealed class CaseInsensitiveContractResolver : CamelCasePropertyNamesContractResolver
+
+
 	internal sealed class ClientMessageHandler
 	{
-		public event Action<ClientHUDMessage> OnReceiveMessage;
+		public event Action<TextMessage> OnReceiveMessage;
 		private ConcurrentQueue<BaseMessage> SendMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
-		private ConcurrentQueue<ClientHUDMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<ClientHUDMessage>();
-		private JsonSerializer Serializer { get; } = JsonSerializer.CreateDefault();
+		private ConcurrentQueue<TextMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<TextMessage>();
+		private JsonSerializer Serializer { get; } = new JsonSerializer()
+		{
+			ContractResolver = new CamelCasePropertyNamesContractResolver()
+		};
+
 		private HttpClient HttpClient { get; }
-		private ClientWebSocket WebSocket { get; }
+		private CancellationToken StopToken { get; }
 
-
-		public ClientMessageHandler( HttpClient httpClient )
+		public ClientMessageHandler( HttpClient httpClient , CancellationToken token )
 		{
 			HttpClient = httpClient;
-			WebSocket = new ClientWebSocket();
+			StopToken = token;
 		}
 
 		public void SendMessage( BaseMessage message )
@@ -62,12 +71,24 @@ namespace MatchRecorder
 				new StringContent( stringBuilder.ToString() , Encoding.UTF8 , "application/json" ) ,
 				token );
 
-			await ParseResponseMessages( response );
+			//await ParseResponseMessages( response );
 		}
 
-		private async Task GetAllPendingClientMessages( CancellationToken token = default )
+		private async Task GetAllPendingClientMessages( Stopwatch cooldown = null , CancellationToken token = default )
 		{
-			using var response = await HttpClient.GetAsync( "/messages" , HttpCompletionOption.ResponseHeadersRead , token );
+			if( cooldown != null )
+			{
+				if( cooldown.Elapsed >= TimeSpan.FromMilliseconds( 500 ) )
+				{
+					cooldown.Restart();
+				}
+				else
+				{
+					return;
+				}
+			}
+
+			using var response = await HttpClient.GetAsync( "/messages" , token );
 
 			if( response == null || !response.IsSuccessStatusCode )
 			{
@@ -79,12 +100,23 @@ namespace MatchRecorder
 
 		private async Task ParseResponseMessages( HttpResponseMessage response )
 		{
-			using var responseContent = await response.Content.ReadAsStreamAsync();
-			using var reader = new StreamReader( responseContent );
+			//using var responseContent = await response.Content.ReadAsStreamAsync();
+			var responseString = await response.Content.ReadAsStringAsync();
+			//using var reader = new StreamReader( responseContent );
+			using var reader = new StringReader( responseString );
+
+			Console.WriteLine( responseString );
+
 			using var jsonReader = new JsonTextReader( reader );
 
-			var clientMessages = Serializer.Deserialize<ClientHUDMessage []>( jsonReader );
+			using( var writer = File.AppendText( @"C:\Users\Jvsth\Desktop\test.txt" ) )
+			{
+				await writer.WriteAsync( $"{responseString ?? "actually empty lol"}\n");
+				await writer.FlushAsync();
+			}
 
+			var clientMessages = Serializer.Deserialize<List<TextMessage>>( jsonReader );
+			
 			if( clientMessages == null )
 			{
 				return;
@@ -98,6 +130,8 @@ namespace MatchRecorder
 
 		internal async Task ThreadedLoop( CancellationToken token = default )
 		{
+			Stopwatch pendingMessagesCooldown = Stopwatch.StartNew();
+
 			while( !token.IsCancellationRequested )
 			{
 				while( SendMessagesQueue.TryDequeue( out var message ) )
@@ -105,7 +139,7 @@ namespace MatchRecorder
 					await SendRecorderMessage( message , token );
 				}
 
-				//await GetAllPendingClientMessages();
+				await GetAllPendingClientMessages( pendingMessagesCooldown );
 				await Task.Delay( 100 );
 			}
 		}

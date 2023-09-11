@@ -10,13 +10,13 @@ namespace MatchRecorder
 	internal class ModMessageQueue
 	{
 		public ConcurrentQueue<BaseMessage> RecorderMessageQueue { get; } = new();
-		public ConcurrentQueue<ClientHUDMessage> ClientMessageQueue { get; } = new();
+		public ConcurrentQueue<TextMessage> ClientMessageQueue { get; } = new();
 
 		public ModMessageQueue()
 		{
 			for( int i = 0; i < 5; i++ )
 			{
-				ClientMessageQueue.Enqueue( new ClientHUDMessage()
+				ClientMessageQueue.Enqueue( new TextMessage()
 				{
 					Message = $"Test {i}"
 				} );

@@ -4,9 +4,9 @@ using System.Text;
 
 namespace MatchRecorderShared.Messages
 {
-	public class ClientHUDMessage : BaseMessage
+	public class TextMessage : BaseMessage
 	{
-		public override string MessageType { get; set; } = nameof( ClientHUDMessage );
+		public override string MessageType { get; set; } = nameof( TextMessage );
 		public string Message { get; set; } = string.Empty;
 	}
 }

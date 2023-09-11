@@ -18,6 +18,7 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Net.WebSockets;
+using WebSocketSharp.Server;
 
 var host = WebApplication.CreateBuilder( args );
 
@@ -48,23 +49,27 @@ host.Services.AddHostedService<RecorderBackgroundService>();
 
 var app = host.Build();
 
-app.UseWebSockets();
+//app.UseWebSockets();
 
-app.Map( "/ws" , async ( context ) =>
-{
-	if( context.Request.Path == "/ws" )
-	{
-		if( context.WebSockets.IsWebSocketRequest )
-		{
-			using var webSocket = await context.WebSockets.AcceptWebSocketAsync();
-			await Echo( webSocket );
-		}
-		else
-		{
-			context.Response.StatusCode = StatusCodes.Status400BadRequest;
-		}
-	}
-} );
+//app.Map( "/ws" , async ( context ) =>
+//{
+//	if( context.Request.Path == "/ws" )
+//	{
+//		if( context.WebSockets.IsWebSocketRequest )
+//		{
+//			using var webSocket = await context.WebSockets.AcceptWebSocketAsync( new WebSocketAcceptContext()
+//			{
+//				KeepAliveInterval = TimeSpan.FromSeconds( 30 )
+//			} );
+//			await Echo( webSocket );
+			
+//		}
+//		else
+//		{
+//			context.Response.StatusCode = StatusCodes.Status400BadRequest;
+//		}
+//	}
+//} );
 app.MapGet( "/ping" , () => Results.Ok() );
 app.MapGet( "/messages" , ( ModMessageQueue queue ) =>
 {
@@ -110,8 +115,8 @@ static async Task Echo( WebSocket webSocket )
 static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
 {
 	queue.RecorderMessageQueue.Enqueue( message );
-	//Results.Ok();
-	return ReturnQueuedMessages( queue );
+	return Results.Ok();
+	//return ReturnQueuedMessages( queue );
 }
 
 static IResult ReturnQueuedMessages( ModMessageQueue queue )

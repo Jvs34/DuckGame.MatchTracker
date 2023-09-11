@@ -55,7 +55,7 @@ namespace MatchRecorder.Services
 				{
 					break;
 				}
-				await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , token );
+				await Task.Delay( TimeSpan.FromMilliseconds( 50 ) , token );
 			}
 
 			//wait 5 seconds for stuff to completely be done
@@ -68,11 +68,11 @@ namespace MatchRecorder.Services
 			while( Recorder.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
 			{
 				await Recorder.Update();
-				await Task.Delay( TimeSpan.FromMilliseconds( 100 ) , fiveSecondsSource.Token );
+				await Task.Delay( TimeSpan.FromMilliseconds( 50 ) , fiveSecondsSource.Token );
 			}
 
 			//request the app host to close the process
-			//AppLifeTime.StopApplication();
+			AppLifeTime.StopApplication();
 		}
 
 		internal async Task CheckMessages()

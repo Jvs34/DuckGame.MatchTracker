@@ -14,8 +14,8 @@ namespace MatchRecorder.Recorders
 		public virtual RecordingType ResultingRecordingType { get; set; }
 		public virtual bool IsRecordingRound { get; }
 		public bool IsRecordingMatch { get; set; }
-		public MatchData CurrentMatch { get; set; }
-		public RoundData CurrentRound { get; set; }
+		public MatchData CurrentMatch { get; protected set; }
+		public RoundData CurrentRound { get; protected set; }
 
 		/// <summary>
 		/// Data that has arrived from network messages yet to be processed
@@ -135,6 +135,8 @@ namespace MatchRecorder.Recorders
 				Name = GameDatabase.SharedSettings.DateTimeToString( time ) ,
 			};
 
+			SendHUDmessage( $"Match {CurrentMatch.Name} Started" );
+
 			return Task.FromResult( CurrentMatch );
 		}
 
@@ -144,6 +146,8 @@ namespace MatchRecorder.Recorders
 			{
 				return null;
 			}
+
+			SendHUDmessage( $"Match {CurrentMatch.Name} Ended" );
 
 			CurrentMatch.TimeEnded = time;
 			CurrentMatch.Players = PendingMatchData.Players;
@@ -162,6 +166,11 @@ namespace MatchRecorder.Recorders
 
 		internal Task<RoundData> StartCollectingRoundData( DateTime startTime )
 		{
+			if( CurrentMatch is null )
+			{
+				return Task.FromResult<RoundData>( null );
+			}
+
 			CurrentRound = new RoundData()
 			{
 				MatchName = CurrentMatch?.Name ,
@@ -173,7 +182,9 @@ namespace MatchRecorder.Recorders
 				Teams = PendingRoundData.Teams ,
 			};
 
-			CurrentMatch?.Rounds.Add( GameDatabase.SharedSettings.DateTimeToString( CurrentRound.TimeStarted ) );
+			CurrentMatch.Rounds.Add( CurrentRound.Name );
+
+			SendHUDmessage( $"Round #{CurrentMatch.Rounds.Count} Started" );
 
 			return Task.FromResult( CurrentRound );
 		}
@@ -184,6 +195,8 @@ namespace MatchRecorder.Recorders
 			{
 				return null;
 			}
+
+			SendHUDmessage( $"Round #{CurrentMatch.Rounds.Count} Ended" );
 
 			CurrentRound.Players = PendingRoundData.Players;
 			CurrentRound.Teams = PendingRoundData.Teams;
@@ -204,7 +217,7 @@ namespace MatchRecorder.Recorders
 		public void SendHUDmessage( string message )
 		{
 			Logger.LogInformation( "Sending to client: {message}" , message );
-			MessageQueue.ClientMessageQueue.Enqueue( new ClientHUDMessage()
+			MessageQueue.ClientMessageQueue.Enqueue( new TextMessage()
 			{
 				Message = message
 			} );

@@ -10,12 +10,16 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.WebSockets;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	public sealed class MatchRecorderClient
+	public sealed class MatchRecorderClient : IDisposable
 	{
+		private bool IsDisposed { get; set; }
+		private CancellationTokenSource StopTokenSource { get; }
+		private CancellationToken StopToken { get; }
 		public string ModPath { get; }
 		private Process RecorderProcess { get; set; }
 		private ClientMessageHandler MessageHandler { get; }
@@ -25,26 +29,28 @@ namespace MatchRecorder
 
 		public MatchRecorderClient( string directory )
 		{
+			//StopTokenSource = new CancellationTokenSource();
+			StopToken = CancellationToken.None;
 			HttpClient = new HttpClient()
 			{
 				BaseAddress = new Uri( RecorderUrl ) ,
-				Timeout = TimeSpan.FromSeconds( 1 )
+				Timeout = TimeSpan.FromSeconds( 10 )
 			};
 			HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd( "duckgame-matchrecorder/1.0" );
 
 			ModPath = directory;
-			MessageHandler = new ClientMessageHandler( HttpClient );
+			MessageHandler = new ClientMessageHandler( HttpClient , StopToken );
 			MessageHandler.OnReceiveMessage += OnReceiveMessage;
 		}
 
-		private void OnReceiveMessage( ClientHUDMessage message )
+		private void OnReceiveMessage( TextMessage message )
 		{
 			ShowHUDMessage( message.Message );
 		}
 
 		public static void ShowHUDMessage( string text , float lifetime = 1f )
 		{
-			var cornerMessage = HUD.AddCornerMessage( HUDCorner.TopLeft , text );
+			var cornerMessage = HUD.AddCornerMessage( HUDCorner.TopLeft , text , true );
 			cornerMessage.slide = 1;
 			cornerMessage.willDie = true;
 			cornerMessage.life = lifetime;
@@ -69,13 +75,13 @@ namespace MatchRecorder
 			{
 				try
 				{
-					await MessageHandler.ThreadedLoop();
+					await MessageHandler.ThreadedLoop( StopToken );
 				}
 				catch( Exception e )
 				{
 					System.Diagnostics.Debug.WriteLine( e );
 				}
-			} );
+			} , StopToken );
 		}
 
 		private void CheckRecorderProcess()
@@ -183,8 +189,33 @@ namespace MatchRecorder
 
 			return id;
 		}
+
+
 		#endregion MATCHTRACKING
 
+		private void Dispose( bool disposing )
+		{
+			if( !IsDisposed )
+			{
+				if( disposing )
+				{
+					// TODO: dispose managed state (managed objects)
+					//StopTokenSource.Cancel();
+					//StopTokenSource.Dispose();
+				}
+
+				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
+				// TODO: set large fields to null
+				IsDisposed = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose( disposing: true );
+			GC.SuppressFinalize( this );
+		}
 	}
 
 	#region HOOKS
