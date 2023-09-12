@@ -48,9 +48,9 @@ namespace MatchRecorder
 			ShowHUDMessage( message.Message );
 		}
 
-		public static void ShowHUDMessage( string text , float lifetime = 1f )
+		public static void ShowHUDMessage( string text , float lifetime = 1f , TextMessagePosition position = TextMessagePosition.TopLeft )
 		{
-			var cornerMessage = HUD.AddCornerMessage( HUDCorner.TopLeft , text , true );
+			var cornerMessage = HUD.AddCornerMessage( (HUDCorner) position , text , true );
 			cornerMessage.slide = 1;
 			cornerMessage.willDie = true;
 			cornerMessage.life = lifetime;

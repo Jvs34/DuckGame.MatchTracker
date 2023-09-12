@@ -1,4 +1,5 @@
 ﻿using MatchRecorder.Services;
+using MatchRecorderShared;
 using MatchTracker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -41,13 +42,18 @@ namespace MatchRecorder.Recorders
 			GameDatabase = db;
 			RecordingState = ObsOutputState.Stopped;
 			ObsHandler = new ObsClientSocket();
-
 			ObsHandler.Connected += OnConnected;
 			ObsHandler.Disconnected += OnDisconnected;
 			ObsHandler.RecordStateChanged += OnRecordingStateChanged;
 			NextObsCheck = DateTime.MinValue;
 		}
 
+		/// <summary>
+		/// A workaround to the fact that some of the methods in obs-websocket are non-blocking
+		/// and for instance, don't await until recording fully starts.
+		/// </summary>
+		/// <param name="desiredRecordingState"></param>
+		/// <returns></returns>
 		private async Task WaitUntilRecordingState( ObsOutputState desiredRecordingState )
 		{
 			using var timeoutCancellationTokenSource = new CancellationTokenSource( TimeSpan.FromSeconds( 10 ) );
@@ -135,28 +141,28 @@ namespace MatchRecorder.Recorders
 
 		public async Task TryConnect()
 		{
+			if( ObsHandler.IsConnected )
+			{
+				return;
+			}
+
 			try
 			{
 				await ObsHandler.ConnectAsync( new Uri( OBSSettings.WebSocketUri ) , OBSSettings.WebSocketPassword );
 			}
 			catch( Exception )
 			{
-				SendHUDmessage( "Failed connecting to OBS. Check Settings/obs.json" );
+				SendHUDmessage( "Failed connecting to OBS. Check Settings/obs.json" , TextMessagePosition.TopMiddle );
 			}
 		}
 
 		public override async Task Update()
 		{
-			if( !ObsHandler.IsConnected )
+			if( NextObsCheck < DateTime.Now )
 			{
-				//try reconnecting
+				await TryConnect();
 
-				if( NextObsCheck < DateTime.Now )
-				{
-					await TryConnect();
-
-					NextObsCheck = DateTime.Now.AddSeconds( 5 );
-				}
+				NextObsCheck = DateTime.Now.AddSeconds( 5 );
 			}
 		}
 

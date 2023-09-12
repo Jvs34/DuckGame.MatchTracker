@@ -1,4 +1,5 @@
 ﻿using MatchRecorder.Services;
+using MatchRecorderShared;
 using MatchRecorderShared.Messages;
 using MatchTracker;
 using Microsoft.Extensions.Logging;
@@ -8,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders
 {
-	internal abstract class BaseRecorder
+	internal abstract class BaseRecorder : IDisposable , IAsyncDisposable
 	{
 		public virtual bool IsRecording { get; }
 		public virtual RecordingType ResultingRecordingType { get; set; }
@@ -214,12 +215,13 @@ namespace MatchRecorder.Recorders
 			return newRoundData;
 		}
 
-		public void SendHUDmessage( string message )
+		public void SendHUDmessage( string message , TextMessagePosition messagePosition = TextMessagePosition.TopLeft )
 		{
 			Logger.LogInformation( "Sending to client: {message}" , message );
 			MessageQueue.ClientMessageQueue.Enqueue( new TextMessage()
 			{
-				Message = message
+				Message = message ,
+				MessagePosition = messagePosition
 			} );
 		}
 	}
