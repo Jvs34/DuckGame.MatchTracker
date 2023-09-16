@@ -4,8 +4,8 @@
 		<TargetFramework>net452</TargetFramework>
 		<Platforms>x86</Platforms>
 		<DebugType>full</DebugType>
-		<Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them.</Description>
-		<Company>Jvs &amp; Willox</Company>
+		<Description>Allows MatchRecorder to Track kills properly</Description>
+		<Company>Jvs</Company>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
@@ -15,25 +15,18 @@
 
 		<PackageReference Include="ILRepack" Version="2.0.18" />
 		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
-		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<ProjectReference Include="..\MatchRecorderShared\MatchRecorderShared.csproj" />
 		<Reference Include="DuckGame">
 			<HintPath>..\ThirdParty\DuckGame.exe</HintPath>
 			<Private>false</Private>
 		</Reference>
 	</ItemGroup>
 
-	<Target Name="RepackDlls" AfterTargets="PostBuildEvent">
-		<Exec Command="$(ILRepack) /out:$(OutDir)\ModOutput\$(ProjectName).dll $(OutDir)\$(ProjectName).dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\MatchRecorderShared.dll $(OutDir)\MatchShared.dll $(OutDir)\System.Runtime.InteropServices.RuntimeInformation.dll" />
-	</Target>
-
-	<Target Name="CopyModContent" AfterTargets="RepackDlls">
-		<Copy SourceFiles="@(ModContent)" DestinationFolder="$(OutDir)\ModOutput\content\%(RecursiveDir)"/>
+	<Target Name="CopyModContent" AfterTargets="PostBuildEvent">
+		<Copy SourceFiles="@(ModContent)" DestinationFolder="$(OutDir)\ModOutput\content\%(RecursiveDir)" />
 	</Target>
 
 	<Target Name="CopyModFinalContentToModsFolder" AfterTargets="CopyModContent">
 		<Copy SourceFiles="@(ModFinalContent)" DestinationFolder="$(AppData)\DuckGame\Mods\$(ProjectName)\%(RecursiveDir)" />
 	</Target>
-
 
 </Project>

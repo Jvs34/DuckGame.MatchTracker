@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.28803.202
+# Visual Studio Version 17
+VisualStudioVersion = 17.7.34031.279
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorder", "MatchRecorder\MatchRecorder.csproj", "{E4AB7ED5-3306-4688-98FA-01FE183532F3}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -28,6 +28,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorderShared", "MatchRecorderShared\MatchRecorderShared.csproj", "{334BF617-4AB5-4CC9-8C37-46D412E3BDA5}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchShared.Databases", "MatchShared.Databases\MatchShared.Databases.csproj", "{E37BEDE5-4525-4DE1-982D-92C7CE0DCFEA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MatchRecorderCompanion", "MatchRecorderCompanion\MatchRecorderCompanion.csproj", "{96FB8685-C73D-478C-B60D-D97F25A73664}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -101,6 +103,14 @@ Global
 		{E37BEDE5-4525-4DE1-982D-92C7CE0DCFEA}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E37BEDE5-4525-4DE1-982D-92C7CE0DCFEA}.Release|x86.ActiveCfg = Release|Any CPU
 		{E37BEDE5-4525-4DE1-982D-92C7CE0DCFEA}.Release|x86.Build.0 = Release|Any CPU
+		{96FB8685-C73D-478C-B60D-D97F25A73664}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{96FB8685-C73D-478C-B60D-D97F25A73664}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{96FB8685-C73D-478C-B60D-D97F25A73664}.Debug|x86.ActiveCfg = Debug|x86
+		{96FB8685-C73D-478C-B60D-D97F25A73664}.Debug|x86.Build.0 = Debug|x86
+		{96FB8685-C73D-478C-B60D-D97F25A73664}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{96FB8685-C73D-478C-B60D-D97F25A73664}.Release|Any CPU.Build.0 = Release|Any CPU
+		{96FB8685-C73D-478C-B60D-D97F25A73664}.Release|x86.ActiveCfg = Release|Any CPU
+		{96FB8685-C73D-478C-B60D-D97F25A73664}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
