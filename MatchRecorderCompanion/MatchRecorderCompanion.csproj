@@ -21,7 +21,11 @@
 		</Reference>
 	</ItemGroup>
 
-	<Target Name="CopyModContent" AfterTargets="PostBuildEvent">
+	<Target Name="RepackDlls" AfterTargets="PostBuildEvent">
+		<Exec Command="$(ILRepack) /out:$(OutDir)\ModOutput\$(ProjectName).dll $(OutDir)\$(ProjectName).dll $(OutDir)\0Harmony.dll" />
+	</Target>
+
+	<Target Name="CopyModContent" AfterTargets="RepackDlls">
 		<Copy SourceFiles="@(ModContent)" DestinationFolder="$(OutDir)\ModOutput\content\%(RecursiveDir)" />
 	</Target>
 
