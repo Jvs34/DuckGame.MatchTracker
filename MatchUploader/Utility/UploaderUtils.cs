@@ -74,14 +74,14 @@ namespace MatchUploader
 				{
 					var roundData = await DB.GetData<RoundData>( roundName );
 					builder
-						.Append( $"{roundData.VideoStartTime:mm\\:ss} - {data.DatabaseIndex} {await GetAllWinners( DB , roundData ) }" )
+						.Append( $"{roundData.VideoStartTime:mm\\:ss} - {data.DatabaseIndex} {await GetAllWinners( DB , roundData )}" )
 						.AppendLine();
 				}
 
 				description = builder.ToString();
 			}
 
-			Video videoData = new Video()
+			var videoData = new Video()
 			{
 				Snippet = new VideoSnippet()
 				{
@@ -97,7 +97,7 @@ namespace MatchUploader
 				} ,
 				RecordingDetails = new VideoRecordingDetails()
 				{
-					RecordingDate = data.TimeStarted.ToString( "s" , CultureInfo.InvariantCulture ) ,
+					RecordingDateDateTimeOffset = data.TimeStarted ,
 				}
 			};
 

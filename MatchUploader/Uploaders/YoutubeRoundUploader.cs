@@ -267,7 +267,7 @@ namespace MatchUploader
 				} ,
 				RecordingDetails = new VideoRecordingDetails()
 				{
-					RecordingDate = data.TimeStarted.ToString( "s" , CultureInfo.InvariantCulture ) ,
+					RecordingDateDateTimeOffset = data.TimeStarted,
 				}
 			};
 

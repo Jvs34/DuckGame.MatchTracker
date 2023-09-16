@@ -18,7 +18,7 @@ namespace MatchRecorder
 	public sealed class MatchRecorderClient : IDisposable
 	{
 		private bool IsDisposed { get; set; }
-		private CancellationTokenSource StopTokenSource { get; }
+		//private CancellationTokenSource StopTokenSource { get; }
 		private CancellationToken StopToken { get; }
 		public string ModPath { get; }
 		private Process RecorderProcess { get; set; }
@@ -104,6 +104,7 @@ namespace MatchRecorder
 				FileName = Path.Combine( ModPath , "MatchRecorderOOP" , "MatchRecorderOOP.exe" ) ,
 				WorkingDirectory = ModPath ,
 				CreateNoWindow = false ,
+				WindowStyle = ProcessWindowStyle.Minimized ,
 				Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} {RecorderType.OBSMergedVideo} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
 			} );
 		}
@@ -219,6 +220,8 @@ namespace MatchRecorder
 	}
 
 	#region HOOKS
+#pragma warning disable IDE0051 // Remove unused private members
+
 	//save the video and stop recording
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
 	internal static class Level_SetCurrent
@@ -295,6 +298,6 @@ namespace MatchRecorder
 			MatchRecorderMod.Instance.Recorder.Update();
 		}
 	}
-
+#pragma warning restore IDE0051 // Remove unused private members
 	#endregion HOOKS
 }

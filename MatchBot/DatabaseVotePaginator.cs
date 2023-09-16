@@ -34,6 +34,8 @@ namespace MatchBot
 			}
 		}
 
+		public int PageCount => 0;
+
 		public DatabaseVotePaginator( DiscordClient client , IGameDatabase database , IEnumerable<string> databaseIndexes , DiscordUser usr , DiscordMessage message )
 		{
 			DiscordClient = client;
@@ -115,7 +117,7 @@ namespace MatchBot
 				return new Page( $"No {typeof( T )} found in database with id {CurrentItem}" );
 			}
 
-			DiscordEmbedBuilder embed = new DiscordEmbedBuilder()
+			var embed = new DiscordEmbedBuilder()
 			{
 				Color = DiscordColor.Orange ,
 				Footer = new DiscordEmbedBuilder.EmbedFooter() ,
@@ -131,7 +133,7 @@ namespace MatchBot
 
 			if( itemData is IPlayersList playerList )
 			{
-				StringBuilder descriptionBuilder = new StringBuilder( "Players: " );
+				var descriptionBuilder = new StringBuilder( "Players: " );
 
 				//see if this user has a discord id, then use the mention thinghy to add him
 				foreach( var player in playerList.Players )
@@ -222,7 +224,7 @@ namespace MatchBot
 				embed.Title = $"{Path.GetFileName( levelData.FilePath )} ({CurrentItem})";
 			}
 
-			StringBuilder builder = new StringBuilder();
+			var builder = new StringBuilder();
 
 			builder.Append( "Current Tags: " );
 
@@ -313,6 +315,11 @@ namespace MatchBot
 			await SaveCurrentEmojis( true );
 
 			CurrentIndex = DatabaseIndexes.Count - 1;
+		}
+
+		public Task<IEnumerable<DiscordButtonComponent>> GetButtonsAsync()
+		{
+			throw new NotImplementedException();
 		}
 		#endregion
 	}

@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders
 {
-	internal abstract class BaseRecorder : IDisposable , IAsyncDisposable
+	internal abstract class BaseRecorder
 	{
 		public virtual bool IsRecording { get; }
 		public virtual RecordingType ResultingRecordingType { get; set; }

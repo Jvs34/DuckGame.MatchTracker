@@ -82,6 +82,12 @@ namespace MatchRecorder.Recorders
 			await tempTaskCompletionSource.Task;
 		}
 
+		/// <summary>
+		/// Needed for now as the stable OBS doesn't have an up to date obs-websocket
+		/// and calling handler.SetRecordDirectory throws an error as it doesn't exist in that version
+		/// </summary>
+		/// <param name="recordingFolder"></param>
+		/// <returns></returns>
 		private async Task SetRecordDirectoryWorkaroundAsync( string recordingFolder )
 		{
 			await ObsHandler.SetProfileParameterAsync( "AdvOut" , "RecFilePath" , recordingFolder );
@@ -94,12 +100,12 @@ namespace MatchRecorder.Recorders
 			string recordingTimeString = GameDatabase.SharedSettings.DateTimeToString( recordingTime );
 			string matchPath = GameDatabase.SharedSettings.GetPath<MatchData>( recordingTimeString );
 
-			//try setting the recording folder first, then create it before we start recording
-
 			Directory.CreateDirectory( matchPath );
+			
 			await SetRecordDirectoryWorkaroundAsync( matchPath );
 			await ObsHandler.StartRecordAsync();
 			await WaitUntilRecordingState( ObsOutputState.Started );
+			
 			var match = await StartCollectingMatchData( recordingTime );
 			match.VideoType = VideoType.MergedVideoLink;
 			match.VideoEndTime = match.GetDuration();

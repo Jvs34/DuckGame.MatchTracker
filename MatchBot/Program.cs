@@ -37,7 +37,7 @@ namespace MatchBot
 
 			try
 			{
-				DiscordBotHandler handler = new DiscordBotHandler( args );
+				var handler = new DiscordBotHandler( args );
 				await handler.Initialize();
 
 				Console.WriteLine( "Press a key to stop" );

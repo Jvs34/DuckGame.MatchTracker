@@ -83,7 +83,7 @@ namespace MatchUploader
 			var remainingTime = GetWaitingTime();
 			if( remainingTime > 0 )
 			{
-				CancellationTokenSource source = new CancellationTokenSource();
+				var source = new CancellationTokenSource();
 				source.CancelAfter( remainingTime );
 				source.Token.WaitHandle.WaitOne( TimeUnit * 5 );
 				Stopwatch.Restart();
