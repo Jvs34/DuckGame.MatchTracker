@@ -10,7 +10,6 @@ namespace MatchTracker
 {
 	public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 	{
-		private bool disposedValue;
 		public override bool ReadOnly => false;
 		public LiteDatabase Database { get; protected set; }
 		protected BsonMapper Mapper { get; } = new BsonMapper();
@@ -48,22 +47,6 @@ namespace MatchTracker
 			return Task.CompletedTask;
 		}
 
-		protected virtual void Dispose( bool disposing )
-		{
-			if( !disposedValue )
-			{
-				if( disposing )
-				{
-					Database?.Dispose();
-				}
-				disposedValue = true;
-			}
-		}
-
-		public override void Dispose()
-		{
-			Dispose( disposing: true );
-			GC.SuppressFinalize( this );
-		}
+		protected override void InternalDispose() => Database?.Dispose();
 	}
 }

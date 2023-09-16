@@ -12,6 +12,7 @@
 	<ItemGroup>
 		<ModContent Include="$(ProjectDir)\content\**\*.*" Exclude="**\.gitkeep" />
 		<ModFinalContent Include="$(OutDir)\ModOutput\**\*.*;$(ProjectDir)\mod.conf" />
+		<ModSettings Include="$(ProjectDir)\..\Settings\**" />
 
 		<PackageReference Include="ILRepack" Version="2.0.18" />
 		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
@@ -28,11 +29,15 @@
 	</Target>
 
 	<Target Name="CopyModContent" AfterTargets="RepackDlls">
-		<Copy SourceFiles="@(ModContent)" DestinationFolder="$(OutDir)\ModOutput\content\%(RecursiveDir)"/>
+		<Copy SourceFiles="@(ModContent)" DestinationFolder="$(OutDir)\ModOutput\content\%(RecursiveDir)" />
 	</Target>
 
 	<Target Name="CopyModFinalContentToModsFolder" AfterTargets="CopyModContent">
 		<Copy SourceFiles="@(ModFinalContent)" DestinationFolder="$(AppData)\DuckGame\Mods\$(ProjectName)\%(RecursiveDir)" />
+	</Target>
+
+	<Target Name="CopyModSettingsToModsFolder" AfterTargets="CopyModFinalContentToModsFolder">
+		<Copy SourceFiles="@(ModSettings)" DestinationFolder="$(AppData)\DuckGame\Mods\$(ProjectName)\Settings\%(RecursiveDir)" />
 	</Target>
 
 

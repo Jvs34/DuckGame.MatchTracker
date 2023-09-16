@@ -151,6 +151,29 @@ namespace MatchRecorder
 			} );
 		}
 
+		internal void TrackKill( Duck victim , DestroyType type , bool isNetworkMessage )
+		{
+			//ignore this if the function was returned early
+			if( !victim.destroyed )
+			{
+				return;
+			}
+
+			TeamData killerTeamData = null;
+			var objectResponsible = string.Empty;
+
+			var killData = new KillData()
+			{
+				Killer = killerTeamData ,
+				Victim = ConvertDuckGameProfileToTeamData( victim.profile ) ,
+				DeathTypeClassName = type?.GetType()?.Name ,
+				TimeOccured = DateTime.Now ,
+				ObjectClassName = objectResponsible
+			};
+
+
+		}
+
 		private TeamData ConvertDuckGameTeamToTeamData( Team duckgameteam )
 		{
 			return duckgameteam is null ? null : new TeamData()
@@ -170,6 +193,18 @@ namespace MatchRecorder
 				Name = profile.name ,
 				UserId = GetPlayerID( profile ) ,
 			};
+		}
+
+		private TeamData ConvertDuckGameProfileToTeamData( Profile profile )
+		{
+			var teamData = ConvertDuckGameTeamToTeamData( profile.team );
+
+			if( teamData != null )
+			{
+				teamData.Players = teamData.Players.Where( x => x.Equals( GetPlayerID( profile ) , StringComparison.InvariantCultureIgnoreCase );
+			}
+
+			return teamData;
 		}
 
 		private string GetPlayerID( Profile profile )
@@ -222,7 +257,7 @@ namespace MatchRecorder
 	#region HOOKS
 #pragma warning disable IDE0051 // Remove unused private members
 
-	//save the video and stop recording
+	//a round is done after a level change in all cases
 	[HarmonyPatch( typeof( Level ) , "set_current" )]
 	internal static class Level_SetCurrent
 	{
@@ -248,7 +283,7 @@ namespace MatchRecorder
 		}
 	}
 
-	//start recording a round
+	//start recording a round after the virtual transition, it'd be annoying in recordings otherwise
 	[HarmonyPatch( typeof( VirtualTransition ) , nameof( VirtualTransition.GoUnVirtual ) )]
 	internal static class VirtualTransition_GoUnVirtual
 	{
@@ -286,7 +321,7 @@ namespace MatchRecorder
 
 
 	[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
-	internal static class UpdateLoop
+	internal static class Level_UpdateCurrentLevel
 	{
 		private static void Prefix()
 		{
@@ -298,6 +333,38 @@ namespace MatchRecorder
 			MatchRecorderMod.Instance.Recorder.Update();
 		}
 	}
+
+	[HarmonyPatch( typeof( Duck ) , nameof( Duck.Kill ) )]
+	internal static class Duck_Kill
+	{
+		private static void Postfix( Duck __instance , DestroyType type )
+		{
+			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
+			{
+				return;
+			}
+
+			MatchRecorderMod.Instance.Recorder.TrackKill( __instance , type , __instance.isKillMessage );
+		}
+	}
+
+	//sets a global networkconnection to allow TrackKill to find out who sent the kill message
+	[HarmonyPatch( typeof( NMKillDuck ) , nameof( NMKillDuck.Activate ) )]
+	internal static class NMKillDuck_Activate
+	{
+		internal static NetworkConnection CurrentNMKillDuckConnection { get; private set; }
+
+		private static void Prefix( NMKillDuck __instance )
+		{
+			CurrentNMKillDuckConnection = __instance.connection;
+		}
+
+		private static void Postfix( NMKillDuck __instance )
+		{
+			CurrentNMKillDuckConnection = null;
+		}
+	}
+
 #pragma warning restore IDE0051 // Remove unused private members
 	#endregion HOOKS
 }

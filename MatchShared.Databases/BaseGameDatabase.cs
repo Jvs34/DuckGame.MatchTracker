@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace MatchTracker
 {
-	public abstract class BaseGameDatabase : IGameDatabase
+	public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 	{
+		protected bool IsDisposed { get; private set; }
 		public SharedSettings SharedSettings { get; set; } = new SharedSettings();
 		public virtual bool ReadOnly => false;
 
@@ -20,6 +21,8 @@ namespace MatchTracker
 			DefineMapping<LevelData>();
 			DefineMapping<TagData>();
 			DefineMapping<PlayerData>();
+			DefineMapping<ObjectData>();
+			DefineMapping<DestroyTypeData>();
 		}
 
 		public abstract Task Load( CancellationToken token = default );
@@ -28,7 +31,27 @@ namespace MatchTracker
 		protected abstract void DefineMapping<T>() where T : IDatabaseEntry;
 		public abstract Task<T> GetData<T>( string dataId = "" , CancellationToken token = default ) where T : IDatabaseEntry;
 		public abstract Task SaveData<T>( T data , CancellationToken token = default ) where T : IDatabaseEntry;
-		public abstract void Dispose();
+		protected abstract void InternalDispose();
 		#endregion
+
+		protected virtual void Dispose( bool disposing )
+		{
+			if( !IsDisposed )
+			{
+				if( disposing )
+				{
+					InternalDispose();
+				}
+
+				IsDisposed = true;
+			}
+		}
+
+		public void Dispose()
+		{
+			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+			Dispose( disposing: true );
+			GC.SuppressFinalize( this );
+		}
 	}
 }
