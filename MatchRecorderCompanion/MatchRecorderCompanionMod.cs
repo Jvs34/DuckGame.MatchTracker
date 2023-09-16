@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MatchRecorderCompanion
 {
-	public class MatchRecorderCompanionMod : DuckGame.Mod
+	public class MatchRecorderCompanionMod : DuckGame.ClientMod
 	{
 		private Harmony HarmonyInstance { get; set; }
 
@@ -19,7 +19,6 @@ namespace MatchRecorderCompanion
 
 		protected override void OnPostInitialize()
 		{
-
 			HarmonyInstance.PatchAll( Assembly.GetExecutingAssembly() );
 		}
 	}
