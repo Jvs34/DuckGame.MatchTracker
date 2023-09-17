@@ -57,6 +57,8 @@ DefineEndPoint<EndMatchMessage>( app );
 DefineEndPoint<EndRoundMessage>( app );
 DefineEndPoint<StartMatchMessage>( app );
 DefineEndPoint<StartRoundMessage>( app );
+DefineEndPoint<TextMessage>( app );
+DefineEndPoint<TrackKillMessage>( app );
 
 await app.InitAsync();
 await app.RunAsync();

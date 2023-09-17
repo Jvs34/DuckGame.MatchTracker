@@ -105,7 +105,7 @@ namespace MatchRecorder
 				WorkingDirectory = ModPath ,
 				CreateNoWindow = false ,
 				WindowStyle = ProcessWindowStyle.Minimized ,
-				Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} {RecorderType.OBSMergedVideo} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
+				Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} {RecorderType.NoVideo} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
 			} );
 		}
 
@@ -151,27 +151,78 @@ namespace MatchRecorder
 			} );
 		}
 
-		internal void TrackKill( Duck victim , DestroyType type , bool isNetworkMessage )
+		internal void TrackKill( Duck duckVictim , DestroyType type , bool isNetworkMessage )
 		{
-			//ignore this if the function was returned early
-			if( !victim.destroyed )
+			Profile killerProfile = null;
+
+			var objectResponsible = string.Empty;
+
+			if( type != null )
 			{
-				return;
+				var kv = GetBestDestroyTypeKillerAndWeapon( type );
+				killerProfile = kv.Key;
+				objectResponsible = kv.Value;
+			}
+
+			if( isNetworkMessage )
+			{
+				//in unmodded duck game, we're very restricted by what we can get on the network
+
+				killerProfile = NMKillDuck_Activate.CurrentNMKillDuckConnection?.profile;
+
+				//TODO: check if the companion mod is installed and then try get the additional data
+
 			}
 
 			TeamData killerTeamData = null;
-			var objectResponsible = string.Empty;
+
+			if( killerProfile != null )
+			{
+				killerTeamData = ConvertDuckGameProfileToTeamData( killerProfile );
+			}
 
 			var killData = new KillData()
 			{
 				Killer = killerTeamData ,
-				Victim = ConvertDuckGameProfileToTeamData( victim.profile ) ,
+				Victim = ConvertDuckGameProfileToTeamData( duckVictim.profile ) ,
 				DeathTypeClassName = type?.GetType()?.Name ,
 				TimeOccured = DateTime.Now ,
 				ObjectClassName = objectResponsible
 			};
 
+			MessageHandler?.SendMessage( new TrackKillMessage()
+			{
+				KillData = killData
+			} );
+		}
 
+		private KeyValuePair<Profile , string> GetBestDestroyTypeKillerAndWeapon( DestroyType destroyType )
+		{
+			//try a direct check, easiest one
+			Profile profile = destroyType.responsibleProfile;
+
+			string weapon = string.Empty;
+
+			if( destroyType is DTShot shotType && shotType.bulletFiredFrom != null )
+			{
+				//god, grenade launchers are a pain in the ass
+				var type = shotType.bulletFiredFrom.GetType();
+
+				if( shotType.bulletFiredFrom.killThingType != null )
+				{
+					type = shotType.bulletFiredFrom.killThingType;
+				}
+
+				if( shotType.bulletFiredFrom.responsibleProfile != null )
+				{
+					profile = destroyType.responsibleProfile;
+				}
+
+				weapon = type.Name;
+			}
+
+			//... I know I know, but either I Import the tuples nuget or I make my own struct, so whatever
+			return new KeyValuePair<Profile , string>( profile , weapon );
 		}
 
 		private TeamData ConvertDuckGameTeamToTeamData( Team duckgameteam )
@@ -201,7 +252,7 @@ namespace MatchRecorder
 
 			if( teamData != null )
 			{
-				teamData.Players = teamData.Players.Where( x => x.Equals( GetPlayerID( profile ) , StringComparison.InvariantCultureIgnoreCase );
+				teamData.Players = teamData.Players.Where( x => x.Equals( GetPlayerID( profile ) , StringComparison.InvariantCultureIgnoreCase ) ).ToList();
 			}
 
 			return teamData;
@@ -235,13 +286,8 @@ namespace MatchRecorder
 			{
 				if( disposing )
 				{
-					// TODO: dispose managed state (managed objects)
-					//StopTokenSource.Cancel();
-					//StopTokenSource.Dispose();
 				}
 
-				// TODO: free unmanaged resources (unmanaged objects) and override finalizer
-				// TODO: set large fields to null
 				IsDisposed = true;
 			}
 		}
@@ -334,20 +380,6 @@ namespace MatchRecorder
 		}
 	}
 
-	[HarmonyPatch( typeof( Duck ) , nameof( Duck.Kill ) )]
-	internal static class Duck_Kill
-	{
-		private static void Postfix( Duck __instance , DestroyType type )
-		{
-			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
-			{
-				return;
-			}
-
-			MatchRecorderMod.Instance.Recorder.TrackKill( __instance , type , __instance.isKillMessage );
-		}
-	}
-
 	//sets a global networkconnection to allow TrackKill to find out who sent the kill message
 	[HarmonyPatch( typeof( NMKillDuck ) , nameof( NMKillDuck.Activate ) )]
 	internal static class NMKillDuck_Activate
@@ -362,6 +394,38 @@ namespace MatchRecorder
 		private static void Postfix( NMKillDuck __instance )
 		{
 			CurrentNMKillDuckConnection = null;
+		}
+	}
+
+	//try to track a kill whether it's a networked one or not
+	[HarmonyPatch( typeof( Duck ) , nameof( Duck.Kill ) )]
+	internal static class Duck_Kill
+	{
+		private static void Prefix( Duck __instance , DestroyType type , bool __state )
+		{
+			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
+			{
+				return;
+			}
+
+			//to check whether this is the first time Duck.Kill was called, let's save the current Duck.forceDead
+			__state = __instance.forceDead;
+		}
+
+		private static void Postfix( Duck __instance , DestroyType type , bool __state , bool __result )
+		{
+			if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null || !__result )
+			{
+				return;
+			}
+
+			//some things like fire/flaregun keep calling Duck.Kill even after death, so ignore the duplicate calls
+			if( __state && __state == __instance.forceDead )
+			{
+				return;
+			}
+
+			MatchRecorderMod.Instance.Recorder.TrackKill( __instance , type , __instance.isKillMessage );
 		}
 	}
 

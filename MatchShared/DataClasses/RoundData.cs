@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace MatchTracker
 {
-	public class RoundData : IPlayersList, IStartEnd, IWinner, IVideoUpload, ITagsList, ILevelName, IDatabaseEntry
+	public class RoundData : IPlayersList, IKillList, IStartEnd, IWinner, IVideoUpload, ITagsList, ILevelName, IDatabaseEntry
 	{
 		public RecordingType RecordingType { get; set; }
 		public string LevelName { get; set; }
@@ -12,6 +12,7 @@ namespace MatchTracker
 		public string DatabaseIndex => Name;
 		public List<string> Players { get; set; } = new List<string>();
 		public List<TeamData> Teams { get; set; } = new List<TeamData>();
+		public List<KillData> Kills { get; set; } = new List<KillData>();
 		public DateTime TimeEnded { get; set; }
 		public DateTime TimeStarted { get; set; }
 		public TeamData Winner { get; set; }

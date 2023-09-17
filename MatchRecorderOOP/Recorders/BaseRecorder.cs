@@ -224,5 +224,13 @@ namespace MatchRecorder.Recorders
 				MessagePosition = messagePosition
 			} );
 		}
+
+		public async Task TrackKill( KillData killData )
+		{
+			if( IsRecordingRound )
+			{
+				CurrentRound.Kills.Add( killData );
+			}
+		}
 	}
 }
