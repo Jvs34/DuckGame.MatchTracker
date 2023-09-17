@@ -225,11 +225,11 @@ namespace MatchRecorder.Recorders
 			} );
 		}
 
-		public async Task TrackKill( KillData killData )
+		public void TrackKill( KillData killData )
 		{
 			if( IsRecordingRound )
 			{
-				CurrentRound.Kills.Add( killData );
+				CurrentRound.KillsList.Add( killData );
 			}
 		}
 	}

@@ -12,7 +12,7 @@ namespace MatchTracker
 		public string DatabaseIndex => Name;
 		public List<string> Players { get; set; } = new List<string>();
 		public List<TeamData> Teams { get; set; } = new List<TeamData>();
-		public List<KillData> Kills { get; set; } = new List<KillData>();
+		public List<KillData> KillsList { get; set; } = new List<KillData>();
 		public DateTime TimeEnded { get; set; }
 		public DateTime TimeStarted { get; set; }
 		public TeamData Winner { get; set; }

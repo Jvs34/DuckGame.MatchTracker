@@ -143,7 +143,7 @@ namespace MatchTracker
 		/// <returns></returns>
 		public static async Task IterateOver<T>( this IGameDatabase db , Func<T , Task<bool>> callback , List<string> databaseIndexes ) where T : IDatabaseEntry
 		{
-			List<Task> tasks = new List<Task>();
+			var tasks = new List<Task>();
 
 			var tokenSource = new CancellationTokenSource();
 
@@ -212,7 +212,7 @@ namespace MatchTracker
 
 		public static async Task<List<string>> GetAll<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
-			List<string> databaseIndexes = new List<string>();
+			var databaseIndexes = new List<string>();
 
 			var entryListData = await db.GetData<EntryListData>( typeof( T ).Name );
 			if( entryListData != null )
@@ -231,7 +231,7 @@ namespace MatchTracker
 		/// <param name="databaseIndexes"></param>
 		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db , List<string> databaseIndexes ) where T : IDatabaseEntry
 		{
-			List<T> dataList = new List<T>();
+			var dataList = new List<T>();
 
 			foreach( var entryIndex in databaseIndexes )
 			{

@@ -2,12 +2,17 @@
 {
 	public enum VideoMirrorType
 	{
-		None = -1,
+		None,
 
 		/// <summary>
 		/// Default behaviour
 		/// </summary>
-		Youtube = 0,
+		Youtube,
+
+		/// <summary>
+		/// A raw link to the file hosted somewhere
+		/// </summary>
+		Http,
 
 		/// <summary>
 		/// 8 mb file upload limit, not sure about daily quotas and whatnot
@@ -28,10 +33,5 @@
 		/// This can get throttled apparently, and it'll spit out a 403
 		/// </summary>
 		OneDrive,
-
-		/// <summary>
-		/// A raw link to the file hosted somewhere
-		/// </summary>
-		Http,
 	}
 }

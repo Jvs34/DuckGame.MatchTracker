@@ -6,6 +6,6 @@ namespace MatchTracker
 {
 	public interface IKillList
 	{
-		public List<KillData> Kills { get; set; }
+		public List<KillData> KillsList { get; set; }
 	}
 }

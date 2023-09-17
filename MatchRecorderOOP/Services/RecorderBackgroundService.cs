@@ -107,7 +107,7 @@ namespace MatchRecorder.Services
 				case TextMessage txtm:
 					Logger.LogInformation( "Received: {message}" , txtm.Message ); break;
 				case TrackKillMessage tkm:
-					await Recorder.TrackKill( tkm.KillData ); break;
+					Recorder.TrackKill( tkm.KillData ); break;
 				default:
 					break;
 			}
