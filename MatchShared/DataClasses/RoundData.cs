@@ -6,7 +6,6 @@ namespace MatchTracker
 {
 	public class RoundData : IPlayersList, IKillList, IStartEnd, IWinner, IVideoUploadList, ITagsList, ILevelName, IDatabaseEntry
 	{
-		public RecordingType RecordingType { get; set; }
 		public string LevelName { get; set; }
 		public string Name { get; set; }
 		public string MatchName { get; set; }

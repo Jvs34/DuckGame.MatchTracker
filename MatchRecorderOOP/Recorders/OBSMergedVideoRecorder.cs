@@ -110,11 +110,11 @@ namespace MatchRecorder.Recorders
 
 			var match = await StartCollectingMatchData( recordingTime );
 
-			var videoUpload = new VideoUpload()
+			match.VideoUploads.Add( new VideoUpload()
 			{
-				VideoType = VideoUrlType.MergedVideoLink,
-			};
-			match.VideoUploads.Add( videoUpload );
+				VideoType = VideoUrlType.MergedVideoLink ,
+				RecordingType = ResultingRecordingType
+			} );
 
 			await GameDatabase.SaveData( match );
 		}
@@ -131,11 +131,11 @@ namespace MatchRecorder.Recorders
 		{
 			var round = await StartCollectingRoundData( DateTime.Now );
 
-			var videoUpload = new VideoUpload()
+			round.VideoUploads.Add( new VideoUpload()
 			{
 				VideoType = VideoUrlType.MergedVideoLink ,
-			};
-			round.VideoUploads.Add( videoUpload );
+				RecordingType = ResultingRecordingType
+			} );
 		}
 
 		protected override async Task StopRecordingRoundInternal() => await StopCollectingRoundData( DateTime.Now );

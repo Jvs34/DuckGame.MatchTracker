@@ -29,6 +29,7 @@ namespace MatchRecorder.Recorders
 			var videoUpload = new VideoUpload()
 			{
 				VideoType = VideoUrlType.None ,
+				RecordingType = ResultingRecordingType
 			};
 			match.VideoUploads.Add( videoUpload );
 
@@ -44,6 +45,7 @@ namespace MatchRecorder.Recorders
 			var videoUpload = new VideoUpload()
 			{
 				VideoType = VideoUrlType.None ,
+				RecordingType = ResultingRecordingType
 			};
 			round.VideoUploads.Add( videoUpload );
 		}

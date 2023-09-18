@@ -182,7 +182,6 @@ namespace MatchRecorder.Recorders
 			CurrentRound.MatchName = CurrentMatch.Name;
 			CurrentRound.TimeStarted = startTime;
 			CurrentRound.Name = GameDatabase.SharedSettings.DateTimeToString( startTime );
-			CurrentRound.RecordingType = ResultingRecordingType;
 
 			CurrentMatch.Rounds.Add( CurrentRound.Name );
 

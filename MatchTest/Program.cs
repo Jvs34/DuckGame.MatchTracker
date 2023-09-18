@@ -26,6 +26,11 @@ await db.Load();
 Console.WriteLine( "Resaving matches" );
 await db.IterateOverAll<MatchData>( async ( entry ) =>
 {
+	//foreach( var upload in entry.VideoUploads )
+	//{
+	//	upload.RecordingType = RecordingType.Video;
+	//}
+
 	await db.SaveData( entry );
 	return true;
 } );
@@ -33,6 +38,11 @@ await db.IterateOverAll<MatchData>( async ( entry ) =>
 Console.WriteLine( "Resaving rounds" );
 await db.IterateOverAll<RoundData>( async ( entry ) =>
 {
+	//foreach( var upload in entry.VideoUploads )
+	//{
+	//	upload.RecordingType = RecordingType.Video;
+	//}
+
 	await db.SaveData( entry );
 	return true;
 } );
