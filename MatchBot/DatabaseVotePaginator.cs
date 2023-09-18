@@ -188,7 +188,7 @@ namespace MatchBot
 			{
 				switch( videoUpload.VideoType )
 				{
-					case VideoType.VideoLink:
+					case VideoUrlType.VideoLink:
 						{
 							embed
 								.WithUrl( $"https://www.youtube.com/watch?v={videoUpload.YoutubeUrl}" )
@@ -196,7 +196,7 @@ namespace MatchBot
 						}
 						break;
 
-					case VideoType.PlaylistLink:
+					case VideoUrlType.PlaylistLink:
 						{
 							embed.Url = $"https://www.youtube.com/playlist?list={videoUpload.YoutubeUrl}";
 						}

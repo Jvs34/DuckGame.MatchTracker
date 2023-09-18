@@ -42,19 +42,19 @@ namespace MatchUploader
 			return databaseIndex.Replace( '-' , ' ' );
 		}
 
-		internal static async Task<Video> GetVideoDataForDatabaseItem<T>( IGameDatabase DB , T data ) where T : IPlayersList, IStartEnd, IWinner, IDatabaseEntry, IVideoUpload
+		internal static async Task<Video> GetVideoDataForDatabaseItem<T>( IGameDatabase DB , T data , VideoUpload upload ) where T : IPlayersList, IStartEnd, IWinner, IDatabaseEntry
 		{
 			string mainWinners = await GetAllWinners( DB , data );
 			string description = string.Empty;
 			string privacystatus = "unlisted";
 
-			if( data.VideoType == VideoType.VideoLink )
+			if( upload.VideoType == VideoUrlType.VideoLink )
 			{
 				description = $"Recorded on {DB.SharedSettings.DateTimeToString( data.TimeStarted )}\nThe winner is {mainWinners}";
 			}
 
 			//only update the description for the main video
-			if( data.VideoType == VideoType.MergedVideoLink && data is MatchData matchData )
+			if( upload.VideoType == VideoUrlType.MergedVideoLink && data is MatchData matchData )
 			{
 				privacystatus = "public";
 
@@ -73,8 +73,12 @@ namespace MatchUploader
 				foreach( var roundName in matchData.Rounds )
 				{
 					var roundData = await DB.GetData<RoundData>( roundName );
+
+					//TODO: properly calculate the chapters again
+					TimeSpan timeSpan = TimeSpan.Zero;
+
 					builder
-						.Append( $"{roundData.VideoStartTime:mm\\:ss} - {data.DatabaseIndex} {await GetAllWinners( DB , roundData )}" )
+						.Append( $"{timeSpan:mm\\:ss} - {data.DatabaseIndex} {await GetAllWinners( DB , roundData )}" )
 						.AppendLine();
 				}
 

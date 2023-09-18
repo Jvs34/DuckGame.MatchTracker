@@ -118,24 +118,46 @@ namespace MatchUploader
 
 			var toCleanup = new ConcurrentBag<MatchData>();
 
-			await DB.IterateOverAll<MatchData>( ( matchData ) =>
+			await DB.IterateOverAll<MatchData>( async ( matchData ) =>
 			{
-				if( matchData.VideoType == VideoType.MergedVideoLink )
+				//a generic recording is one made without a service in mind
+
+				var genericRecording = matchData.VideoUploads.FirstOrDefault( x => x.ServiceType == VideoServiceType.None );
+
+				if( genericRecording != null || genericRecording.VideoType != VideoUrlType.MergedVideoLink )
 				{
-					if( string.IsNullOrEmpty( matchData.YoutubeUrl ) )
+					return true;
+				}
+
+				//create or find a videoupload object for this youtube one
+				var youtubeUpload = matchData.VideoUploads.FirstOrDefault( x => x.ServiceType == VideoServiceType.Youtube );
+
+				if( youtubeUpload == null )
+				{
+					youtubeUpload = new VideoUpload()
 					{
-						concMatches.Add( matchData );
-					}
-					else
+						ServiceType = VideoServiceType.Youtube ,
+						VideoType = genericRecording.VideoType
+					};
+
+					matchData.VideoUploads.Add( youtubeUpload );
+					await DB.SaveData( matchData );
+				}
+
+				// video is not uploaded, add it to the queue
+				if( string.IsNullOrEmpty( youtubeUpload.Url ) )
+				{
+					concMatches.Add( matchData );
+				}
+				else
+				{
+					if( File.Exists( DB.SharedSettings.GetMatchVideoPath( matchData.DatabaseIndex ) ) )
 					{
-						if( File.Exists( DB.SharedSettings.GetMatchVideoPath( matchData.DatabaseIndex ) ) )
-						{
-							toCleanup.Add( matchData );
-						}
+						toCleanup.Add( matchData );
 					}
 				}
 
-				return Task.FromResult( true );
+				return true;
 			} );
 
 			foreach( var data in toCleanup )
@@ -173,7 +195,14 @@ namespace MatchUploader
 		protected override async Task<bool> UploadItem( PendingUpload upload )
 		{
 			var matchData = await DB.GetData<MatchData>( upload.DataName );
+			var youtubeVideoUpload = matchData.VideoUploads.FirstOrDefault( x => x.ServiceType == VideoServiceType.Youtube );
 			var videoResource = await FindYoutubeDraft( matchData );
+
+			if( youtubeVideoUpload is null )
+			{
+				upload.LastException = "Could not find the youtube MatchData.VideoUploads";
+				return false;
+			}
 
 			if( videoResource is null )
 			{
@@ -193,8 +222,8 @@ namespace MatchUploader
 			//now override the match data to publish the item
 			try
 			{
-				matchData.YoutubeUrl = videoResource.VideoId;
-				var matchVideoData = await UploaderUtils.GetVideoDataForDatabaseItem( DB , matchData );
+				youtubeVideoUpload.Url = videoResource.VideoId;
+				var matchVideoData = await UploaderUtils.GetVideoDataForDatabaseItem( DB , matchData , youtubeVideoUpload );
 				await UploaderUtils.UpdateVideoData( Service , videoResource.VideoId , matchVideoData );
 				await DB.SaveData( matchData );
 
@@ -202,11 +231,16 @@ namespace MatchUploader
 
 				await DB.IterateOver<RoundData>( async ( roundData ) =>
 				{
-					if( roundData.VideoType == VideoType.MergedVideoLink && string.IsNullOrEmpty( roundData.YoutubeUrl ) )
+					var roundDataVideoUpload = new VideoUpload()
 					{
-						roundData.YoutubeUrl = videoResource.VideoId;
-						await DB.SaveData( roundData );
-					}
+						ServiceType = VideoServiceType.Youtube ,
+						Url = videoResource.VideoId ,
+						VideoType = VideoUrlType.MergedVideoLink ,
+					};
+
+					roundData.VideoUploads.Add( roundDataVideoUpload );
+
+					await DB.SaveData( roundData );
 
 					return true;
 				} , matchData.Rounds );

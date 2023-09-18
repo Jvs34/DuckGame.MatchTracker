@@ -1,6 +1,6 @@
 ﻿namespace MatchTracker
 {
-	public enum VideoMirrorType
+	public enum VideoServiceType
 	{
 		None,
 

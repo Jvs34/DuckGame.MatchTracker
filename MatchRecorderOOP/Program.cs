@@ -38,7 +38,7 @@ host.Services.AddSingleton<ModMessageQueue>();
 
 switch( host.Configuration.Get<RecorderSettings>().RecorderType )
 {
-	case RecorderType.OBSMergedVideo: host.Services.AddSingleton<BaseRecorder , OBSLocalRecorder>(); break;
+	case RecorderType.OBSMergedVideo: host.Services.AddSingleton<BaseRecorder , OBSMergedVideoRecorder>(); break;
 	default: host.Services.AddSingleton<BaseRecorder , NoVideoRecorder>(); break;
 }
 

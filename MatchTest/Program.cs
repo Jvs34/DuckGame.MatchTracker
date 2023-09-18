@@ -1,4 +1,5 @@
 ﻿using MatchTracker;
+using MatchTracker.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
@@ -7,17 +8,60 @@ using System.Linq;
 using System.Threading.Tasks;
 
 var configuration = new ConfigurationBuilder()
+	.SetBasePath( Directory.GetCurrentDirectory() )
 	.AddJsonFile( Path.Combine( "Settings" , "shared.json" ) )
 .Build();
 
-using IGameDatabase litedb = new LiteDBGameDatabase();
+using IGameDatabase db = new LiteDBGameDatabase();
 
-configuration.Bind( litedb.SharedSettings );
-await litedb.Load();
+configuration.Bind( db.SharedSettings );
+await db.Load();
 
-var data = await litedb.GetData<RoundData>( "2018-09-24 22-53-23" );
+//var data = await litedb.GetData<RoundData>( "2018-09-24 22-53-23" );
 
+
+//convert IVideoUpload to IVideoUploadList
+
+
+Console.WriteLine( "Resaving matches" );
+await db.IterateOverAll<MatchData>( async ( entry ) =>
+{
+	await db.SaveData( entry );
+	return true;
+} );
+
+Console.WriteLine( "Resaving rounds" );
+await db.IterateOverAll<RoundData>( async ( entry ) =>
+{
+	await db.SaveData( entry );
+	return true;
+} );
+
+Console.WriteLine( "Done, press a key to stop" );
 Console.ReadKey();
+
+
+//static async Task MigrateIVideoUploadToIVideoUploadList<T>( IGameDatabase db , T databaseEntry ) where T : IDatabaseEntry, IVideoUpload, IVideoUploadList
+//{
+//	databaseEntry.VideoUploads ??= new List<VideoUpload>();
+
+//	if( databaseEntry.VideoUploads.Count > 0 )
+//	{
+//		return;
+//	}
+
+//	var videoUpload = new VideoUpload()
+//	{
+//		//when there's entries without a videotype, that means that they were made with NoVideoRecorder
+//		ServiceType = databaseEntry.VideoType == VideoUrlType.None ? VideoServiceType.None : VideoServiceType.Youtube ,
+//		Url = databaseEntry.YoutubeUrl ,
+//		VideoType = databaseEntry.VideoType
+//	};
+
+//	databaseEntry.VideoUploads.Add( videoUpload );
+
+//	await db.SaveData( databaseEntry );
+//}
 
 //await CopyDatabaseOverTo( filedb , litedb );
 //await DeleteAllJsonFiles( filedb as FileSystemGameDatabase );
@@ -85,8 +129,8 @@ foreach( var backupKV in backup )
 }
 */
 
-static async Task CopyDatabaseOverTo( IGameDatabase from , IGameDatabase to )
-{
-	var backup = await from.GetBackupAllOut();
-	await to.ImportBackup( backup );
-}
+//static async Task CopyDatabaseOverTo( IGameDatabase from , IGameDatabase to )
+//{
+//	var backup = await from.GetBackupAllOut();
+//	await to.ImportBackup( backup );
+//}

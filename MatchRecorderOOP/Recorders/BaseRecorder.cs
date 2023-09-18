@@ -17,17 +17,6 @@ namespace MatchRecorder.Recorders
 		public bool IsRecordingMatch { get; set; }
 		public MatchData CurrentMatch { get; protected set; }
 		public RoundData CurrentRound { get; protected set; }
-
-		/// <summary>
-		/// Data that has arrived from network messages yet to be processed
-		/// </summary>
-		protected MatchData PendingMatchData { get; set; } = new MatchData();
-
-		/// <summary>
-		/// Data that has arrived from network messages yet to be processed
-		/// </summary>
-		protected RoundData PendingRoundData { get; set; } = new RoundData();
-
 		protected ILogger<BaseRecorder> Logger { get; set; }
 		protected IGameDatabase GameDatabase { get; set; }
 		protected ModMessageQueue MessageQueue { get; set; }
@@ -72,8 +61,12 @@ namespace MatchRecorder.Recorders
 
 			IsRecordingMatch = true;
 
-			PendingMatchData.Players = playersList.Players;
-			PendingMatchData.Teams = teamsList.Teams;
+			CurrentMatch = new MatchData
+			{
+				Players = playersList.Players ,
+				Teams = teamsList.Teams
+			};
+
 			await StartRecordingMatchInternal();
 			await AddOrUpdateMissingPlayers( players );
 		}
@@ -87,9 +80,10 @@ namespace MatchRecorder.Recorders
 
 			IsRecordingMatch = false;
 
-			PendingMatchData.Players = playersList.Players ?? new();
-			PendingMatchData.Teams = teamsList.Teams ?? new();
-			PendingMatchData.Winner = winner.Winner ?? new();
+			CurrentMatch.Players = playersList.Players ?? new();
+			CurrentMatch.Teams = teamsList.Teams ?? new();
+			CurrentMatch.Winner = winner.Winner ?? new();
+
 			await StopRecordingMatchInternal();
 			await AddOrUpdateMissingPlayers( players );
 		}
@@ -101,9 +95,14 @@ namespace MatchRecorder.Recorders
 				return;
 			}
 
-			PendingRoundData.LevelName = levelName.LevelName;
-			PendingRoundData.Players = playersList.Players;
-			PendingRoundData.Teams = teamsList.Teams;
+			CurrentRound = new RoundData
+			{
+				LevelName = levelName.LevelName ,
+				Players = playersList.Players ,
+				Teams = teamsList.Teams
+			};
+
+
 			await StartRecordingRoundInternal();
 		}
 
@@ -114,9 +113,10 @@ namespace MatchRecorder.Recorders
 				return;
 			}
 
-			PendingRoundData.Players = playersList.Players ?? new();
-			PendingRoundData.Teams = teamsList.Teams ?? new();
-			PendingRoundData.Winner = winner.Winner ?? new();
+			CurrentRound.Players = playersList.Players ?? new();
+			CurrentRound.Teams = teamsList.Teams ?? new();
+			CurrentRound.Winner = winner.Winner ?? new();
+
 			await StopRecordingRoundInternal();
 		}
 
@@ -130,11 +130,8 @@ namespace MatchRecorder.Recorders
 
 		internal Task<MatchData> StartCollectingMatchData( DateTime time )
 		{
-			CurrentMatch = new MatchData
-			{
-				TimeStarted = time ,
-				Name = GameDatabase.SharedSettings.DateTimeToString( time ) ,
-			};
+			CurrentMatch.TimeStarted = time;
+			CurrentMatch.Name = GameDatabase.SharedSettings.DateTimeToString( time );
 
 			SendHUDmessage( $"Match {CurrentMatch.Name} Started" );
 
@@ -151,9 +148,7 @@ namespace MatchRecorder.Recorders
 			SendHUDmessage( $"Match {CurrentMatch.Name} Ended" );
 
 			CurrentMatch.TimeEnded = time;
-			CurrentMatch.Players = PendingMatchData.Players;
-			CurrentMatch.Teams = PendingMatchData.Teams;
-			CurrentMatch.Winner = PendingMatchData.Winner;
+
 
 			await GameDatabase.SaveData( CurrentMatch );
 			await GameDatabase.Add( CurrentMatch );
@@ -161,7 +156,6 @@ namespace MatchRecorder.Recorders
 			MatchData newMatchData = CurrentMatch;
 
 			CurrentMatch = null;
-			PendingMatchData = new MatchData();
 			return newMatchData;
 		}
 
@@ -172,16 +166,10 @@ namespace MatchRecorder.Recorders
 				return Task.FromResult<RoundData>( null );
 			}
 
-			CurrentRound = new RoundData()
-			{
-				MatchName = CurrentMatch?.Name ,
-				LevelName = PendingRoundData.LevelName ,
-				TimeStarted = startTime ,
-				Name = GameDatabase.SharedSettings.DateTimeToString( startTime ) ,
-				RecordingType = ResultingRecordingType ,
-				Players = PendingRoundData.Players ,
-				Teams = PendingRoundData.Teams ,
-			};
+			CurrentRound.MatchName = CurrentMatch?.Name;
+			CurrentRound.TimeStarted = startTime;
+			CurrentRound.Name = GameDatabase.SharedSettings.DateTimeToString( startTime );
+			CurrentRound.RecordingType = ResultingRecordingType;
 
 			CurrentMatch.Rounds.Add( CurrentRound.Name );
 
@@ -199,9 +187,7 @@ namespace MatchRecorder.Recorders
 
 			SendHUDmessage( $"Round #{CurrentMatch.Rounds.Count} Ended" );
 
-			CurrentRound.Players = PendingRoundData.Players;
-			CurrentRound.Teams = PendingRoundData.Teams;
-			CurrentRound.Winner = PendingRoundData.Winner;
+
 			CurrentRound.TimeEnded = endTime;
 
 			await GameDatabase.SaveData( CurrentRound );
@@ -210,7 +196,6 @@ namespace MatchRecorder.Recorders
 			RoundData newRoundData = CurrentRound;
 
 			CurrentRound = null;
-			PendingRoundData = new RoundData();
 
 			return newRoundData;
 		}

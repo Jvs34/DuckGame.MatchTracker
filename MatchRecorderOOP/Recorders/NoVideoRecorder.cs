@@ -1,6 +1,7 @@
 ﻿using MatchTracker;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders
@@ -27,8 +28,11 @@ namespace MatchRecorder.Recorders
 				return;
 			}
 
-			match.VideoType = VideoType.MergedVideoLink;
-			match.VideoEndTime = match.GetDuration();
+			var videoUpload = new VideoUpload()
+			{
+				VideoType = VideoUrlType.None ,
+			};
+			match.VideoUploads.Add( videoUpload );
 
 			await GameDatabase.SaveData( match );
 		}
@@ -37,6 +41,7 @@ namespace MatchRecorder.Recorders
 		{
 			await StopCollectingMatchData( DateTime.Now );
 		}
+
 		protected override async Task StartRecordingRoundInternal()
 		{
 			var round = await StartCollectingRoundData( DateTime.Now );
@@ -45,7 +50,12 @@ namespace MatchRecorder.Recorders
 				return;
 			}
 			IsRecordingRoundInternal = true;
-			round.VideoType = VideoType.None;
+
+			var videoUpload = new VideoUpload()
+			{
+				VideoType = VideoUrlType.None ,
+			};
+			round.VideoUploads.Add( videoUpload );
 		}
 
 		protected override async Task StopRecordingRoundInternal()

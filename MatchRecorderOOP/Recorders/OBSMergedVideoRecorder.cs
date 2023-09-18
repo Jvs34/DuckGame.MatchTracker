@@ -15,7 +15,11 @@ using System.Threading.Tasks.Sources;
 
 namespace MatchRecorder.Recorders
 {
-	internal sealed class OBSLocalRecorder : BaseRecorder
+	/// <summary>
+	/// Records an entire match at once, alongside pauses, transitions and even the victory screen,
+	/// however, data wise only the singular rounds are recorded
+	/// </summary>
+	internal sealed class OBSMergedVideoRecorder : BaseRecorder
 	{
 		private OBSSettings OBSSettings { get; }
 		private ObsClientSocket ObsHandler { get; }
@@ -29,9 +33,8 @@ namespace MatchRecorder.Recorders
 		};
 		public override RecordingType ResultingRecordingType { get; set; }
 		private DateTime NextObsCheck { get; set; }
-		private TimeSpan MergedRoundDuration { get; set; } = TimeSpan.Zero;
 
-		public OBSLocalRecorder(
+		public OBSMergedVideoRecorder(
 			ILogger<BaseRecorder> logger ,
 			ModMessageQueue messageQueue ,
 			IOptions<OBSSettings> obsSettings ,
@@ -101,15 +104,18 @@ namespace MatchRecorder.Recorders
 			string matchPath = GameDatabase.SharedSettings.GetPath<MatchData>( recordingTimeString );
 
 			Directory.CreateDirectory( matchPath );
-			
+
 			await SetRecordDirectoryWorkaroundAsync( matchPath );
 			await ObsHandler.StartRecordAsync();
 			await WaitUntilRecordingState( ObsOutputState.Started );
-			
+
 			var match = await StartCollectingMatchData( recordingTime );
-			match.VideoType = VideoType.MergedVideoLink;
-			match.VideoEndTime = match.GetDuration();
-			MergedRoundDuration = TimeSpan.Zero;
+
+			var videoUpload = new VideoUpload()
+			{
+				VideoType = VideoUrlType.MergedVideoLink,
+			};
+			match.VideoUploads.Add( videoUpload );
 
 			await GameDatabase.SaveData( match );
 		}
@@ -129,8 +135,12 @@ namespace MatchRecorder.Recorders
 			{
 				return;
 			}
-			round.VideoType = VideoType.MergedVideoLink;
-			round.VideoStartTime = MergedRoundDuration;
+
+			var videoUpload = new VideoUpload()
+			{
+				VideoType = VideoUrlType.MergedVideoLink ,
+			};
+			round.VideoUploads.Add( videoUpload );
 		}
 
 		protected override async Task StopRecordingRoundInternal()
@@ -141,8 +151,6 @@ namespace MatchRecorder.Recorders
 				return;
 			}
 
-			MergedRoundDuration += round.GetDuration();
-			round.VideoEndTime = MergedRoundDuration;
 		}
 
 		public async Task TryConnect()

@@ -1,9 +1,10 @@
-﻿using System;
+﻿using MatchTracker.Interfaces;
+using System;
 using System.Collections.Generic;
 
 namespace MatchTracker
 {
-	public class RoundData : IPlayersList, IKillList, IStartEnd, IWinner, IVideoUpload, ITagsList, ILevelName, IDatabaseEntry
+	public class RoundData : IPlayersList, IKillList, IStartEnd, IWinner, IVideoUploadList, ITagsList, ILevelName, IDatabaseEntry
 	{
 		public RecordingType RecordingType { get; set; }
 		public string LevelName { get; set; }
@@ -16,10 +17,7 @@ namespace MatchTracker
 		public DateTime TimeEnded { get; set; }
 		public DateTime TimeStarted { get; set; }
 		public TeamData Winner { get; set; }
-		public string YoutubeUrl { get; set; }
-		public VideoType VideoType { get; set; } = VideoType.VideoLink;
-		public TimeSpan VideoStartTime { get; set; }
-		public TimeSpan VideoEndTime { get; set; }
+		public List<VideoUpload> VideoUploads { get; set; }
 		public List<string> Tags { get; set; } = new List<string>();
 
 		public TimeSpan GetDuration() => TimeEnded.Subtract( TimeStarted );

@@ -47,7 +47,7 @@ namespace MatchUploader
 
 		private void CreateUploaders()
 		{
-			AddUploader( new MatchMerger( GameDatabase , UploaderSettings ) );
+			//AddUploader( new MatchMerger( GameDatabase , UploaderSettings ) );
 			AddUploader( new YoutubeMatchUpdater( GameDatabase , UploaderSettings ) );
 			//AddUploader( new YoutubeRoundUploader( GameDatabase , UploaderSettings ) );
 		}
