@@ -105,7 +105,7 @@ namespace MatchRecorder
 				WorkingDirectory = ModPath ,
 				CreateNoWindow = false ,
 				WindowStyle = ProcessWindowStyle.Minimized ,
-				Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} {RecorderType.NoVideo} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
+				Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} {RecorderType.OBSMergedVideo} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
 			} );
 		}
 

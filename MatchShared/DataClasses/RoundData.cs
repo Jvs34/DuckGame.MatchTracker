@@ -17,7 +17,7 @@ namespace MatchTracker
 		public DateTime TimeEnded { get; set; }
 		public DateTime TimeStarted { get; set; }
 		public TeamData Winner { get; set; }
-		public List<VideoUpload> VideoUploads { get; set; }
+		public List<VideoUpload> VideoUploads { get; set; } = new List<VideoUpload>();
 		public List<string> Tags { get; set; } = new List<string>();
 
 		public TimeSpan GetDuration() => TimeEnded.Subtract( TimeStarted );

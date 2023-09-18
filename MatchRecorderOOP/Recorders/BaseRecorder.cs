@@ -13,7 +13,7 @@ namespace MatchRecorder.Recorders
 	{
 		public virtual bool IsRecording { get; }
 		public virtual RecordingType ResultingRecordingType { get; set; }
-		public virtual bool IsRecordingRound { get; }
+		public bool IsRecordingRound { get; set; }
 		public bool IsRecordingMatch { get; set; }
 		public MatchData CurrentMatch { get; protected set; }
 		public RoundData CurrentRound { get; protected set; }
@@ -90,10 +90,12 @@ namespace MatchRecorder.Recorders
 
 		public async Task StartRecordingRound( ILevelName levelName , IPlayersList playersList , ITeamsList teamsList )
 		{
-			if( !IsRecordingMatch )
+			if( IsRecordingRound || !IsRecordingMatch )
 			{
 				return;
 			}
+
+			IsRecordingRound = true;
 
 			CurrentRound = new RoundData
 			{
@@ -101,7 +103,6 @@ namespace MatchRecorder.Recorders
 				Players = playersList.Players ,
 				Teams = teamsList.Teams
 			};
-
 
 			await StartRecordingRoundInternal();
 		}
@@ -113,6 +114,8 @@ namespace MatchRecorder.Recorders
 				return;
 			}
 
+			IsRecordingRound = false;
+
 			CurrentRound.Players = playersList.Players ?? new();
 			CurrentRound.Teams = teamsList.Teams ?? new();
 			CurrentRound.Winner = winner.Winner ?? new();
@@ -121,9 +124,30 @@ namespace MatchRecorder.Recorders
 		}
 
 		#region ABSTRACT
+
+
+		/// <summary>
+		/// Must call <see cref="StartCollectingMatchData"/>
+		/// </summary>
+		/// <returns></returns>
 		protected abstract Task StartRecordingMatchInternal();
+
+		/// <summary>
+		/// Must call <see cref="StopCollectingRoundData"/>
+		/// </summary>
+		/// <returns></returns>
 		protected abstract Task StartRecordingRoundInternal();
+
+		/// <summary>
+		/// Must call <see cref="StopCollectingMatchData"/>
+		/// </summary>
+		/// <returns></returns>
 		protected abstract Task StopRecordingMatchInternal();
+
+		/// <summary>
+		/// Must call <see cref="StopCollectingRoundData"/>
+		/// </summary>
+		/// <returns></returns>
 		protected abstract Task StopRecordingRoundInternal();
 		public abstract Task Update();
 		#endregion
@@ -140,15 +164,9 @@ namespace MatchRecorder.Recorders
 
 		internal async Task<MatchData> StopCollectingMatchData( DateTime time )
 		{
-			if( CurrentMatch == null )
-			{
-				return null;
-			}
-
 			SendHUDmessage( $"Match {CurrentMatch.Name} Ended" );
 
 			CurrentMatch.TimeEnded = time;
-
 
 			await GameDatabase.SaveData( CurrentMatch );
 			await GameDatabase.Add( CurrentMatch );
@@ -161,12 +179,7 @@ namespace MatchRecorder.Recorders
 
 		internal Task<RoundData> StartCollectingRoundData( DateTime startTime )
 		{
-			if( CurrentMatch is null )
-			{
-				return Task.FromResult<RoundData>( null );
-			}
-
-			CurrentRound.MatchName = CurrentMatch?.Name;
+			CurrentRound.MatchName = CurrentMatch.Name;
 			CurrentRound.TimeStarted = startTime;
 			CurrentRound.Name = GameDatabase.SharedSettings.DateTimeToString( startTime );
 			CurrentRound.RecordingType = ResultingRecordingType;
@@ -180,13 +193,7 @@ namespace MatchRecorder.Recorders
 
 		internal async Task<RoundData> StopCollectingRoundData( DateTime endTime )
 		{
-			if( CurrentRound == null )
-			{
-				return null;
-			}
-
 			SendHUDmessage( $"Round #{CurrentMatch.Rounds.Count} Ended" );
-
 
 			CurrentRound.TimeEnded = endTime;
 
@@ -212,7 +219,7 @@ namespace MatchRecorder.Recorders
 
 		public void TrackKill( KillData killData )
 		{
-			if( IsRecordingRound )
+			if( IsRecordingRound && CurrentRound != null )
 			{
 				CurrentRound.KillsList.Add( killData );
 			}

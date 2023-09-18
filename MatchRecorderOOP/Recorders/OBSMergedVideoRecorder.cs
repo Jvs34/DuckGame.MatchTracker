@@ -24,7 +24,6 @@ namespace MatchRecorder.Recorders
 		private OBSSettings OBSSettings { get; }
 		private ObsClientSocket ObsHandler { get; }
 		private ObsOutputState RecordingState { get; set; }
-		public override bool IsRecordingRound => IsRecording;
 		public override bool IsRecording => RecordingState switch
 		{
 			ObsOutputState.Started or ObsOutputState.Starting => true,
@@ -131,10 +130,6 @@ namespace MatchRecorder.Recorders
 		protected override async Task StartRecordingRoundInternal()
 		{
 			var round = await StartCollectingRoundData( DateTime.Now );
-			if( round is null )
-			{
-				return;
-			}
 
 			var videoUpload = new VideoUpload()
 			{
@@ -143,15 +138,7 @@ namespace MatchRecorder.Recorders
 			round.VideoUploads.Add( videoUpload );
 		}
 
-		protected override async Task StopRecordingRoundInternal()
-		{
-			var round = await StopCollectingRoundData( DateTime.Now );
-			if( round is null )
-			{
-				return;
-			}
-
-		}
+		protected override async Task StopRecordingRoundInternal() => await StopCollectingRoundData( DateTime.Now );
 
 		public async Task TryConnect()
 		{

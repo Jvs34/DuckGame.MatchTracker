@@ -1,9 +1,5 @@
-﻿using HarmonyLib;
-using MatchRecorderShared;
-using MatchRecorderShared.Messages;
+﻿using MatchRecorderShared.Messages;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Bson;
-using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Concurrent;
@@ -11,15 +7,10 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.Linq;
 using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.WebSockets;
-using System.Runtime.Remoting.Messaging;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using static DuckGame.RasterFont;
 
 namespace MatchRecorder
 {
@@ -100,9 +91,7 @@ namespace MatchRecorder
 
 		private async Task ParseResponseMessages( HttpResponseMessage response )
 		{
-			//using var responseContent = await response.Content.ReadAsStreamAsync();
 			var responseString = await response.Content.ReadAsStringAsync();
-			//using var reader = new StreamReader( responseContent );
 			using var reader = new StringReader( responseString );
 
 			Console.WriteLine( responseString );
@@ -110,7 +99,7 @@ namespace MatchRecorder
 			using var jsonReader = new JsonTextReader( reader );
 
 			var clientMessages = Serializer.Deserialize<List<TextMessage>>( jsonReader );
-			
+
 			if( clientMessages == null )
 			{
 				return;
@@ -137,7 +126,5 @@ namespace MatchRecorder
 				await Task.Delay( 100 );
 			}
 		}
-
-
 	}
 }
