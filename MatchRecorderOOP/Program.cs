@@ -65,7 +65,7 @@ await app.RunAsync();
 
 static IResult QueueAndReturnOK( BaseMessage message , ModMessageQueue queue )
 {
-	queue.RecorderMessageQueue.Enqueue( message );
+	queue.PushToRecorderQueue( message );
 	return Results.Ok();
 }
 

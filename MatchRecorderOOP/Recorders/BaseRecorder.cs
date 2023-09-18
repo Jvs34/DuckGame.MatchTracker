@@ -15,8 +15,8 @@ namespace MatchRecorder.Recorders
 		public virtual RecordingType ResultingRecordingType { get; set; }
 		public bool IsRecordingRound { get; set; }
 		public bool IsRecordingMatch { get; set; }
-		public MatchData CurrentMatch { get; protected set; }
-		public RoundData CurrentRound { get; protected set; }
+		private MatchData CurrentMatch { get; set; }
+		private RoundData CurrentRound { get; set; }
 		protected ILogger<BaseRecorder> Logger { get; set; }
 		protected IGameDatabase GameDatabase { get; set; }
 		protected ModMessageQueue MessageQueue { get; set; }
@@ -209,7 +209,7 @@ namespace MatchRecorder.Recorders
 		public void SendHUDmessage( string message , TextMessagePosition messagePosition = TextMessagePosition.TopLeft )
 		{
 			Logger.LogInformation( "Sending to client: {message}" , message );
-			MessageQueue.ClientMessageQueue.Enqueue( new TextMessage()
+			MessageQueue.PushToClientMessageQueue( new TextMessage()
 			{
 				Message = message ,
 				MessagePosition = messagePosition
