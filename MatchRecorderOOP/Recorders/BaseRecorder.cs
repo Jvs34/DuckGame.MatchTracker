@@ -52,7 +52,7 @@ namespace MatchRecorder.Recorders
 			}
 		}
 
-		public async Task StartRecordingMatch( IPlayersList playersList , ITeamsList teamsList , List<PlayerData> players )
+		public async Task StartRecordingMatch( StartMatchMessage message )
 		{
 			if( IsRecordingMatch )
 			{
@@ -63,15 +63,16 @@ namespace MatchRecorder.Recorders
 
 			CurrentMatch = new MatchData
 			{
-				Players = playersList.Players ,
-				Teams = teamsList.Teams
+				//TimeStarted = message.TimeStarted , //TODO: differentiate between tracking time and recording time
+				Players = message.Players ,
+				Teams = message.Teams
 			};
 
 			await StartRecordingMatchInternal();
-			await AddOrUpdateMissingPlayers( players );
+			await AddOrUpdateMissingPlayers( message.PlayersData );
 		}
 
-		public async Task StopRecordingMatch( IPlayersList playersList = null , ITeamsList teamsList = null , IWinner winner = null , List<PlayerData> players = null )
+		public async Task StopRecordingMatch( EndMatchMessage message = null )
 		{
 			if( !IsRecordingMatch )
 			{
@@ -80,15 +81,16 @@ namespace MatchRecorder.Recorders
 
 			IsRecordingMatch = false;
 
-			CurrentMatch.Players = playersList.Players ?? new();
-			CurrentMatch.Teams = teamsList.Teams ?? new();
-			CurrentMatch.Winner = winner.Winner ?? new();
+			//CurrentMatch.TimeEnded = message?.TimeEnded ?? DateTime.Now; //TODO: differentiate between tracking time and recording time
+			CurrentMatch.Players = message?.Players ?? new();
+			CurrentMatch.Teams = message?.Teams ?? new();
+			CurrentMatch.Winner = message?.Winner ?? new();
 
 			await StopRecordingMatchInternal();
-			await AddOrUpdateMissingPlayers( players );
+			await AddOrUpdateMissingPlayers( message?.PlayersData ?? new() );
 		}
 
-		public async Task StartRecordingRound( ILevelName levelName , IPlayersList playersList , ITeamsList teamsList )
+		public async Task StartRecordingRound( StartRoundMessage message )
 		{
 			if( IsRecordingRound || !IsRecordingMatch )
 			{
@@ -99,15 +101,16 @@ namespace MatchRecorder.Recorders
 
 			CurrentRound = new RoundData
 			{
-				LevelName = levelName.LevelName ,
-				Players = playersList.Players ,
-				Teams = teamsList.Teams
+				//TimeStarted = message.TimeStarted , //TODO: differentiate between tracking time and recording time
+				LevelName = message.LevelName ,
+				Players = message.Players ,
+				Teams = message.Teams
 			};
 
 			await StartRecordingRoundInternal();
 		}
 
-		public async Task StopRecordingRound( IPlayersList playersList = null , ITeamsList teamsList = null , IWinner winner = null )
+		public async Task StopRecordingRound( EndRoundMessage message = null )
 		{
 			if( !IsRecordingRound || !IsRecordingMatch )
 			{
@@ -116,9 +119,10 @@ namespace MatchRecorder.Recorders
 
 			IsRecordingRound = false;
 
-			CurrentRound.Players = playersList.Players ?? new();
-			CurrentRound.Teams = teamsList.Teams ?? new();
-			CurrentRound.Winner = winner.Winner ?? new();
+			//CurrentRound.TimeEnded = message?.TimeEnded ?? DateTime.Now; //TODO: differentiate between tracking time and recording time
+			CurrentRound.Players = message?.Players ?? new();
+			CurrentRound.Teams = message?.Teams ?? new();
+			CurrentRound.Winner = message?.Winner ?? new();
 
 			await StopRecordingRoundInternal();
 		}
@@ -216,11 +220,11 @@ namespace MatchRecorder.Recorders
 			} );
 		}
 
-		public void TrackKill( KillData killData )
+		public void TrackKill( TrackKillMessage message )
 		{
 			if( IsRecordingRound && CurrentRound != null )
 			{
-				CurrentRound.KillsList.Add( killData );
+				CurrentRound.KillsList.Add( message.KillData );
 			}
 		}
 	}

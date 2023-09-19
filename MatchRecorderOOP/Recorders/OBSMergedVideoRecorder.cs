@@ -153,7 +153,7 @@ namespace MatchRecorder.Recorders
 			}
 			catch( Exception )
 			{
-				SendHUDmessage( "Failed connecting to OBS. Check Settings/obs.json" , TextMessagePosition.TopMiddle );
+				SendHUDmessage( "Cannot reach OBS" , TextMessagePosition.TopMiddle );
 			}
 		}
 
@@ -167,8 +167,8 @@ namespace MatchRecorder.Recorders
 			}
 		}
 
-		private void OnConnected( Uri uri ) => SendHUDmessage( "Connected to OBS." );
-		private void OnDisconnected( Exception exception ) => SendHUDmessage( "Disconnected from OBS." );
+		private void OnConnected( Uri uri ) => SendHUDmessage( "Connected to OBS.", TextMessagePosition.TopMiddle );
+		private void OnDisconnected( Exception exception ) => SendHUDmessage( "Disconnected from OBS." , TextMessagePosition.TopMiddle );
 		private void OnRecordingStateChanged( RecordStateChanged changed ) => RecordingState = changed.OutputState;
 
 	}

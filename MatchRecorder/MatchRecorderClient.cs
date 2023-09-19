@@ -117,6 +117,7 @@ namespace MatchRecorder
 				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
 				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
 				PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
+				TimeStarted = DateTime.Now ,
 			} );
 		}
 
@@ -128,6 +129,7 @@ namespace MatchRecorder
 				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
 				PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
 				Winner = ConvertDuckGameTeamToTeamData( Teams.winning.FirstOrDefault() ) ,
+				TimeEnded = DateTime.Now ,
 			} );
 		}
 
@@ -138,6 +140,7 @@ namespace MatchRecorder
 				LevelName = Level.current.level ,
 				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
 				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+				TimeStarted = DateTime.Now ,
 			} );
 		}
 
@@ -148,6 +151,7 @@ namespace MatchRecorder
 				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
 				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
 				Winner = ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ) ,
+				TimeEnded = DateTime.Now ,
 			} );
 		}
 

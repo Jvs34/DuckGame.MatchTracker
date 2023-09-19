@@ -49,9 +49,10 @@ namespace MatchRecorder.Services
 
 			while( !token.IsCancellationRequested )
 			{
-				try { 
-				await CheckMessages();
-				await Recorder.Update();
+				try
+				{
+					await CheckMessages();
+					await Recorder.Update();
 				}
 				catch( Exception e )
 				{
@@ -97,17 +98,17 @@ namespace MatchRecorder.Services
 			switch( message )
 			{
 				case StartMatchMessage smm:
-					await Recorder.StartRecordingMatch( smm , smm , smm.PlayersData ); break;
+					await Recorder.StartRecordingMatch( smm ); break;
 				case EndMatchMessage emm:
-					await Recorder.StopRecordingMatch( emm , emm , emm , emm.PlayersData ); break;
+					await Recorder.StopRecordingMatch( emm ); break;
 				case StartRoundMessage srm:
-					await Recorder.StartRecordingRound( srm , srm , srm ); break;
+					await Recorder.StartRecordingRound( srm ); break;
 				case EndRoundMessage erm:
-					await Recorder.StopRecordingRound( erm , erm , erm ); break;
+					await Recorder.StopRecordingRound( erm ); break;
 				case TextMessage txtm:
-					Logger.LogInformation( "Received: {message}" , txtm.Message ); break;
+					Logger.LogInformation( "Received: {message}" , txtm ); break;
 				case TrackKillMessage tkm:
-					Recorder.TrackKill( tkm.KillData ); break;
+					Recorder.TrackKill( tkm ); break;
 				default:
 					break;
 			}

@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace MatchTracker
 {
-	public class RoundData : IPlayersList, IKillList, IStartEnd, IWinner, IVideoUploadList, ITagsList, ILevelName, IDatabaseEntry
+	public class RoundData : IPlayersList, IKillList, IStartEndTime, IWinner, IVideoUploadList, ITagsList, ILevelName, IDatabaseEntry
 	{
 		public string LevelName { get; set; }
 		public string Name { get; set; }
