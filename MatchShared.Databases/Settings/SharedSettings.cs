@@ -20,15 +20,22 @@ namespace MatchTracker
 		public string LevelPreviewFile { get; set; }
 
 		public string DateTimeToString( DateTime time ) => time.ToString( TimestampFormat );
-		public static string Combine( bool isUrl , params string [] paths ) => isUrl ? Url.Combine( paths ) : Path.Combine( paths );
-		public string GetRecordingFolder( bool useUrl = false ) => useUrl ? BaseRepositoryUrl : BaseRecordingFolder;
-		public string GetPath<T>( string databaseIndex , bool useUrl = false ) where T : IDatabaseEntry => GetPath( typeof( T ).Name , databaseIndex , useUrl );
-		public string GetPath( string typeName , string databaseIndex , bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , typeName , string.IsNullOrEmpty( databaseIndex ) ? typeName : databaseIndex );
-		public string GetDataPath<T>( string databaseIndex = "" , bool useUrl = false ) where T : IDatabaseEntry => Combine( useUrl , GetPath<T>( databaseIndex , useUrl ) , DataName );
-		public string GetDataPath( string typeName , string databaseIndex = "" , bool useUrl = false ) => Combine( useUrl , GetPath( typeName , databaseIndex , useUrl ) , DataName );
-		public string GetDatabasePath( bool useUrl = false ) => Combine( useUrl , GetRecordingFolder( useUrl ) , DatabaseFile );
-		public string GetRoundVideoPath( string roundName , bool useUrl = false ) => Combine( useUrl , GetPath<RoundData>( roundName , useUrl ) , RoundVideoFile );
-		public string GetMatchVideoPath( string matchName , bool useUrl = false ) => Combine( useUrl , GetPath<MatchData>( matchName , useUrl ) , RoundVideoFile );
-		public string GetLevelPreviewPath( string levelName , bool useUrl = false ) => Combine( useUrl , GetPath<LevelData>( levelName , useUrl ) , LevelPreviewFile );
+
+		public static string Combine( Func<string [] , string> combineFunc = null , params string [] paths )
+		{
+			static string DefaultCombineFunction( string [] paths ) => Path.Combine( paths );
+			combineFunc ??= DefaultCombineFunction;
+			return combineFunc( paths );
+		}
+
+		public string GetRecordingFolder() => BaseRecordingFolder;
+		public string GetPath<T>( string databaseIndex ) where T : IDatabaseEntry => GetPath( typeof( T ).Name , databaseIndex );
+		public string GetPath( string typeName , string databaseIndex ) => Combine( null , GetRecordingFolder() , typeName , string.IsNullOrEmpty( databaseIndex ) ? typeName : databaseIndex );
+		public string GetDataPath<T>( string databaseIndex = "" ) where T : IDatabaseEntry => Combine( null , GetPath<T>( databaseIndex ) , DataName );
+		public string GetDataPath( string typeName , string databaseIndex = "" ) => Combine( null , GetPath( typeName , databaseIndex ) , DataName );
+		public string GetDatabasePath() => Combine( null , GetRecordingFolder() , DatabaseFile );
+		public string GetRoundVideoPath( string roundName ) => Combine( null , GetPath<RoundData>( roundName ) , RoundVideoFile );
+		public string GetMatchVideoPath( string matchName ) => Combine( null , GetPath<MatchData>( matchName ) , RoundVideoFile );
+		public string GetLevelPreviewPath( string levelName ) => Combine( null , GetPath<LevelData>( levelName ) , LevelPreviewFile );
 	}
 }

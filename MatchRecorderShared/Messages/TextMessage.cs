@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MatchRecorderShared.Enums;
+using System;
 using System.Collections.Generic;
 using System.Text;
 

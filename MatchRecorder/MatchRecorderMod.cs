@@ -19,9 +19,6 @@ namespace MatchRecorder
 
 		protected override void OnPostInitialize()
 		{
-#if DEBUG
-			System.Diagnostics.Debugger.Launch();
-#endif
 			HarmonyInstance.PatchAll( Assembly.GetExecutingAssembly() );
 			Recorder = new MatchRecorderClient( configuration.directory );
 		}

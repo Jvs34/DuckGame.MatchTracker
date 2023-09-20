@@ -109,6 +109,7 @@ namespace MatchRecorder.Services
 					Logger.LogInformation( "Received: {message}" , txtm ); break;
 				case TrackKillMessage tkm:
 					Recorder.TrackKill( tkm ); break;
+				case CloseRecorderMessage: AppLifeTime.StopApplication(); break;
 				default:
 					break;
 			}

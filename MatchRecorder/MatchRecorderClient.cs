@@ -1,8 +1,10 @@
 ﻿using DuckGame;
 using HarmonyLib;
 using MatchRecorderShared;
+using MatchRecorderShared.Enums;
 using MatchRecorderShared.Messages;
 using MatchTracker;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +14,7 @@ using System.Net.Http;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using static DuckGame.RasterFont;
 
 namespace MatchRecorder
 {
@@ -19,18 +22,26 @@ namespace MatchRecorder
 	{
 		private bool IsDisposed { get; set; }
 		//private CancellationTokenSource StopTokenSource { get; }
-		private CancellationToken StopToken { get; }
+		private CancellationToken StopToken { get; } = CancellationToken.None;
 		public string ModPath { get; }
 		private Process RecorderProcess { get; set; }
 		private ClientMessageHandler MessageHandler { get; }
 		private Task MessageHandlerTask { get; set; }
 		public string RecorderUrl { get; set; } = "http://localhost:6969";
 		private HttpClient HttpClient { get; }
+		private ModSettings Settings { get; set; } = new ModSettings();
+		private JsonSerializer Serializer { get; } = new JsonSerializer()
+		{
+			Formatting = Formatting.Indented
+		};
+		private string SettingsPath { get; }
 
 		public MatchRecorderClient( string directory )
 		{
+			ModPath = directory;
+			SettingsPath = Path.Combine( ModPath , "Settings" , "modsettings.json" );
 			//StopTokenSource = new CancellationTokenSource();
-			StopToken = CancellationToken.None;
+			//StopToken = CancellationToken.None;
 			HttpClient = new HttpClient()
 			{
 				BaseAddress = new Uri( RecorderUrl ) ,
@@ -38,9 +49,22 @@ namespace MatchRecorder
 			};
 			HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd( "duckgame-matchrecorder/1.0" );
 
-			ModPath = directory;
 			MessageHandler = new ClientMessageHandler( HttpClient , StopToken );
 			MessageHandler.OnReceiveMessage += OnReceiveMessage;
+		}
+
+		public void LoadSettings()
+		{
+			using var dataStream = File.Open( SettingsPath , FileMode.Open );
+			using var reader = new StreamReader( dataStream );
+			using var jsonReader = new JsonTextReader( reader );
+			Settings = Serializer.Deserialize<ModSettings>( jsonReader );
+		}
+
+		public void SaveSettings()
+		{
+			using var writer = File.CreateText( SettingsPath );
+			Serializer.Serialize( writer , Settings );
 		}
 
 		private void OnReceiveMessage( TextMessage message )
@@ -99,14 +123,22 @@ namespace MatchRecorder
 
 		private void StartRecorderProcess()
 		{
-			RecorderProcess = Process.Start( new ProcessStartInfo()
+			var startInfo = new ProcessStartInfo()
 			{
 				FileName = Path.Combine( ModPath , "MatchRecorderOOP" , "MatchRecorderOOP.exe" ) ,
 				WorkingDirectory = ModPath ,
+				UseShellExecute = false ,
 				CreateNoWindow = false ,
 				WindowStyle = ProcessWindowStyle.Minimized ,
-				Arguments = $"--urls {RecorderUrl} --{nameof( RecorderSettings.RecorderType )} {RecorderType.OBSMergedVideo} --{nameof( RecorderSettings.RecordingEnabled )} true --{nameof( RecorderSettings.DuckGameProcessID )} {Process.GetCurrentProcess().Id}" ,
-			} );
+			};
+
+			var envVars = startInfo.EnvironmentVariables;
+			envVars.Add( "ASPNETCORE_URLS" , $"{RecorderUrl}" );
+			envVars.Add( nameof( IRecorderSharedSettings.RecorderType ) , $"{Settings.RecorderType}" );
+			envVars.Add( nameof( IRecorderSharedSettings.RecordingEnabled ) , $"{Settings.RecordingEnabled}" );
+			envVars.Add( nameof( RecorderSettings.DuckGameProcessID ) , $"{Process.GetCurrentProcess().Id}" );
+
+			RecorderProcess = Process.Start( startInfo );
 		}
 
 		#region MATCHTRACKING

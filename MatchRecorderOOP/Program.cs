@@ -18,6 +18,7 @@ using System.Net.Mime;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Net.WebSockets;
+using MatchRecorderShared.Enums;
 
 var host = WebApplication.CreateBuilder( args );
 
@@ -27,7 +28,8 @@ host.Configuration
 	.AddJsonFile( Path.Combine( "Settings" , "shared_debug.json" ) )
 #endif
 	.AddJsonFile( Path.Combine( "Settings" , "obs.json" ) )
-	.AddCommandLine( args );
+	.AddCommandLine( args )
+	.AddEnvironmentVariables();
 
 host.Services.AddOptions<SharedSettings>().BindConfiguration( string.Empty );
 host.Services.AddOptions<OBSSettings>().BindConfiguration( string.Empty );
@@ -39,6 +41,8 @@ host.Services.AddSingleton<ModMessageQueue>();
 switch( host.Configuration.Get<RecorderSettings>().RecorderType )
 {
 	case RecorderType.OBSMergedVideo: host.Services.AddSingleton<BaseRecorder , OBSMergedVideoRecorder>(); break;
+
+	case RecorderType.NoVideo:
 	default: host.Services.AddSingleton<BaseRecorder , NoVideoRecorder>(); break;
 }
 
@@ -48,10 +52,7 @@ host.Services.AddHostedService<RecorderBackgroundService>();
 
 var app = host.Build();
 
-app.MapGet( "/messages" , ( ModMessageQueue queue ) =>
-{
-	return ReturnQueuedMessages( queue );
-} );
+app.MapGet( "/messages" , ( ModMessageQueue queue ) => ReturnQueuedMessages( queue ) );
 
 DefineEndPoint<EndMatchMessage>( app );
 DefineEndPoint<EndRoundMessage>( app );
@@ -59,6 +60,7 @@ DefineEndPoint<StartMatchMessage>( app );
 DefineEndPoint<StartRoundMessage>( app );
 DefineEndPoint<TextMessage>( app );
 DefineEndPoint<TrackKillMessage>( app );
+DefineEndPoint<CloseRecorderMessage>( app );
 
 await app.InitAsync();
 await app.RunAsync();

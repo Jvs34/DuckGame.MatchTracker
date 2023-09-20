@@ -1,13 +1,11 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>netstandard2.0</TargetFramework>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <LangVersion>latest</LangVersion>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
-    <PackageReference Include="LiteDB" Version="5.0.17" />
-    <PackageReference Include="Flurl" Version="3.0.7" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\MatchShared\MatchShared.csproj" />
+		<PackageReference Include="LiteDB" Version="5.0.17" />
+	</ItemGroup>
 </Project>

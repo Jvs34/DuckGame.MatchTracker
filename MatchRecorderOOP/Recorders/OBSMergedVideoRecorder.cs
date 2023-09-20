@@ -1,5 +1,5 @@
 ﻿using MatchRecorder.Services;
-using MatchRecorderShared;
+using MatchRecorderShared.Enums;
 using MatchTracker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
