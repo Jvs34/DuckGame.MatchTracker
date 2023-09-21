@@ -9,73 +9,18 @@ namespace MatchTracker
 {
 	public static class DatabaseExtensions
 	{
-		public static async Task<Dictionary<string , Dictionary<string , IDatabaseEntry>>> GetBackup( this IGameDatabase db )
-		{
-			var mainCollection = new Dictionary<string , Dictionary<string , IDatabaseEntry>>
-			{
-				[nameof( EntryListData )] = new Dictionary<string , IDatabaseEntry>() ,
-				[nameof( RoundData )] = new Dictionary<string , IDatabaseEntry>() ,
-				[nameof( MatchData )] = new Dictionary<string , IDatabaseEntry>() ,
-				[nameof( LevelData )] = new Dictionary<string , IDatabaseEntry>() ,
-				[nameof( TagData )] = new Dictionary<string , IDatabaseEntry>() ,
-				[nameof( PlayerData )] = new Dictionary<string , IDatabaseEntry>() ,
-			};
-
-			foreach( var entryName in await db.GetAll<EntryListData>() )
-			{
-				mainCollection [nameof( EntryListData )] [entryName] = await db.GetData<EntryListData>( entryName );
-			}
-
-			foreach( var entryName in await db.GetAll<RoundData>() )
-			{
-				mainCollection [nameof( RoundData )] [entryName] = await db.GetData<RoundData>( entryName );
-			}
-
-			foreach( var entryName in await db.GetAll<MatchData>() )
-			{
-				mainCollection [nameof( MatchData )] [entryName] = await db.GetData<MatchData>( entryName );
-			}
-
-			foreach( var entryName in await db.GetAll<LevelData>() )
-			{
-				mainCollection [nameof( LevelData )] [entryName] = await db.GetData<LevelData>( entryName );
-			}
-
-			foreach( var entryName in await db.GetAll<TagData>() )
-			{
-				mainCollection [nameof( TagData )] [entryName] = await db.GetData<TagData>( entryName );
-			}
-
-			foreach( var entryName in await db.GetAll<PlayerData>() )
-			{
-				mainCollection [nameof( PlayerData )] [entryName] = await db.GetData<PlayerData>( entryName );
-			}
-
-			return mainCollection;
-		}
-
 		public static async Task<Dictionary<string , Dictionary<string , IDatabaseEntry>>> GetBackupAllOut( this IGameDatabase db )
 		{
-			var backupTasks = new List<Task<Dictionary<string , IDatabaseEntry>>>()
-			{
-				db.GetBackup<EntryListData>(),
-				db.GetBackup<RoundData>(),
-				db.GetBackup<MatchData>(),
-				db.GetBackup<LevelData>(),
-				db.GetBackup<TagData>(),
-				db.GetBackup<PlayerData>(),
-			};
-
-			await Task.WhenAll( backupTasks );
-
 			return new Dictionary<string , Dictionary<string , IDatabaseEntry>>()
 			{
-				[nameof( EntryListData )] = await backupTasks [0] ,
-				[nameof( RoundData )] = await backupTasks [1] ,
-				[nameof( MatchData )] = await backupTasks [2] ,
-				[nameof( LevelData )] = await backupTasks [3] ,
-				[nameof( TagData )] = await backupTasks [4] ,
-				[nameof( PlayerData )] = await backupTasks [5] ,
+				[nameof( EntryListData )] = await db.GetBackup<EntryListData>() ,
+				[nameof( RoundData )] = await db.GetBackup<RoundData>() ,
+				[nameof( MatchData )] = await db.GetBackup<MatchData>() ,
+				[nameof( LevelData )] = await db.GetBackup<LevelData>() ,
+				[nameof( TagData )] = await db.GetBackup<TagData>() ,
+				[nameof( PlayerData )] = await db.GetBackup<PlayerData>() ,
+				[nameof( ObjectData )] = await db.GetBackup<ObjectData>() ,
+				[nameof( DestroyTypeData )] = await db.GetBackup<DestroyTypeData>() ,
 			};
 		}
 
@@ -229,6 +174,7 @@ namespace MatchTracker
 		/// <typeparam name="T"></typeparam>
 		/// <param name="db"></param>
 		/// <param name="databaseIndexes"></param>
+		[Obsolete]
 		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db , List<string> databaseIndexes ) where T : IDatabaseEntry
 		{
 			var dataList = new List<T>();
@@ -246,6 +192,7 @@ namespace MatchTracker
 		/// </summary>
 		/// <typeparam name="T"></typeparam>
 		/// <param name="db"></param>
+		[Obsolete]
 		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
 			return await db.GetAllData<T>( await db.GetAll<T>() );
@@ -297,24 +244,6 @@ namespace MatchTracker
 			}
 
 			await db.SaveData( entryListData );
-		}
-
-		public static async Task CallForRegisteredTypes( this IGameDatabase db , Func<Type , Task> method )
-		{
-			var registeredTypes = new List<Type>()
-			{
-				typeof( EntryListData ),
-				typeof( RoundData ),
-				typeof( MatchData ),
-				typeof( LevelData ),
-				typeof( TagData ),
-				typeof( PlayerData ),
-			};
-
-			foreach( var registeredType in registeredTypes )
-			{
-				await method.Invoke( registeredType );
-			}
 		}
 	}
 }

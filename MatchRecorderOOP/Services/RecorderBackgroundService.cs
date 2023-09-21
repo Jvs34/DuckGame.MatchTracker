@@ -59,10 +59,11 @@ namespace MatchRecorder.Services
 					Console.WriteLine( e );
 				}
 
-				if( DuckGameProcess == null || DuckGameProcess.HasExited )
+				if( RecorderSettings.AutoCloseWhenParentDies && ( DuckGameProcess == null || DuckGameProcess.HasExited ) )
 				{
 					break;
 				}
+
 				await Task.Delay( TimeSpan.FromMilliseconds( 50 ) , token );
 			}
 

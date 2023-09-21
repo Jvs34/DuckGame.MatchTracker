@@ -14,9 +14,6 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder
 {
-	//internal sealed class CaseInsensitiveContractResolver : CamelCasePropertyNamesContractResolver
-
-
 	internal sealed class ClientMessageHandler
 	{
 		public event Action<TextMessage> OnReceiveMessage;

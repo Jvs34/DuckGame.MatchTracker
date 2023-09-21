@@ -26,13 +26,10 @@ namespace MatchTracker
 		}
 
 		public abstract Task Load( CancellationToken token = default );
-
-		#region INTERFACE
 		protected abstract void DefineMapping<T>() where T : IDatabaseEntry;
 		public abstract Task<T> GetData<T>( string dataId = "" , CancellationToken token = default ) where T : IDatabaseEntry;
 		public abstract Task SaveData<T>( T data , CancellationToken token = default ) where T : IDatabaseEntry;
 		protected abstract void InternalDispose();
-		#endregion
 
 		protected virtual void Dispose( bool disposing )
 		{

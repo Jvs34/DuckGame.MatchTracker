@@ -21,7 +21,7 @@ namespace MatchRecorder
 	public sealed class MatchRecorderClient : IDisposable
 	{
 		private bool IsDisposed { get; set; }
-		//private CancellationTokenSource StopTokenSource { get; }
+		private CancellationTokenSource StopTokenSource { get; }
 		private CancellationToken StopToken { get; } = CancellationToken.None;
 		public string ModPath { get; }
 		private Process RecorderProcess { get; set; }
@@ -39,9 +39,9 @@ namespace MatchRecorder
 		public MatchRecorderClient( string directory )
 		{
 			ModPath = directory;
-			SettingsPath = Path.Combine( ModPath , "Settings" , "modsettings.json" );
-			//StopTokenSource = new CancellationTokenSource();
-			//StopToken = CancellationToken.None;
+			SettingsPath = Path.Combine( ModPath , "modsettings.json" );
+			StopTokenSource = new CancellationTokenSource();
+			StopToken = CancellationToken.None;
 			HttpClient = new HttpClient()
 			{
 				BaseAddress = new Uri( RecorderUrl ) ,
@@ -51,6 +51,9 @@ namespace MatchRecorder
 
 			MessageHandler = new ClientMessageHandler( HttpClient , StopToken );
 			MessageHandler.OnReceiveMessage += OnReceiveMessage;
+
+			LoadSettings();
+			SaveSettings();
 		}
 
 		public void LoadSettings()
@@ -82,6 +85,11 @@ namespace MatchRecorder
 
 		internal void Update()
 		{
+			if( StopToken.IsCancellationRequested )
+			{
+				return;
+			}
+
 			CheckRecorderProcess();
 			MessageHandler.UpdateMessages();
 
@@ -137,6 +145,7 @@ namespace MatchRecorder
 			envVars.Add( nameof( IRecorderSharedSettings.RecorderType ) , $"{Settings.RecorderType}" );
 			envVars.Add( nameof( IRecorderSharedSettings.RecordingEnabled ) , $"{Settings.RecordingEnabled}" );
 			envVars.Add( nameof( RecorderSettings.DuckGameProcessID ) , $"{Process.GetCurrentProcess().Id}" );
+			envVars.Add( nameof( RecorderSettings.AutoCloseWhenParentDies ) , $"{true}" );
 
 			RecorderProcess = Process.Start( startInfo );
 		}
@@ -322,6 +331,8 @@ namespace MatchRecorder
 			{
 				if( disposing )
 				{
+					StopTokenSource.Cancel();
+					MessageHandlerTask = null;
 				}
 
 				IsDisposed = true;
@@ -465,6 +476,13 @@ namespace MatchRecorder
 		}
 	}
 
+	internal static class MonoMain_KillEverything
+	{
+		private static void Postfix( MonoMain __instance )
+		{
+			MatchRecorderMod.Instance?.Dispose();
+		}
+	}
 #pragma warning restore IDE0051 // Remove unused private members
 	#endregion HOOKS
 }

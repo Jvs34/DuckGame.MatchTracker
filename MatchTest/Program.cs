@@ -1,10 +1,12 @@
-﻿using MatchTracker;
+﻿using LiteDB.Engine;
+using MatchTracker;
 using MatchTracker.Interfaces;
 using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 
 var configuration = new ConfigurationBuilder()
@@ -20,35 +22,70 @@ await db.Load();
 //var data = await litedb.GetData<RoundData>( "2018-09-24 22-53-23" );
 
 
+//{
+
+//	var allData = await db.GetBackupGeneric<RoundData>();
+
+//	var transformed = allData.Select( x => x.Value );
+
+//	await using var jsonFileTest = File.OpenWrite( Path.Combine( Path.GetTempPath() , "test.json" ) );
+//	await JsonSerializer.SerializeAsync( jsonFileTest , transformed , new JsonSerializerOptions()
+//	{
+//		WriteIndented = true ,
+//	} );
+//}
+
+//{
+//	await using var jsonFileTest = File.OpenRead( Path.Combine( Path.GetTempPath() , "test.json" ) );
+
+//	await foreach( var roundData in JsonSerializer.DeserializeAsyncEnumerable<RoundData>( jsonFileTest ) )
+//	{
+//		Console.WriteLine( roundData.DatabaseIndex );
+//	}
+
+//	//using var document = await JsonDocument.ParseAsync( jsonFileTest , new JsonDocumentOptions()
+//	//{
+//	//	AllowTrailingCommas = true
+//	//} );
+
+//	Console.WriteLine( "haha document" );
+//}
+
+
 //convert IVideoUpload to IVideoUploadList
 
+//Console.WriteLine( "Resaving matches" );
+//await db.IterateOverAll<MatchData>( async ( entry ) =>
+//{
+//	//foreach( var upload in entry.VideoUploads )
+//	//{
+//	//	upload.RecordingType = RecordingType.Video;
+//	//}
 
-Console.WriteLine( "Resaving matches" );
-await db.IterateOverAll<MatchData>( async ( entry ) =>
-{
-	//foreach( var upload in entry.VideoUploads )
-	//{
-	//	upload.RecordingType = RecordingType.Video;
-	//}
+//	await db.SaveData( entry );
+//	return true;
+//} );
 
-	await db.SaveData( entry );
-	return true;
-} );
+//Console.WriteLine( "Resaving rounds" );
+//await db.IterateOverAll<RoundData>( async ( entry ) =>
+//{
+//	//foreach( var upload in entry.VideoUploads )
+//	//{
+//	//	upload.RecordingType = RecordingType.Video;
+//	//}
 
-Console.WriteLine( "Resaving rounds" );
-await db.IterateOverAll<RoundData>( async ( entry ) =>
-{
-	//foreach( var upload in entry.VideoUploads )
-	//{
-	//	upload.RecordingType = RecordingType.Video;
-	//}
+//	await db.SaveData( entry );
+//	return true;
+//} );
 
-	await db.SaveData( entry );
-	return true;
-} );
+
+//JsonDocument jsonDocument = JsonDocument.Parse
+
 
 Console.WriteLine( "Done, press a key to stop" );
 Console.ReadKey();
+
+
 
 
 //static async Task MigrateIVideoUploadToIVideoUploadList<T>( IGameDatabase db , T databaseEntry ) where T : IDatabaseEntry, IVideoUpload, IVideoUploadList
