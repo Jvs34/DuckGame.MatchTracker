@@ -40,6 +40,7 @@ namespace MatchRecorder.Recorders
 			IGameDatabase db ) : base( logger , db , messageQueue )
 		{
 			ResultingRecordingType = RecordingType.Video;
+			RecorderConfigType = RecorderType.OBSMergedVideo;
 			OBSSettings = obsSettings.Value;
 			GameDatabase = db;
 			RecordingState = ObsOutputState.Stopped;
@@ -167,7 +168,7 @@ namespace MatchRecorder.Recorders
 			}
 		}
 
-		private void OnConnected( Uri uri ) => SendHUDmessage( "Connected to OBS.", TextMessagePosition.TopMiddle );
+		private void OnConnected( Uri uri ) => SendHUDmessage( "Connected to OBS." , TextMessagePosition.TopMiddle );
 		private void OnDisconnected( Exception exception ) => SendHUDmessage( "Disconnected from OBS." , TextMessagePosition.TopMiddle );
 		private void OnRecordingStateChanged( RecordStateChanged changed ) => RecordingState = changed.OutputState;
 

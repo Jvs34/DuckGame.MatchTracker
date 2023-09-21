@@ -3,8 +3,10 @@ using System.IO;
 
 namespace MatchTracker
 {
-	//a settings class that will be used for all match programs and website with blazor
-	//this is something that once setup really shouldn't be touched again
+	/// <summary>
+	/// a settings class that will be used for all match programs and website with blazor,
+	/// this is something that once setup really shouldn't be touched again
+	/// </summary>
 	public class SharedSettings
 	{
 		public string BaseRecordingFolder { get; set; }

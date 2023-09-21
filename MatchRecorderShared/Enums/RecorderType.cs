@@ -6,7 +6,8 @@ namespace MatchRecorderShared.Enums
 {
 	public enum RecorderType
 	{
-		NoVideo = 0,
-		OBSMergedVideo = 1,
+		NoVideo,
+		OBSMergedVideo,
+		OBSLiveStream,
 	}
 }

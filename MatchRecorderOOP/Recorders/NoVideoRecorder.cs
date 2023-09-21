@@ -1,4 +1,5 @@
 ﻿using MatchTracker;
+using MatchRecorderShared.Enums;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Text.RegularExpressions;
@@ -13,6 +14,7 @@ namespace MatchRecorder.Recorders
 		public NoVideoRecorder( ILogger<BaseRecorder> logger , IGameDatabase db , ModMessageQueue messageQueue ) : base( logger , db , messageQueue )
 		{
 			ResultingRecordingType = RecordingType.None;
+			RecorderConfigType = RecorderType.NoVideo;
 		}
 
 		public override Task Update() => Task.CompletedTask;

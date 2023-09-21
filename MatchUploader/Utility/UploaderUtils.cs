@@ -42,7 +42,7 @@ namespace MatchUploader
 			return databaseIndex.Replace( '-' , ' ' );
 		}
 
-		internal static async Task<Video> GetVideoDataForDatabaseItem<T>( IGameDatabase DB , T data , VideoUpload upload ) where T : IPlayersList, IStartEnd, IWinner, IDatabaseEntry
+		internal static async Task<Video> GetVideoDataForDatabaseItem<T>( IGameDatabase DB , T data , VideoUpload upload ) where T : IPlayersList, IStartEndTime, IWinner, IDatabaseEntry
 		{
 			string mainWinners = await GetAllWinners( DB , data );
 			string description = string.Empty;

@@ -11,6 +11,7 @@ namespace MatchRecorder.Recorders
 {
 	internal abstract class BaseRecorder
 	{
+		public RecorderType RecorderConfigType { get; protected set; }
 		public virtual bool IsRecording { get; }
 		public virtual RecordingType ResultingRecordingType { get; set; }
 		public bool IsRecordingRound { get; set; }
