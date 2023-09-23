@@ -124,10 +124,7 @@ namespace MatchRecorder
 			}
 		}
 
-		private bool IsRecorderProcessAlive()
-		{
-			return RecorderProcess != null && !RecorderProcess.HasExited;
-		}
+		private bool IsRecorderProcessAlive() => RecorderProcess != null && !RecorderProcess.HasExited;
 
 		private void StartRecorderProcess()
 		{
@@ -151,50 +148,38 @@ namespace MatchRecorder
 		}
 
 		#region MATCHTRACKING
-		internal void StartRecordingMatch()
+		internal void StartRecordingMatch() => MessageHandler?.SendMessage( new StartMatchMessage()
 		{
-			MessageHandler?.SendMessage( new StartMatchMessage()
-			{
-				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
-				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
-				PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
-				TimeStarted = DateTime.Now ,
-			} );
-		}
+			Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
+			Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+			PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
+			TimeStarted = DateTime.Now ,
+		} );
 
-		internal void StopRecordingMatch()
+		internal void StopRecordingMatch() => MessageHandler?.SendMessage( new EndMatchMessage()
 		{
-			MessageHandler?.SendMessage( new EndMatchMessage()
-			{
-				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
-				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
-				PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
-				Winner = ConvertDuckGameTeamToTeamData( Teams.winning.FirstOrDefault() ) ,
-				TimeEnded = DateTime.Now ,
-			} );
-		}
+			Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
+			Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+			PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
+			Winner = ConvertDuckGameTeamToTeamData( Teams.winning.FirstOrDefault() ) ,
+			TimeEnded = DateTime.Now ,
+		} );
 
-		internal void StartRecordingRound()
+		internal void StartRecordingRound() => MessageHandler?.SendMessage( new StartRoundMessage()
 		{
-			MessageHandler?.SendMessage( new StartRoundMessage()
-			{
-				LevelName = Level.current.level ,
-				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
-				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
-				TimeStarted = DateTime.Now ,
-			} );
-		}
+			LevelName = Level.current.level ,
+			Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
+			Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+			TimeStarted = DateTime.Now ,
+		} );
 
-		internal void StopRecordingRound()
+		internal void StopRecordingRound() => MessageHandler?.SendMessage( new EndRoundMessage()
 		{
-			MessageHandler?.SendMessage( new EndRoundMessage()
-			{
-				Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
-				Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
-				Winner = ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ) ,
-				TimeEnded = DateTime.Now ,
-			} );
-		}
+			Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
+			Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
+			Winner = ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ) ,
+			TimeEnded = DateTime.Now ,
+		} );
 
 		internal void TrackKill( Duck duckVictim , DestroyType type , bool isNetworkMessage )
 		{
@@ -241,7 +226,7 @@ namespace MatchRecorder
 			} );
 		}
 
-		private KeyValuePair<Profile , string> GetBestDestroyTypeKillerAndWeapon( DestroyType destroyType )
+		private static KeyValuePair<Profile , string> GetBestDestroyTypeKillerAndWeapon( DestroyType destroyType )
 		{
 			//try a direct check, easiest one
 			Profile profile = destroyType.responsibleProfile;
@@ -270,7 +255,7 @@ namespace MatchRecorder
 			return new KeyValuePair<Profile , string>( profile , weapon );
 		}
 
-		private TeamData ConvertDuckGameTeamToTeamData( Team duckgameteam )
+		private static TeamData ConvertDuckGameTeamToTeamData( Team duckgameteam )
 		{
 			return duckgameteam is null ? null : new TeamData()
 			{
@@ -282,7 +267,7 @@ namespace MatchRecorder
 			};
 		}
 
-		private PlayerData ConvertDuckGameProfileToPlayerData( Profile profile )
+		private static PlayerData ConvertDuckGameProfileToPlayerData( Profile profile )
 		{
 			return new PlayerData()
 			{
@@ -291,7 +276,7 @@ namespace MatchRecorder
 			};
 		}
 
-		private TeamData ConvertDuckGameProfileToTeamData( Profile profile )
+		private static TeamData ConvertDuckGameProfileToTeamData( Profile profile )
 		{
 			var teamData = ConvertDuckGameTeamToTeamData( profile.team );
 
@@ -303,7 +288,7 @@ namespace MatchRecorder
 			return teamData;
 		}
 
-		private string GetPlayerID( Profile profile )
+		private static string GetPlayerID( Profile profile )
 		{
 			var id = profile.id;
 
@@ -476,6 +461,7 @@ namespace MatchRecorder
 		}
 	}
 
+	//[HarmonyPatch( typeof( MonoMain ) , nameof( MonoMain.KillEverything ) )]
 	internal static class MonoMain_KillEverything
 	{
 		private static void Postfix( MonoMain __instance )

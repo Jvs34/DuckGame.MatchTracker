@@ -10,20 +10,25 @@ namespace MatchTracker
 {
 	public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 	{
-		public override bool ReadOnly => false;
+		public override bool ReadOnly { get; }
 		public LiteDatabase Database { get; protected set; }
 		protected BsonMapper Mapper { get; } = new BsonMapper();
 
-		public LiteDBGameDatabase()
-		{
-
-		}
+		public LiteDBGameDatabase() : this( false ) { }
+		public LiteDBGameDatabase( bool readOnly ) => ReadOnly = readOnly;
 
 		protected override void DefineMapping<T>() => Mapper.Entity<T>().Id( x => x.DatabaseIndex );
 
 		public override Task Load( CancellationToken token = default )
 		{
-			Database = new LiteDatabase( SharedSettings.GetDatabasePath() , Mapper );
+			var connectionString = new ConnectionString
+			{
+				Connection = ConnectionType.Direct ,
+				Filename = SharedSettings.GetDatabasePath() ,
+				ReadOnly = ReadOnly ,
+			};
+
+			Database = new LiteDatabase( connectionString , Mapper );
 			return Task.CompletedTask;
 		}
 
@@ -47,6 +52,10 @@ namespace MatchTracker
 			return Task.CompletedTask;
 		}
 
-		protected override void InternalDispose() => Database?.Dispose();
+		protected override void InternalDispose()
+		{
+			Database?.Dispose();
+			Database = null;
+		}
 	}
 }

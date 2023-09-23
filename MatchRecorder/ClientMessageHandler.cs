@@ -58,8 +58,6 @@ namespace MatchRecorder
 				message.MessageType.ToLower() ,
 				new StringContent( stringBuilder.ToString() , Encoding.UTF8 , "application/json" ) ,
 				token );
-
-			//await ParseResponseMessages( response );
 		}
 
 		private async Task GetAllPendingClientMessages( Stopwatch cooldown = null , CancellationToken token = default )
@@ -120,7 +118,7 @@ namespace MatchRecorder
 				}
 
 				await GetAllPendingClientMessages( pendingMessagesCooldown );
-				await Task.Delay( 100 );
+				await Task.Delay( 50 );
 			}
 		}
 	}

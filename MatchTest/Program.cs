@@ -19,6 +19,14 @@ using IGameDatabase db = new LiteDBGameDatabase();
 configuration.Bind( db.SharedSettings );
 await db.Load();
 
+
+var allData = await db.GetBackup<RoundData>();
+
+Console.WriteLine( "Done, press a key to stop" );
+Console.ReadKey();
+
+
+#region bullshit
 //var data = await litedb.GetData<RoundData>( "2018-09-24 22-53-23" );
 
 
@@ -82,8 +90,7 @@ await db.Load();
 //JsonDocument jsonDocument = JsonDocument.Parse
 
 
-Console.WriteLine( "Done, press a key to stop" );
-Console.ReadKey();
+
 
 
 
@@ -181,3 +188,4 @@ foreach( var backupKV in backup )
 //	var backup = await from.GetBackupAllOut();
 //	await to.ImportBackup( backup );
 //}
+#endregion bullshit
