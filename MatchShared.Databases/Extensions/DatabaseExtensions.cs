@@ -9,40 +9,32 @@ namespace MatchTracker
 {
 	public static class DatabaseExtensions
 	{
-		public static async Task<Dictionary<string , Dictionary<string , IDatabaseEntry>>> GetBackupAllOut( this IGameDatabase db )
-		{
-			return new Dictionary<string , Dictionary<string , IDatabaseEntry>>()
-			{
-				[nameof( EntryListData )] = await db.GetBackup<EntryListData>() ,
-				[nameof( RoundData )] = await db.GetBackup<RoundData>() ,
-				[nameof( MatchData )] = await db.GetBackup<MatchData>() ,
-				[nameof( LevelData )] = await db.GetBackup<LevelData>() ,
-				[nameof( TagData )] = await db.GetBackup<TagData>() ,
-				[nameof( PlayerData )] = await db.GetBackup<PlayerData>() ,
-				[nameof( ObjectData )] = await db.GetBackup<ObjectData>() ,
-				[nameof( DestroyTypeData )] = await db.GetBackup<DestroyTypeData>() ,
-			};
-		}
+		//public static async Task<Dictionary<string , Dictionary<string , IDatabaseEntry>>> GetBackupAllOut( this IGameDatabase db )
+		//{
+		//	return new Dictionary<string , Dictionary<string , IDatabaseEntry>>()
+		//	{
+		//		[nameof( EntryListData )] = await db.GetBackup<EntryListData>() ,
+		//		[nameof( RoundData )] = await db.GetBackup<RoundData>() ,
+		//		[nameof( MatchData )] = await db.GetBackup<MatchData>() ,
+		//		[nameof( LevelData )] = await db.GetBackup<LevelData>() ,
+		//		[nameof( TagData )] = await db.GetBackup<TagData>() ,
+		//		[nameof( PlayerData )] = await db.GetBackup<PlayerData>() ,
+		//		[nameof( ObjectData )] = await db.GetBackup<ObjectData>() ,
+		//		[nameof( DestroyTypeData )] = await db.GetBackup<DestroyTypeData>() ,
+		//	};
+		//}
 
-		public static async Task<Dictionary<string , IDatabaseEntry>> GetBackup<T>( this IGameDatabase db ) where T : IDatabaseEntry
+		public static async Task<Dictionary<string , T>> GetBackup<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
-			var entryNames = await db.GetAll<T>();
-			var dataTasks = new List<Task<T>>();
+			var entryNames = await db.GetAllIndexes<T>();
 
-			foreach( var entryName in entryNames )
-			{
-				dataTasks.Add( db.GetData<T>( entryName ) );
-			}
+			var dataTasks = entryNames.Select( entryName => db.GetData<T>( entryName ) ).ToList();
 
 			await Task.WhenAll( dataTasks );
 
-			var allData = dataTasks.Select( x =>
-			{
-				var value = x.Result;
-				return new KeyValuePair<string , IDatabaseEntry>( value.DatabaseIndex , value );
-			} ).ToDictionary( x => x.Key , x => x.Value );
-
-			return allData;
+			return dataTasks
+				.Select( x => new KeyValuePair<string , T>( x.Result.DatabaseIndex , x.Result ) )
+				.ToDictionary( x => x.Key , x => x.Value );
 		}
 
 		public static async Task ImportBackup( this IGameDatabase db , Dictionary<string , Dictionary<string , IDatabaseEntry>> backup )
@@ -102,7 +94,7 @@ namespace MatchTracker
 
 		public static async Task IterateOverAll<T>( this IGameDatabase db , Func<T , Task<bool>> callback ) where T : IDatabaseEntry
 		{
-			await db.IterateOver( callback , await db.GetAll<T>() );
+			await db.IterateOver( callback , await db.GetAllIndexes<T>() );
 		}
 
 		/// <summary>
@@ -155,7 +147,7 @@ namespace MatchTracker
 			}
 		}
 
-		public static async Task<List<string>> GetAll<T>( this IGameDatabase db ) where T : IDatabaseEntry
+		public static async Task<List<string>> GetAllIndexes<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
 			var databaseIndexes = new List<string>();
 
@@ -195,7 +187,7 @@ namespace MatchTracker
 		[Obsolete]
 		public static async Task<List<T>> GetAllData<T>( this IGameDatabase db ) where T : IDatabaseEntry
 		{
-			return await db.GetAllData<T>( await db.GetAll<T>() );
+			return await db.GetAllData<T>( await db.GetAllIndexes<T>() );
 		}
 
 		/// <summary>

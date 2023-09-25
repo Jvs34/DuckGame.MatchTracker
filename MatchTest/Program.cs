@@ -1,4 +1,5 @@
-﻿using LiteDB.Engine;
+﻿using LiteDB;
+using LiteDB.Engine;
 using MatchTracker;
 using MatchTracker.Interfaces;
 using Microsoft.Extensions.Configuration;
@@ -14,13 +15,17 @@ var configuration = new ConfigurationBuilder()
 	.AddJsonFile( Path.Combine( "Settings" , "shared.json" ) )
 .Build();
 
-using IGameDatabase db = new LiteDBGameDatabase();
+using var db = new LiteDBGameDatabase();
 
 configuration.Bind( db.SharedSettings );
 await db.Load();
 
+//var litedb = db.Database;
 
-var allData = await db.GetBackup<RoundData>();
+//var path = @"RoundData.json";
+
+//litedb.Execute( $"select $ into $file('{path}') from RoundData" );
+//var allData = await db.GetBackup<RoundData>();
 
 Console.WriteLine( "Done, press a key to stop" );
 Console.ReadKey();

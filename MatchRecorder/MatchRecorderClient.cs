@@ -226,6 +226,17 @@ namespace MatchRecorder
 			} );
 		}
 
+		internal void CollectObjectData()
+		{
+			var collectObjectDataMessage = new CollectObjectDataMessage()
+			{
+				ObjectDataList = new List<ObjectData>()
+			};
+
+			//foreach( var type in DuckGame.All )
+
+		}
+
 		private static KeyValuePair<Profile , string> GetBestDestroyTypeKillerAndWeapon( DestroyType destroyType )
 		{
 			//try a direct check, easiest one
