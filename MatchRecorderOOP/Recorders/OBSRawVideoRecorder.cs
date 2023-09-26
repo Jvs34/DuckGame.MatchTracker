@@ -19,11 +19,11 @@ namespace MatchRecorder.Recorders
 	/// Records an entire match at once, alongside pauses, transitions and even the victory screen,
 	/// however, data wise only the singular rounds are recorded
 	/// </summary>
-	internal sealed class OBSMergedVideoRecorder : BaseRecorder
+	internal class OBSRawVideoRecorder : BaseRecorder
 	{
-		private OBSSettings OBSSettings { get; }
-		private ObsClientSocket ObsHandler { get; }
-		private ObsOutputState RecordingState { get; set; }
+		protected OBSSettings OBSSettings { get; }
+		protected ObsClientSocket ObsHandler { get; }
+		protected ObsOutputState RecordingState { get; set; }
 		public override bool IsRecording => RecordingState switch
 		{
 			ObsOutputState.Started or ObsOutputState.Starting => true,
@@ -31,16 +31,16 @@ namespace MatchRecorder.Recorders
 			_ => false,
 		};
 		public override RecordingType ResultingRecordingType { get; set; }
-		private DateTime NextObsCheck { get; set; }
+		protected DateTime NextObsCheck { get; set; }
 
-		public OBSMergedVideoRecorder(
+		public OBSRawVideoRecorder(
 			ILogger<BaseRecorder> logger ,
 			ModMessageQueue messageQueue ,
 			IOptions<OBSSettings> obsSettings ,
 			IGameDatabase db ) : base( logger , db , messageQueue )
 		{
 			ResultingRecordingType = RecordingType.Video;
-			RecorderConfigType = RecorderType.OBSMergedVideo;
+			RecorderConfigType = RecorderType.OBSRawVideo;
 			OBSSettings = obsSettings.Value;
 			GameDatabase = db;
 			RecordingState = ObsOutputState.Stopped;
@@ -113,7 +113,7 @@ namespace MatchRecorder.Recorders
 
 			match.VideoUploads.Add( new VideoUpload()
 			{
-				VideoType = VideoUrlType.MergedVideoLink ,
+				VideoType = VideoUrlType.RawVideoLink ,
 				RecordingType = ResultingRecordingType
 			} );
 
@@ -134,7 +134,7 @@ namespace MatchRecorder.Recorders
 
 			round.VideoUploads.Add( new VideoUpload()
 			{
-				VideoType = VideoUrlType.MergedVideoLink ,
+				VideoType = VideoUrlType.RawVideoLink ,
 				RecordingType = ResultingRecordingType
 			} );
 		}

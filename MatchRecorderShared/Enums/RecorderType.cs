@@ -8,6 +8,7 @@ namespace MatchRecorderShared.Enums
 	{
 		NoVideo,
 		OBSMergedVideo,
+		OBSRawVideo,
 		OBSLiveStream,
 	}
 }
