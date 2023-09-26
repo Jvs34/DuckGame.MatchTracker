@@ -154,8 +154,9 @@ namespace MatchRecorder
 			TimeStarted = DateTime.Now ,
 		} );
 
-		internal void StopRecordingMatch() => MessageHandler?.SendMessage( new EndMatchMessage()
+		internal void StopRecordingMatch( bool aborted = false ) => MessageHandler?.SendMessage( new EndMatchMessage()
 		{
+			Aborted = aborted ,
 			Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
 			Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
 			PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
@@ -371,7 +372,7 @@ namespace MatchRecorder
 
 			if( Level.current is TitleScreen )
 			{
-				MatchRecorderMod.Instance.Recorder.StopRecordingMatch();
+				MatchRecorderMod.Instance.Recorder.StopRecordingMatch( true );
 			}
 		}
 	}

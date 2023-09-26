@@ -5,7 +5,7 @@ using System.Text;
 namespace MatchTracker
 {
 	/// <summary>
-	/// Matches played back to back
+	/// Matches played back to back in the same session, this is tracked automatically
 	/// </summary>
 	public class TournamentData : IWinner, IMatchesList, IDatabaseEntry, IStartEndTime, ITagsList
 	{

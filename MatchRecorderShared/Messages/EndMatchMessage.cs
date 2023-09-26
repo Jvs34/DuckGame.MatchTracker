@@ -13,6 +13,7 @@ namespace MatchRecorderShared.Messages
 		public List<TeamData> Teams { get; set; }
 		public List<PlayerData> PlayersData { get; set; }
 		public DateTime TimeEnded { get; set; }
+		public bool Aborted { get; set; }
 
 		public List<string> GetWinners() => Winner?.Players ?? new List<string>();
 	}
