@@ -2,6 +2,9 @@
 
 namespace MatchTracker
 {
+	/// <summary>
+	/// Lists the entries currently present in the database to avoid expensive lookups
+	/// </summary>
 	public class EntryListData : IDatabaseEntry
 	{
 		public string Type { get; set; }

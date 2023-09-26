@@ -114,7 +114,7 @@ namespace MatchRecorder.Recorders
 			match.VideoUploads.Add( new VideoUpload()
 			{
 				VideoType = VideoUrlType.RawVideoLink ,
-				RecordingType = ResultingRecordingType
+				RecordingType = ResultingRecordingType ,
 			} );
 
 			await GameDatabase.SaveData( match );
@@ -135,7 +135,7 @@ namespace MatchRecorder.Recorders
 			round.VideoUploads.Add( new VideoUpload()
 			{
 				VideoType = VideoUrlType.RawVideoLink ,
-				RecordingType = ResultingRecordingType
+				RecordingType = ResultingRecordingType ,
 			} );
 		}
 

@@ -4,8 +4,8 @@ using System.Text;
 
 namespace MatchTracker
 {
-	public interface IVideoUploadList
+	public interface IMatchesList
 	{
-		List<VideoUpload> VideoUploads { get; set; }
+		List<string> Matches { get; set; }
 	}
 }

@@ -4,6 +4,9 @@ using System.Text;
 
 namespace MatchTracker
 {
+	/// <summary>
+	/// A type of death in Duck Game, eg: DTFall for fall damage
+	/// </summary>
 	public class DestroyTypeData : IDatabaseEntry
 	{
 		public string DatabaseIndex => ClassName;

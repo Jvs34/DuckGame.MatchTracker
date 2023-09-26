@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,6 +16,7 @@ namespace MatchTracker
 			DefineMapping<EntryListData>();
 			DefineMapping<RoundData>();
 			DefineMapping<MatchData>();
+			DefineMapping<TournamentData>();
 			DefineMapping<LevelData>();
 			DefineMapping<TagData>();
 			DefineMapping<PlayerData>();

@@ -2,6 +2,9 @@
 
 namespace MatchTracker
 {
+	/// <summary>
+	/// A level in Duck Game, used for stat tracking
+	/// </summary>
 	public class LevelData : ITagsList, IDatabaseEntry, ILevelName
 	{
 		/// <summary>

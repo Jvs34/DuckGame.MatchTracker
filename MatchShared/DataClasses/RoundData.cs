@@ -1,9 +1,11 @@
-﻿using MatchTracker.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace MatchTracker
 {
+	/// <summary>
+	/// A round in Duck Game, starts before the countdown and ends before a level switch
+	/// </summary>
 	public class RoundData : IPlayersList, IKillList, IStartEndTime, IWinner, IVideoUploadList, ITagsList, ILevelName, IDatabaseEntry
 	{
 		public string LevelName { get; set; }

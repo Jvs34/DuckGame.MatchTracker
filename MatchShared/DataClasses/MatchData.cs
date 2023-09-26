@@ -1,14 +1,14 @@
-﻿using MatchTracker.Interfaces;
-using System;
+﻿using System;
 using System.Collections.Generic;
 
 namespace MatchTracker
 {
-	//a match is kind of hard to keep track of in a sense, reconnections might throw stats off and create duplicate matches
-	//which in theory is fine until you want to link multiple matches together later on, gotta think about this
+	/// <summary>
+	/// A match does not necessarily start when the first round starts or the last round ends,<para/>
+	/// that depends entirely when Duck Game considers a game started or concluded, so keep that in mind when using dates
+	/// </summary>
 	public class MatchData : IPlayersList, IRoundsList, IStartEndTime, IWinner, IVideoUploadList, ITagsList, IDatabaseEntry
 	{
-		//name of the match
 		public string Name { get; set; } = string.Empty;
 		public string DatabaseIndex => Name;
 		public List<string> Players { get; set; } = new List<string>();

@@ -31,7 +31,7 @@ namespace MatchRecorder.Recorders
 			match.VideoUploads.Add( new VideoUpload()
 			{
 				VideoType = VideoUrlType.None ,
-				RecordingType = ResultingRecordingType
+				RecordingType = ResultingRecordingType,
 			} );
 
 			await GameDatabase.SaveData( match );

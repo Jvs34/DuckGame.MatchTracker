@@ -2,6 +2,9 @@
 
 namespace MatchTracker
 {
+	/// <summary>
+	/// A tag assigned to something for easier searching, typically an emoticon
+	/// </summary>
 	public class TagData : IDatabaseEntry
 	{
 		/// <summary>

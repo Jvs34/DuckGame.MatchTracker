@@ -3,7 +3,9 @@ using System.Collections.Generic;
 
 namespace MatchTracker
 {
-	//hats are used to define teams in duck game, so we kinda do need to track them
+	/// <summary>
+	/// A Duck Game Team, defined by a hat or lack of, even hatless players have teams
+	/// </summary>
 	public class TeamData : IPlayersList
 	{
 		public bool HasHat { get; set; }

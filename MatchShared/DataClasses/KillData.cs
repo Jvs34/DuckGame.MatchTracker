@@ -4,6 +4,9 @@ using System.Text;
 
 namespace MatchTracker
 {
+	/// <summary>
+	/// A kill in a round, not saved directly in the database but as part of <see cref="RoundData.KillsList"/>
+	/// </summary>
 	public class KillData
 	{
 
