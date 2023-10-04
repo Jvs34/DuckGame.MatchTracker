@@ -1,17 +1,13 @@
-﻿using MatchRecorder.Services;
-using MatchRecorderShared.Enums;
+﻿using MatchRecorderShared.Enums;
 using MatchTracker;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ObsStrawket;
 using ObsStrawket.DataTypes.Predefineds;
 using System;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Sources;
 
 namespace MatchRecorder.Recorders
 {

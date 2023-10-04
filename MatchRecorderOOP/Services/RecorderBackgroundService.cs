@@ -2,7 +2,6 @@
 using MatchRecorderShared;
 using MatchRecorderShared.Messages;
 using MatchTracker;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -67,17 +66,17 @@ namespace MatchRecorder.Services
 				await Task.Delay( TimeSpan.FromMilliseconds( 50 ) , token );
 			}
 
-			//wait 5 seconds for stuff to completely be done
-			var fiveSecondsSource = new CancellationTokenSource();
-			fiveSecondsSource.CancelAfter( TimeSpan.FromSeconds( 5 ) );
+			//wait some time for stuff to completely be done
+			var timedSource = new CancellationTokenSource();
+			timedSource.CancelAfter( TimeSpan.FromSeconds( 10 ) );
 
 			await Recorder.StopRecordingRound();
 			await Recorder.StopRecordingMatch();
 
-			while( Recorder.IsRecording && !fiveSecondsSource.Token.IsCancellationRequested )
+			while( Recorder.IsRecording && !timedSource.Token.IsCancellationRequested )
 			{
 				await Recorder.Update();
-				await Task.Delay( TimeSpan.FromMilliseconds( 50 ) , fiveSecondsSource.Token );
+				await Task.Delay( TimeSpan.FromMilliseconds( 50 ) , timedSource.Token );
 			}
 
 			//request the app host to close the process

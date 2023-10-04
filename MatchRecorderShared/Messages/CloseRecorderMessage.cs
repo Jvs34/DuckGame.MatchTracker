@@ -1,9 +1,4 @@
-﻿using MatchRecorderShared.Messages;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MatchRecorderShared.Messages
+﻿namespace MatchRecorderShared.Messages
 {
 	public class CloseRecorderMessage : BaseMessage
 	{

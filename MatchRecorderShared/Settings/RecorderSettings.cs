@@ -1,8 +1,4 @@
 ﻿using MatchRecorderShared.Enums;
-using MatchTracker;
-using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace MatchRecorderShared
 {

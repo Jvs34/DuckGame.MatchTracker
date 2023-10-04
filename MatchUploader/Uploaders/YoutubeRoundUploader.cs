@@ -1,18 +1,4 @@
-﻿using Google.Apis.Auth.OAuth2;
-using Google.Apis.Services;
-using Google.Apis.Upload;
-using Google.Apis.YouTube.v3;
-using Google.Apis.YouTube.v3.Data;
-using MatchTracker;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
+﻿
 //namespace MatchUploader
 //{
 //	[Obsolete( "Please use MatchMerger and YoutubeMatchUploader instead, as this is hard to use with the new youtube api change" )]

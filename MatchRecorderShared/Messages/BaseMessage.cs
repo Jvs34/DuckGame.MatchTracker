@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace MatchRecorderShared.Messages
+﻿namespace MatchRecorderShared.Messages
 {
 	public abstract class BaseMessage
 	{

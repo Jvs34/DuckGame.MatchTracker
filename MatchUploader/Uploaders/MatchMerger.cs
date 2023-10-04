@@ -1,17 +1,4 @@
-﻿using Humanizer;
-using Humanizer.Bytes;
-using MatchTracker;
-using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Xabe.FFmpeg;
-using Xabe.FFmpeg.Downloader;
-using Xabe.FFmpeg.Events;
-
+﻿
 //namespace MatchUploader
 //{
 //	class MatchMerger : Uploader, IProgress<ProgressInfo>

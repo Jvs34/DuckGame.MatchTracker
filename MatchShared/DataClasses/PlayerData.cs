@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MatchTracker
+﻿namespace MatchTracker
 {
 	/// <summary>
 	/// A Duck Game player, most of the time UserId represents the SteamID
