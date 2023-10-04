@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface IStartTime
 {
-	public interface IStartTime
-	{
-		DateTime TimeStarted { get; set; }
-	}
+	DateTime TimeStarted { get; set; }
 }

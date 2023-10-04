@@ -4,18 +4,17 @@ using Microsoft.Extensions.Options;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchRecorder.Initializers
+namespace MatchRecorder.Initializers;
+
+public sealed class GameDatabaseInitializer : IAsyncInitializer
 {
-	public sealed class GameDatabaseInitializer : IAsyncInitializer
+	public IGameDatabase Database { get; }
+
+	public GameDatabaseInitializer( IOptions<SharedSettings> sharedSettings , IGameDatabase db )
 	{
-		public IGameDatabase Database { get; }
-
-		public GameDatabaseInitializer( IOptions<SharedSettings> sharedSettings , IGameDatabase db )
-		{
-			Database = db;
-			Database.SharedSettings = sharedSettings.Value;
-		}
-
-		public async Task InitializeAsync( CancellationToken token ) => await Database.Load( token );
+		Database = db;
+		Database.SharedSettings = sharedSettings.Value;
 	}
+
+	public async Task InitializeAsync( CancellationToken token ) => await Database.Load( token );
 }

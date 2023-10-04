@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface ITeamsList
 {
-	public interface ITeamsList
-	{
-		List<TeamData> Teams { get; set; }
-	}
+	List<TeamData> Teams { get; set; }
 }

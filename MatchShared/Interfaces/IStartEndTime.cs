@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface IStartEndTime : IStartTime, IEndTime
 {
-	public interface IStartEndTime : IStartTime, IEndTime
-	{
-		TimeSpan GetDuration();
-	}
+	TimeSpan GetDuration();
 }

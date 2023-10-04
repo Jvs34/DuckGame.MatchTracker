@@ -1,9 +1,8 @@
 ﻿using System;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface IEndTime
 {
-	public interface IEndTime
-	{
-		DateTime TimeEnded { get; set; }
-	}
+	DateTime TimeEnded { get; set; }
 }

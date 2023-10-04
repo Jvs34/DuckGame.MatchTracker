@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface ITagsList
 {
-	public interface ITagsList
-	{
-		List<string> Tags { get; set; }
-	}
+	List<string> Tags { get; set; }
 }

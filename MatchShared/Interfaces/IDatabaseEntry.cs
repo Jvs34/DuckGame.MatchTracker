@@ -1,10 +1,9 @@
-﻿namespace MatchTracker
+﻿namespace MatchTracker;
+
+public interface IDatabaseEntry
 {
-	public interface IDatabaseEntry
-	{
-		/// <summary>
-		/// Point this to another variable to make that the index
-		/// </summary>
-		string DatabaseIndex { get; }
-	}
+	/// <summary>
+	/// Point this to another variable to make that the index
+	/// </summary>
+	string DatabaseIndex { get; }
 }

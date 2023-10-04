@@ -1,10 +1,9 @@
-﻿namespace MatchRecorderShared.Enums
+﻿namespace MatchRecorderShared.Enums;
+
+public enum RecorderType
 {
-	public enum RecorderType
-	{
-		NoVideo,
-		OBSMergedVideo,
-		OBSRawVideo,
-		OBSLiveStream,
-	}
+	NoVideo,
+	OBSMergedVideo,
+	OBSRawVideo,
+	OBSLiveStream,
 }

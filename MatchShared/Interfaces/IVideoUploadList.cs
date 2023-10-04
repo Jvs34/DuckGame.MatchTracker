@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface IVideoUploadList
 {
-	public interface IVideoUploadList
-	{
-		List<VideoUpload> VideoUploads { get; set; }
-	}
+	List<VideoUpload> VideoUploads { get; set; }
 }

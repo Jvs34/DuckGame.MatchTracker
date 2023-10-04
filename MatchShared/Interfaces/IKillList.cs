@@ -1,12 +1,11 @@
 ﻿using System.Collections.Generic;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface IKillList
 {
-	public interface IKillList
-	{
-		/// <summary>
-		/// List of kills, not ordered
-		/// </summary>
-		public List<KillData> KillsList { get; set; }
-	}
+	/// <summary>
+	/// List of kills, not ordered
+	/// </summary>
+	public List<KillData> KillsList { get; set; }
 }

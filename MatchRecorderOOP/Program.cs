@@ -35,14 +35,13 @@ host.Services.AddSingleton<ModMessageQueue>();
 switch( host.Configuration.Get<RecorderSettings>().RecorderType )
 {
 	case RecorderType.OBSRawVideo: host.Services.AddSingleton<BaseRecorder , OBSRawVideoRecorder>(); break;
-
+	//TODO: case RecorderType.OBSLiveStream: host.Services.AddSingleton<BaseRecorder, OBSLiveStreamRecorder>(); break;
 	case RecorderType.NoVideo:
 	default: host.Services.AddSingleton<BaseRecorder , NoVideoRecorder>(); break;
 }
 
 host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
 host.Services.AddHostedService<RecorderBackgroundService>();
-
 
 var app = host.Build();
 

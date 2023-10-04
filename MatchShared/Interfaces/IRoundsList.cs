@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface IRoundsList
 {
-	public interface IRoundsList
-	{
-		List<string> Rounds { get; set; }
-	}
+	List<string> Rounds { get; set; }
 }

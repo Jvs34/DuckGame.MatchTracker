@@ -2,45 +2,44 @@
 using System;
 using System.Reflection;
 
-namespace MatchRecorder
+namespace MatchRecorder;
+
+public class MatchRecorderMod : DuckGame.ClientMod, IDisposable
 {
-	public class MatchRecorderMod : DuckGame.ClientMod, IDisposable
+	private bool IsDisposed { get; set; }
+
+	public static MatchRecorderMod Instance => DuckGame.ModLoader.GetMod<MatchRecorderMod>();
+	public MatchRecorderClient Recorder { get; set; }
+	private Harmony HarmonyInstance { get; set; }
+
+	public MatchRecorderMod()
 	{
-		private bool IsDisposed { get; set; }
+		HarmonyInstance = new Harmony( GetType().Namespace );
+	}
 
-		public static MatchRecorderMod Instance => DuckGame.ModLoader.GetMod<MatchRecorderMod>();
-		public MatchRecorderClient Recorder { get; set; }
-		private Harmony HarmonyInstance { get; set; }
+	protected override void OnPostInitialize()
+	{
+		HarmonyInstance.PatchAll( Assembly.GetExecutingAssembly() );
+		Recorder = new MatchRecorderClient( configuration.directory );
+	}
 
-		public MatchRecorderMod()
+	protected virtual void Dispose( bool disposing )
+	{
+		if( !IsDisposed )
 		{
-			HarmonyInstance = new Harmony( GetType().Namespace );
-		}
-
-		protected override void OnPostInitialize()
-		{
-			HarmonyInstance.PatchAll( Assembly.GetExecutingAssembly() );
-			Recorder = new MatchRecorderClient( configuration.directory );
-		}
-
-		protected virtual void Dispose( bool disposing )
-		{
-			if( !IsDisposed )
+			if( disposing )
 			{
-				if( disposing )
-				{
-					Recorder.Dispose();
-					Recorder = null;
-				}
-				IsDisposed = true;
+				Recorder.Dispose();
+				Recorder = null;
 			}
+			IsDisposed = true;
 		}
+	}
 
-		public void Dispose()
-		{
-			// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
-			Dispose( disposing: true );
-			GC.SuppressFinalize( this );
-		}
+	public void Dispose()
+	{
+		// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
+		Dispose( disposing: true );
+		GC.SuppressFinalize( this );
 	}
 }

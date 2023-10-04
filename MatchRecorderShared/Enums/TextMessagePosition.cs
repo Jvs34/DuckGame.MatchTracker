@@ -1,12 +1,11 @@
-﻿namespace MatchRecorderShared.Enums
+﻿namespace MatchRecorderShared.Enums;
+
+public enum TextMessagePosition
 {
-	public enum TextMessagePosition
-	{
-		TopLeft,
-		TopRight,
-		BottomLeft,
-		BottomRight,
-		BottomMiddle,
-		TopMiddle
-	}
+	TopLeft,
+	TopRight,
+	BottomLeft,
+	BottomRight,
+	BottomMiddle,
+	TopMiddle
 }

@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 
-namespace MatchTracker
+namespace MatchTracker;
+
+public interface IPlayersList
 {
-	public interface IPlayersList
-	{
-		List<string> Players { get; set; }
-	}
+	List<string> Players { get; set; }
 }
