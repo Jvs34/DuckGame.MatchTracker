@@ -53,6 +53,7 @@ DefineEndPoint<StartMatchMessage>( app );
 DefineEndPoint<StartRoundMessage>( app );
 DefineEndPoint<TextMessage>( app );
 DefineEndPoint<TrackKillMessage>( app );
+DefineEndPoint<CollectObjectDataMessage>( app );
 DefineEndPoint<CloseRecorderMessage>( app );
 
 await app.InitAsync();

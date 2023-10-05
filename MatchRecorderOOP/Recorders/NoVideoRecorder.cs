@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace MatchRecorder.Recorders;
 
+/// <summary>
+/// A "recorder" that purely tracks data but does not record any actual footage
+/// </summary>
 internal sealed class NoVideoRecorder : BaseRecorder
 {
 	public override bool IsRecording => IsRecordingMatch;
@@ -30,7 +33,7 @@ internal sealed class NoVideoRecorder : BaseRecorder
 		match.VideoUploads.Add( new VideoUpload()
 		{
 			VideoType = VideoUrlType.None ,
-			RecordingType = ResultingRecordingType,
+			RecordingType = ResultingRecordingType ,
 		} );
 
 		await GameDatabase.SaveData( match );

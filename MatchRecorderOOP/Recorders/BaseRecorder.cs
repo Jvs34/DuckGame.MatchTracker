@@ -156,7 +156,7 @@ internal abstract class BaseRecorder
 	public abstract Task Update();
 	#endregion
 
-	internal Task<MatchData> StartCollectingMatchData( DateTime time )
+	protected Task<MatchData> StartCollectingMatchData( DateTime time )
 	{
 		CurrentMatch.TimeStarted = time;
 		CurrentMatch.Name = GameDatabase.SharedSettings.DateTimeToString( time );
@@ -166,7 +166,7 @@ internal abstract class BaseRecorder
 		return Task.FromResult( CurrentMatch );
 	}
 
-	internal async Task<MatchData> StopCollectingMatchData( DateTime time )
+	protected async Task<MatchData> StopCollectingMatchData( DateTime time )
 	{
 		SendHUDmessage( $"Match {CurrentMatch.Name} Ended" );
 
@@ -181,7 +181,7 @@ internal abstract class BaseRecorder
 		return newMatchData;
 	}
 
-	internal Task<RoundData> StartCollectingRoundData( DateTime startTime )
+	protected Task<RoundData> StartCollectingRoundData( DateTime startTime )
 	{
 		CurrentRound.MatchName = CurrentMatch.Name;
 		CurrentRound.TimeStarted = startTime;
@@ -194,7 +194,7 @@ internal abstract class BaseRecorder
 		return Task.FromResult( CurrentRound );
 	}
 
-	internal async Task<RoundData> StopCollectingRoundData( DateTime endTime )
+	protected async Task<RoundData> StopCollectingRoundData( DateTime endTime )
 	{
 		SendHUDmessage( $"Round #{CurrentMatch.Rounds.Count} Ended" );
 
@@ -226,5 +226,10 @@ internal abstract class BaseRecorder
 		{
 			CurrentRound.KillsList.Add( message.KillData );
 		}
+	}
+
+	public async Task CollectObjectData( CollectObjectDataMessage cod )
+	{
+		await Task.CompletedTask;
 	}
 }

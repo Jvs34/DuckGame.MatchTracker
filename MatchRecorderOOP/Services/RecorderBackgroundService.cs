@@ -97,18 +97,13 @@ internal sealed class RecorderBackgroundService : BackgroundService
 
 		switch( message )
 		{
-			case StartMatchMessage smm:
-				await Recorder.StartRecordingMatch( smm ); break;
-			case EndMatchMessage emm:
-				await Recorder.StopRecordingMatch( emm ); break;
-			case StartRoundMessage srm:
-				await Recorder.StartRecordingRound( srm ); break;
-			case EndRoundMessage erm:
-				await Recorder.StopRecordingRound( erm ); break;
-			case TextMessage txtm:
-				Logger.LogInformation( "Received: {message}" , txtm ); break;
-			case TrackKillMessage tkm:
-				Recorder.TrackKill( tkm ); break;
+			case StartMatchMessage smm: await Recorder.StartRecordingMatch( smm ); break;
+			case EndMatchMessage emm: await Recorder.StopRecordingMatch( emm ); break;
+			case StartRoundMessage srm: await Recorder.StartRecordingRound( srm ); break;
+			case EndRoundMessage erm: await Recorder.StopRecordingRound( erm ); break;
+			case TextMessage txtm: Logger.LogInformation( "Received: {message}" , txtm ); break;
+			case TrackKillMessage tkm: Recorder.TrackKill( tkm ); break;
+			case CollectObjectDataMessage cod: await Recorder.CollectObjectData( cod ); break;
 			case CloseRecorderMessage: AppLifeTime.StopApplication(); break;
 			default:
 				break;
