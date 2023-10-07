@@ -1,52 +1,24 @@
-﻿using System;
-using System.IO;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-
-namespace MatchBot
-{
-	public static class Program
-	{
-		public static async Task Main( string [] args )
-		{
-			/*
-			var hostBuilder = new HostBuilder();
-
-			hostBuilder
-				.UseContentRoot( Directory.GetCurrentDirectory() )
-				.ConfigureAppConfiguration( config =>
-				{
-					config.SetBasePath( Path.Combine( Directory.GetCurrentDirectory() , "Settings" ) );
-					config.AddJsonFile( "shared.json" );
-					config.AddJsonFile( "bot.json" );
-					config.AddJsonFile( "uploader.json" );
-					config.AddCommandLine( args );
-				} )
-				.ConfigureLogging( config =>
-				{
-					config.AddConsole();
-					config.AddDebug();
-					config.AddEventSourceLogger();
-				} )
-				.UseConsoleLifetime();
-
-			*/
+﻿using MatchBot.Initializers;
+using MatchBot.Services;
+using MatchTracker;
 
 
-			try
-			{
-				var handler = new DiscordBotHandler( args );
-				await handler.Initialize();
+var host = Host.CreateApplicationBuilder( args );
 
-				Console.WriteLine( "Press a key to stop" );
-			}
-			catch( Exception e )
-			{
-				Console.WriteLine( e );
-			}
-			Console.ReadLine();
-		}
-	}
-}
+host.Configuration
+	.AddJsonFile( Path.Combine( "Settings" , "shared.json" ) )
+	.AddJsonFile( Path.Combine( "Settings" , "bot.json" ) )
+	.AddCommandLine( args )
+	.AddEnvironmentVariables();
+
+host.Services.AddOptions<SharedSettings>().BindConfiguration( string.Empty );
+host.Services.AddOptions<BotSettings>().BindConfiguration( string.Empty );
+host.Services.AddSingleton<IGameDatabase , LiteDBGameDatabase>();
+
+host.Services.AddAsyncInitializer<GameDatabaseInitializer>();
+host.Services.AddHostedService<DiscordService>();
+
+var app = host.Build();
+
+await app.InitAsync();
+await app.RunAsync();
