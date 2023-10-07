@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -23,19 +24,6 @@ public static class DatabaseExtensions
 	//		[nameof( DestroyTypeData )] = await db.GetBackup<DestroyTypeData>() ,
 	//	};
 	//}
-
-	public static async Task<Dictionary<string , T>> GetBackup<T>( this IGameDatabase db ) where T : IDatabaseEntry
-	{
-		var entryNames = await db.GetAllIndexes<T>();
-
-		var dataTasks = entryNames.Select( entryName => db.GetData<T>( entryName ) ).ToList();
-
-		await Task.WhenAll( dataTasks );
-
-		return dataTasks
-			.Select( x => new KeyValuePair<string , T>( x.Result.DatabaseIndex , x.Result ) )
-			.ToDictionary( x => x.Key , x => x.Value );
-	}
 
 	public static async Task ImportBackup( this IGameDatabase db , Dictionary<string , Dictionary<string , IDatabaseEntry>> backup )
 	{
@@ -97,29 +85,6 @@ public static class DatabaseExtensions
 		await db.IterateOver( callback , await db.GetAllIndexes<T>() );
 	}
 
-	/// <summary>
-	/// Legacy, please use IGameDatabase.IterateOverAll directly
-	/// </summary>
-	/// <param name="db"></param>
-	/// <param name="matchOrRound">true for match, false for round</param>
-	/// <param name="callback">The callback, return false to interrupt the iteration</param>
-	/// <returns></returns>
-	public static async Task IterateOverAllRoundsOrMatches( this IGameDatabase db , bool matchOrRound , Func<IWinner , Task<bool>> callback )
-	{
-		if( matchOrRound )
-		{
-			async Task<bool> matchTask( MatchData matchData ) => await callback( matchData );
-
-			await db.IterateOverAll<MatchData>( matchTask );
-		}
-		else
-		{
-			async Task<bool> roundTask( RoundData roundData ) => await callback( roundData );
-
-			await db.IterateOverAll<RoundData>( roundTask );
-		}
-	}
-
 	public static async Task AddTag( this IGameDatabase db , string unicode , string fancyName , ITagsList tagsList = null )
 	{
 		string emojiDatabaseIndex = string.Join( " " , Encoding.UTF8.GetBytes( unicode ) );
@@ -147,19 +112,6 @@ public static class DatabaseExtensions
 		}
 	}
 
-	public static async Task<List<string>> GetAllIndexes<T>( this IGameDatabase db ) where T : IDatabaseEntry
-	{
-		var databaseIndexes = new List<string>();
-
-		var entryListData = await db.GetData<EntryListData>( typeof( T ).Name );
-		if( entryListData != null )
-		{
-			databaseIndexes.AddRange( entryListData.Entries );
-		}
-
-		return databaseIndexes;
-	}
-
 	/// <summary>
 	/// Ideally these two should not be used whatsoever, please deprecate after moving the code over
 	/// </summary>
@@ -177,64 +129,5 @@ public static class DatabaseExtensions
 		}
 
 		return dataList;
-	}
-
-	/// <summary>
-	/// Ideally these two should not be used whatsoever, please deprecate after moving the code over
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	/// <param name="db"></param>
-	[Obsolete]
-	public static async Task<List<T>> GetAllData<T>( this IGameDatabase db ) where T : IDatabaseEntry
-	{
-		return await db.GetAllData<T>( await db.GetAllIndexes<T>() );
-	}
-
-	/// <summary>
-	/// <para>Adds this item to EntryListData of this type</para>
-	/// <para>
-	/// This overload calls back to IGameDatabase.Add( string databaseIndex )
-	/// NOTE: this will not save the data itself, call db.SaveData for that
-	/// </para>
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	/// <param name="db"></param>
-	/// <param name="data"></param>
-	public static async Task Add<T>( this IGameDatabase db , T data ) where T : IDatabaseEntry
-	{
-		await db.Add<T>( data.DatabaseIndex );
-	}
-
-	public static async Task Add<T>( this IGameDatabase db , params string [] databaseIndexes ) where T : IDatabaseEntry
-	{
-		var entryListData = await db.GetData<EntryListData>( typeof( T ).Name );
-
-		bool doAdd = false;
-
-		if( entryListData == null )
-		{
-			entryListData = new EntryListData()
-			{
-				Type = typeof( T ).Name
-			};
-
-			//signal that we need to add this to the EntryListData itself
-			doAdd = entryListData.Type != entryListData.GetType().Name;
-		}
-
-		foreach( var dbEntry in databaseIndexes )
-		{
-			if( !entryListData.Entries.Contains( dbEntry ) )
-			{
-				entryListData.Entries.Add( dbEntry );
-			}
-		}
-
-		if( doAdd )
-		{
-			await db.Add( entryListData );
-		}
-
-		await db.SaveData( entryListData );
 	}
 }

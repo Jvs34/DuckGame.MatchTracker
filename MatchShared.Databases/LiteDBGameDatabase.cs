@@ -7,14 +7,14 @@ namespace MatchTracker;
 
 public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 {
-	public override bool ReadOnly { get; }
+	public override bool IsReadOnly { get; }
 	public LiteDatabase Database { get; protected set; }
 	protected BsonMapper Mapper { get; } = new BsonMapper();
 
 	public LiteDBGameDatabase() : this( false ) { }
-	public LiteDBGameDatabase( bool readOnly ) => ReadOnly = readOnly;
+	public LiteDBGameDatabase( bool readOnly ) => IsReadOnly = readOnly;
 
-	protected override void DefineMapping<T>() => Mapper.Entity<T>().Id( x => x.DatabaseIndex );
+	protected override void DefineMappingInternal<T>() => Mapper.Entity<T>().Id( x => x.DatabaseIndex );
 
 	public override Task Load( CancellationToken token = default )
 	{
@@ -22,7 +22,7 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 		{
 			Connection = ConnectionType.Direct ,
 			Filename = SharedSettings.GetDatabasePath() ,
-			ReadOnly = ReadOnly ,
+			ReadOnly = IsReadOnly ,
 		};
 
 		Database = new LiteDatabase( connectionString , Mapper );
@@ -42,11 +42,11 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 		return Task.FromResult( data );
 	}
 
-	public override Task SaveData<T>( T data , CancellationToken token = default )
+	public override Task<bool> SaveData<T>( T data , CancellationToken token = default )
 	{
 		var collection = Database.GetCollection<T>( data.GetType().Name );
 		collection.Upsert( data );
-		return Task.CompletedTask;
+		return Task.FromResult( true );
 	}
 
 	protected override void InternalDispose()

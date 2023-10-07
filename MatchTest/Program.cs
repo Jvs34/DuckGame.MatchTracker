@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using System;
 using System.IO;
+using System.Text.Json;
 
 var configuration = new ConfigurationBuilder()
 	.SetBasePath( Directory.GetCurrentDirectory() )
@@ -13,6 +14,28 @@ using var db = new LiteDBGameDatabase();
 configuration.Bind( db.SharedSettings );
 await db.Load();
 
+var entries = await db.GetAllIndexes<RoundData>();
+
+using var roundDataStream = File.OpenWrite( Path.Combine( @"C:\Users\Jvsth\Desktop\waw" , "rounddata.json" ) );
+
+using var writer = new Utf8JsonWriter( roundDataStream , new JsonWriterOptions()
+{
+	Indented = true ,
+} );
+
+writer.WriteStartObject();
+
+foreach( var roundName in entries )
+{
+	var roundData = await db.GetData<RoundData>( roundName );
+	if( roundData is not null )
+	{
+		writer.WritePropertyName( roundName );
+		JsonSerializer.Serialize( writer , roundData );
+	}
+}
+
+writer.WriteEndObject();
 //var litedb = db.Database;
 
 //var path = @"RoundData.json";
