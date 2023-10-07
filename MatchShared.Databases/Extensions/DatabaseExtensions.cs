@@ -46,7 +46,7 @@ public static class DatabaseExtensions
 			return;
 		}
 
-		T iterateItem = await db.GetData<T>( dataName );
+		T iterateItem = await db.GetData<T>( dataName , tokenSource.Token );
 
 		if( !await callback( iterateItem ) )
 		{
