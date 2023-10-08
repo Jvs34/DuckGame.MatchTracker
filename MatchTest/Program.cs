@@ -1,8 +1,11 @@
 ﻿using MatchTracker;
 using Microsoft.Extensions.Configuration;
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Threading.Tasks;
 
 var configuration = new ConfigurationBuilder()
 	.SetBasePath( Directory.GetCurrentDirectory() )
@@ -14,28 +17,58 @@ using var db = new LiteDBGameDatabase();
 configuration.Bind( db.SharedSettings );
 await db.Load();
 
-var entries = await db.GetAllIndexes<RoundData>();
 
-using var roundDataStream = File.OpenWrite( Path.Combine( @"C:\Users\Jvsth\Desktop\waw" , "rounddata.json" ) );
+//await db.IterateOverAll<PlayerData>( async playerData =>
+//{
+//	await db.SaveData( playerData );
+//	return true;
+//} );
 
-using var writer = new Utf8JsonWriter( roundDataStream , new JsonWriterOptions()
-{
-	Indented = true ,
-} );
+Console.WriteLine( "Done, press a key to stop" );
+Console.ReadKey();
 
-writer.WriteStartObject();
 
-foreach( var roundName in entries )
-{
-	var roundData = await db.GetData<RoundData>( roundName );
-	if( roundData is not null )
-	{
-		writer.WritePropertyName( roundName );
-		JsonSerializer.Serialize( writer , roundData );
-	}
-}
+#region bullshit
+//var emptyMatchNames = new ConcurrentBag<string>();
 
-writer.WriteEndObject();
+//await db.IterateOverAll<MatchData>( async data =>
+//{
+//	return await ClearTags( data , db );
+//} );
+
+//await db.IterateOverAll<RoundData>( async data =>
+//{
+//	return await ClearTags( data , db );
+//} );
+
+//await db.IterateOverAll<LevelData>( async data =>
+//{
+//	return await ClearTags( data , db );
+//} );
+
+
+
+//var entries = await db.GetAllIndexes<RoundData>();
+//using var roundDataStream = File.OpenWrite( Path.Combine( @"C:\Users\Jvsth\Desktop\waw" , "rounddata.json" ) );
+
+//using var writer = new Utf8JsonWriter( roundDataStream , new JsonWriterOptions()
+//{
+//	Indented = true ,
+//} );
+
+//writer.WriteStartObject();
+
+//foreach( var roundName in entries )
+//{
+//	var roundData = await db.GetData<RoundData>( roundName );
+//	if( roundData is not null )
+//	{
+//		writer.WritePropertyName( roundName );
+//		JsonSerializer.Serialize( writer , roundData );
+//	}
+//}
+
+//writer.WriteEndObject();
 //var litedb = db.Database;
 
 //var path = @"RoundData.json";
@@ -43,11 +76,15 @@ writer.WriteEndObject();
 //litedb.Execute( $"select $ into $file('{path}') from RoundData" );
 //var allData = await db.GetBackup<RoundData>();
 
-Console.WriteLine( "Done, press a key to stop" );
-Console.ReadKey();
+//static async Task<bool> ClearTags<T>( T data , LiteDBGameDatabase db ) where T : ITagsList, IDatabaseEntry
+//{
+//	data.Tags.Clear();
+//	await db.SaveData<T>( data );
+//	return true;
+//}
 
 
-#region bullshit
+
 //var data = await litedb.GetData<RoundData>( "2018-09-24 22-53-23" );
 
 

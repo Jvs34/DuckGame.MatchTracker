@@ -12,17 +12,17 @@ This contraption consists of these parts:
 
 4. **BROKEN** Match Uploader *(ran manually)*, used to use the Youtube API to upload the match videos, then link the youtube URLs to the metadata hosted on GitHub, but ever since the changes to the Youtube API in 2020, it can't upload anything since I'm an idiot and removed all my keys pre-2020 that were already authorized.
 
-5. **BROKEN** Match Bot, a discord bot that allows some simple queries to the match database, uses DSharpPlus but I might switch (again) to Discord-Net as it feels like DSharpPlus changes api every month.
+5. **COMPLETE FOR NOW** Match Bot *(ran manually)*, a discord bot that allows some simple queries to the match database, uses DSharpPlus.
 
 ----------
 
 ## What's left to do
 
-The setup experience is absolutely horrid considering how many config files I'm using, this hasn't changed and it's dependant on the user configuring obs-studio's websocket plugin on their own.
+The setup experience is absolutely horrid considering how many config files I'm using, this hasn't changed and it's dependant on the user configuring obs-studio's websocket on their own.
 
 Unless you go through the sourcecode you won't know how to handle the whole thing.
 
-Honestly there's probably easier ways to do this kind of stuff but at the moment I can't be arsed to look up more
+Honestly there's probably easier ways to do this kind of stuff but I don't know what I don't know.
 
 ----------
 
@@ -36,4 +36,4 @@ Even if I somehow managed to save metadata on the videos, there's no filtering w
 
 Besides that, I also had to manually move all the videos uploaded to the Duck Game album, and there's no proper Google Photos apis except for using the outdated Picasa api that doesn't work properly with Photos.
 
-Overall, I feel like I'm quite happy with this, it was a refreshing experience being able to use C# on all fronts for once and even if the usecase is pretty niche.
+Overall, I feel like I'm quite happy with this, it was a refreshing experience being able to use C# and Microsoft's stack on all fronts for once and even if the usecase is pretty niche and massively overkill.
