@@ -1,10 +1,12 @@
-﻿using MatchTracker;
+﻿using MatchShared.Databases;
+using MatchShared.Databases.Interfaces;
+using MatchUploader.Settings;
+using MatchUploader.Uploaders;
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MatchUploader;
@@ -26,9 +28,9 @@ public sealed class MatchUploaderHandler : IDisposable
 		Formatting = Formatting.Indented
 	};
 
-	public MatchUploaderHandler( string [] args )
+	public MatchUploaderHandler( string[] args )
 	{
-		SettingsFolder = Path.Combine( Directory.GetCurrentDirectory() , "Settings" );
+		SettingsFolder = Path.Combine( Directory.GetCurrentDirectory(), "Settings" );
 		Configuration = new ConfigurationBuilder()
 			.SetBasePath( SettingsFolder )
 			.AddJsonFile( "shared.json" )
@@ -48,7 +50,7 @@ public sealed class MatchUploaderHandler : IDisposable
 	private void CreateUploaders()
 	{
 		//AddUploader( new MatchMerger( GameDatabase , UploaderSettings ) );
-		AddUploader( new YoutubeMatchUpdater( GameDatabase , UploaderSettings ) );
+		AddUploader( new YoutubeMatchUpdater( GameDatabase, UploaderSettings ) );
 		//AddUploader( new YoutubeRoundUploader( GameDatabase , UploaderSettings ) );
 	}
 
@@ -56,9 +58,9 @@ public sealed class MatchUploaderHandler : IDisposable
 	{
 		var typeName = uploader.GetType().Name;
 
-		if( !UploaderSettings.UploadersInfo.TryGetValue( typeName , out var uploaderInfo ) )
+		if( !UploaderSettings.UploadersInfo.TryGetValue( typeName, out var uploaderInfo ) )
 		{
-			UploaderSettings.UploadersInfo.TryAdd( typeName , uploader.Info );
+			UploaderSettings.UploadersInfo.TryAdd( typeName, uploader.Info );
 			uploaderInfo = uploader.Info;
 		}
 
@@ -112,8 +114,8 @@ public sealed class MatchUploaderHandler : IDisposable
 
 	public void SaveSettings()
 	{
-		using var writer = File.CreateText( Path.Combine( SettingsFolder , "uploader.json" ) );
-		Serializer.Serialize( writer , UploaderSettings );
+		using var writer = File.CreateText( Path.Combine( SettingsFolder, "uploader.json" ) );
+		Serializer.Serialize( writer, UploaderSettings );
 	}
 
 	private void Dispose( bool disposing )

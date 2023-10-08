@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using MatchShared.Interfaces;
+using System.Collections.Generic;
 
-namespace MatchTracker;
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// Lists the entries currently present in the database to avoid expensive lookups

@@ -1,6 +1,6 @@
 ﻿using Google.Apis.Auth.OAuth2;
 
-namespace MatchUploader;
+namespace MatchUploader.Settings;
 
 public class GoogleSecrets
 {
@@ -11,7 +11,7 @@ public class GoogleSecrets
 	{
 		return new ClientSecrets()
 		{
-			ClientSecret = secrets.client_secret ,
+			ClientSecret = secrets.client_secret,
 			ClientId = secrets.client_id
 		};
 	}

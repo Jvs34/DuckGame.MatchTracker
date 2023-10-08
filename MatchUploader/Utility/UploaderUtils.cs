@@ -1,13 +1,17 @@
 ﻿using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
-using MatchTracker;
+using MatchShared.Databases.Extensions;
+using MatchShared.Databases.Interfaces;
+using MatchShared.DataClasses;
+using MatchShared.Enums;
+using MatchShared.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MatchUploader;
+namespace MatchUploader.Utility;
 
 internal static class UploaderUtils
 {
@@ -17,11 +21,11 @@ internal static class UploaderUtils
 	/// <param name="data"></param>
 	/// <param name="DB"></param>
 	/// <returns>EG: "Willox Jvs"</returns>
-	internal static async Task<string> GetAllWinners( IGameDatabase DB , IWinner data )
+	internal static async Task<string> GetAllWinners( IGameDatabase DB, IWinner data )
 	{
 		string winners = string.Empty;
 		var playerWinners = await DB.GetAllData<PlayerData>( data.GetWinners() );
-		winners = string.Join( " " , playerWinners.Select( x => x?.GetName() ) );
+		winners = string.Join( " ", playerWinners.Select( x => x?.GetName() ) );
 
 		if( string.IsNullOrEmpty( winners ) )
 		{
@@ -38,12 +42,12 @@ internal static class UploaderUtils
 	/// <returns></returns>
 	public static string GetYoutubeStrippedName( string databaseIndex )
 	{
-		return databaseIndex.Replace( '-' , ' ' );
+		return databaseIndex.Replace( '-', ' ' );
 	}
 
-	internal static async Task<Video> GetVideoDataForDatabaseItem<T>( IGameDatabase DB , T data , VideoUpload upload ) where T : IPlayersList, IStartEndTime, IWinner, IDatabaseEntry
+	internal static async Task<Video> GetVideoDataForDatabaseItem<T>( IGameDatabase DB, T data, VideoUpload upload ) where T : IPlayersList, IStartEndTime, IWinner, IDatabaseEntry
 	{
-		string mainWinners = await GetAllWinners( DB , data );
+		string mainWinners = await GetAllWinners( DB, data );
 		string description = string.Empty;
 		string privacystatus = "unlisted";
 
@@ -77,7 +81,7 @@ internal static class UploaderUtils
 				TimeSpan timeSpan = TimeSpan.Zero;
 
 				builder
-					.Append( $"{timeSpan:mm\\:ss} - {data.DatabaseIndex} {await GetAllWinners( DB , roundData )}" )
+					.Append( $"{timeSpan:mm\\:ss} - {data.DatabaseIndex} {await GetAllWinners( DB, roundData )}" )
 					.AppendLine();
 			}
 
@@ -88,38 +92,38 @@ internal static class UploaderUtils
 		{
 			Snippet = new VideoSnippet()
 			{
-				Title = $"{data.DatabaseIndex} {mainWinners}" ,
-				Tags = new List<string>() { "duckgame" , "peniscorp" } ,
-				CategoryId = "20" ,
-				Description = description ,
-			} ,
+				Title = $"{data.DatabaseIndex} {mainWinners}",
+				Tags = new List<string>() { "duckgame", "peniscorp" },
+				CategoryId = "20",
+				Description = description,
+			},
 			Status = new VideoStatus()
 			{
-				PrivacyStatus = privacystatus ,
-				MadeForKids = false ,
-			} ,
+				PrivacyStatus = privacystatus,
+				MadeForKids = false,
+			},
 			RecordingDetails = new VideoRecordingDetails()
 			{
-				RecordingDateDateTimeOffset = data.TimeStarted ,
+				RecordingDateDateTimeOffset = data.TimeStarted,
 			}
 		};
 
 		return videoData;
 	}
 
-	internal static async Task<Video> GetVideoData( YouTubeService service , string youtubeId )
+	internal static async Task<Video> GetVideoData( YouTubeService service, string youtubeId )
 	{
-		var req = service.Videos.List( new string [] { "snippet" , "status" , "processingDetails" } );
+		var req = service.Videos.List( new string[] { "snippet", "status", "processingDetails" } );
 		req.Id = youtubeId;
 
 		var resp = await req.ExecuteAsync();
 		return resp.Items.FirstOrDefault();
 	}
 
-	internal static async Task UpdateVideoData( YouTubeService service , string youtubeId , Video videoData )
+	internal static async Task UpdateVideoData( YouTubeService service, string youtubeId, Video videoData )
 	{
 		videoData.Id = youtubeId;
-		var req = service.Videos.Update( videoData , new string [] { "snippet" , "status" , "recordingDetails" } );
+		var req = service.Videos.Update( videoData, new string[] { "snippet", "status", "recordingDetails" } );
 
 		await req.ExecuteAsync();
 	}

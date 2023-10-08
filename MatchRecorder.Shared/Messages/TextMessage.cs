@@ -1,6 +1,6 @@
-﻿using MatchRecorderShared.Enums;
+﻿using MatchRecorder.Shared.Enums;
 
-namespace MatchRecorderShared.Messages;
+namespace MatchRecorder.Shared.Messages;
 
 public class TextMessage : BaseMessage
 {

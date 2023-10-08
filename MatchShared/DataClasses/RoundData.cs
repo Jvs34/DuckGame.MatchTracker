@@ -1,7 +1,8 @@
-﻿using System;
+﻿using MatchShared.Interfaces;
+using System;
 using System.Collections.Generic;
 
-namespace MatchTracker;
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A round in Duck Game, starts before the countdown and ends before a level switch

@@ -1,15 +1,11 @@
-﻿using MatchTracker;
+﻿using MatchShared.Databases;
 using Microsoft.Extensions.Configuration;
 using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.IO;
-using System.Text.Json;
-using System.Threading.Tasks;
 
 var configuration = new ConfigurationBuilder()
 	.SetBasePath( Directory.GetCurrentDirectory() )
-	.AddJsonFile( Path.Combine( "Settings" , "shared.json" ) )
+	.AddJsonFile( Path.Combine( "Settings", "shared.json" ) )
 .Build();
 
 using var db = new LiteDBGameDatabase();

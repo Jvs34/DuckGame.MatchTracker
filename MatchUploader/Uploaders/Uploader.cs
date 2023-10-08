@@ -1,9 +1,11 @@
-﻿using MatchTracker;
+﻿using MatchShared.Databases.Interfaces;
+using MatchShared.Interfaces;
+using MatchUploader.Settings;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MatchUploader;
+namespace MatchUploader.Uploaders;
 
 public abstract class Uploader
 {
@@ -27,9 +29,9 @@ public abstract class Uploader
 		}
 	}
 	public event Action SaveSettingsCallback;
-	public event Func<string , Task> UpdateStatusCallback;
+	public event Func<string, Task> UpdateStatusCallback;
 
-	protected Uploader( IGameDatabase gameDatabase , UploaderSettings settings )
+	protected Uploader( IGameDatabase gameDatabase, UploaderSettings settings )
 	{
 		DB = gameDatabase;
 		UploaderSettings = settings;

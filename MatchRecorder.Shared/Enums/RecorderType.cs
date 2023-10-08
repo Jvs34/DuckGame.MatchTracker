@@ -1,4 +1,4 @@
-﻿namespace MatchRecorderShared.Enums;
+﻿namespace MatchRecorder.Shared.Enums;
 
 public enum RecorderType
 {

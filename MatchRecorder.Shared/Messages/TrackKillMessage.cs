@@ -1,6 +1,6 @@
-﻿using MatchTracker;
+﻿using MatchShared.DataClasses;
 
-namespace MatchRecorderShared.Messages;
+namespace MatchRecorder.Shared.Messages;
 
 public class TrackKillMessage : BaseMessage
 {

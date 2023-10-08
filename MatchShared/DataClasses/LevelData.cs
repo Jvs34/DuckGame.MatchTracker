@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using MatchShared.Interfaces;
+using System.Collections.Generic;
 
-namespace MatchTracker;
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A level in Duck Game, used for stat tracking

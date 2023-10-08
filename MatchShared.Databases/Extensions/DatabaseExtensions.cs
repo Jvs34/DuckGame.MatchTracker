@@ -1,12 +1,13 @@
-﻿using System;
-using System.Collections;
+﻿using MatchShared.Databases.Interfaces;
+using MatchShared.DataClasses;
+using MatchShared.Interfaces;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchTracker;
+namespace MatchShared.Databases.Extensions;
 
 public static class DatabaseExtensions
 {
@@ -25,7 +26,7 @@ public static class DatabaseExtensions
 	//	};
 	//}
 
-	public static async Task ImportBackup( this IGameDatabase db , Dictionary<string , Dictionary<string , IDatabaseEntry>> backup )
+	public static async Task ImportBackup( this IGameDatabase db, Dictionary<string, Dictionary<string, IDatabaseEntry>> backup )
 	{
 		foreach( var dataTypeKV in backup )
 		{
@@ -39,14 +40,14 @@ public static class DatabaseExtensions
 		}
 	}
 
-	private static async Task IteratorTask<T>( IGameDatabase db , string dataName , Func<T , Task<bool>> callback , List<Task> tasks , CancellationTokenSource tokenSource ) where T : IDatabaseEntry
+	private static async Task IteratorTask<T>( IGameDatabase db, string dataName, Func<T, Task<bool>> callback, List<Task> tasks, CancellationTokenSource tokenSource ) where T : IDatabaseEntry
 	{
 		if( tokenSource.IsCancellationRequested )
 		{
 			return;
 		}
 
-		T iterateItem = await db.GetData<T>( dataName , tokenSource.Token );
+		T iterateItem = await db.GetData<T>( dataName, tokenSource.Token );
 
 		if( !await callback( iterateItem ) )
 		{
@@ -66,7 +67,7 @@ public static class DatabaseExtensions
 	/// <param name="callback"></param>
 	/// <param name="databaseIndexes"></param>
 	/// <returns></returns>
-	public static async Task IterateOver<T>( this IGameDatabase db , Func<T , Task<bool>> callback , List<string> databaseIndexes ) where T : IDatabaseEntry
+	public static async Task IterateOver<T>( this IGameDatabase db, Func<T, Task<bool>> callback, List<string> databaseIndexes ) where T : IDatabaseEntry
 	{
 		var tasks = new List<Task>();
 
@@ -74,20 +75,20 @@ public static class DatabaseExtensions
 
 		foreach( string dataName in databaseIndexes )
 		{
-			tasks.Add( IteratorTask( db , dataName , callback , tasks , tokenSource ) );
+			tasks.Add( IteratorTask( db, dataName, callback, tasks, tokenSource ) );
 		}
 
 		await Task.WhenAll( tasks );
 	}
 
-	public static async Task IterateOverAll<T>( this IGameDatabase db , Func<T , Task<bool>> callback ) where T : IDatabaseEntry
+	public static async Task IterateOverAll<T>( this IGameDatabase db, Func<T, Task<bool>> callback ) where T : IDatabaseEntry
 	{
-		await db.IterateOver( callback , await db.GetAllIndexes<T>() );
+		await db.IterateOver( callback, await db.GetAllIndexes<T>() );
 	}
 
-	public static async Task AddTag( this IGameDatabase db , string unicode , string fancyName , ITagsList tagsList = null )
+	public static async Task AddTag( this IGameDatabase db, string unicode, string fancyName, ITagsList tagsList = null )
 	{
-		string emojiDatabaseIndex = string.Join( " " , Encoding.UTF8.GetBytes( unicode ) );
+		string emojiDatabaseIndex = string.Join( " ", Encoding.UTF8.GetBytes( unicode ) );
 
 		//now check if we exist
 		TagData tagData = await db.GetData<TagData>( emojiDatabaseIndex );
@@ -96,9 +97,9 @@ public static class DatabaseExtensions
 		{
 			tagData = new TagData()
 			{
-				Name = emojiDatabaseIndex ,
-				Emoji = unicode ,
-				FancyName = fancyName ,
+				Name = emojiDatabaseIndex,
+				Emoji = unicode,
+				FancyName = fancyName,
 			};
 
 			await db.SaveData( tagData );
@@ -119,7 +120,7 @@ public static class DatabaseExtensions
 	/// <param name="db"></param>
 	/// <param name="databaseIndexes"></param>
 	[Obsolete]
-	public static async Task<List<T>> GetAllData<T>( this IGameDatabase db , List<string> databaseIndexes ) where T : IDatabaseEntry
+	public static async Task<List<T>> GetAllData<T>( this IGameDatabase db, List<string> databaseIndexes ) where T : IDatabaseEntry
 	{
 		var dataList = new List<T>();
 

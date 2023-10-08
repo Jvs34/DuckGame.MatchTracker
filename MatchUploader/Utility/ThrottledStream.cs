@@ -4,7 +4,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchUploader;
+namespace MatchUploader.Utility;
 
 public class ThrottledStream : Stream
 {
@@ -19,18 +19,18 @@ public class ThrottledStream : Stream
 	public override long Length => BaseStream.Length;
 	public override long Position { get => BaseStream.Position; set => BaseStream.Position = value; }
 
-	public ThrottledStream( Stream stream , int bytesPerSecond = -1 )
+	public ThrottledStream( Stream stream, int bytesPerSecond = -1 )
 	{
 		BaseStream = stream;
 		BPS = bytesPerSecond;
 		Stopwatch = new Stopwatch();
 	}
 
-	public override int Read( byte[] buffer , int offset , int count )
+	public override int Read( byte[] buffer, int offset, int count )
 	{
 		if( BPS == -1 )
 		{
-			return BaseStream.Read( buffer , offset , count );
+			return BaseStream.Read( buffer, offset, count );
 		}
 
 		CheckWatch();
@@ -39,10 +39,10 @@ public class ThrottledStream : Stream
 		if( IsLimitReached( count ) )
 		{
 			//then cap it to the remaining bytes we have remaining for this time
-			count = Math.Clamp( count , 0 , BPS );
+			count = Math.Clamp( count, 0, BPS );
 		}
 
-		int bytesRead = BaseStream.Read( buffer , offset , count );
+		int bytesRead = BaseStream.Read( buffer, offset, count );
 
 		BytesProcessed += bytesRead;
 
@@ -51,11 +51,11 @@ public class ThrottledStream : Stream
 		return bytesRead;
 	}
 
-	public override void Write( byte[] buffer , int offset , int count )
+	public override void Write( byte[] buffer, int offset, int count )
 	{
 		if( BPS == -1 )
 		{
-			BaseStream.Write( buffer , offset , count );
+			BaseStream.Write( buffer, offset, count );
 			return;
 		}
 
@@ -65,10 +65,10 @@ public class ThrottledStream : Stream
 		if( IsLimitReached( count ) )
 		{
 			//then cap it to the remaining bytes we have remaining for this time
-			count = Math.Clamp( count , 0 , BPS );
+			count = Math.Clamp( count, 0, BPS );
 		}
 
-		BaseStream.Write( buffer , offset , count );
+		BaseStream.Write( buffer, offset, count );
 
 		BytesProcessed += count;
 
@@ -99,7 +99,7 @@ public class ThrottledStream : Stream
 		}
 	}
 
-	protected bool IsLimitReached( int bytes = 0 ) => ( BytesProcessed + bytes ) >= BPS;
+	protected bool IsLimitReached( int bytes = 0 ) => BytesProcessed + bytes >= BPS;
 
 	protected int GetWaitingTime()
 	{
@@ -110,7 +110,7 @@ public class ThrottledStream : Stream
 
 			if( remainingTime < 0 )
 			{
-				return ( int ) Math.Abs( remainingTime );
+				return (int) Math.Abs( remainingTime );
 			}
 		}
 		return 0;
@@ -125,6 +125,6 @@ public class ThrottledStream : Stream
 	}
 
 	public override void Flush() => BaseStream.Flush();
-	public override long Seek( long offset , SeekOrigin origin ) => BaseStream.Seek( offset , origin );
+	public override long Seek( long offset, SeekOrigin origin ) => BaseStream.Seek( offset, origin );
 	public override void SetLength( long value ) => BaseStream.SetLength( value );
 }

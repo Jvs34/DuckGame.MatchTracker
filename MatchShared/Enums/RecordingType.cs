@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MatchTracker;
+namespace MatchShared.Enums;
 
 public enum RecordingType
 {

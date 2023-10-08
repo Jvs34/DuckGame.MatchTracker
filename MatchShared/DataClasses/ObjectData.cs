@@ -1,4 +1,6 @@
-﻿namespace MatchTracker;
+﻿using MatchShared.Interfaces;
+
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A Duck Game object that can cause a death, like a gun or even a crate

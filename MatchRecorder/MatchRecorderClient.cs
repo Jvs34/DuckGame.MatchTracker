@@ -1,9 +1,10 @@
 ﻿using DuckGame;
 using HarmonyLib;
-using MatchRecorderShared;
-using MatchRecorderShared.Enums;
-using MatchRecorderShared.Messages;
-using MatchTracker;
+using MatchRecorder.Shared.Enums;
+using MatchRecorder.Shared.Interfaces;
+using MatchRecorder.Shared.Messages;
+using MatchRecorder.Shared.Settings;
+using MatchShared.DataClasses;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -29,8 +30,8 @@ public sealed class MatchRecorderClient : IDisposable
 	private HttpClient HttpClient { get; }
 	private ModSettings Settings { get; set; } = new ModSettings()
 	{
-		RecorderType = RecorderType.OBSRawVideo ,
-		RecordingEnabled = true ,
+		RecorderType = RecorderType.OBSRawVideo,
+		RecordingEnabled = true,
 	};
 	private JsonSerializer Serializer { get; } = new JsonSerializer()
 	{
@@ -41,17 +42,17 @@ public sealed class MatchRecorderClient : IDisposable
 	public MatchRecorderClient( string directory )
 	{
 		ModPath = directory;
-		SettingsPath = Path.Combine( ModPath , "modsettings.json" );
+		SettingsPath = Path.Combine( ModPath, "modsettings.json" );
 		StopTokenSource = new CancellationTokenSource();
 		StopToken = CancellationToken.None;
 		HttpClient = new HttpClient()
 		{
-			BaseAddress = new Uri( RecorderUrl ) ,
+			BaseAddress = new Uri( RecorderUrl ),
 			Timeout = TimeSpan.FromSeconds( 10 )
 		};
 		HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd( "duckgame-matchrecorder/1.0" );
 
-		MessageHandler = new ClientMessageHandler( HttpClient , StopToken );
+		MessageHandler = new ClientMessageHandler( HttpClient, StopToken );
 		MessageHandler.OnReceiveMessage += OnReceiveMessage;
 
 		LoadSettings();
@@ -65,7 +66,7 @@ public sealed class MatchRecorderClient : IDisposable
 			return false;
 		}
 
-		using var dataStream = File.Open( SettingsPath , FileMode.Open );
+		using var dataStream = File.Open( SettingsPath, FileMode.Open );
 		using var reader = new StreamReader( dataStream );
 		using var jsonReader = new JsonTextReader( reader );
 		Settings = Serializer.Deserialize<ModSettings>( jsonReader );
@@ -75,7 +76,7 @@ public sealed class MatchRecorderClient : IDisposable
 	public void SaveSettings()
 	{
 		using var writer = File.CreateText( SettingsPath );
-		Serializer.Serialize( writer , Settings );
+		Serializer.Serialize( writer, Settings );
 	}
 
 	private void OnReceiveMessage( TextMessage message )
@@ -83,9 +84,9 @@ public sealed class MatchRecorderClient : IDisposable
 		ShowHUDMessage( message.Message );
 	}
 
-	public static void ShowHUDMessage( string text , float lifetime = 1f , TextMessagePosition position = TextMessagePosition.TopLeft )
+	public static void ShowHUDMessage( string text, float lifetime = 1f, TextMessagePosition position = TextMessagePosition.TopLeft )
 	{
-		var cornerMessage = HUD.AddCornerMessage( (HUDCorner) position , text , true );
+		var cornerMessage = HUD.AddCornerMessage( (HUDCorner) position, text, true );
 		cornerMessage.slide = 1;
 		cornerMessage.willDie = true;
 		cornerMessage.life = lifetime;
@@ -121,7 +122,7 @@ public sealed class MatchRecorderClient : IDisposable
 			{
 				System.Diagnostics.Debug.WriteLine( e );
 			}
-		} , StopToken );
+		}, StopToken );
 	}
 
 	private void CheckRecorderProcess()
@@ -138,19 +139,19 @@ public sealed class MatchRecorderClient : IDisposable
 	{
 		var startInfo = new ProcessStartInfo()
 		{
-			FileName = Path.Combine( ModPath , "MatchRecorder.OOP" , "MatchRecorder.OOP.exe" ) ,
-			WorkingDirectory = ModPath ,
-			UseShellExecute = false ,
-			CreateNoWindow = false ,
-			WindowStyle = ProcessWindowStyle.Minimized ,
+			FileName = Path.Combine( ModPath, "MatchRecorder.OOP", "MatchRecorder.OOP.exe" ),
+			WorkingDirectory = ModPath,
+			UseShellExecute = false,
+			CreateNoWindow = false,
+			WindowStyle = ProcessWindowStyle.Minimized,
 		};
 
 		var envVars = startInfo.EnvironmentVariables;
-		envVars.Add( "ASPNETCORE_URLS" , $"{RecorderUrl}" );
-		envVars.Add( nameof( IRecorderSharedSettings.RecorderType ) , $"{Settings.RecorderType}" );
-		envVars.Add( nameof( IRecorderSharedSettings.RecordingEnabled ) , $"{Settings.RecordingEnabled}" );
-		envVars.Add( nameof( RecorderSettings.DuckGameProcessID ) , $"{Process.GetCurrentProcess().Id}" );
-		envVars.Add( nameof( RecorderSettings.AutoCloseWhenParentDies ) , $"{true}" );
+		envVars.Add( "ASPNETCORE_URLS", $"{RecorderUrl}" );
+		envVars.Add( nameof( IRecorderSharedSettings.RecorderType ), $"{Settings.RecorderType}" );
+		envVars.Add( nameof( IRecorderSharedSettings.RecordingEnabled ), $"{Settings.RecordingEnabled}" );
+		envVars.Add( nameof( RecorderSettings.DuckGameProcessID ), $"{Process.GetCurrentProcess().Id}" );
+		envVars.Add( nameof( RecorderSettings.AutoCloseWhenParentDies ), $"{true}" );
 
 		RecorderProcess = Process.Start( startInfo );
 	}
@@ -158,39 +159,39 @@ public sealed class MatchRecorderClient : IDisposable
 	#region MATCHTRACKING
 	internal void StartRecordingMatch() => MessageHandler?.SendMessage( new StartMatchMessage()
 	{
-		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
-		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
-		PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
-		TimeStarted = DateTime.Now ,
+		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList(),
+		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList(),
+		PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList(),
+		TimeStarted = DateTime.Now,
 	} );
 
 	internal void StopRecordingMatch( bool aborted = false ) => MessageHandler?.SendMessage( new EndMatchMessage()
 	{
-		Aborted = aborted ,
-		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
-		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
-		PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList() ,
-		Winner = ConvertDuckGameTeamToTeamData( Teams.winning.FirstOrDefault() ) ,
-		TimeEnded = DateTime.Now ,
+		Aborted = aborted,
+		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList(),
+		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList(),
+		PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList(),
+		Winner = ConvertDuckGameTeamToTeamData( Teams.winning.FirstOrDefault() ),
+		TimeEnded = DateTime.Now,
 	} );
 
 	internal void StartRecordingRound() => MessageHandler?.SendMessage( new StartRoundMessage()
 	{
-		LevelName = Level.current.level ,
-		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
-		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
-		TimeStarted = DateTime.Now ,
+		LevelName = Level.current.level,
+		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList(),
+		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList(),
+		TimeStarted = DateTime.Now,
 	} );
 
 	internal void StopRecordingRound() => MessageHandler?.SendMessage( new EndRoundMessage()
 	{
-		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList() ,
-		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList() ,
-		Winner = ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ) ,
-		TimeEnded = DateTime.Now ,
+		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList(),
+		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList(),
+		Winner = ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ),
+		TimeEnded = DateTime.Now,
 	} );
 
-	internal void TrackKill( Duck duckVictim , DestroyType type , bool isNetworkMessage )
+	internal void TrackKill( Duck duckVictim, DestroyType type, bool isNetworkMessage )
 	{
 		Profile killerProfile = null;
 
@@ -222,10 +223,10 @@ public sealed class MatchRecorderClient : IDisposable
 
 		var killData = new KillData()
 		{
-			Killer = killerTeamData ,
-			Victim = ConvertDuckGameProfileToTeamData( duckVictim.profile ) ,
-			DeathTypeClassName = type?.GetType()?.Name ,
-			TimeOccured = DateTime.Now ,
+			Killer = killerTeamData,
+			Victim = ConvertDuckGameProfileToTeamData( duckVictim.profile ),
+			DeathTypeClassName = type?.GetType()?.Name,
+			TimeOccured = DateTime.Now,
 			ObjectClassName = objectResponsible
 		};
 
@@ -252,7 +253,7 @@ public sealed class MatchRecorderClient : IDisposable
 
 	}
 
-	private static KeyValuePair<Profile , string> GetBestDestroyTypeKillerAndWeapon( DestroyType destroyType )
+	private static KeyValuePair<Profile, string> GetBestDestroyTypeKillerAndWeapon( DestroyType destroyType )
 	{
 		//try a direct check, easiest one
 		Profile profile = destroyType.responsibleProfile;
@@ -278,17 +279,17 @@ public sealed class MatchRecorderClient : IDisposable
 		}
 
 		//... I know I know, but either I Import the tuples nuget or I make my own struct, so whatever
-		return new KeyValuePair<Profile , string>( profile , weapon );
+		return new KeyValuePair<Profile, string>( profile, weapon );
 	}
 
 	private static TeamData ConvertDuckGameTeamToTeamData( Team duckgameteam )
 	{
 		return duckgameteam is null ? null : new TeamData()
 		{
-			HasHat = duckgameteam.hasHat ,
-			Score = duckgameteam.score ,
-			HatName = duckgameteam.name ,
-			IsCustomHat = duckgameteam.customData != null ,
+			HasHat = duckgameteam.hasHat,
+			Score = duckgameteam.score,
+			HatName = duckgameteam.name,
+			IsCustomHat = duckgameteam.customData != null,
 			Players = duckgameteam.activeProfiles.Select( x => GetPlayerID( x ) ).ToList()
 		};
 	}
@@ -297,8 +298,8 @@ public sealed class MatchRecorderClient : IDisposable
 	{
 		return new PlayerData()
 		{
-			Name = profile.name ,
-			UserId = GetPlayerID( profile ) ,
+			Name = profile.name,
+			UserId = GetPlayerID( profile ),
 		};
 	}
 
@@ -308,7 +309,7 @@ public sealed class MatchRecorderClient : IDisposable
 
 		if( teamData != null )
 		{
-			teamData.Players = teamData.Players.Where( x => x.Equals( GetPlayerID( profile ) , StringComparison.InvariantCultureIgnoreCase ) ).ToList();
+			teamData.Players = teamData.Players.Where( x => x.Equals( GetPlayerID( profile ), StringComparison.InvariantCultureIgnoreCase ) ).ToList();
 		}
 
 		return teamData;
@@ -362,7 +363,7 @@ public sealed class MatchRecorderClient : IDisposable
 #pragma warning disable IDE0051 // Remove unused private members
 
 //a round is done after a level change in all cases
-[HarmonyPatch( typeof( Level ) , "set_current" )]
+[HarmonyPatch( typeof( Level ), "set_current" )]
 internal static class Level_SetCurrent
 {
 	private static void Postfix()
@@ -388,7 +389,7 @@ internal static class Level_SetCurrent
 }
 
 //start recording a round after the virtual transition, it'd be annoying in recordings otherwise
-[HarmonyPatch( typeof( VirtualTransition ) , nameof( VirtualTransition.GoUnVirtual ) )]
+[HarmonyPatch( typeof( VirtualTransition ), nameof( VirtualTransition.GoUnVirtual ) )]
 internal static class VirtualTransition_GoUnVirtual
 {
 	private static void Postfix()
@@ -409,7 +410,7 @@ internal static class VirtualTransition_GoUnVirtual
 
 //this is called once when a new match starts, but not if you're a client and in multiplayer and the host decides to continue from the endgame screen instead of going
 //back to lobby first
-[HarmonyPatch( typeof( Main ) , "ResetMatchStuff" )]
+[HarmonyPatch( typeof( Main ), "ResetMatchStuff" )]
 internal static class Main_ResetMatchStuff
 {
 	private static void Prefix()
@@ -424,7 +425,7 @@ internal static class Main_ResetMatchStuff
 }
 
 
-[HarmonyPatch( typeof( Level ) , nameof( Level.UpdateCurrentLevel ) )]
+[HarmonyPatch( typeof( Level ), nameof( Level.UpdateCurrentLevel ) )]
 internal static class Level_UpdateCurrentLevel
 {
 	private static void Prefix()
@@ -439,7 +440,7 @@ internal static class Level_UpdateCurrentLevel
 }
 
 //sets a global networkconnection to allow TrackKill to find out who sent the kill message
-[HarmonyPatch( typeof( NMKillDuck ) , nameof( NMKillDuck.Activate ) )]
+[HarmonyPatch( typeof( NMKillDuck ), nameof( NMKillDuck.Activate ) )]
 internal static class NMKillDuck_Activate
 {
 	internal static NetworkConnection CurrentNMKillDuckConnection { get; private set; }
@@ -456,10 +457,10 @@ internal static class NMKillDuck_Activate
 }
 
 //try to track a kill whether it's a networked one or not
-[HarmonyPatch( typeof( Duck ) , nameof( Duck.Kill ) )]
+[HarmonyPatch( typeof( Duck ), nameof( Duck.Kill ) )]
 internal static class Duck_Kill
 {
-	private static void Prefix( Duck __instance , DestroyType type , bool __state )
+	private static void Prefix( Duck __instance, DestroyType type, bool __state )
 	{
 		if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
 		{
@@ -470,7 +471,7 @@ internal static class Duck_Kill
 		__state = __instance.forceDead;
 	}
 
-	private static void Postfix( Duck __instance , DestroyType type , bool __state , bool __result )
+	private static void Postfix( Duck __instance, DestroyType type, bool __state, bool __result )
 	{
 		if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null || !__result )
 		{
@@ -483,7 +484,7 @@ internal static class Duck_Kill
 			return;
 		}
 
-		MatchRecorderMod.Instance.Recorder.TrackKill( __instance , type , __instance.isKillMessage );
+		MatchRecorderMod.Instance.Recorder.TrackKill( __instance, type, __instance.isKillMessage );
 	}
 }
 

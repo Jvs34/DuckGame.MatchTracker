@@ -1,6 +1,7 @@
-﻿using MatchRecorderShared.Enums;
+﻿using MatchRecorder.Shared.Enums;
+using MatchRecorder.Shared.Interfaces;
 
-namespace MatchRecorderShared;
+namespace MatchRecorder.Shared.Settings;
 
 /// <summary>
 /// Settings used by the out of process program

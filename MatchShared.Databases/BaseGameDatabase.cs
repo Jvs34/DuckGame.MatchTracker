@@ -1,10 +1,14 @@
-﻿using System;
+﻿using MatchShared.Databases.Interfaces;
+using MatchShared.Databases.Settings;
+using MatchShared.DataClasses;
+using MatchShared.Interfaces;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchTracker;
+namespace MatchShared.Databases;
 
 public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 {
@@ -33,11 +37,11 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 
 	public abstract Task Load( CancellationToken token = default );
 	protected abstract void DefineMappingInternal<T>() where T : IDatabaseEntry;
-	public abstract Task<T> GetData<T>( string dataId = "" , CancellationToken token = default ) where T : IDatabaseEntry;
-	public abstract Task<bool> SaveData<T>( T data , CancellationToken token = default ) where T : IDatabaseEntry;
+	public abstract Task<T> GetData<T>( string dataId = "", CancellationToken token = default ) where T : IDatabaseEntry;
+	public abstract Task<bool> SaveData<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry;
 	protected abstract void InternalDispose();
 
-	public virtual async Task<Dictionary<string , T>> GetBackup<T>() where T : IDatabaseEntry
+	public virtual async Task<Dictionary<string, T>> GetBackup<T>() where T : IDatabaseEntry
 	{
 		var entryNames = await GetAllIndexes<T>();
 
@@ -46,8 +50,8 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 		var results = await Task.WhenAll( dataTasks );
 
 		return results
-			.Select( x => new KeyValuePair<string , T>( x.DatabaseIndex , x ) )
-			.ToDictionary( x => x.Key , x => x.Value );
+			.Select( x => new KeyValuePair<string, T>( x.DatabaseIndex, x ) )
+			.ToDictionary( x => x.Key, x => x.Value );
 	}
 
 	public virtual async Task<List<string>> GetAllIndexes<T>() where T : IDatabaseEntry
@@ -65,7 +69,7 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 
 	public virtual async Task Add<T>( T data ) where T : IDatabaseEntry => await Add<T>( data.DatabaseIndex );
 
-	public virtual async Task Add<T>( params string [] databaseIndexes ) where T : IDatabaseEntry
+	public virtual async Task Add<T>( params string[] databaseIndexes ) where T : IDatabaseEntry
 	{
 		var entryListData = await GetData<EntryListData>( typeof( T ).Name );
 

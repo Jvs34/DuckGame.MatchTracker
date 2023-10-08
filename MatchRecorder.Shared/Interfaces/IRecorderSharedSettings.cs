@@ -1,6 +1,6 @@
-﻿using MatchRecorderShared.Enums;
+﻿using MatchRecorder.Shared.Enums;
 
-namespace MatchRecorderShared;
+namespace MatchRecorder.Shared.Interfaces;
 
 public interface IRecorderSharedSettings
 {

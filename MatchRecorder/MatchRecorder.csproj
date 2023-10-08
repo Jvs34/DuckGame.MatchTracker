@@ -5,8 +5,6 @@
 		<Platforms>x86</Platforms>
 		<DebugType>full</DebugType>
 		<Description>Records Duck Game matches with obs-websockets-dot-net and saves metadata alongside them, use MatchUploader to upload them.</Description>
-		<Company>Jvs &amp; Willox</Company>
-		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

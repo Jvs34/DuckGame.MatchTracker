@@ -1,7 +1,7 @@
-﻿using MatchRecorder.Recorders;
-using MatchRecorderShared;
-using MatchRecorderShared.Messages;
-using MatchTracker;
+﻿using MatchRecorder.OOP.Recorders;
+using MatchRecorder.Shared.Messages;
+using MatchRecorder.Shared.Settings;
+using MatchShared.Databases.Interfaces;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -10,7 +10,7 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchRecorder.Services;
+namespace MatchRecorder.OOP.Services;
 
 internal sealed class RecorderBackgroundService : BackgroundService
 {
@@ -22,11 +22,11 @@ internal sealed class RecorderBackgroundService : BackgroundService
 	private ModMessageQueue MessageQueue { get; }
 	private Process DuckGameProcess { get; }
 
-	public RecorderBackgroundService( ILogger<RecorderBackgroundService> logger ,
-		ModMessageQueue messageQueue ,
-		IGameDatabase db ,
-		IOptions<RecorderSettings> recorderSettings ,
-		BaseRecorder recorder ,
+	public RecorderBackgroundService( ILogger<RecorderBackgroundService> logger,
+		ModMessageQueue messageQueue,
+		IGameDatabase db,
+		IOptions<RecorderSettings> recorderSettings,
+		BaseRecorder recorder,
 		IHostApplicationLifetime lifetime )
 	{
 		AppLifeTime = lifetime;
@@ -63,7 +63,7 @@ internal sealed class RecorderBackgroundService : BackgroundService
 				break;
 			}
 
-			await Task.Delay( TimeSpan.FromMilliseconds( 50 ) , token );
+			await Task.Delay( TimeSpan.FromMilliseconds( 50 ), token );
 		}
 
 		//wait some time for stuff to completely be done
@@ -76,7 +76,7 @@ internal sealed class RecorderBackgroundService : BackgroundService
 		while( Recorder.IsRecording && !timedSource.Token.IsCancellationRequested )
 		{
 			await Recorder.Update();
-			await Task.Delay( TimeSpan.FromMilliseconds( 50 ) , timedSource.Token );
+			await Task.Delay( TimeSpan.FromMilliseconds( 50 ), timedSource.Token );
 		}
 
 		//request the app host to close the process
@@ -93,7 +93,7 @@ internal sealed class RecorderBackgroundService : BackgroundService
 
 	public async Task OnReceiveMessage( BaseMessage message )
 	{
-		Logger.LogInformation( "Received a {messageType} message " , message.MessageType );
+		Logger.LogInformation( "Received a {messageType} message ", message.MessageType );
 
 		switch( message )
 		{
@@ -101,12 +101,12 @@ internal sealed class RecorderBackgroundService : BackgroundService
 			case EndMatchMessage emm: await Recorder.StopRecordingMatch( emm ); break;
 			case StartRoundMessage srm: await Recorder.StartRecordingRound( srm ); break;
 			case EndRoundMessage erm: await Recorder.StopRecordingRound( erm ); break;
-			case TextMessage txtm: Logger.LogInformation( "Received: {message}" , txtm ); break;
+			case TextMessage txtm: Logger.LogInformation( "Received: {message}", txtm ); break;
 			case TrackKillMessage tkm: Recorder.TrackKill( tkm ); break;
 			case CollectObjectDataMessage cod: await Recorder.CollectObjectData( cod ); break;
 			case CloseRecorderMessage: AppLifeTime.StopApplication(); break;
 			default:
-				break;
+			break;
 		}
 	}
 }

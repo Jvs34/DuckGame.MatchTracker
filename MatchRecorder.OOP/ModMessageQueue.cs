@@ -1,10 +1,10 @@
-﻿using MatchRecorderShared.Messages;
+﻿using MatchRecorder.Shared.Messages;
 using System;
 using System.Collections.Concurrent;
 using System.Threading.Channels;
 using System.Threading.Tasks;
 
-namespace MatchRecorder;
+namespace MatchRecorder.OOP;
 
 internal class ModMessageQueue : IAsyncDisposable, IDisposable
 {
@@ -15,14 +15,14 @@ internal class ModMessageQueue : IAsyncDisposable, IDisposable
 
 	public Channel<BaseMessage> ClientToRecorderChannel { get; } = Channel.CreateUnbounded<BaseMessage>( new UnboundedChannelOptions()
 	{
-		SingleReader = true , //only the background service will read this
-		SingleWriter = false , //multiple endpoints might try to add stuff to this for whatever reason
+		SingleReader = true, //only the background service will read this
+		SingleWriter = false, //multiple endpoints might try to add stuff to this for whatever reason
 	} );
 
 	public Channel<BaseMessage> RecorderToClientChannel { get; } = Channel.CreateUnbounded<BaseMessage>( new UnboundedChannelOptions()
 	{
-		SingleReader = false ,
-		SingleWriter = true ,
+		SingleReader = false,
+		SingleWriter = true,
 	} );
 
 	public ModMessageQueue()

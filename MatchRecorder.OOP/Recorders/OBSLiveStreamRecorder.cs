@@ -1,17 +1,18 @@
-﻿using MatchRecorderShared.Enums;
-using MatchTracker;
+﻿using MatchRecorder.Shared.Enums;
+using MatchShared.Databases.Interfaces;
+using MatchShared.Enums;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace MatchRecorder.Recorders;
+namespace MatchRecorder.OOP.Recorders;
 
 /// <summary>
 /// WIP
 /// </summary>
 internal sealed class OBSLiveStreamRecorder : BaseRecorder
 {
-	public OBSLiveStreamRecorder( ILogger<BaseRecorder> logger , IGameDatabase db , ModMessageQueue messageQueue ) : base( logger , db , messageQueue )
+	public OBSLiveStreamRecorder( ILogger<BaseRecorder> logger, IGameDatabase db, ModMessageQueue messageQueue ) : base( logger, db, messageQueue )
 	{
 		ResultingRecordingType = RecordingType.Video;
 		RecorderConfigType = RecorderType.OBSLiveStream;

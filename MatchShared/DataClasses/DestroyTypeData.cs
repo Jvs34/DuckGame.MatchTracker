@@ -1,4 +1,6 @@
-﻿namespace MatchTracker;
+﻿using MatchShared.Interfaces;
+
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A type of death in Duck Game, eg: DTFall for fall damage

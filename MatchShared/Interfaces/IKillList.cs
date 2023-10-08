@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using MatchShared.DataClasses;
+using System.Collections.Generic;
 
-namespace MatchTracker;
+namespace MatchShared.Interfaces;
 
 public interface IKillList
 {

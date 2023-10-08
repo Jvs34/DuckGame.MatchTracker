@@ -1,13 +1,8 @@
 ﻿using DSharpPlus;
 using DSharpPlus.SlashCommands;
 using MatchBot.Discord;
-using MatchTracker;
+using MatchShared.Databases.Settings;
 using Microsoft.Extensions.Options;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MatchBot.Services;
 
@@ -17,27 +12,27 @@ internal class DiscordService : BackgroundService
 	private ILogger<DiscordService> Logger { get; }
 	private BotSettings BotOptions { get; }
 
-	public DiscordService( ILogger<DiscordService> logger , IOptions<BotSettings> botSettings , IServiceProvider serviceProvider )
+	public DiscordService( ILogger<DiscordService> logger, IOptions<BotSettings> botSettings, IServiceProvider serviceProvider )
 	{
 		Logger = logger;
 		BotOptions = botSettings.Value;
 
 		var discordConfig = new DiscordConfiguration()
 		{
-			AutoReconnect = true ,
-			AlwaysCacheMembers = false ,
-			Token = BotOptions.DiscordToken ,
-			TokenType = TokenType.Bot ,
+			AutoReconnect = true,
+			AlwaysCacheMembers = false,
+			Token = BotOptions.DiscordToken,
+			TokenType = TokenType.Bot,
 #if DEBUG
-			MinimumLogLevel = LogLevel.Debug ,
+			MinimumLogLevel = LogLevel.Debug,
 #endif
-			MessageCacheSize = 10 ,
+			MessageCacheSize = 10,
 		};
 
 		DiscordInstance = new DiscordClient( discordConfig );
 		var slash = DiscordInstance.UseSlashCommands( new SlashCommandsConfiguration()
 		{
-			Services = serviceProvider ,
+			Services = serviceProvider,
 		} );
 		slash.RegisterCommands<MatchTrackerSlashCommands>();
 	}
@@ -50,7 +45,7 @@ internal class DiscordService : BackgroundService
 
 		while( !stoppingToken.IsCancellationRequested )
 		{
-			await Task.Delay( 100 , stoppingToken );
+			await Task.Delay( 100, stoppingToken );
 		}
 
 		Logger.LogInformation( "Stopping discord" );

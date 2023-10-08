@@ -2,7 +2,13 @@
 using Google.Apis.Services;
 using Google.Apis.YouTube.v3;
 using Google.Apis.YouTube.v3.Data;
-using MatchTracker;
+using MatchShared.Databases.Extensions;
+using MatchShared.Databases.Interfaces;
+using MatchShared.DataClasses;
+using MatchShared.Enums;
+using MatchShared.Interfaces;
+using MatchUploader.Settings;
+using MatchUploader.Utility;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -11,7 +17,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchUploader;
+namespace MatchUploader.Uploaders;
 
 /// <summary>
 /// Not exactly an uploader, you have to upload the videos yourself with the youtube interface, then run this to
@@ -21,7 +27,7 @@ public class YoutubeMatchUpdater : Uploader
 {
 	public YouTubeService Service { get; private set; }
 
-	public YoutubeMatchUpdater( IGameDatabase gameDatabase , UploaderSettings settings ) : base( gameDatabase , settings )
+	public YoutubeMatchUpdater( IGameDatabase gameDatabase, UploaderSettings settings ) : base( gameDatabase, settings )
 	{
 	}
 
@@ -30,22 +36,22 @@ public class YoutubeMatchUpdater : Uploader
 		string appName = GetType().Assembly.GetName().Name;
 		Service = new YouTubeService( new BaseClientService.Initializer()
 		{
-			HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( UploaderSettings.GoogleSecrets ,
-				new [] {
+			HttpClientInitializer = await GoogleWebAuthorizationBroker.AuthorizeAsync( UploaderSettings.GoogleSecrets,
+				new[] {
 					YouTubeService.Scope.Youtube
-				} ,
-				"youtube" ,
-				CancellationToken.None ,
+				},
+				"youtube",
+				CancellationToken.None,
 				UploaderSettings.GoogleDataStore
-			) ,
-			ApplicationName = appName ,
-			GZipEnabled = true ,
+			),
+			ApplicationName = appName,
+			GZipEnabled = true,
 		} );
 		Service.HttpClient.Timeout = TimeSpan.FromMinutes( 2 );
 
-		if( !Directory.Exists( Path.Combine( Path.GetTempPath() , "MatchUploader" ) ) )
+		if( !Directory.Exists( Path.Combine( Path.GetTempPath(), "MatchUploader" ) ) )
 		{
-			Directory.CreateDirectory( Path.Combine( Path.GetTempPath() , "MatchUploader" ) );
+			Directory.CreateDirectory( Path.Combine( Path.GetTempPath(), "MatchUploader" ) );
 		}
 	}
 
@@ -66,9 +72,9 @@ public class YoutubeMatchUpdater : Uploader
 		return resp.Items.FirstOrDefault( item => item.Snippet != null && strippedName == item.Snippet.Title )?.Id;
 	}
 
-	private async Task<Dictionary<string , ResourceId>> FindYoutubeDrafts( List<IDatabaseEntry> databaseEntries )
+	private async Task<Dictionary<string, ResourceId>> FindYoutubeDrafts( List<IDatabaseEntry> databaseEntries )
 	{
-		var resources = new Dictionary<string , ResourceId>();
+		var resources = new Dictionary<string, ResourceId>();
 
 		var pageToken = string.Empty;
 
@@ -85,11 +91,11 @@ public class YoutubeMatchUpdater : Uploader
 
 			foreach( var item in resp.Items )
 			{
-				var dataEntry = databaseEntries.FirstOrDefault( data => item.Snippet != null && data.DatabaseIndex.Replace( '-' , ' ' ) == item.Snippet.Title );
+				var dataEntry = databaseEntries.FirstOrDefault( data => item.Snippet != null && data.DatabaseIndex.Replace( '-', ' ' ) == item.Snippet.Title );
 
 				if( dataEntry != null )
 				{
-					resources.Add( dataEntry.DatabaseIndex , item.Id );
+					resources.Add( dataEntry.DatabaseIndex, item.Id );
 				}
 			}
 
@@ -104,8 +110,8 @@ public class YoutubeMatchUpdater : Uploader
 	{
 		return Task.FromResult( new PendingUpload()
 		{
-			DataName = entry.DatabaseIndex ,
-			DataType = entry.GetType().Name ,
+			DataName = entry.DatabaseIndex,
+			DataType = entry.GetType().Name,
 		} );
 	}
 
@@ -134,7 +140,7 @@ public class YoutubeMatchUpdater : Uploader
 			{
 				youtubeUpload = new VideoUpload()
 				{
-					ServiceType = VideoServiceType.Youtube ,
+					ServiceType = VideoServiceType.Youtube,
 					VideoType = genericRecording.VideoType
 				};
 
@@ -167,9 +173,9 @@ public class YoutubeMatchUpdater : Uploader
 
 			//now check the temp folder too
 
-			if( File.Exists( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{data.DatabaseIndex}.mp4" ) ) )
+			if( File.Exists( Path.Combine( Path.GetTempPath(), "MatchUploader", $"{data.DatabaseIndex}.mp4" ) ) )
 			{
-				File.Delete( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{data.DatabaseIndex}.mp4" ) );
+				File.Delete( Path.Combine( Path.GetTempPath(), "MatchUploader", $"{data.DatabaseIndex}.mp4" ) );
 			}
 		}
 
@@ -182,9 +188,9 @@ public class YoutubeMatchUpdater : Uploader
 				Uploads.Enqueue( pendingUpload );
 
 				//now add the file to the temp path if it doesn't exist
-				if( !File.Exists( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{data.DatabaseIndex}.mp4" ) ) )
+				if( !File.Exists( Path.Combine( Path.GetTempPath(), "MatchUploader", $"{data.DatabaseIndex}.mp4" ) ) )
 				{
-					File.Copy( DB.SharedSettings.GetMatchVideoPath( data.DatabaseIndex ) , Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{data.DatabaseIndex}.mp4" ) );
+					File.Copy( DB.SharedSettings.GetMatchVideoPath( data.DatabaseIndex ), Path.Combine( Path.GetTempPath(), "MatchUploader", $"{data.DatabaseIndex}.mp4" ) );
 				}
 			}
 		}
@@ -208,7 +214,7 @@ public class YoutubeMatchUpdater : Uploader
 			return false;
 		}
 
-		var draftVideoData = await UploaderUtils.GetVideoData( Service , videoResource.VideoId );
+		var draftVideoData = await UploaderUtils.GetVideoData( Service, videoResource.VideoId );
 
 		//ignore videos that haven't been fully uploaded/processed yet
 		if( draftVideoData is null || draftVideoData.ProcessingDetails.ProcessingStatus != "succeeded" )
@@ -221,8 +227,8 @@ public class YoutubeMatchUpdater : Uploader
 		try
 		{
 			youtubeVideoUpload.Url = videoResource.VideoId;
-			var matchVideoData = await UploaderUtils.GetVideoDataForDatabaseItem( DB , matchData , youtubeVideoUpload );
-			await UploaderUtils.UpdateVideoData( Service , videoResource.VideoId , matchVideoData );
+			var matchVideoData = await UploaderUtils.GetVideoDataForDatabaseItem( DB, matchData, youtubeVideoUpload );
+			await UploaderUtils.UpdateVideoData( Service, videoResource.VideoId, matchVideoData );
 			await DB.SaveData( matchData );
 
 			//also update the youtubeurl on all the linked rounds
@@ -231,9 +237,9 @@ public class YoutubeMatchUpdater : Uploader
 			{
 				var roundDataVideoUpload = new VideoUpload()
 				{
-					ServiceType = VideoServiceType.Youtube ,
-					Url = videoResource.VideoId ,
-					VideoType = VideoUrlType.MergedVideoLink ,
+					ServiceType = VideoServiceType.Youtube,
+					Url = videoResource.VideoId,
+					VideoType = VideoUrlType.MergedVideoLink,
 				};
 
 				roundData.VideoUploads.Add( roundDataVideoUpload );
@@ -241,7 +247,7 @@ public class YoutubeMatchUpdater : Uploader
 				await DB.SaveData( roundData );
 
 				return true;
-			} , matchData.Rounds );
+			}, matchData.Rounds );
 
 
 			//now delete the file in the temp folder and in the normal path
@@ -252,9 +258,9 @@ public class YoutubeMatchUpdater : Uploader
 
 			//now check the temp folder too
 
-			if( File.Exists( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{matchData.DatabaseIndex}.mp4" ) ) )
+			if( File.Exists( Path.Combine( Path.GetTempPath(), "MatchUploader", $"{matchData.DatabaseIndex}.mp4" ) ) )
 			{
-				File.Delete( Path.Combine( Path.GetTempPath() , "MatchUploader" , $"{matchData.DatabaseIndex}.mp4" ) );
+				File.Delete( Path.Combine( Path.GetTempPath(), "MatchUploader", $"{matchData.DatabaseIndex}.mp4" ) );
 			}
 
 			return true;

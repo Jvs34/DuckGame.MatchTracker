@@ -1,13 +1,9 @@
-﻿using CodeJam.Threading;
-using DSharpPlus.Entities;
-using MatchTracker;
-using System;
+﻿using DSharpPlus.Entities;
+using MatchShared.Databases.Extensions;
+using MatchShared.Databases.Interfaces;
+using MatchShared.DataClasses;
+using MatchShared.Interfaces;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace MatchBot.Utils;
 
@@ -31,7 +27,7 @@ internal class PlayerWinsLossesSearch
 
 internal static class CommandUtils
 {
-	internal static async Task<DateTime> GetLastTimePlayed( this IGameDatabase DB , PlayerData? player )
+	internal static async Task<DateTime> GetLastTimePlayed( this IGameDatabase DB, PlayerData? player )
 	{
 		DateTime lastPlayed = DateTime.MinValue;
 		var asyncLock = new AsyncLock();
@@ -52,12 +48,12 @@ internal static class CommandUtils
 		return lastPlayed;
 	}
 
-	internal static async Task<PlayerTimePlayed> GetTimesPlayed( this IGameDatabase DB , PlayerData? player , bool findmatchOrRound )
+	internal static async Task<PlayerTimePlayed> GetTimesPlayed( this IGameDatabase DB, PlayerData? player, bool findmatchOrRound )
 	{
 		var playerStats = new PlayerTimePlayed();
 		var playerStatsLock = new AsyncLock();
 
-		static async Task<bool> CountTimesPlayed<T>( PlayerData? player , T databaseEntry , PlayerTimePlayed stats , AsyncLock asyncLock ) where T : IWinner, IStartEndTime
+		static async Task<bool> CountTimesPlayed<T>( PlayerData? player, T databaseEntry, PlayerTimePlayed stats, AsyncLock asyncLock ) where T : IWinner, IStartEndTime
 		{
 			if( player == null || databaseEntry.Players.Contains( player.UserId ) )
 			{
@@ -70,17 +66,17 @@ internal static class CommandUtils
 
 		if( findmatchOrRound )
 		{
-			await DB.IterateOverAll<MatchData>( async ( matchOrRound ) => await CountTimesPlayed( player , matchOrRound , playerStats , playerStatsLock ) );
+			await DB.IterateOverAll<MatchData>( async ( matchOrRound ) => await CountTimesPlayed( player, matchOrRound, playerStats, playerStatsLock ) );
 		}
 		else
 		{
-			await DB.IterateOverAll<RoundData>( async ( matchOrRound ) => await CountTimesPlayed( player , matchOrRound , playerStats , playerStatsLock ) );
+			await DB.IterateOverAll<RoundData>( async ( matchOrRound ) => await CountTimesPlayed( player, matchOrRound, playerStats, playerStatsLock ) );
 		}
 
 		return playerStats;
 	}
 
-	internal static async Task<PlayerData?> GetPlayer( this IGameDatabase DB , DiscordUser discordUser )
+	internal static async Task<PlayerData?> GetPlayer( this IGameDatabase DB, DiscordUser discordUser )
 	{
 		PlayerData? foundPlayerData = null;
 
@@ -88,8 +84,8 @@ internal static class CommandUtils
 		{
 			if( playerData.DiscordId == discordUser.Id
 			|| playerData.DatabaseIndex == discordUser.Id.ToString()
-			|| string.Equals( playerData.NickName , discordUser.Username , StringComparison.CurrentCultureIgnoreCase )
-			|| string.Equals( playerData.Name , discordUser.Username , StringComparison.CurrentCultureIgnoreCase ) )
+			|| string.Equals( playerData.NickName, discordUser.Username, StringComparison.CurrentCultureIgnoreCase )
+			|| string.Equals( playerData.Name, discordUser.Username, StringComparison.CurrentCultureIgnoreCase ) )
 			{
 
 				foundPlayerData = playerData;
@@ -124,19 +120,19 @@ internal static class CommandUtils
 		return uploads;
 	}
 
-	internal static async Task<Dictionary<string , PlayerWinsLosses>> GetAllPlayerWinsAndLosses( this IGameDatabase DB , bool ismatchOrRound )
+	internal static async Task<Dictionary<string, PlayerWinsLosses>> GetAllPlayerWinsAndLosses( this IGameDatabase DB, bool ismatchOrRound )
 	{
-		var playerWinsAndLosses = new ConcurrentDictionary<string , PlayerWinsLossesSearch>();
+		var playerWinsAndLosses = new ConcurrentDictionary<string, PlayerWinsLossesSearch>();
 
 		var playerIndexes = await DB.GetAllIndexes<PlayerData>();
-		
+
 		//first, create an entry for all registered players
 		foreach( var playerIndex in playerIndexes )
 		{
-			playerWinsAndLosses [playerIndex] = new PlayerWinsLossesSearch();
+			playerWinsAndLosses[playerIndex] = new PlayerWinsLossesSearch();
 		}
 
-		static async Task<bool> CountAllWinsAndLosses<T>( T winnerEntry , ConcurrentDictionary<string , PlayerWinsLossesSearch> statsDict ) where T : IWinner
+		static async Task<bool> CountAllWinsAndLosses<T>( T winnerEntry, ConcurrentDictionary<string, PlayerWinsLossesSearch> statsDict ) where T : IWinner
 		{
 			var winners = winnerEntry.GetWinners();
 
@@ -148,7 +144,7 @@ internal static class CommandUtils
 
 			foreach( var playerId in winnerEntry.Players )
 			{
-				if( !statsDict.TryGetValue( playerId , out var statsSearch ) )
+				if( !statsDict.TryGetValue( playerId, out var statsSearch ) )
 				{
 					continue;
 				}
@@ -170,23 +166,23 @@ internal static class CommandUtils
 
 		if( ismatchOrRound )
 		{
-			await DB.IterateOverAll<MatchData>( async ( matchOrRound ) => await CountAllWinsAndLosses( matchOrRound , playerWinsAndLosses ) );
+			await DB.IterateOverAll<MatchData>( async ( matchOrRound ) => await CountAllWinsAndLosses( matchOrRound, playerWinsAndLosses ) );
 		}
 		else
 		{
-			await DB.IterateOverAll<RoundData>( async ( matchOrRound ) => await CountAllWinsAndLosses( matchOrRound , playerWinsAndLosses ) );
+			await DB.IterateOverAll<RoundData>( async ( matchOrRound ) => await CountAllWinsAndLosses( matchOrRound, playerWinsAndLosses ) );
 		}
 
 
-		return playerWinsAndLosses.ToDictionary( x => x.Key , y => y.Value.WinsLosses );
+		return playerWinsAndLosses.ToDictionary( x => x.Key, y => y.Value.WinsLosses );
 	}
 
-	internal static async Task<PlayerWinsLosses> GetPlayerWinsAndLosses( this IGameDatabase DB , PlayerData player , bool ismatchOrRound )
+	internal static async Task<PlayerWinsLosses> GetPlayerWinsAndLosses( this IGameDatabase DB, PlayerData player, bool ismatchOrRound )
 	{
 		var playerStats = new PlayerWinsLosses();
 		var playerStatsLock = new AsyncLock();
 
-		static async Task<bool> CountWinsAndLosses<T>( PlayerData player , T winnerEntry , PlayerWinsLosses stats , AsyncLock asyncLock ) where T : IWinner
+		static async Task<bool> CountWinsAndLosses<T>( PlayerData player, T winnerEntry, PlayerWinsLosses stats, AsyncLock asyncLock ) where T : IWinner
 		{
 			//even if it's team mode we consider it a win
 			//first off, only do this if the play is actually in the match
@@ -208,11 +204,11 @@ internal static class CommandUtils
 
 		if( ismatchOrRound )
 		{
-			await DB.IterateOverAll<MatchData>( async ( matchOrRound ) => await CountWinsAndLosses( player , matchOrRound , playerStats , playerStatsLock ) );
+			await DB.IterateOverAll<MatchData>( async ( matchOrRound ) => await CountWinsAndLosses( player, matchOrRound, playerStats, playerStatsLock ) );
 		}
 		else
 		{
-			await DB.IterateOverAll<RoundData>( async ( matchOrRound ) => await CountWinsAndLosses( player , matchOrRound , playerStats , playerStatsLock ) );
+			await DB.IterateOverAll<RoundData>( async ( matchOrRound ) => await CountWinsAndLosses( player, matchOrRound, playerStats, playerStatsLock ) );
 		}
 
 		return playerStats;

@@ -1,4 +1,6 @@
-﻿namespace MatchTracker;
+﻿using MatchShared.Interfaces;
+
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A Duck Game player, most of the time UserId represents the SteamID

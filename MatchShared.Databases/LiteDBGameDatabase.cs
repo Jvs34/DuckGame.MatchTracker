@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchTracker;
+namespace MatchShared.Databases;
 
 public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 {
@@ -20,16 +20,16 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 	{
 		var connectionString = new ConnectionString
 		{
-			Connection = ConnectionType.Direct ,
-			Filename = SharedSettings.GetDatabasePath() ,
-			ReadOnly = IsReadOnly ,
+			Connection = ConnectionType.Direct,
+			Filename = SharedSettings.GetDatabasePath(),
+			ReadOnly = IsReadOnly,
 		};
 
-		Database = new LiteDatabase( connectionString , Mapper );
+		Database = new LiteDatabase( connectionString, Mapper );
 		return Task.CompletedTask;
 	}
 
-	public override Task<T> GetData<T>( string dataId = "" , CancellationToken token = default )
+	public override Task<T> GetData<T>( string dataId = "", CancellationToken token = default )
 	{
 		if( string.IsNullOrEmpty( dataId ) )
 		{
@@ -42,7 +42,7 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 		return Task.FromResult( data );
 	}
 
-	public override Task<bool> SaveData<T>( T data , CancellationToken token = default )
+	public override Task<bool> SaveData<T>( T data, CancellationToken token = default )
 	{
 		var collection = Database.GetCollection<T>( data.GetType().Name );
 		collection.Upsert( data );

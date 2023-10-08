@@ -2,9 +2,9 @@
 using HarmonyLib;
 using System.Reflection;
 
-namespace MatchRecorderCompanion;
+namespace MatchRecorder.Companion;
 
-public class MatchRecorderCompanionMod : DuckGame.ClientMod
+public class MatchRecorderCompanionMod : ClientMod
 {
 	private Harmony HarmonyInstance { get; set; }
 
@@ -23,7 +23,7 @@ public class MatchRecorderCompanionMod : DuckGame.ClientMod
 
 internal static class Duck_Kill
 {
-	public static void Postfix( Duck ___instance , DestroyType destroyType )
+	public static void Postfix( Duck ___instance, DestroyType destroyType )
 	{
 
 	}
@@ -40,7 +40,7 @@ internal static class NMKillDuck_OnSerialize
 
 internal static class NMKillDuck_OnDeserialize
 {
-	private static void Postfix( NMKillDuck ___instance , BitBuffer buffer )
+	private static void Postfix( NMKillDuck ___instance, BitBuffer buffer )
 	{
 	}
 }

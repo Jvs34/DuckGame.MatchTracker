@@ -1,6 +1,8 @@
-﻿using System;
+﻿using MatchShared.Enums;
+using MatchShared.Interfaces;
+using System;
 
-namespace MatchTracker;
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A video upload for either a round or match

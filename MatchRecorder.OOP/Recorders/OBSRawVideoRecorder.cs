@@ -1,5 +1,8 @@
-﻿using MatchRecorderShared.Enums;
-using MatchTracker;
+﻿using MatchRecorder.Shared.Enums;
+using MatchRecorder.Shared.Settings;
+using MatchShared.Databases.Interfaces;
+using MatchShared.DataClasses;
+using MatchShared.Enums;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ObsStrawket;
@@ -9,7 +12,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchRecorder.Recorders;
+namespace MatchRecorder.OOP.Recorders;
 
 /// <summary>
 /// Records an entire match at once, alongside pauses, transitions and even the victory screen,
@@ -30,10 +33,10 @@ internal class OBSRawVideoRecorder : BaseRecorder
 	protected DateTime NextObsCheck { get; set; }
 
 	public OBSRawVideoRecorder(
-		ILogger<BaseRecorder> logger ,
-		ModMessageQueue messageQueue ,
-		IOptions<OBSSettings> obsSettings ,
-		IGameDatabase db ) : base( logger , db , messageQueue )
+		ILogger<BaseRecorder> logger,
+		ModMessageQueue messageQueue,
+		IOptions<OBSSettings> obsSettings,
+		IGameDatabase db ) : base( logger, db, messageQueue )
 	{
 		ResultingRecordingType = RecordingType.Video;
 		RecorderConfigType = RecorderType.OBSRawVideo;
@@ -89,8 +92,8 @@ internal class OBSRawVideoRecorder : BaseRecorder
 	/// <returns></returns>
 	private async Task SetRecordDirectoryWorkaroundAsync( string recordingFolder )
 	{
-		await ObsHandler.SetProfileParameterAsync( "AdvOut" , "RecFilePath" , recordingFolder );
-		await ObsHandler.SetProfileParameterAsync( "SimpleOutput" , "FilePath" , recordingFolder );
+		await ObsHandler.SetProfileParameterAsync( "AdvOut", "RecFilePath", recordingFolder );
+		await ObsHandler.SetProfileParameterAsync( "SimpleOutput", "FilePath", recordingFolder );
 	}
 
 	protected override async Task StartRecordingMatchInternal()
@@ -109,8 +112,8 @@ internal class OBSRawVideoRecorder : BaseRecorder
 
 		match.VideoUploads.Add( new VideoUpload()
 		{
-			VideoType = VideoUrlType.RawVideoLink ,
-			RecordingType = ResultingRecordingType ,
+			VideoType = VideoUrlType.RawVideoLink,
+			RecordingType = ResultingRecordingType,
 		} );
 
 		await GameDatabase.SaveData( match );
@@ -130,8 +133,8 @@ internal class OBSRawVideoRecorder : BaseRecorder
 
 		round.VideoUploads.Add( new VideoUpload()
 		{
-			VideoType = VideoUrlType.RawVideoLink ,
-			RecordingType = ResultingRecordingType ,
+			VideoType = VideoUrlType.RawVideoLink,
+			RecordingType = ResultingRecordingType,
 		} );
 	}
 
@@ -146,11 +149,11 @@ internal class OBSRawVideoRecorder : BaseRecorder
 
 		try
 		{
-			await ObsHandler.ConnectAsync( new Uri( OBSSettings.WebSocketUri ) , OBSSettings.WebSocketPassword );
+			await ObsHandler.ConnectAsync( new Uri( OBSSettings.WebSocketUri ), OBSSettings.WebSocketPassword );
 		}
 		catch( Exception )
 		{
-			SendHUDmessage( "Cannot reach OBS" , TextMessagePosition.TopMiddle );
+			SendHUDmessage( "Cannot reach OBS", TextMessagePosition.TopMiddle );
 		}
 	}
 
@@ -164,8 +167,8 @@ internal class OBSRawVideoRecorder : BaseRecorder
 		}
 	}
 
-	private void OnConnected( Uri uri ) => SendHUDmessage( "Connected to OBS." , TextMessagePosition.TopMiddle );
-	private void OnDisconnected( Exception exception ) => SendHUDmessage( "Disconnected from OBS." , TextMessagePosition.TopMiddle );
+	private void OnConnected( Uri uri ) => SendHUDmessage( "Connected to OBS.", TextMessagePosition.TopMiddle );
+	private void OnDisconnected( Exception exception ) => SendHUDmessage( "Disconnected from OBS.", TextMessagePosition.TopMiddle );
 	private void OnRecordingStateChanged( RecordStateChanged changed ) => RecordingState = changed.OutputState;
 
 }

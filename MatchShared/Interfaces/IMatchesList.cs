@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace MatchTracker;
+namespace MatchShared.Interfaces;
 
 public interface IMatchesList
 {

@@ -1,6 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using MatchShared.Interfaces;
+using System.Collections.Generic;
 
-namespace MatchTracker;
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A Duck Game Team, defined by a hat or lack of, even hatless players have teams
@@ -15,6 +16,6 @@ public class TeamData : IPlayersList
 
 	public override string ToString()
 	{
-		return $"{HatName} +{Score} " + string.Join( "," , Players );
+		return $"{HatName} +{Score} " + string.Join( ",", Players );
 	}
 }

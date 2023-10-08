@@ -1,4 +1,4 @@
-﻿namespace MatchTracker;
+﻿namespace MatchShared.Databases.Settings;
 
 public class BotSettings
 {

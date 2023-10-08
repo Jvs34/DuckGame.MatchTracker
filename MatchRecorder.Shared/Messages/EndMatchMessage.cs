@@ -1,8 +1,9 @@
-﻿using MatchTracker;
+﻿using MatchShared.DataClasses;
+using MatchShared.Interfaces;
 using System;
 using System.Collections.Generic;
 
-namespace MatchRecorderShared.Messages;
+namespace MatchRecorder.Shared.Messages;
 
 public class EndMatchMessage : BaseMessage, IWinner, IEndTime
 {

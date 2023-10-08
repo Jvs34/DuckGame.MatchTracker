@@ -1,7 +1,7 @@
-﻿using MatchTracker;
+﻿using MatchShared.DataClasses;
 using System.Collections.Generic;
 
-namespace MatchRecorderShared.Messages;
+namespace MatchRecorder.Shared.Messages;
 
 public class CollectObjectDataMessage : BaseMessage
 {

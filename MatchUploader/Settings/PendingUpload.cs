@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MatchUploader;
+namespace MatchUploader.Settings;
 
 public class PendingUpload
 {

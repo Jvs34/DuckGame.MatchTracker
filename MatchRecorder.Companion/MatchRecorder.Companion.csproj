@@ -5,8 +5,6 @@
 		<Platforms>x86</Platforms>
 		<DebugType>full</DebugType>
 		<Description>Allows MatchRecorder to Track kills properly</Description>
-		<Company>Jvs</Company>
-		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

@@ -1,4 +1,4 @@
-﻿using MatchRecorderShared.Messages;
+﻿using MatchRecorder.Shared.Messages;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using System;
@@ -27,7 +27,7 @@ internal sealed class ClientMessageHandler
 	private HttpClient HttpClient { get; }
 	private CancellationToken StopToken { get; }
 
-	public ClientMessageHandler( HttpClient httpClient , CancellationToken token )
+	public ClientMessageHandler( HttpClient httpClient, CancellationToken token )
 	{
 		HttpClient = httpClient;
 		StopToken = token;
@@ -46,21 +46,21 @@ internal sealed class ClientMessageHandler
 		}
 	}
 
-	private async Task SendRecorderMessage( BaseMessage message , CancellationToken token = default )
+	private async Task SendRecorderMessage( BaseMessage message, CancellationToken token = default )
 	{
 		var stringBuilder = new StringBuilder( 1024 );
-		using var sw = new StringWriter( stringBuilder , CultureInfo.InvariantCulture );
+		using var sw = new StringWriter( stringBuilder, CultureInfo.InvariantCulture );
 		using var jsonTextWriter = new JsonTextWriter( sw );
 
-		Serializer.Serialize( jsonTextWriter , message );
+		Serializer.Serialize( jsonTextWriter, message );
 
 		using var response = await HttpClient.PostAsync(
-			message.MessageType.ToLower() ,
-			new StringContent( stringBuilder.ToString() , Encoding.UTF8 , "application/json" ) ,
+			message.MessageType.ToLower(),
+			new StringContent( stringBuilder.ToString(), Encoding.UTF8, "application/json" ),
 			token );
 	}
 
-	private async Task GetAllPendingClientMessages( Stopwatch cooldown = null , CancellationToken token = default )
+	private async Task GetAllPendingClientMessages( Stopwatch cooldown = null, CancellationToken token = default )
 	{
 		if( cooldown != null )
 		{
@@ -74,7 +74,7 @@ internal sealed class ClientMessageHandler
 			}
 		}
 
-		using var response = await HttpClient.GetAsync( "/messages" , token );
+		using var response = await HttpClient.GetAsync( "/messages", token );
 
 		if( response == null || !response.IsSuccessStatusCode )
 		{
@@ -114,7 +114,7 @@ internal sealed class ClientMessageHandler
 		{
 			while( SendMessagesQueue.TryDequeue( out var message ) )
 			{
-				await SendRecorderMessage( message , token );
+				await SendRecorderMessage( message, token );
 			}
 
 			await GetAllPendingClientMessages( pendingMessagesCooldown );

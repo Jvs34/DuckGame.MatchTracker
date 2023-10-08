@@ -1,4 +1,4 @@
-﻿namespace MatchTracker;
+﻿namespace MatchShared.Interfaces;
 
 public interface IDatabaseEntry
 {

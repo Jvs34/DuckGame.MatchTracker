@@ -37,6 +37,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Miscellaneous", "Miscellane
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{BA7634C0-27F1-42B4-AA8F-299F387AEEE0}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Configs", "Configs", "{087276F0-44FC-4B5E-9839-F30D0E4EA35C}"
+	ProjectSection(SolutionItems) = preProject
+		Directory.Build.props = Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Settings", "Settings", "{9877B777-4261-47EC-9AC5-AFACD0342BA0}"
+	ProjectSection(SolutionItems) = preProject
+		Settings\appsettings.json = Settings\appsettings.json
+		Settings\bot.json = Settings\bot.json
+		Settings\obs.json = Settings\obs.json
+		Settings\shared.json = Settings\shared.json
+		Settings\shared_debug.json = Settings\shared_debug.json
+		Settings\uploader.json = Settings\uploader.json
+	EndProjectSection
+	ProjectSection(FolderGlobals) = preProject
+		C_5_4Users_4Jvsth_4OneDrive_4Documents_4DuckGameMods_4MatchTracker_4Settings_4bot_1json__JsonSchema = 
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -131,6 +149,7 @@ Global
 		{334BF617-4AB5-4CC9-8C37-46D412E3BDA5} = {9E7F1C69-8E6C-4F49-B0B5-9105F2DD47C2}
 		{E37BEDE5-4525-4DE1-982D-92C7CE0DCFEA} = {BA7634C0-27F1-42B4-AA8F-299F387AEEE0}
 		{96FB8685-C73D-478C-B60D-D97F25A73664} = {9E7F1C69-8E6C-4F49-B0B5-9105F2DD47C2}
+		{9877B777-4261-47EC-9AC5-AFACD0342BA0} = {087276F0-44FC-4B5E-9839-F30D0E4EA35C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B2D69E24-5A6F-4286-A097-88C1BF8D651D}

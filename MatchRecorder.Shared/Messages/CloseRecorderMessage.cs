@@ -1,4 +1,4 @@
-﻿namespace MatchRecorderShared.Messages;
+﻿namespace MatchRecorder.Shared.Messages;
 
 public class CloseRecorderMessage : BaseMessage
 {

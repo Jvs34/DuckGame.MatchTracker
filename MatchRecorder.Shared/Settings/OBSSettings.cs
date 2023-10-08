@@ -1,4 +1,4 @@
-﻿namespace MatchTracker;
+﻿namespace MatchRecorder.Shared.Settings;
 
 public class OBSSettings
 {

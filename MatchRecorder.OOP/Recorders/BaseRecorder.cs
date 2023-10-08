@@ -1,12 +1,14 @@
-﻿using MatchRecorderShared.Enums;
-using MatchRecorderShared.Messages;
-using MatchTracker;
+﻿using MatchRecorder.Shared.Enums;
+using MatchRecorder.Shared.Messages;
+using MatchShared.Databases.Interfaces;
+using MatchShared.DataClasses;
+using MatchShared.Enums;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace MatchRecorder.Recorders;
+namespace MatchRecorder.OOP.Recorders;
 
 internal abstract class BaseRecorder
 {
@@ -22,8 +24,8 @@ internal abstract class BaseRecorder
 	protected ModMessageQueue MessageQueue { get; set; }
 
 	public BaseRecorder(
-		ILogger<BaseRecorder> logger ,
-		IGameDatabase db ,
+		ILogger<BaseRecorder> logger,
+		IGameDatabase db,
 		ModMessageQueue messageQueue
 		)
 	{
@@ -64,7 +66,7 @@ internal abstract class BaseRecorder
 		CurrentMatch = new MatchData
 		{
 			//TimeStarted = message.TimeStarted , //TODO: differentiate between tracking time and recording time
-			Players = message.Players ,
+			Players = message.Players,
 			Teams = message.Teams
 		};
 
@@ -102,8 +104,8 @@ internal abstract class BaseRecorder
 		CurrentRound = new RoundData
 		{
 			//TimeStarted = message.TimeStarted , //TODO: differentiate between tracking time and recording time
-			LevelName = message.LevelName ,
-			Players = message.Players ,
+			LevelName = message.LevelName,
+			Players = message.Players,
 			Teams = message.Teams
 		};
 
@@ -210,12 +212,12 @@ internal abstract class BaseRecorder
 		return newRoundData;
 	}
 
-	public void SendHUDmessage( string message , TextMessagePosition messagePosition = TextMessagePosition.TopLeft )
+	public void SendHUDmessage( string message, TextMessagePosition messagePosition = TextMessagePosition.TopLeft )
 	{
-		Logger.LogInformation( "Sending to client: {message}" , message );
+		Logger.LogInformation( "Sending to client: {message}", message );
 		MessageQueue.PushToClientMessageQueue( new TextMessage()
 		{
-			Message = message ,
+			Message = message,
 			MessagePosition = messagePosition
 		} );
 	}

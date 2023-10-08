@@ -1,11 +1,8 @@
-﻿using System;
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
 
 //https://github.com/rsdn/CodeJam/blob/master/CodeJam.Main/Threading/AwaitableNonDisposable.cs
-namespace CodeJam.Threading;
+namespace MatchBot.Utils;
 
 /// <summary>
 /// Lock, that can be used with async/await code.
@@ -44,13 +41,13 @@ public class AsyncLock
 	}
 	#endregion
 
-	private readonly SemaphoreSlim _semaphore = new( 1 , 1 );
+	private readonly SemaphoreSlim _semaphore = new( 1, 1 );
 
 	/// <summary>
 	/// Acquires async lock.
 	/// </summary>
 	/// <returns>A task that returns the <see cref="AsyncLockScope"/> to release the lock.</returns>
-	public Task<AsyncLockScope> AcquireAsync() => AcquireAsync( -1 , CancellationToken.None );
+	public Task<AsyncLockScope> AcquireAsync() => AcquireAsync( -1, CancellationToken.None );
 
 	/// <summary>
 	/// Acquires async lock.
@@ -62,7 +59,7 @@ public class AsyncLock
 	/// <returns>A task that returns the <see cref="AsyncLockScope"/> to release the lock.</returns>
 	/// <exception cref="TimeoutException">The timeout has expired.</exception>
 	public Task<AsyncLockScope> AcquireAsync( int timeout ) =>
-		AcquireAsync( TimeSpan.FromMilliseconds( timeout ) , CancellationToken.None );
+		AcquireAsync( TimeSpan.FromMilliseconds( timeout ), CancellationToken.None );
 
 	/// <summary>
 	/// Acquires async lock.
@@ -75,7 +72,7 @@ public class AsyncLock
 	/// <returns>A task that returns the <see cref="AsyncLockScope"/> to release the lock.</returns>
 	/// <exception cref="TimeoutException">The timeout has expired.</exception>
 	public Task<AsyncLockScope> AcquireAsync( TimeSpan timeout )
-		=> AcquireAsync( timeout , CancellationToken.None );
+		=> AcquireAsync( timeout, CancellationToken.None );
 
 	/// <summary>
 	/// Acquires async lock.
@@ -84,7 +81,7 @@ public class AsyncLock
 	/// <returns>A task that returns the <see cref="AsyncLockScope"/> to release the lock.</returns>
 	/// <exception cref="OperationCanceledException">The token has had cancellation requested.</exception>
 	public Task<AsyncLockScope> AcquireAsync( CancellationToken cancellation )
-		=> AcquireAsync( -1 , cancellation );
+		=> AcquireAsync( -1, cancellation );
 
 	/// <summary>
 	/// Acquires async lock.
@@ -98,8 +95,8 @@ public class AsyncLock
 	/// <exception cref="OperationCanceledException">The token has had cancellation requested.</exception>
 	/// <exception cref="TimeoutException">The timeout has expired.</exception>
 	public Task<AsyncLockScope> AcquireAsync(
-		int timeout , CancellationToken cancellation ) =>
-			AcquireAsync( TimeSpan.FromMilliseconds( timeout ) , cancellation );
+		int timeout, CancellationToken cancellation ) =>
+			AcquireAsync( TimeSpan.FromMilliseconds( timeout ), cancellation );
 
 	/// <summary>
 	/// Acquires async lock.
@@ -113,12 +110,12 @@ public class AsyncLock
 	/// <returns>A task that returns the <see cref="AsyncLockScope"/> to release the lock.</returns>
 	/// <exception cref="OperationCanceledException">The token has had cancellation requested.</exception>
 	/// <exception cref="TimeoutException">The timeout has expired.</exception>
-	public Task<AsyncLockScope> AcquireAsync( TimeSpan timeout , CancellationToken cancellation ) =>
-		AcquireAsyncImpl( timeout , cancellation );
+	public Task<AsyncLockScope> AcquireAsync( TimeSpan timeout, CancellationToken cancellation ) =>
+		AcquireAsyncImpl( timeout, cancellation );
 
-	private async Task<AsyncLockScope> AcquireAsyncImpl( TimeSpan timeout , CancellationToken cancellation )
+	private async Task<AsyncLockScope> AcquireAsyncImpl( TimeSpan timeout, CancellationToken cancellation )
 	{
-		var succeeded = await _semaphore.WaitAsync( timeout , cancellation ).ConfigureAwait( false );
+		var succeeded = await _semaphore.WaitAsync( timeout, cancellation ).ConfigureAwait( false );
 		if( !succeeded )
 		{
 			cancellation.ThrowIfCancellationRequested();
@@ -131,7 +128,7 @@ public class AsyncLock
 	/// Synchronously acquires async lock.
 	/// </summary>
 	/// <returns>An <see cref="AsyncLockScope"/> to release the lock.</returns>
-	public AsyncLockScope AcquireSync() => AcquireSync( -1 , CancellationToken.None );
+	public AsyncLockScope AcquireSync() => AcquireSync( -1, CancellationToken.None );
 
 	/// <summary>
 	/// Synchronously acquires async lock.
@@ -143,7 +140,7 @@ public class AsyncLock
 	/// <returns>An <see cref="AsyncLockScope"/> to release the lock.</returns>
 	/// <exception cref="TimeoutException">The timeout has expired.</exception>
 	public AsyncLockScope AcquireSync( int timeout ) =>
-		AcquireSync( TimeSpan.FromMilliseconds( timeout ) , CancellationToken.None );
+		AcquireSync( TimeSpan.FromMilliseconds( timeout ), CancellationToken.None );
 
 	/// <summary>
 	/// Synchronously acquires async lock.
@@ -155,7 +152,7 @@ public class AsyncLock
 	/// </param>
 	/// <returns>An <see cref="AsyncLockScope"/> to release the lock.</returns>
 	/// <exception cref="TimeoutException">The timeout has expired.</exception>
-	public AsyncLockScope AcquireSync( TimeSpan timeout ) => AcquireSync( timeout , CancellationToken.None );
+	public AsyncLockScope AcquireSync( TimeSpan timeout ) => AcquireSync( timeout, CancellationToken.None );
 
 	/// <summary>
 	/// Synchronously acquires async lock.
@@ -163,7 +160,7 @@ public class AsyncLock
 	/// <param name="cancellation">The <see cref="CancellationToken"/> to observe.</param>
 	/// <returns>An <see cref="AsyncLockScope"/> to release the lock.</returns>
 	/// <exception cref="OperationCanceledException">The token has had cancellation requested.</exception>
-	public AsyncLockScope AcquireSync( CancellationToken cancellation ) => AcquireSync( -1 , cancellation );
+	public AsyncLockScope AcquireSync( CancellationToken cancellation ) => AcquireSync( -1, cancellation );
 
 	/// <summary>
 	/// Synchronously acquires async lock.
@@ -176,8 +173,8 @@ public class AsyncLock
 	/// <returns>An <see cref="AsyncLockScope"/> to release the lock.</returns>
 	/// <exception cref="OperationCanceledException">The token has had cancellation requested.</exception>
 	/// <exception cref="TimeoutException">The timeout has expired.</exception>
-	public AsyncLockScope AcquireSync( int timeout , CancellationToken cancellation ) =>
-		AcquireSync( TimeSpan.FromMilliseconds( timeout ) , cancellation );
+	public AsyncLockScope AcquireSync( int timeout, CancellationToken cancellation ) =>
+		AcquireSync( TimeSpan.FromMilliseconds( timeout ), cancellation );
 
 	/// <summary>
 	/// Synchronously acquires async lock.
@@ -192,9 +189,9 @@ public class AsyncLock
 	/// <exception cref="OperationCanceledException">The token has had cancellation requested.</exception>
 	/// <exception cref="TimeoutException">The timeout has expired.</exception>
 	/// <remarks>Should be used only in specific scenario, when sync and async code uses lock together</remarks>
-	public AsyncLockScope AcquireSync( TimeSpan timeout , CancellationToken cancellation )
+	public AsyncLockScope AcquireSync( TimeSpan timeout, CancellationToken cancellation )
 	{
-		var succeed = _semaphore.Wait( timeout , cancellation );
+		var succeed = _semaphore.Wait( timeout, cancellation );
 		if( !succeed )
 		{
 			cancellation.ThrowIfCancellationRequested();

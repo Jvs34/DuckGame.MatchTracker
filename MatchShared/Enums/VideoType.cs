@@ -1,4 +1,6 @@
-﻿namespace MatchTracker;
+﻿using MatchShared.DataClasses;
+
+namespace MatchShared.Enums;
 
 public enum VideoUrlType
 {

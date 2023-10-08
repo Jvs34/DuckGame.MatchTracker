@@ -1,7 +1,8 @@
-﻿using System;
+﻿using MatchShared.Interfaces;
+using System;
 using System.Collections.Generic;
 
-namespace MatchTracker;
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// Matches played back to back in the same session, this is tracked automatically

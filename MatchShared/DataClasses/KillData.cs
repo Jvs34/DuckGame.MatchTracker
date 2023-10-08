@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace MatchTracker;
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A kill in a round, not saved directly in the database but as part of <see cref="RoundData.KillsList"/>

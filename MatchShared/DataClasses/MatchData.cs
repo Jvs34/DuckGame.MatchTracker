@@ -1,7 +1,8 @@
-﻿using System;
+﻿using MatchShared.Interfaces;
+using System;
 using System.Collections.Generic;
 
-namespace MatchTracker;
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A match does not necessarily start when the first round starts or the last round ends,<para/>

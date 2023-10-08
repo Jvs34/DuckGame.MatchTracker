@@ -1,4 +1,6 @@
-﻿namespace MatchTracker;
+﻿using MatchShared.Interfaces;
+
+namespace MatchShared.DataClasses;
 
 /// <summary>
 /// A tag assigned to something for easier searching, typically an emoticon

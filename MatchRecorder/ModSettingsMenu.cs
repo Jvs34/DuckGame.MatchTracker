@@ -1,6 +1,6 @@
 ﻿using DuckGame;
-using MatchRecorderShared;
-using MatchRecorderShared.Enums;
+using MatchRecorder.Shared.Enums;
+using MatchRecorder.Shared.Settings;
 using System;
 using System.Collections.Generic;
 using System.Linq;

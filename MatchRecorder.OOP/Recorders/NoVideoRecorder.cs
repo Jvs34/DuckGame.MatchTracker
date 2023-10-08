@@ -1,10 +1,12 @@
-﻿using MatchTracker;
-using MatchRecorderShared.Enums;
+﻿using MatchRecorder.Shared.Enums;
+using MatchShared.Databases.Interfaces;
+using MatchShared.DataClasses;
+using MatchShared.Enums;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 
-namespace MatchRecorder.Recorders;
+namespace MatchRecorder.OOP.Recorders;
 
 /// <summary>
 /// A "recorder" that purely tracks data but does not record any actual footage
@@ -13,7 +15,7 @@ internal sealed class NoVideoRecorder : BaseRecorder
 {
 	public override bool IsRecording => IsRecordingMatch;
 
-	public NoVideoRecorder( ILogger<BaseRecorder> logger , IGameDatabase db , ModMessageQueue messageQueue ) : base( logger , db , messageQueue )
+	public NoVideoRecorder( ILogger<BaseRecorder> logger, IGameDatabase db, ModMessageQueue messageQueue ) : base( logger, db, messageQueue )
 	{
 		ResultingRecordingType = RecordingType.None;
 		RecorderConfigType = RecorderType.NoVideo;
@@ -32,8 +34,8 @@ internal sealed class NoVideoRecorder : BaseRecorder
 
 		match.VideoUploads.Add( new VideoUpload()
 		{
-			VideoType = VideoUrlType.None ,
-			RecordingType = ResultingRecordingType ,
+			VideoType = VideoUrlType.None,
+			RecordingType = ResultingRecordingType,
 		} );
 
 		await GameDatabase.SaveData( match );
@@ -47,7 +49,7 @@ internal sealed class NoVideoRecorder : BaseRecorder
 
 		round.VideoUploads.Add( new VideoUpload()
 		{
-			VideoType = VideoUrlType.None ,
+			VideoType = VideoUrlType.None,
 			RecordingType = ResultingRecordingType
 		} );
 	}
