@@ -17,7 +17,7 @@
 		<PackageReference Include="ILRepack" Version="2.0.18" />
 		<PackageReference Include="Lib.Harmony" Version="2.2.2" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<ProjectReference Include="..\MatchRecorderShared\MatchRecorderShared.csproj" />
+		<ProjectReference Include="..\MatchRecorder.Shared\MatchRecorder.Shared.csproj" />
 		<Reference Include="DuckGame">
 			<HintPath>..\ThirdParty\DuckGame.exe</HintPath>
 			<Private>false</Private>
@@ -25,7 +25,7 @@
 	</ItemGroup>
 
 	<Target Name="RepackDlls" AfterTargets="PostBuildEvent">
-		<Exec Command="$(ILRepack) /out:$(OutDir)\ModOutput\$(ProjectName).dll $(OutDir)\$(ProjectName).dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\MatchRecorderShared.dll $(OutDir)\MatchShared.dll $(OutDir)\System.Runtime.InteropServices.RuntimeInformation.dll" />
+		<Exec Command="$(ILRepack) /out:$(OutDir)\ModOutput\$(ProjectName).dll $(OutDir)\$(ProjectName).dll $(OutDir)\0Harmony.dll $(OutDir)\Newtonsoft.Json.dll $(OutDir)\MatchRecorder.Shared.dll $(OutDir)\MatchShared.dll $(OutDir)\System.Runtime.InteropServices.RuntimeInformation.dll" />
 	</Target>
 
 	<Target Name="CopyModContent" AfterTargets="RepackDlls">

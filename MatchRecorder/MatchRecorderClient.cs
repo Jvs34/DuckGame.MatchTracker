@@ -27,7 +27,11 @@ public sealed class MatchRecorderClient : IDisposable
 	private Task MessageHandlerTask { get; set; }
 	public string RecorderUrl { get; set; } = "http://localhost:6969";
 	private HttpClient HttpClient { get; }
-	private ModSettings Settings { get; set; } = new ModSettings();
+	private ModSettings Settings { get; set; } = new ModSettings()
+	{
+		RecorderType = RecorderType.OBSRawVideo ,
+		RecordingEnabled = true ,
+	};
 	private JsonSerializer Serializer { get; } = new JsonSerializer()
 	{
 		Formatting = Formatting.Indented
@@ -54,12 +58,18 @@ public sealed class MatchRecorderClient : IDisposable
 		SaveSettings();
 	}
 
-	public void LoadSettings()
+	public bool LoadSettings()
 	{
+		if( !File.Exists( SettingsPath ) )
+		{
+			return false;
+		}
+
 		using var dataStream = File.Open( SettingsPath , FileMode.Open );
 		using var reader = new StreamReader( dataStream );
 		using var jsonReader = new JsonTextReader( reader );
 		Settings = Serializer.Deserialize<ModSettings>( jsonReader );
+		return true;
 	}
 
 	public void SaveSettings()
@@ -128,7 +138,7 @@ public sealed class MatchRecorderClient : IDisposable
 	{
 		var startInfo = new ProcessStartInfo()
 		{
-			FileName = Path.Combine( ModPath , "MatchRecorderOOP" , "MatchRecorderOOP.exe" ) ,
+			FileName = Path.Combine( ModPath , "MatchRecorder.OOP" , "MatchRecorder.OOP.exe" ) ,
 			WorkingDirectory = ModPath ,
 			UseShellExecute = false ,
 			CreateNoWindow = false ,

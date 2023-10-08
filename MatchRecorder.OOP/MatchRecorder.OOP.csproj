@@ -8,7 +8,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\MatchRecorderShared\MatchRecorderShared.csproj" />
+		<ProjectReference Include="..\MatchRecorder.Shared\MatchRecorder.Shared.csproj" />
 		<ProjectReference Include="..\MatchShared.Databases\MatchShared.Databases.csproj" />
 		<PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="3.0.0" />
 		<PackageReference Include="ObsStrawket" Version="0.14.0" />
