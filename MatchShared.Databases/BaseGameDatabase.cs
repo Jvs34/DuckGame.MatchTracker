@@ -15,6 +15,8 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 	protected bool IsDisposed { get; private set; }
 	public SharedSettings SharedSettings { get; set; } = new SharedSettings();
 	public virtual bool IsReadOnly => false;
+	public virtual bool IsLoaded => IsLoadedInternal;
+	protected bool IsLoadedInternal { get; set; }
 
 	protected BaseGameDatabase()
 	{

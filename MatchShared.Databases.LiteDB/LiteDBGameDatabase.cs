@@ -18,6 +18,11 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 
 	public override Task Load( CancellationToken token = default )
 	{
+		if( IsLoaded )
+		{
+			return Task.CompletedTask;
+		}
+
 		var connectionString = new ConnectionString
 		{
 			Connection = ConnectionType.Direct,
@@ -26,6 +31,7 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 		};
 
 		Database = new LiteDatabase( connectionString, Mapper );
+		IsLoadedInternal = true;
 		return Task.CompletedTask;
 	}
 

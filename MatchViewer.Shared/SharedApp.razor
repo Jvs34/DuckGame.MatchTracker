@@ -1,6 +1,5 @@
 ﻿@using System.Net.Http.Json;
 @inject IGameDatabase Database
-@inject IOptions<SharedSettings> SharedOptions
 @inject IHttpClientFactory ClientFactory
 @inject NavigationManager NavigationManager
 
@@ -20,11 +19,17 @@
 @code {
 	protected override async Task OnInitializedAsync()
 	{
+		if( Database is null || Database.IsLoaded )
+		{
+			return;
+		}
+
 		var client = ClientFactory.CreateClient( "Anonymous" );
 		client.BaseAddress = new Uri( NavigationManager.BaseUri );
-		var test = await client.GetFromJsonAsync<SharedSettings>( "_content/MatchViewer.Shared/shared.json" );
 
-		Database.SharedSettings = SharedOptions.Value;
+		var sharedSettings = await client.GetFromJsonAsync<SharedSettings>( "_content/MatchViewer.Shared/shared.json" );
+
+		Database.SharedSettings = sharedSettings;
 		await Database.Load();
 	}
 }

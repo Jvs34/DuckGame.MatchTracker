@@ -13,6 +13,7 @@ public interface IGameDatabase : IDisposable
 	SharedSettings SharedSettings { get; set; }
 
 	bool IsReadOnly { get; }
+	bool IsLoaded { get; }
 
 	Task Load( CancellationToken token = default );
 	Task<bool> SaveData<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry;
