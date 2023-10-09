@@ -3,7 +3,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchShared.Databases;
+namespace MatchShared.Databases.LiteDB;
 
 public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 {

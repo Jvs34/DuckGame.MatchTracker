@@ -12,8 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\MatchShared.Databases\MatchShared.Databases.csproj" />
-    <ProjectReference Include="..\MatchShared\MatchShared.csproj" />
+	  <ProjectReference Include="..\MatchRecorder.Shared\MatchRecorder.Shared.csproj" />
+	  <ProjectReference Include="..\MatchShared.Databases\MatchShared.Databases.csproj" />
+	  <ProjectReference Include="..\MatchShared.Databases.LiteDB\MatchShared.Databases.LiteDB.csproj" />
   </ItemGroup>
 
 

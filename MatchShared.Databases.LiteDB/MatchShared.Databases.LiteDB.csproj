@@ -1,9 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
 		<TargetFramework>netstandard2.0</TargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\MatchShared\MatchShared.csproj" />
+		<ProjectReference Include="..\MatchShared.Databases\MatchShared.Databases.csproj" />
+		<PackageReference Include="LiteDB" Version="5.0.17" />
 	</ItemGroup>
+
 </Project>

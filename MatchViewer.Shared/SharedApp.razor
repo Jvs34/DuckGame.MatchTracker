@@ -1,0 +1,30 @@
+﻿@using System.Net.Http.Json;
+@inject IGameDatabase Database
+@inject IOptions<SharedSettings> SharedOptions
+@inject IHttpClientFactory ClientFactory
+@inject NavigationManager NavigationManager
+
+<Router AppAssembly="@typeof(SharedApp).Assembly">
+	<Found Context="routeData">
+		<RouteView RouteData="@routeData" DefaultLayout="@typeof(MainLayout)" />
+		<FocusOnNavigate RouteData="@routeData" Selector="h1" />
+	</Found>
+	<NotFound>
+		<PageTitle>Not found</PageTitle>
+		<LayoutView Layout="@typeof(MainLayout)">
+			<p role="alert">Sorry, there's nothing at this address.</p>
+		</LayoutView>
+	</NotFound>
+</Router>
+
+@code {
+	protected override async Task OnInitializedAsync()
+	{
+		var client = ClientFactory.CreateClient( "Anonymous" );
+		client.BaseAddress = new Uri( NavigationManager.BaseUri );
+		var test = await client.GetFromJsonAsync<SharedSettings>( "_content/MatchViewer.Shared/shared.json" );
+
+		Database.SharedSettings = SharedOptions.Value;
+		await Database.Load();
+	}
+}

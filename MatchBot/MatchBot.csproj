@@ -12,8 +12,9 @@
 		<PackageReference Include="Humanizer" Version="2.14.1" />
 		<PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="3.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
+		<ProjectReference Include="..\MatchRecorder.Shared\MatchRecorder.Shared.csproj" />
 		<ProjectReference Include="..\MatchShared.Databases\MatchShared.Databases.csproj" />
-		<ProjectReference Include="..\MatchShared\MatchShared.csproj" />
+		<ProjectReference Include="..\MatchShared.Databases.LiteDB\MatchShared.Databases.LiteDB.csproj" />
 	</ItemGroup>
 
 </Project>

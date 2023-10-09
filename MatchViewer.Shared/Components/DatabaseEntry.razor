@@ -1,0 +1,41 @@
+﻿@typeparam TItem where TItem: IDatabaseEntry
+@inject IGameDatabase Database
+
+<MudCard>
+	<MudCardContent>
+		<MudText>Story of the day</MudText>
+		<MudText Typo="Typo.body2">
+			@if( Entry is null )
+			{
+				<p>Loading...</p>
+			}
+			else
+			{
+				<p>@Entry.DatabaseIndex</p>
+			}
+		</MudText>
+	</MudCardContent>
+	<MudCardActions>
+		<MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+	</MudCardActions>
+</MudCard>
+
+@code {
+	[Parameter]
+	public string? EntryIndex { get; set; }
+
+	public TItem? Entry { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		if( Database is null )
+		{
+			return;
+		}
+
+		if( !string.IsNullOrEmpty( EntryIndex ) )
+		{
+			Entry = await Database.GetData<TItem>( EntryIndex );
+		}
+	}
+}
