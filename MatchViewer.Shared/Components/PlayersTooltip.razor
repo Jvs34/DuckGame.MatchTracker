@@ -1,0 +1,30 @@
+﻿@inject IGameDatabase Database
+
+@foreach( var playerName in PlayerNames )
+{
+	<MudText Typo="Typo.body2">@playerName</MudText>
+}
+
+@code {
+	[Parameter]
+	public List<string>? PlayerIndexes { get; set; }
+
+	private List<string> PlayerNames { get; set; } = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		if( !Database.IsLoaded || PlayerIndexes is null )
+		{
+			return;
+		}
+
+		@foreach( var playerIndex in PlayerIndexes )
+		{
+			var playerData = await Database.GetData<PlayerData>( playerIndex );
+			if( playerData is not null )
+			{
+				PlayerNames.Add( playerData.GetName( true ) );
+			}
+		}
+	}
+}

@@ -1,26 +1,42 @@
 ﻿@typeparam TItem where TItem: IDatabaseEntry
 @inject IGameDatabase Database
 
-<MudCard>
+<MudCard Width="350px">
+	<MudCardHeader>
+		<CardHeaderContent>
+			<MudText Typo="Typo.h6">
+				<p>@EntryIndex</p>
+			</MudText>
+		</CardHeaderContent>
+		<CardHeaderActions>
+			<MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" />
+		</CardHeaderActions>
+	</MudCardHeader>
 	<MudCardContent>
-		<MudText>Story of the day</MudText>
-		<MudText Typo="Typo.body2">
-			@if( Entry is null )
-			{
-				<p>Loading...</p>
-			}
-			else
-			{
-				<p>@Entry.DatabaseIndex</p>
-			}
+		<MudText>
+			test
 		</MudText>
+		<MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.</MudText>
 	</MudCardContent>
 	<MudCardActions>
-		<MudButton Variant="Variant.Text" Color="Color.Primary">Learn More</MudButton>
+		@if( Entry is not null && Entry is IPlayersList players )
+		{
+			<MudTooltip>
+				<ChildContent>
+					<MudBadge Content="@players.Players.Count" Overlap="true">
+						<MudIcon Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Default" />
+					</MudBadge>
+				</ChildContent>
+				<TooltipContent>
+					<PlayersTooltip PlayerIndexes="@players.Players" />
+				</TooltipContent>
+			</MudTooltip>
+		}
 	</MudCardActions>
 </MudCard>
 
 @code {
+	//<MudCardMedia Image="images/pilars.jpg" Height="250" />
 	[Parameter]
 	public string? EntryIndex { get; set; }
 

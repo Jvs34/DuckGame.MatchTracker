@@ -19,7 +19,7 @@
 @code {
 	protected override async Task OnInitializedAsync()
 	{
-		if( Database is null || Database.IsLoaded )
+		if( Database.IsLoaded )
 		{
 			return;
 		}
