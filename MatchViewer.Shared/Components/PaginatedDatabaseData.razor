@@ -45,7 +45,7 @@
 			Indexes = await Database.GetAllIndexes<TItem>();
 		}
 
-		MaxPages = (int) Math.Ceiling( (double) Indexes.Count / (double) ItemsPerPage ) - 1;
+		MaxPages = (int) Math.Ceiling( (double) Indexes.Count / (double) ItemsPerPage );
 	}
 
 	private IEnumerable<string> GetPageItems( int page = 0 )
@@ -62,7 +62,7 @@
 		{
 			if( currentItems >= ItemsPerPage )
 			{
-				break;
+				yield break;
 			}
 			currentItems++;
 			yield return item;
