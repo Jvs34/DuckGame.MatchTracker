@@ -1,0 +1,79 @@
+﻿@using MatchShared.Enums;
+<!--
+@if( IsYoutubeEmbed )
+{
+	<iframe width="560"
+			height="315"
+			src="@YoutubeUrl"
+			title="YouTube video player"
+			frameborder="0"
+			allowfullscreen />
+}
+-->
+
+@if( UploadList is not null )
+{
+	<MudCardMedia Image="@GetThumbnailUrl()" Height="250" />
+}
+
+@code {
+	[Parameter]
+	public IVideoUploadList? UploadList { get; set; }
+
+	private bool IsYoutubeEmbed { get; set; }
+	private string? YoutubeUrl { get; set; }
+
+	protected override void OnParametersSet()
+	{
+		//SetupYoutubeEmbed();
+	}
+
+	private void SetupYoutubeEmbed()
+	{
+		var nonPendingUpload = UploadList?.VideoUploads.FirstOrDefault( x => !x.IsPending() && x.ServiceType == VideoServiceType.Youtube );
+
+		if( nonPendingUpload is not null )
+		{
+			IsYoutubeEmbed = true;
+
+			switch( nonPendingUpload.VideoType )
+			{
+				case VideoUrlType.PlaylistLink:
+				{
+					YoutubeUrl = $"https://www.youtube.com/embed/videoseries?list={nonPendingUpload.Url}";
+					break;
+				}
+
+				case VideoUrlType.RawVideoLink:
+				case VideoUrlType.MergedVideoLink:
+				case VideoUrlType.LivestreamLink:
+				{
+					YoutubeUrl = $"https://www.youtube.com/embed/{nonPendingUpload.Url}";
+					break;
+				}
+				default: break;
+			}
+		}
+	}
+
+
+	private string GetThumbnailUrl()
+	{
+		var nonPendingUpload = UploadList?
+		.VideoUploads
+		.FirstOrDefault( x =>
+			!x.IsPending() );
+
+		if( nonPendingUpload is not null )
+		{
+
+			if( nonPendingUpload.ServiceType == VideoServiceType.Youtube && nonPendingUpload.VideoType != VideoUrlType.PlaylistLink )
+			{
+				return $"https://img.youtube.com/vi/{nonPendingUpload.Url}/maxresdefault.jpg";
+			}
+
+		}
+
+		return string.Empty;
+	}
+}

@@ -2,10 +2,20 @@
 
 @foreach( var playerName in PlayerNames )
 {
-	<MudText Typo="Typo.body2">@playerName</MudText>
+	<MudText Typo="Typo.body2">
+
+		@if( IsWinnerText )
+		{
+			<MudIcon Icon="@Icons.Material.Filled.Celebration" />
+		}
+		@playerName
+	</MudText>
 }
 
 @code {
+	[Parameter]
+	public bool IsWinnerText { get; set; } = false;
+
 	[Parameter]
 	public List<string>? PlayerIndexes { get; set; }
 

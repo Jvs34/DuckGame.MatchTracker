@@ -1,0 +1,71 @@
+﻿@typeparam TItem where TItem: IDatabaseEntry
+@inject IGameDatabase Database
+
+<MudPagination Color="Color.Primary"
+			   Count="@MaxPages"
+@bind-Selected="CurrentPage"
+			   ShowLastButton="true"
+			   ShowFirstButton="true"
+			   Size="Size.Large" />
+
+<MudGrid SSpacing="1" Justify="Justify.FlexStart">
+	@foreach( var item in GetPageItems( CurrentPage - 1 ) )
+	{
+		<MudItem>
+			<DatabaseEntry @key="item" EntryIndex="@item" TItem="TItem"></DatabaseEntry>
+		</MudItem>
+	}
+</MudGrid>
+
+<MudPagination Color="Color.Primary"
+			   Count="@MaxPages"
+@bind-Selected="CurrentPage"
+			   ShowLastButton="true"
+			   ShowFirstButton="true"
+			   Size="Size.Large" />
+
+@code {
+	[Parameter]
+	public List<string>? Indexes { get; set; }
+
+	private int ItemsPerPage = 50;
+	private int MaxPages = 1;
+	private int CurrentPage = 1;
+
+	protected override async Task OnInitializedAsync()
+	{
+		if( !Database.IsLoaded )
+		{
+			return;
+		}
+
+		//only load all the indexes in they weren't provided by the parent
+		if( Indexes is null )
+		{
+			Indexes = await Database.GetAllIndexes<TItem>();
+		}
+
+		MaxPages = (int) Math.Ceiling( (double) Indexes.Count / (double) ItemsPerPage ) - 1;
+	}
+
+	private IEnumerable<string> GetPageItems( int page = 0 )
+	{
+		if( Indexes is null )
+		{
+			yield break;
+		}
+
+		int itemsToSkip = ItemsPerPage * page;
+		int currentItems = 0;
+		var skippedEnumerable = Indexes.Skip( itemsToSkip );
+		foreach( var item in skippedEnumerable )
+		{
+			if( currentItems >= ItemsPerPage )
+			{
+				break;
+			}
+			currentItems++;
+			yield return item;
+		}
+	}
+}

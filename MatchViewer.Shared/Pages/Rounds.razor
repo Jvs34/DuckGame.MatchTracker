@@ -1,30 +1,14 @@
 ﻿@page "/rounds"
-@using Microsoft.AspNetCore.Components.Web.Virtualization
+@page "/rounds/{MatchName}"
 @inject IGameDatabase Database
 
-
-<MudGrid SSpacing="1" Justify="Justify.FlexStart">
-	@foreach( var item in GetPageItems( CurrentPage ) )
-	{
-		<MudItem>
-			<DatabaseEntry @key="item" EntryIndex="@item" TItem="RoundData"></DatabaseEntry>
-		</MudItem>
-	}
-</MudGrid>
-
-<MudPagination Color="Color.Primary"
-			   Count="@MaxPages"
-@bind-Selected="CurrentPage"
-			   ShowLastButton="true"
-			   ShowFirstButton="true" />
+<PaginatedDatabaseData TItem="RoundData" Indexes="@RoundIndexes" />
 
 @code {
+	[Parameter]
+	public string? MatchName { get; set; }
 
-	private List<string> Indexes { get; set; } = new();
-
-	private int ItemsPerPage = 50;
-	private int MaxPages = 1;
-	private int CurrentPage = 0;
+	private List<string>? RoundIndexes { get; set; }
 
 	protected override async Task OnInitializedAsync()
 	{
@@ -33,22 +17,11 @@
 			return;
 		}
 
-		Indexes = await Database.GetAllIndexes<RoundData>();
-		MaxPages = (int) Math.Ceiling( (double) Indexes.Count / (double) ItemsPerPage );
-	}
-
-	private IEnumerable<string> GetPageItems( int page = 0 )
-	{
-		int currentItems = 0;
-		var skippedEnumerable = Indexes.Skip( ItemsPerPage * page );
-		foreach( var item in skippedEnumerable )
+		if( !string.IsNullOrEmpty( MatchName ) )
 		{
-			if( currentItems >= ItemsPerPage )
-			{
-				break;
-			}
-			currentItems++;
-			yield return item;
+			var matchData = await Database.GetData<MatchData>( MatchName );
+
+			RoundIndexes = matchData?.Rounds;
 		}
 	}
 }

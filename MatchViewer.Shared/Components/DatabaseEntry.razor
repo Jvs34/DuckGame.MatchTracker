@@ -1,22 +1,41 @@
-﻿@typeparam TItem where TItem: IDatabaseEntry
+﻿@using Humanizer;
+@typeparam TItem where TItem: IDatabaseEntry
 @inject IGameDatabase Database
 
 <MudCard Width="350px">
 	<MudCardHeader>
 		<CardHeaderContent>
 			<MudText Typo="Typo.h6">
-				<p>@EntryIndex</p>
+				@if( Entry is not null && Entry is IStartEndTime startEndTime )
+				{   //TODO: center the text
+					if( Entry is IRoundsList roundsList )
+					{
+						<MudNavLink Href=@($"/rounds/{EntryIndex}") Match="NavLinkMatch.Prefix">@startEndTime.TimeStarted.ToString("G")</MudNavLink>
+					}
+					else
+					{
+						@startEndTime.TimeStarted.ToString("G")
+					}
+				}
+				else
+				{
+					@EntryIndex
+				}
 			</MudText>
 		</CardHeaderContent>
 		<CardHeaderActions>
 			<MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" />
 		</CardHeaderActions>
 	</MudCardHeader>
+	@if( Entry is not null && Entry is IVideoUploadList videoUploadList )
+	{
+		<VideoThumbnail UploadList="@videoUploadList" />
+	}
 	<MudCardContent>
-		<MudText>
-			test
-		</MudText>
-		<MudText Typo="Typo.body2">The quick, brown fox jumps over a lazy dog.</MudText>
+		@if( Entry is not null && Entry is IWinner winners )
+		{
+			<PlayersTooltip PlayerIndexes="@winners.GetWinners()" IsWinnerText="true" />
+		}
 	</MudCardContent>
 	<MudCardActions>
 		@if( Entry is not null && Entry is IPlayersList players )
@@ -24,7 +43,7 @@
 			<MudTooltip>
 				<ChildContent>
 					<MudBadge Content="@players.Players.Count" Overlap="true">
-						<MudIcon Icon="@Icons.Material.Filled.AccountCircle" Color="Color.Default" />
+						<MudIcon Icon="@Icons.Material.Filled.Group" Color="Color.Default" />
 					</MudBadge>
 				</ChildContent>
 				<TooltipContent>
@@ -32,11 +51,23 @@
 				</TooltipContent>
 			</MudTooltip>
 		}
+		@if( Entry is not null && Entry is IRoundsList rounds )
+		{
+			<MudBadge Content="@rounds.Rounds.Count" Overlap="true">
+				<MudIcon Icon="@Icons.Material.Filled.VideogameAsset" Color="Color.Default" />
+			</MudBadge>
+		}
+
+		@if( Entry is not null && Entry is IStartEndTime startEndTime )
+		{
+			<MudContainer Class="d-flex flex-1 justify-end">
+				<MudIcon Icon="@Icons.Material.Filled.AccessTime" /><MudText Typo="Typo.body2">@startEndTime.GetDuration().Humanize()</MudText>
+			</MudContainer>
+		}
 	</MudCardActions>
 </MudCard>
 
 @code {
-	//<MudCardMedia Image="images/pilars.jpg" Height="250" />
 	[Parameter]
 	public string? EntryIndex { get; set; }
 
