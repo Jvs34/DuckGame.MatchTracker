@@ -20,6 +20,7 @@
 			<HintPath>..\ThirdParty\DuckGame.exe</HintPath>
 			<Private>false</Private>
 		</Reference>
+
 	</ItemGroup>
 
 	<Target Name="RepackDlls" AfterTargets="PostBuildEvent">

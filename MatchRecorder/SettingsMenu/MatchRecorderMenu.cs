@@ -9,16 +9,16 @@ namespace MatchRecorder;
 
 public sealed class MatchRecorderMenu
 {
-	/// <summary>
-	/// Called when we need to refresh the settings of the menu
-	/// </summary>
 	public event Func<ModSettings> GetOptions;
 	public event Action<ModSettings> SetOptions;
+	public event Action ApplyOptions;
 
 	/// <summary>
-	/// Called when the menu is closed and we need to restart the companion process
+	/// Called when the option "RESTART" was called
 	/// </summary>
-	public event Action ApplyOptions;
+	public event Action RestartCompanion;
+
+	public event Action GenerateThumbnails;
 
 	public bool RecordingEnabled { get; set; }
 	public int RecordingTypeInt { get; set; }
@@ -27,8 +27,10 @@ public sealed class MatchRecorderMenu
 	#region UICOMPONENTS
 	private UIComponent MainGroup { get; set; }
 	private UIMenu Menu { get; set; }
-	public UIMenuItemToggle RecordingEnabledToggle { get; private set; }
-	public UIMenuItemNumber RecordingTypeSwitch { get; private set; }
+	private UIMenuItemToggle RecordingEnabledToggle { get; set; }
+	private UIMenuItemNumber RecordingTypeSwitch { get; set; }
+	private UIMenuItem RestartCompanionButton { get; set; }
+	private UIMenuItem GenerateThumbnailsButton { get; set; }
 	#endregion UICOMPONENTS
 
 	public MatchRecorderMenu()
@@ -45,22 +47,41 @@ public sealed class MatchRecorderMenu
 	private void CreateUI()
 	{
 		MainGroup = new UIComponent( Layer.HUD.camera.width / 2f, Layer.HUD.camera.height / 2f, 0f, 0f );
-		Menu = new UIMenu( "@LWING@MODRECORDER SETTINGS@RWING@", Layer.HUD.camera.width / 2f, Layer.HUD.camera.height / 2f, 200, -1f, "@CANCEL@CLOSE  @SELECT@SELECT" );
+
+		Menu = new UIMenu( "@LWING@MODRECORDER SETTINGS@RWING@", Layer.HUD.camera.width / 2f, Layer.HUD.camera.height / 2f, 240, -1f, "@CANCEL@CLOSE  @SELECT@SELECT" );
 		Menu.SetBackFunction( new UIMenuActionCloseMenuCallFunction( MainGroup, CloseSettingsMenu ) );
+		MainGroup.Add( Menu );
 
 		RecordingEnabledToggle = new UIMenuItemToggle( "RECORDING",
 			new UIMenuActionCallFunction( OnSettingsChanged ),
 			new FieldBinding( this, nameof( RecordingEnabled ) ) );
+		Menu.Add( RecordingEnabledToggle );
 
 		RecordingTypeSwitch = new UIMenuItemNumber( "TYPE",
 			new UIMenuActionCallFunction( OnSettingsChanged ),
 			new FieldBinding( this, nameof( RecordingTypeInt ), 0, RecorderTypeOptions.Count - 1 ),
 			valStrings: RecorderTypeOptions );
-
-		Menu.Add( RecordingEnabledToggle );
 		Menu.Add( RecordingTypeSwitch );
-		MainGroup.Add( Menu );
+
+		RestartCompanionButton = new UIMenuItem( "RESTART",
+			new UIMenuActionCallFunction( RestartCompanionCallback ) );
+		Menu.Add( RestartCompanionButton );
+
+		GenerateThumbnailsButton = new UIMenuItem( "GENERATE LEVEL THUMBNAILS",
+			new UIMenuActionCallFunction( GenerateThumbnailsCallback ) );
+		Menu.Add( GenerateThumbnailsButton );
+
 		MainGroup.Close();
+	}
+
+	private void GenerateThumbnailsCallback()
+	{
+		GenerateThumbnails();
+	}
+
+	private void RestartCompanionCallback()
+	{
+		RestartCompanion();
 	}
 
 	private void CloseSettingsMenu()

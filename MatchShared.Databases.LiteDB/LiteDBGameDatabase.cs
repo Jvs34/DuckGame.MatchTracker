@@ -1,5 +1,6 @@
 ﻿using LiteDB;
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -52,6 +53,13 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 	{
 		var collection = Database.GetCollection<T>( data.GetType().Name );
 		collection.Upsert( data );
+		return Task.FromResult( true );
+	}
+
+	public override Task<bool> SaveData<T>( IEnumerable<T> datas, CancellationToken token = default )
+	{
+		var collection = Database.GetCollection<T>( typeof( T ).Name );
+		collection.Upsert( datas );
 		return Task.FromResult( true );
 	}
 

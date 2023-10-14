@@ -104,6 +104,7 @@ internal sealed class RecorderBackgroundService : BackgroundService
 			case TextMessage txtm: Logger.LogInformation( "Received: {message}", txtm ); break;
 			case TrackKillMessage tkm: Recorder.TrackKill( tkm ); break;
 			case CollectObjectDataMessage cod: await Recorder.CollectObjectData( cod ); break;
+			case CollectLevelDataMessage lvl: await Recorder.CollectLevelData( lvl ); break;
 			case CloseRecorderMessage: AppLifeTime.StopApplication(); break;
 			default:
 			break;

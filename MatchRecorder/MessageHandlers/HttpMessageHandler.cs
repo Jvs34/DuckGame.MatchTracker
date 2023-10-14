@@ -12,11 +12,11 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MatchRecorder;
+namespace MatchRecorder.MessageHandlers;
 
-internal sealed class ClientMessageHandler
+internal sealed class HttpMessageHandler : IMessageHandler
 {
-	public event Action<TextMessage> OnReceiveMessage;
+	public event Action<BaseMessage> OnReceiveMessage;
 	private ConcurrentQueue<BaseMessage> SendMessagesQueue { get; } = new ConcurrentQueue<BaseMessage>();
 	private ConcurrentQueue<TextMessage> ReceiveMessagesQueue { get; } = new ConcurrentQueue<TextMessage>();
 	private JsonSerializer Serializer { get; } = new JsonSerializer()
@@ -27,7 +27,7 @@ internal sealed class ClientMessageHandler
 	private HttpClient HttpClient { get; }
 	private CancellationToken StopToken { get; }
 
-	public ClientMessageHandler( HttpClient httpClient, CancellationToken token )
+	public HttpMessageHandler( HttpClient httpClient, CancellationToken token )
 	{
 		HttpClient = httpClient;
 		StopToken = token;
@@ -38,7 +38,7 @@ internal sealed class ClientMessageHandler
 		SendMessagesQueue.Enqueue( message );
 	}
 
-	internal void UpdateMessages()
+	public void UpdateMessages()
 	{
 		while( ReceiveMessagesQueue.TryDequeue( out var message ) )
 		{
@@ -106,7 +106,7 @@ internal sealed class ClientMessageHandler
 		}
 	}
 
-	internal async Task ThreadedLoop( CancellationToken token = default )
+	public async Task ThreadedLoop( CancellationToken token = default )
 	{
 		Stopwatch pendingMessagesCooldown = Stopwatch.StartNew();
 

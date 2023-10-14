@@ -45,7 +45,7 @@
 			Indexes = await Database.GetAllIndexes<TItem>();
 		}
 
-		MaxPages = (int) Math.Ceiling( (double) Indexes.Count / (double) ItemsPerPage );
+		MaxPages = (int) Math.Ceiling( (decimal) Indexes.Count / (decimal) ItemsPerPage );
 	}
 
 	private IEnumerable<string> GetPageItems( int page = 0 )

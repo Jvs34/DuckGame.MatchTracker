@@ -1,5 +1,5 @@
 ﻿using DuckGame;
-using HarmonyLib;
+using MatchRecorder.Hooks;
 using MatchRecorder.Shared.Enums;
 using MatchRecorder.Shared.Interfaces;
 using MatchRecorder.Shared.Messages;
@@ -19,12 +19,14 @@ namespace MatchRecorder;
 
 public sealed class MatchRecorderClient : IDisposable
 {
+	public const string DuckGameAuthor = "superjoebob";
+
 	private bool IsDisposed { get; set; }
 	private CancellationTokenSource StopTokenSource { get; }
 	private CancellationToken StopToken { get; } = CancellationToken.None;
 	public string ModPath { get; }
 	private Process RecorderProcess { get; set; }
-	private ClientMessageHandler MessageHandler { get; }
+	private MessageHandlers.HttpMessageHandler MessageHandler { get; }
 	private Task MessageHandlerTask { get; set; }
 	public string RecorderUrl { get; set; } = "http://localhost:6969";
 	private HttpClient HttpClient { get; }
@@ -53,7 +55,7 @@ public sealed class MatchRecorderClient : IDisposable
 		};
 		HttpClient.DefaultRequestHeaders.UserAgent.ParseAdd( "duckgame-matchrecorder/1.0" );
 
-		MessageHandler = new ClientMessageHandler( HttpClient, StopToken );
+		MessageHandler = new MessageHandlers.HttpMessageHandler( HttpClient, StopToken );
 		MessageHandler.OnReceiveMessage += OnReceiveMessage;
 
 		LoadSettings();
@@ -63,11 +65,35 @@ public sealed class MatchRecorderClient : IDisposable
 		SettingsMenu.SetOptions += SetMenuOptions;
 		SettingsMenu.GetOptions += GetMenuOptions;
 		SettingsMenu.ApplyOptions += ApplyMenuOptions;
+		SettingsMenu.RestartCompanion += RestartCompanion;
+		SettingsMenu.GenerateThumbnails += GenerateThumbnails;
+	}
+
+	private void GenerateThumbnails()
+	{
+		var levels = Content.GetAllLevels();
+		foreach( var level in levels )
+		{
+			if( level.metaData.type != LevelType.Deathmatch )
+			{
+				continue;
+			}
+
+			//TODO: use reflection to call content.preview.GetData and then content.preview.Dispose to free data
+			var content = Content.GeneratePreview( level ); //new RenderTarget2D( 1920, 1080 )
+		}
+
+		CollectLevelData();
+	}
+
+	private void RestartCompanion()
+	{
+		MessageHandler?.SendMessage( new CloseRecorderMessage() );
 	}
 
 	private void ApplyMenuOptions()
 	{
-		MessageHandler?.SendMessage( new CloseRecorderMessage() );
+
 	}
 
 	private void SetMenuOptions( ModSettings menuOptions )
@@ -102,9 +128,12 @@ public sealed class MatchRecorderClient : IDisposable
 		Serializer.Serialize( writer, Settings );
 	}
 
-	private void OnReceiveMessage( TextMessage message )
+	private void OnReceiveMessage( BaseMessage message )
 	{
-		ShowHUDMessage( message.Message );
+		if( message is TextMessage txtMessage )
+		{
+			ShowHUDMessage( txtMessage.Message );
+		}
 	}
 
 	public static void ShowHUDMessage( string text, float lifetime = 1f, TextMessagePosition position = TextMessagePosition.TopLeft )
@@ -128,7 +157,7 @@ public sealed class MatchRecorderClient : IDisposable
 		}
 
 		CheckRecorderProcess();
-		MessageHandler.UpdateMessages();
+		MessageHandler?.UpdateMessages();
 
 		if( ( MessageHandlerTask is null || MessageHandlerTask.IsCompleted == true ) && MessageHandler != null )
 		{
@@ -275,10 +304,49 @@ public sealed class MatchRecorderClient : IDisposable
 
 	}
 
-	internal void CollectLevelData()
+	internal void CollectLevelData( DuckGame.LevelData duckGameLevel = null, bool onlyTrackSingleData = false )
 	{
+		if( duckGameLevel is null && onlyTrackSingleData )
+		{
+			return;
+		}
 
+		List<DuckGame.LevelData> levels = duckGameLevel is null ? Content.GetAllLevels() : new List<DuckGame.LevelData>() { duckGameLevel };
 
+		var mtLevels = new List<MatchShared.DataClasses.LevelData>();
+
+		foreach( var level in levels )
+		{
+			if( level.metaData is null || level.metaData.type != LevelType.Deathmatch )
+			{
+				continue;
+			}
+
+			var author = level.workshopData?.author ?? string.Empty;
+
+			//force the author to be duckgame's creator, as he didn't seem to be diligent in filling in the metadata
+			if( level.GetLocation() == LevelLocation.Content )
+			{
+				author = DuckGameAuthor;
+			}
+
+			mtLevels.Add( new()
+			{
+				LevelName = level.metaData.guid,
+				Author = author,
+				FilePath = level.GetPath(),
+				Description = level.workshopData?.description,
+				IsOnlineMap = level.metaData.online,
+				IsCustomMap = level.GetLocation() != LevelLocation.Content,
+				IsEightPlayerMap = level.metaData.eightPlayer,
+				IsOnlyEightPlayer = level.metaData.eightPlayerRestricted
+			} );
+		}
+
+		MessageHandler?.SendMessage( new CollectLevelDataMessage()
+		{
+			Levels = mtLevels
+		} );
 	}
 
 	private static KeyValuePair<Profile, string> GetBestDestroyTypeKillerAndWeapon( DestroyType destroyType )
@@ -386,143 +454,3 @@ public sealed class MatchRecorderClient : IDisposable
 		GC.SuppressFinalize( this );
 	}
 }
-
-#region HOOKS
-#pragma warning disable IDE0051 // Remove unused private members
-
-//a round is done after a level change in all cases
-[HarmonyPatch( typeof( Level ), "set_current" )]
-internal static class Level_SetCurrent
-{
-	private static void Postfix()
-	{
-		if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
-		{
-			return;
-		}
-
-		//regardless if the current level can be recorded or not, we're done with the current round recording so just save and stop
-		MatchRecorderMod.Instance.Recorder.StopRecordingRound();
-
-		if( Level.current is GameLevel )
-		{
-			MatchRecorderMod.Instance.Recorder.StartRecordingMatch();
-		}
-
-		if( Level.current is TitleScreen )
-		{
-			MatchRecorderMod.Instance.Recorder.StopRecordingMatch( true );
-		}
-	}
-}
-
-//start recording a round after the virtual transition, it'd be annoying in recordings otherwise
-[HarmonyPatch( typeof( VirtualTransition ), nameof( VirtualTransition.GoUnVirtual ) )]
-internal static class VirtualTransition_GoUnVirtual
-{
-	private static void Postfix()
-	{
-		if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
-		{
-			return;
-		}
-
-		//only bother if the current level is something we care about
-
-		if( Level.current is GameLevel )
-		{
-			MatchRecorderMod.Instance.Recorder.StartRecordingRound();
-		}
-	}
-}
-
-//this is called once when a new match starts, but not if you're a client and in multiplayer and the host decides to continue from the endgame screen instead of going
-//back to lobby first
-[HarmonyPatch( typeof( Main ), "ResetMatchStuff" )]
-internal static class Main_ResetMatchStuff
-{
-	private static void Prefix()
-	{
-		if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
-		{
-			return;
-		}
-
-		MatchRecorderMod.Instance.Recorder.StopRecordingMatch();
-	}
-}
-
-
-[HarmonyPatch( typeof( Level ), nameof( Level.UpdateCurrentLevel ) )]
-internal static class Level_UpdateCurrentLevel
-{
-	private static void Prefix()
-	{
-		if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
-		{
-			return;
-		}
-
-		MatchRecorderMod.Instance.Recorder.Update();
-	}
-}
-
-//sets a global networkconnection to allow TrackKill to find out who sent the kill message
-[HarmonyPatch( typeof( NMKillDuck ), nameof( NMKillDuck.Activate ) )]
-internal static class NMKillDuck_Activate
-{
-	internal static NetworkConnection CurrentNMKillDuckConnection { get; private set; }
-
-	private static void Prefix( NMKillDuck __instance )
-	{
-		CurrentNMKillDuckConnection = __instance.connection;
-	}
-
-	private static void Postfix( NMKillDuck __instance )
-	{
-		CurrentNMKillDuckConnection = null;
-	}
-}
-
-//try to track a kill whether it's a networked one or not
-[HarmonyPatch( typeof( Duck ), nameof( Duck.Kill ) )]
-internal static class Duck_Kill
-{
-	private static void Prefix( Duck __instance, DestroyType type, bool __state )
-	{
-		if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null )
-		{
-			return;
-		}
-
-		//to check whether this is the first time Duck.Kill was called, let's save the current Duck.forceDead
-		__state = __instance.forceDead;
-	}
-
-	private static void Postfix( Duck __instance, DestroyType type, bool __state, bool __result )
-	{
-		if( MatchRecorderMod.Instance is null || MatchRecorderMod.Instance.Recorder is null || !__result )
-		{
-			return;
-		}
-
-		//some things like fire/flaregun keep calling Duck.Kill even after death, so ignore the duplicate calls
-		if( __state && __state == __instance.forceDead )
-		{
-			return;
-		}
-
-		MatchRecorderMod.Instance.Recorder.TrackKill( __instance, type, __instance.isKillMessage );
-	}
-}
-
-//[HarmonyPatch( typeof( MonoMain ) , nameof( MonoMain.KillEverything ) )]
-internal static class MonoMain_KillEverything
-{
-	private static void Postfix( MonoMain __instance )
-	{
-		MatchRecorderMod.Instance?.Dispose();
-	}
-}
-#pragma warning restore IDE0051 // Remove unused private members
-#endregion HOOKS

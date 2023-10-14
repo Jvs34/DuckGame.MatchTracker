@@ -29,6 +29,16 @@ public class LevelData : ITagsList, IDatabaseEntry, ILevelName
 	public bool IsOnlineMap { get; set; }
 
 	/// <summary>
+	/// Is this an eight players map? They can be played even with four players
+	/// </summary>
+	public bool IsEightPlayerMap { get; set; }
+
+	/// <summary>
+	/// Only playable with eight players
+	/// </summary>
+	public bool IsOnlyEightPlayer { get; set; }
+
+	/// <summary>
 	/// Description of the level, if there's any
 	/// </summary>
 	public string Description { get; set; }

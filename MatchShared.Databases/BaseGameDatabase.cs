@@ -38,10 +38,29 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 	}
 
 	public abstract Task Load( CancellationToken token = default );
+
 	protected abstract void DefineMappingInternal<T>() where T : IDatabaseEntry;
+
 	public abstract Task<T> GetData<T>( string dataId = "", CancellationToken token = default ) where T : IDatabaseEntry;
+
 	public abstract Task<bool> SaveData<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry;
+
 	protected abstract void InternalDispose();
+
+	public virtual async Task<bool> SaveData<T>( IEnumerable<T> datas, CancellationToken token = default ) where T : IDatabaseEntry
+	{
+		bool allsuccess = true;
+
+		foreach( var data in datas )
+		{
+			if( !await SaveData( data ) )
+			{
+				allsuccess = false;
+			}
+		}
+
+		return allsuccess;
+	}
 
 	public virtual async Task<Dictionary<string, T>> GetBackup<T>() where T : IDatabaseEntry
 	{
@@ -70,6 +89,8 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 	}
 
 	public virtual async Task Add<T>( T data ) where T : IDatabaseEntry => await Add<T>( data.DatabaseIndex );
+
+	public virtual async Task Add<T>( IEnumerable<string> databaseIndexes ) where T : IDatabaseEntry => await Add<T>( databaseIndexes.ToArray() );
 
 	public virtual async Task Add<T>( params string[] databaseIndexes ) where T : IDatabaseEntry
 	{

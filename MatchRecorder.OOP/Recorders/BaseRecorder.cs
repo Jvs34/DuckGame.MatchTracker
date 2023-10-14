@@ -6,6 +6,7 @@ using MatchShared.Enums;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MatchRecorder.OOP.Recorders;
@@ -232,6 +233,13 @@ internal abstract class BaseRecorder
 
 	public async Task CollectObjectData( CollectObjectDataMessage cod )
 	{
-		await Task.CompletedTask;
+		await GameDatabase.Add<LevelData>( cod.ObjectDataList.Select( x => x.DatabaseIndex ) );
+		await GameDatabase.SaveData( cod.ObjectDataList );
+	}
+
+	public async Task CollectLevelData( CollectLevelDataMessage lvl )
+	{
+		await GameDatabase.Add<LevelData>( lvl.Levels.Select( x => x.DatabaseIndex ) );
+		await GameDatabase.SaveData( lvl.Levels );
 	}
 }

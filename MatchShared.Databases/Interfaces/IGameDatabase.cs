@@ -17,6 +17,7 @@ public interface IGameDatabase : IDisposable
 
 	Task Load( CancellationToken token = default );
 	Task<bool> SaveData<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry;
+	Task<bool> SaveData<T>(IEnumerable<T> datas, CancellationToken token = default ) where T : IDatabaseEntry;
 	Task<T> GetData<T>( string dataId = "", CancellationToken token = default ) where T : IDatabaseEntry;
 	Task<Dictionary<string, T>> GetBackup<T>() where T : IDatabaseEntry;
 	Task<List<string>> GetAllIndexes<T>() where T : IDatabaseEntry;
@@ -32,4 +33,5 @@ public interface IGameDatabase : IDisposable
 	/// <param name="data"></param>
 	Task Add<T>( T data ) where T : IDatabaseEntry;
 	Task Add<T>( params string[] databaseIndexes ) where T : IDatabaseEntry;
+	Task Add<T>( IEnumerable<string> databaseIndexes ) where T : IDatabaseEntry;
 }
