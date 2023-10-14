@@ -33,6 +33,7 @@ public sealed class MatchRecorderClient : IDisposable
 		RecorderType = RecorderType.OBSRawVideo,
 		RecordingEnabled = true,
 	};
+	public MatchRecorderMenu SettingsMenu { get; set; }
 	private JsonSerializer Serializer { get; } = new JsonSerializer()
 	{
 		Formatting = Formatting.Indented
@@ -57,6 +58,28 @@ public sealed class MatchRecorderClient : IDisposable
 
 		LoadSettings();
 		SaveSettings();
+
+		SettingsMenu = new MatchRecorderMenu();
+		SettingsMenu.SetOptions += SetMenuOptions;
+		SettingsMenu.GetOptions += GetMenuOptions;
+		SettingsMenu.ApplyOptions += ApplyMenuOptions;
+	}
+
+	private void ApplyMenuOptions()
+	{
+		MessageHandler?.SendMessage( new CloseRecorderMessage() );
+	}
+
+	private void SetMenuOptions( ModSettings menuOptions )
+	{
+		Settings.RecordingEnabled = menuOptions.RecordingEnabled;
+		Settings.RecorderType = menuOptions.RecorderType;
+		SaveSettings();
+	}
+
+	private ModSettings GetMenuOptions()
+	{
+		return Settings;
 	}
 
 	public bool LoadSettings()
@@ -97,6 +120,11 @@ public sealed class MatchRecorderClient : IDisposable
 		if( StopToken.IsCancellationRequested )
 		{
 			return;
+		}
+
+		if( ( Keyboard.Pressed( Keys.F7 ) || Input.Pressed( "GRAB" ) ) && Level.current is TitleScreen tScreen )
+		{
+			SettingsMenu.ShowUI( tScreen );
 		}
 
 		CheckRecorderProcess();
