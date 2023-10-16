@@ -34,6 +34,8 @@ host.Services.AddOptions<RecorderSettings>().BindConfiguration( string.Empty );
 host.Services.AddSingleton<IGameDatabase, LiteDBGameDatabase>();
 host.Services.AddSingleton<ModMessageQueue>();
 
+host.Services.ConfigureHttpJsonOptions( options => options.SerializerOptions.IncludeFields = true );
+
 
 switch( host.Configuration.Get<RecorderSettings>().RecorderType )
 {
@@ -58,6 +60,7 @@ DefineEndPoint<TextMessage>( app );
 DefineEndPoint<TrackKillMessage>( app );
 DefineEndPoint<CollectObjectDataMessage>( app );
 DefineEndPoint<CollectLevelDataMessage>( app );
+DefineEndPoint<LevelPreviewMessage>( app );
 DefineEndPoint<CloseRecorderMessage>( app );
 
 await app.InitAsync();

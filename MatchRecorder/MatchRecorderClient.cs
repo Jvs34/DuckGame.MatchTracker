@@ -4,6 +4,7 @@ using MatchRecorder.Shared.Enums;
 using MatchRecorder.Shared.Interfaces;
 using MatchRecorder.Shared.Messages;
 using MatchRecorder.Shared.Settings;
+using MatchRecorder.Shared.Structs;
 using MatchRecorder.Utils;
 using MatchShared.DataClasses;
 using Newtonsoft.Json;
@@ -73,11 +74,12 @@ public sealed class MatchRecorderClient : IDisposable
 
 	private void GenerateThumbnails()
 	{
-
-
 		var levels = Content.GetAllLevels();
 
-		var rt = new RenderTarget2D( 1920, 1080 );
+		int width = 800;
+		int height = 450;
+		using var rt = new RenderTarget2D( width, height );
+		var textArray = new RGBAColor[width * height];
 
 		foreach( var level in levels )
 		{
@@ -88,11 +90,34 @@ public sealed class MatchRecorderClient : IDisposable
 
 			Content.GeneratePreview( level, true, rt );
 
-			var textArray = new Color[1920 * 1080];
-
 			rt.GetData( textArray );
 
-			var test = 5;
+			var message = new LevelPreviewMessage()
+			{
+				LevelName = level.metaData.guid,
+				Width = width,
+				Height = height,
+				PixelArray = new RGBAColor[width * height],
+			};
+
+			Array.Copy( textArray, message.PixelArray, textArray.Length );
+
+			MessageHandler?.SendMessage( message );
+
+			//incredibly slow, do it on the other process?
+			//using var image = new System.Drawing.Bitmap( width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb );
+
+			//for( int x = 0;x < width;x++ )
+			//{
+			//	for( int y = 0;y < height;y++ )
+			//	{
+			//		int arrayIndex = ( y * width ) + x;
+			//		RGBAColor c = textArray[arrayIndex];
+			//		image.SetPixel( x, y, System.Drawing.Color.FromArgb( c.A, c.R, c.G, c.B ) );
+			//	}
+			//}
+
+			//image.Save( Path.Combine( @"C:\Users\Jvsth\Desktop\DeskExample", $"{level.metaData.guid}.png" ), System.Drawing.Imaging.ImageFormat.Png );
 		}
 
 		CollectLevelData();
@@ -167,7 +192,7 @@ public sealed class MatchRecorderClient : IDisposable
 			return;
 		}
 
-		CheckRecorderProcess();
+		//CheckRecorderProcess();
 		MessageHandler?.UpdateMessages();
 
 		if( ( MessageHandlerTask is null || MessageHandlerTask.IsCompleted == true ) && MessageHandler != null )
@@ -205,12 +230,13 @@ public sealed class MatchRecorderClient : IDisposable
 
 	private void StartRecorderProcess()
 	{
+
 		var startInfo = new ProcessStartInfo()
 		{
 			FileName = Path.Combine( ModPath, "MatchRecorder.OOP", "MatchRecorder.OOP.exe" ),
 			WorkingDirectory = ModPath,
 			UseShellExecute = false,
-			CreateNoWindow = false,
+			CreateNoWindow = Settings.HideOOPWindow,
 			WindowStyle = ProcessWindowStyle.Minimized,
 		};
 

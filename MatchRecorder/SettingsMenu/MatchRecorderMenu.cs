@@ -21,6 +21,7 @@ public sealed class MatchRecorderMenu
 	public event Action GenerateThumbnails;
 
 	public bool RecordingEnabled { get; set; }
+	public bool HideOOPWindow { get; set; }
 	public int RecordingTypeInt { get; set; }
 	private List<string> RecorderTypeOptions { get; } = new List<string>();
 
@@ -31,6 +32,7 @@ public sealed class MatchRecorderMenu
 	private UIMenuItemNumber RecordingTypeSwitch { get; set; }
 	private UIMenuItem RestartCompanionButton { get; set; }
 	private UIMenuItem GenerateThumbnailsButton { get; set; }
+	private UIMenuItemToggle HideOOPWindowToggle { get; set; }
 	#endregion UICOMPONENTS
 
 	public MatchRecorderMenu()
@@ -53,6 +55,11 @@ public sealed class MatchRecorderMenu
 			new UIMenuActionCallFunction( OnSettingsChanged ),
 			new FieldBinding( this, nameof( RecordingEnabled ) ) );
 		Menu.Add( RecordingEnabledToggle );
+
+		HideOOPWindowToggle = new UIMenuItemToggle( "HIDE RECORDER WINDOW",
+			new UIMenuActionCallFunction( OnSettingsChanged ),
+			new FieldBinding( this, nameof( HideOOPWindow ) ) );
+		Menu.Add( HideOOPWindowToggle );
 
 		RecordingTypeSwitch = new UIMenuItemNumber( "TYPE",
 			new UIMenuActionCallFunction( OnSettingsChanged ),
@@ -80,7 +87,8 @@ public sealed class MatchRecorderMenu
 	private void OnSettingsChanged() => SetOptions( new ModSettings()
 	{
 		RecorderType = (RecorderType) RecordingTypeInt,
-		RecordingEnabled = RecordingEnabled
+		RecordingEnabled = RecordingEnabled,
+		HideOOPWindow = HideOOPWindow
 	} );
 
 	private void RefreshSettings()
@@ -89,6 +97,7 @@ public sealed class MatchRecorderMenu
 
 		RecordingEnabled = options.RecordingEnabled;
 		RecordingTypeInt = (int) options.RecorderType;
+		HideOOPWindow = options.HideOOPWindow;
 
 		RecordingTypeSwitch.Activate( "ANYTHINGWILLREFRESHYOU" );
 	}

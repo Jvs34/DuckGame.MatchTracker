@@ -63,7 +63,7 @@ internal sealed class RecorderBackgroundService : BackgroundService
 				break;
 			}
 
-			await Task.Delay( TimeSpan.FromMilliseconds( 50 ), token );
+			await Task.Delay( TimeSpan.FromMilliseconds( 10 ), token );
 		}
 
 		//wait some time for stuff to completely be done
@@ -105,6 +105,7 @@ internal sealed class RecorderBackgroundService : BackgroundService
 			case TrackKillMessage tkm: Recorder.TrackKill( tkm ); break;
 			case CollectObjectDataMessage cod: await Recorder.CollectObjectData( cod ); break;
 			case CollectLevelDataMessage lvl: await Recorder.CollectLevelData( lvl ); break;
+			case LevelPreviewMessage lvlPrev: _ = Recorder.SaveLevelPreview( lvlPrev ); break;
 			case CloseRecorderMessage: AppLifeTime.StopApplication(); break;
 			default:
 			break;

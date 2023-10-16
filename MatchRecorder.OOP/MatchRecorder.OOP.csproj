@@ -3,6 +3,7 @@
 	<PropertyGroup>
 		<OutputType>Exe</OutputType>
 		<TargetFramework>net7.0</TargetFramework>
+		<DebugType>full</DebugType>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -11,6 +12,7 @@
 		<ProjectReference Include="..\MatchShared.Databases.LiteDB\MatchShared.Databases.LiteDB.csproj" />
 		<PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="3.0.0" />
 		<PackageReference Include="ObsStrawket" Version="0.14.0" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.2" />
 	</ItemGroup>
 
 </Project>

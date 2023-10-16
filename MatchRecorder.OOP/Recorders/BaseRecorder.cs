@@ -4,8 +4,11 @@ using MatchShared.Databases.Interfaces;
 using MatchShared.DataClasses;
 using MatchShared.Enums;
 using Microsoft.Extensions.Logging;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -241,5 +244,41 @@ internal abstract class BaseRecorder
 	{
 		await GameDatabase.Add<LevelData>( lvl.Levels.Select( x => x.DatabaseIndex ) );
 		await GameDatabase.SaveData( lvl.Levels );
+	}
+
+	internal async Task SaveLevelPreview( LevelPreviewMessage lvlPrev )
+	{
+		string path = Path.Combine( @"C:\Users\Jvsth\Desktop\DeskExample", $"{lvlPrev.LevelName}.png" );
+
+		await Task.Run( () =>
+		{
+			using var test = new Image<Rgba32>( lvlPrev.Width, lvlPrev.Height );
+
+			test.ProcessPixelRows( accessor =>
+			{
+				for( int y = 0;y < accessor.Height;y++ )
+				{
+					var pixelRow = accessor.GetRowSpan( y );
+
+					// pixelRow.Length has the same value as accessor.Width,
+					// but using pixelRow.Length allows the JIT to optimize away bounds checks:
+					for( int x = 0;x < pixelRow.Length;x++ )
+					{
+						// Get a reference to the pixel at position x
+						ref Rgba32 pixel = ref pixelRow[x];
+
+						var col = lvlPrev.PixelArray[( y * accessor.Width ) + x];
+
+						pixel.R = col.R;
+						pixel.G = col.G;
+						pixel.B = col.B;
+						pixel.A = col.A;
+					}
+				}
+			} );
+
+			test.SaveAsPng( path );
+		} );
+
 	}
 }
