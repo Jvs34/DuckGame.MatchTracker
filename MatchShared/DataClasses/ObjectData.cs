@@ -20,11 +20,6 @@ public class ObjectData : IDatabaseEntry
 	public string EditorName { get; set; }
 
 	/// <summary>
-	/// The editor description of the object
-	/// </summary>
-	public string EditorDescription { get; set; }
-
-	/// <summary>
 	/// The editor tooltip of the object
 	/// </summary>
 	public string EditorTooltip { get; set; }

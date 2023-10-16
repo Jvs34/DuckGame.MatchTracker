@@ -4,6 +4,8 @@ using HarmonyLib;
 namespace MatchRecorder.Hooks;
 
 #pragma warning disable IDE0051 // Remove unused private members
+#pragma warning disable IDE0060 // Remove unused parameter
+#pragma warning disable IDE0059 // Unnecessary assignment of a value
 
 //a round is done after a level change in all cases
 [HarmonyPatch( typeof( Level ), "set_current" )]
@@ -132,12 +134,17 @@ internal static class Duck_Kill
 	}
 }
 
+//TODO: undecided about this one, I don't see much point in doing this and also
+//the missing references makes this annoying to do with attributes
 //[HarmonyPatch( typeof( MonoMain ) , nameof( MonoMain.KillEverything ) )]
-internal static class MonoMain_KillEverything
-{
-	private static void Postfix( MonoMain __instance )
-	{
-		MatchRecorderMod.Instance?.Dispose();
-	}
-}
+//internal static class MonoMain_KillEverything
+//{
+//	private static void Postfix( MonoMain __instance )
+//	{
+//		MatchRecorderMod.Instance?.Dispose();
+//		MatchRecorderMod.Instance = null;
+//	}
+//}
 #pragma warning restore IDE0051 // Remove unused private members
+#pragma warning restore IDE0060 // Remove unused parameter
+#pragma warning restore IDE0059 // Unnecessary assignment of a value

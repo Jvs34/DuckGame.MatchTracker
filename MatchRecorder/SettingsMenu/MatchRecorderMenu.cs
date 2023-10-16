@@ -39,10 +39,7 @@ public sealed class MatchRecorderMenu
 		CreateUI();
 	}
 
-	private void SetupRecorderTypeEnum()
-	{
-		RecorderTypeOptions.AddRange( Enum.GetNames( typeof( RecorderType ) ) );
-	}
+	private void SetupRecorderTypeEnum() => RecorderTypeOptions.AddRange( Enum.GetNames( typeof( RecorderType ) ) );
 
 	private void CreateUI()
 	{
@@ -74,29 +71,17 @@ public sealed class MatchRecorderMenu
 		MainGroup.Close();
 	}
 
-	private void GenerateThumbnailsCallback()
-	{
-		GenerateThumbnails();
-	}
+	private void GenerateThumbnailsCallback() => GenerateThumbnails();
 
-	private void RestartCompanionCallback()
-	{
-		RestartCompanion();
-	}
+	private void RestartCompanionCallback() => RestartCompanion();
 
-	private void CloseSettingsMenu()
-	{
-		ApplyOptions();
-	}
+	private void CloseSettingsMenu() => ApplyOptions();
 
-	private void OnSettingsChanged()
+	private void OnSettingsChanged() => SetOptions( new ModSettings()
 	{
-		SetOptions( new ModSettings()
-		{
-			RecorderType = (RecorderType) RecordingTypeInt,
-			RecordingEnabled = RecordingEnabled
-		} );
-	}
+		RecorderType = (RecorderType) RecordingTypeInt,
+		RecordingEnabled = RecordingEnabled
+	} );
 
 	private void RefreshSettings()
 	{
@@ -118,6 +103,4 @@ public sealed class MatchRecorderMenu
 			MainGroup.Open();
 		}
 	}
-
-
 }

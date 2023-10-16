@@ -12,10 +12,7 @@ public class MatchRecorderMod : DuckGame.ClientMod, IDisposable
 	public MatchRecorderClient Recorder { get; set; }
 	private Harmony HarmonyInstance { get; set; }
 
-	public MatchRecorderMod()
-	{
-		HarmonyInstance = new Harmony( GetType().Namespace );
-	}
+	public MatchRecorderMod() => HarmonyInstance = new Harmony( GetType().Namespace );
 
 	protected override void OnPostInitialize()
 	{

@@ -4,6 +4,7 @@ using MatchRecorder.Shared.Enums;
 using MatchRecorder.Shared.Interfaces;
 using MatchRecorder.Shared.Messages;
 using MatchRecorder.Shared.Settings;
+using MatchRecorder.Utils;
 using MatchShared.DataClasses;
 using Newtonsoft.Json;
 using System;
@@ -12,6 +13,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -71,7 +73,12 @@ public sealed class MatchRecorderClient : IDisposable
 
 	private void GenerateThumbnails()
 	{
+
+
 		var levels = Content.GetAllLevels();
+
+		var rt = new RenderTarget2D( 1920, 1080 );
+
 		foreach( var level in levels )
 		{
 			if( level.metaData.type != LevelType.Deathmatch )
@@ -79,8 +86,13 @@ public sealed class MatchRecorderClient : IDisposable
 				continue;
 			}
 
-			//TODO: use reflection to call content.preview.GetData and then content.preview.Dispose to free data
-			var content = Content.GeneratePreview( level ); //new RenderTarget2D( 1920, 1080 )
+			Content.GeneratePreview( level, true, rt );
+
+			var textArray = new Color[1920 * 1080];
+
+			rt.GetData( textArray );
+
+			var test = 5;
 		}
 
 		CollectLevelData();
@@ -132,28 +144,27 @@ public sealed class MatchRecorderClient : IDisposable
 	{
 		if( message is TextMessage txtMessage )
 		{
-			ShowHUDMessage( txtMessage.Message );
+			ShowHUDMessage( txtMessage.Message, position: txtMessage.MessagePosition );
 		}
 	}
 
-	public static void ShowHUDMessage( string text, float lifetime = 1f, TextMessagePosition position = TextMessagePosition.TopLeft )
+	public static void ShowHUDMessage( string text, float lifetime = 1.5f, TextMessagePosition position = TextMessagePosition.TopLeft )
 	{
 		var cornerMessage = HUD.AddCornerMessage( (HUDCorner) position, text, true );
-		cornerMessage.slide = 1;
 		cornerMessage.willDie = true;
 		cornerMessage.life = lifetime;
 	}
 
 	internal void Update()
 	{
-		if( StopToken.IsCancellationRequested )
-		{
-			return;
-		}
-
 		if( ( Keyboard.Pressed( Keys.F7 ) || Input.Pressed( "GRAB" ) ) && Level.current is TitleScreen tScreen )
 		{
 			SettingsMenu.ShowUI( tScreen );
+		}
+
+		if( StopToken.IsCancellationRequested )
+		{
+			return;
 		}
 
 		CheckRecorderProcess();
@@ -216,35 +227,35 @@ public sealed class MatchRecorderClient : IDisposable
 	#region MATCHTRACKING
 	internal void StartRecordingMatch() => MessageHandler?.SendMessage( new StartMatchMessage()
 	{
-		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList(),
-		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList(),
-		PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList(),
+		Teams = Teams.active.Select( RecorderUtils.ConvertDuckGameTeamToTeamData ).ToList(),
+		Players = Profiles.activeNonSpectators.Select( RecorderUtils.GetPlayerID ).ToList(),
+		PlayersData = Profiles.active.Select( RecorderUtils.ConvertDuckGameProfileToPlayerData ).ToList(),
 		TimeStarted = DateTime.Now,
 	} );
 
 	internal void StopRecordingMatch( bool aborted = false ) => MessageHandler?.SendMessage( new EndMatchMessage()
 	{
 		Aborted = aborted,
-		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList(),
-		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList(),
-		PlayersData = Profiles.active.Select( ConvertDuckGameProfileToPlayerData ).ToList(),
-		Winner = ConvertDuckGameTeamToTeamData( Teams.winning.FirstOrDefault() ),
+		Teams = Teams.active.Select( RecorderUtils.ConvertDuckGameTeamToTeamData ).ToList(),
+		Players = Profiles.activeNonSpectators.Select( RecorderUtils.GetPlayerID ).ToList(),
+		PlayersData = Profiles.active.Select( RecorderUtils.ConvertDuckGameProfileToPlayerData ).ToList(),
+		Winner = RecorderUtils.ConvertDuckGameTeamToTeamData( Teams.winning.FirstOrDefault() ),
 		TimeEnded = DateTime.Now,
 	} );
 
 	internal void StartRecordingRound() => MessageHandler?.SendMessage( new StartRoundMessage()
 	{
 		LevelName = Level.current.level,
-		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList(),
-		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList(),
+		Teams = Teams.active.Select( RecorderUtils.ConvertDuckGameTeamToTeamData ).ToList(),
+		Players = Profiles.activeNonSpectators.Select( RecorderUtils.GetPlayerID ).ToList(),
 		TimeStarted = DateTime.Now,
 	} );
 
 	internal void StopRecordingRound() => MessageHandler?.SendMessage( new EndRoundMessage()
 	{
-		Teams = Teams.active.Select( ConvertDuckGameTeamToTeamData ).ToList(),
-		Players = Profiles.activeNonSpectators.Select( GetPlayerID ).ToList(),
-		Winner = ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ),
+		Teams = Teams.active.Select( RecorderUtils.ConvertDuckGameTeamToTeamData ).ToList(),
+		Players = Profiles.activeNonSpectators.Select( RecorderUtils.GetPlayerID ).ToList(),
+		Winner = RecorderUtils.ConvertDuckGameTeamToTeamData( GameMode.lastWinners.FirstOrDefault()?.team ),
 		TimeEnded = DateTime.Now,
 	} );
 
@@ -256,7 +267,7 @@ public sealed class MatchRecorderClient : IDisposable
 
 		if( type != null )
 		{
-			var kv = GetBestDestroyTypeKillerAndWeapon( type );
+			var kv = RecorderUtils.GetBestDestroyTypeKillerAndWeapon( type );
 			killerProfile = kv.Key;
 			objectResponsible = kv.Value;
 		}
@@ -275,13 +286,13 @@ public sealed class MatchRecorderClient : IDisposable
 
 		if( killerProfile != null )
 		{
-			killerTeamData = ConvertDuckGameProfileToTeamData( killerProfile );
+			killerTeamData = RecorderUtils.ConvertDuckGameProfileToTeamData( killerProfile );
 		}
 
 		var killData = new KillData()
 		{
 			Killer = killerTeamData,
-			Victim = ConvertDuckGameProfileToTeamData( duckVictim.profile ),
+			Victim = RecorderUtils.ConvertDuckGameProfileToTeamData( duckVictim.profile ),
 			DeathTypeClassName = type?.GetType()?.Name,
 			TimeOccured = DateTime.Now,
 			ObjectClassName = objectResponsible
@@ -291,17 +302,39 @@ public sealed class MatchRecorderClient : IDisposable
 		{
 			KillData = killData
 		} );
+
+		CollectObjectData( type.thing );
 	}
 
-	internal void CollectObjectData()
+	internal void CollectObjectData( Thing thing )
 	{
+		if( thing == null )
+		{
+			return;
+		}
+
 		var collectObjectDataMessage = new CollectObjectDataMessage()
 		{
 			ObjectDataList = new List<ObjectData>()
 		};
 
-		//foreach( var type in DuckGame.All )
+		collectObjectDataMessage.ObjectDataList.Add( RecorderUtils.ConvertThingToObjectData( thing ) );
 
+		var bulletOwnerData = RecorderUtils.ConvertThingToObjectData( thing is Bullet boolet ? boolet.firedFrom : thing.responsibleProfile?.duck );
+
+		if( bulletOwnerData != null )
+		{
+			collectObjectDataMessage.ObjectDataList.Add( bulletOwnerData );
+		}
+
+		var ownerData = RecorderUtils.ConvertThingToObjectData( thing.owner ?? thing.prevOwner );
+
+		if( ownerData != null )
+		{
+			collectObjectDataMessage.ObjectDataList.Add( ownerData );
+		}
+
+		MessageHandler?.SendMessage( collectObjectDataMessage );
 	}
 
 	internal void CollectLevelData( DuckGame.LevelData duckGameLevel = null, bool onlyTrackSingleData = false )
@@ -348,88 +381,6 @@ public sealed class MatchRecorderClient : IDisposable
 			Levels = mtLevels
 		} );
 	}
-
-	private static KeyValuePair<Profile, string> GetBestDestroyTypeKillerAndWeapon( DestroyType destroyType )
-	{
-		//try a direct check, easiest one
-		Profile profile = destroyType.responsibleProfile;
-
-		string weapon = string.Empty;
-
-		if( destroyType is DTShot shotType && shotType.bulletFiredFrom != null )
-		{
-			//god, grenade launchers are a pain in the ass
-			var type = shotType.bulletFiredFrom.GetType();
-
-			if( shotType.bulletFiredFrom.killThingType != null )
-			{
-				type = shotType.bulletFiredFrom.killThingType;
-			}
-
-			if( shotType.bulletFiredFrom.responsibleProfile != null )
-			{
-				profile = destroyType.responsibleProfile;
-			}
-
-			weapon = type.Name;
-		}
-
-		//... I know I know, but either I Import the tuples nuget or I make my own struct, so whatever
-		return new KeyValuePair<Profile, string>( profile, weapon );
-	}
-
-	private static TeamData ConvertDuckGameTeamToTeamData( Team duckgameteam )
-	{
-		return duckgameteam is null ? null : new TeamData()
-		{
-			HasHat = duckgameteam.hasHat,
-			Score = duckgameteam.score,
-			HatName = duckgameteam.name,
-			IsCustomHat = duckgameteam.customData != null,
-			Players = duckgameteam.activeProfiles.Select( x => GetPlayerID( x ) ).ToList()
-		};
-	}
-
-	private static PlayerData ConvertDuckGameProfileToPlayerData( Profile profile )
-	{
-		return new PlayerData()
-		{
-			Name = profile.name,
-			UserId = GetPlayerID( profile ),
-		};
-	}
-
-	private static TeamData ConvertDuckGameProfileToTeamData( Profile profile )
-	{
-		var teamData = ConvertDuckGameTeamToTeamData( profile.team );
-
-		if( teamData != null )
-		{
-			teamData.Players = teamData.Players.Where( x => x.Equals( GetPlayerID( profile ), StringComparison.InvariantCultureIgnoreCase ) ).ToList();
-		}
-
-		return teamData;
-	}
-
-	private static string GetPlayerID( Profile profile )
-	{
-		var id = profile.id;
-
-		if( Network.isActive )
-		{
-			var steamid = profile.steamID.ToString();
-
-			id = steamid;
-
-			if( profile.isRemoteLocalDuck )
-			{
-				id = $"{steamid}_{profile.name}";
-			}
-		}
-
-		return id;
-	}
-
 
 	#endregion MATCHTRACKING
 

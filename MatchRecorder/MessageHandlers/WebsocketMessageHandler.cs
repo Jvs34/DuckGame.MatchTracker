@@ -4,9 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace MatchRecorder.MessageHandlers
+namespace MatchRecorder.MessageHandlers;
+
+internal class WebsocketMessageHandler
 {
-	internal class WebsocketMessageHandler
-	{
-	}
 }

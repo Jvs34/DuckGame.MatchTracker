@@ -4,7 +4,7 @@
 		<TargetFramework>net452</TargetFramework>
 		<Platforms>x86</Platforms>
 		<DebugType>full</DebugType>
-		<Description>Allows MatchRecorder to Track kills properly</Description>
+		<Description>Allows MatchRecorder to Track kills properly, needs to be installed on all clients</Description>
 	</PropertyGroup>
 
 	<ItemGroup>
