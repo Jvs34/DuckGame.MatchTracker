@@ -7,12 +7,10 @@ using MatchShared.Enums;
 using Microsoft.Extensions.Logging;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using SixLabors.ImageSharp.Processing;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 
@@ -240,7 +238,7 @@ internal abstract class BaseRecorder
 
 	public async Task CollectObjectData( CollectObjectDataMessage cod )
 	{
-		await GameDatabase.Add<LevelData>( cod.ObjectDataList.Select( x => x.DatabaseIndex ) );
+		await GameDatabase.Add<ObjectData>( cod.ObjectDataList.Select( x => x.DatabaseIndex ) );
 		await GameDatabase.SaveData( cod.ObjectDataList );
 	}
 
@@ -256,6 +254,11 @@ internal abstract class BaseRecorder
 
 		var fileInfo = new FileInfo( path );
 
+		if( fileInfo.Exists )
+		{
+			return;
+		}
+
 		var directoryInfo = fileInfo.Directory;
 
 		if( !directoryInfo.Exists )
@@ -263,39 +266,12 @@ internal abstract class BaseRecorder
 			directoryInfo.Create();
 		}
 
-		//TODO: use https://docs.sixlabors.com/articles/imagesharp/pixelbuffers.html#parallel-pixel-format-agnostic-image-manipulation
-
 		await Task.Run( () =>
 		{
-			//using var test = new Image<Rgba32>( lvlPrev.Width, lvlPrev.Height );
-
 			var readOnlySpanOfPixels = new ReadOnlySpan<RGBAColor>( lvlPrev.PixelArray );
+			//it's safe if the runtime doesn't complain ok?
 			var bytesArray = MemoryMarshal.AsBytes( readOnlySpanOfPixels );
-
 			using var test = Image.LoadPixelData<Rgba32>( bytesArray, lvlPrev.Width, lvlPrev.Height );
-
-			//test.ProcessPixelRows( accessor =>
-			//{
-			//	for( int y = 0;y < accessor.Height;y++ )
-			//	{
-			//		var pixelRow = accessor.GetRowSpan( y );
-
-			//		// pixelRow.Length has the same value as accessor.Width,
-			//		// but using pixelRow.Length allows the JIT to optimize away bounds checks:
-			//		for( int x = 0;x < pixelRow.Length;x++ )
-			//		{
-			//			// Get a reference to the pixel at position x
-			//			ref Rgba32 pixel = ref pixelRow[x];
-
-			//			var col = lvlPrev.PixelArray[( y * accessor.Width ) + x];
-
-			//			pixel.R = col.R;
-			//			pixel.G = col.G;
-			//			pixel.B = col.B;
-			//			pixel.A = col.A;
-			//		}
-			//	}
-			//} );
 
 			test.SaveAsPng( path );
 		} );
