@@ -109,7 +109,7 @@ internal static class CommandUtils
 			{
 				if( upload.IsPending() )
 				{
-					using var uploadsScope = uploadsLock.AcquireSync();
+					using var uploadsScope = await uploadsLock.AcquireAsync();
 					uploads++;
 				}
 			}

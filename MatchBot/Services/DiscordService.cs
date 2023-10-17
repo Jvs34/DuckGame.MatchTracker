@@ -41,7 +41,6 @@ internal class DiscordService : BackgroundService
 	{
 		Logger.LogInformation( "Starting up discord" );
 		await DiscordInstance.ConnectAsync();
-		//await DiscordInstance.ConnectAsync( status: DSharpPlus.Entities.UserStatus.Invisible );
 
 		while( !stoppingToken.IsCancellationRequested )
 		{
