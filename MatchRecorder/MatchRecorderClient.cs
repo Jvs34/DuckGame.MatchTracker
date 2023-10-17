@@ -83,7 +83,7 @@ public sealed class MatchRecorderClient : IDisposable
 
 		foreach( var level in levels )
 		{
-			if( level.metaData.type != LevelType.Deathmatch )
+			if( level.metaData.type != LevelType.Deathmatch || string.IsNullOrEmpty( level.metaData.guid ) )
 			{
 				continue;
 			}
@@ -103,21 +103,6 @@ public sealed class MatchRecorderClient : IDisposable
 			Array.Copy( textArray, message.PixelArray, textArray.Length );
 
 			MessageHandler?.SendMessage( message );
-
-			//incredibly slow, do it on the other process?
-			//using var image = new System.Drawing.Bitmap( width, height, System.Drawing.Imaging.PixelFormat.Format32bppArgb );
-
-			//for( int x = 0;x < width;x++ )
-			//{
-			//	for( int y = 0;y < height;y++ )
-			//	{
-			//		int arrayIndex = ( y * width ) + x;
-			//		RGBAColor c = textArray[arrayIndex];
-			//		image.SetPixel( x, y, System.Drawing.Color.FromArgb( c.A, c.R, c.G, c.B ) );
-			//	}
-			//}
-
-			//image.Save( Path.Combine( @"C:\Users\Jvsth\Desktop\DeskExample", $"{level.metaData.guid}.png" ), System.Drawing.Imaging.ImageFormat.Png );
 		}
 
 		CollectLevelData();
@@ -137,13 +122,11 @@ public sealed class MatchRecorderClient : IDisposable
 	{
 		Settings.RecordingEnabled = menuOptions.RecordingEnabled;
 		Settings.RecorderType = menuOptions.RecorderType;
+		Settings.HideOOPWindow = menuOptions.HideOOPWindow;
 		SaveSettings();
 	}
 
-	private ModSettings GetMenuOptions()
-	{
-		return Settings;
-	}
+	private ModSettings GetMenuOptions() => Settings;
 
 	public bool LoadSettings()
 	{
@@ -182,7 +165,7 @@ public sealed class MatchRecorderClient : IDisposable
 
 	internal void Update()
 	{
-		if( ( Keyboard.Pressed( Keys.F7 ) || Input.Pressed( "GRAB" ) ) && Level.current is TitleScreen tScreen )
+		if( Level.current is TitleScreen tScreen && ( Keyboard.Pressed( Keys.F7 ) || Input.Pressed( "GRAB" ) ) )
 		{
 			SettingsMenu.ShowUI( tScreen );
 		}
@@ -192,7 +175,7 @@ public sealed class MatchRecorderClient : IDisposable
 			return;
 		}
 
-		//CheckRecorderProcess();
+		CheckRecorderProcess();
 		MessageHandler?.UpdateMessages();
 
 		if( ( MessageHandlerTask is null || MessageHandlerTask.IsCompleted == true ) && MessageHandler != null )
@@ -230,7 +213,6 @@ public sealed class MatchRecorderClient : IDisposable
 
 	private void StartRecorderProcess()
 	{
-
 		var startInfo = new ProcessStartInfo()
 		{
 			FileName = Path.Combine( ModPath, "MatchRecorder.OOP", "MatchRecorder.OOP.exe" ),

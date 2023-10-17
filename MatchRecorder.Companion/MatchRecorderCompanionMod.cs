@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace MatchRecorder.Companion;
 
-public class MatchRecorderCompanionMod : ClientMod
+public class MatchRecorderCompanionMod : ClientMod //Mod
 {
 	private Harmony HarmonyInstance { get; set; }
 

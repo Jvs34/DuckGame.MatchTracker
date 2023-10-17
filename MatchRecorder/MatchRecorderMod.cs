@@ -4,7 +4,10 @@ using System.Reflection;
 
 namespace MatchRecorder;
 
-public class MatchRecorderMod : DuckGame.ClientMod, IDisposable
+/// <summary>
+/// Basically the entry point of the mod
+/// </summary>
+public class MatchRecorderMod : DuckGame.ClientMod, IDisposable //TODO: DuckGame does not dispose mods, seeks alternative
 {
 	private bool IsDisposed { get; set; }
 
