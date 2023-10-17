@@ -1,6 +1,8 @@
 ﻿using LiteDB;
+using MatchShared.Databases.Extensions;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -38,34 +40,36 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 
 	public override Task<T> GetData<T>( string dataId = "", CancellationToken token = default )
 	{
-		if( string.IsNullOrEmpty( dataId ) )
-		{
-			dataId = typeof( T ).Name;
-		}
+		var typeName = typeof( T ).Name;
+		dataId = string.IsNullOrEmpty( dataId ) ? typeName : dataId;
 
-		var collection = Database.GetCollection<T>( typeof( T ).Name );
-
-		T data = collection.FindById( dataId );
-		return Task.FromResult( data );
+		return Task.FromResult( Database.GetCollection<T>( typeName ).FindById( dataId ) );
 	}
 
-	public override Task<bool> SaveData<T>( T data, CancellationToken token = default )
-	{
-		var collection = Database.GetCollection<T>( data.GetType().Name );
-		collection.Upsert( data );
-		return Task.FromResult( true );
-	}
+	public override Task<bool> SaveData<T>( T data, CancellationToken token = default ) => SaveData( EnumerableExtensions.AsSingleton( data ), token );
 
 	public override Task<bool> SaveData<T>( IEnumerable<T> datas, CancellationToken token = default )
 	{
-		var collection = Database.GetCollection<T>( typeof( T ).Name );
-		collection.Upsert( datas );
-		return Task.FromResult( true );
+		return Task.FromResult( Database.GetCollection<T>( typeof( T ).Name ).Upsert( datas ) > 0 );
 	}
 
 	protected override void InternalDispose()
 	{
 		Database?.Dispose();
 		Database = null;
+	}
+
+	public override Task<bool> DeleteData<T>( string databaseIndex, CancellationToken token = default )
+	{
+		return Task.FromResult( Database
+				.GetCollection<T>( typeof( T ).Name )
+				.Delete( databaseIndex ) );
+	}
+
+	public override Task<bool> DeleteData<T>( IEnumerable<string> databaseIndexes, CancellationToken token = default )
+	{
+		return Task.FromResult( Database
+				.GetCollection<T>( typeof( T ).Name )
+				.DeleteMany( Query.In( "_id", databaseIndexes.Select( id => new BsonValue( id ) ) ) ) > 0 );
 	}
 }

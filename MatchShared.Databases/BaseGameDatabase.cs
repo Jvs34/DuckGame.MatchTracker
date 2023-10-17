@@ -1,4 +1,5 @@
-﻿using MatchShared.Databases.Interfaces;
+﻿using MatchShared.Databases.Extensions;
+using MatchShared.Databases.Interfaces;
 using MatchShared.Databases.Settings;
 using MatchShared.DataClasses;
 using MatchShared.Interfaces;
@@ -38,22 +39,18 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 	}
 
 	public abstract Task Load( CancellationToken token = default );
-
 	protected abstract void DefineMappingInternal<T>() where T : IDatabaseEntry;
-
-	public abstract Task<T> GetData<T>( string dataId = "", CancellationToken token = default ) where T : IDatabaseEntry;
-
-	public abstract Task<bool> SaveData<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry;
-
 	protected abstract void InternalDispose();
 
+	public abstract Task<T> GetData<T>( string dataId = "", CancellationToken token = default ) where T : IDatabaseEntry;
+	public abstract Task<bool> SaveData<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry;
 	public virtual async Task<bool> SaveData<T>( IEnumerable<T> datas, CancellationToken token = default ) where T : IDatabaseEntry
 	{
 		bool allsuccess = true;
 
 		foreach( var data in datas )
 		{
-			if( !await SaveData( data ) )
+			if( !await SaveData( data, token ) )
 			{
 				allsuccess = false;
 			}
@@ -62,11 +59,16 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 		return allsuccess;
 	}
 
-	public virtual async Task<Dictionary<string, T>> GetBackup<T>() where T : IDatabaseEntry
-	{
-		var entryNames = await GetAllIndexes<T>();
+	public virtual async Task<bool> DeleteData<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry => await DeleteData( EnumerableExtensions.AsSingleton( data ), token );
+	public virtual async Task<bool> DeleteData<T>( IEnumerable<T> datas, CancellationToken token = default ) where T : IDatabaseEntry => await DeleteData<T>( datas.Select( x => x.DatabaseIndex ), token );
+	public virtual async Task<bool> DeleteData<T>( string databaseIndex, CancellationToken token = default ) where T : IDatabaseEntry => await DeleteData<T>( EnumerableExtensions.AsSingleton( databaseIndex ), token );
+	public abstract Task<bool> DeleteData<T>( IEnumerable<string> databaseIndexes, CancellationToken token = default ) where T : IDatabaseEntry;
 
-		var dataTasks = entryNames.Select( entryName => GetData<T>( entryName ) ).ToList();
+	public virtual async Task<Dictionary<string, T>> GetBackup<T>( CancellationToken token = default ) where T : IDatabaseEntry
+	{
+		var entryNames = await GetAllIndexes<T>( token );
+
+		var dataTasks = entryNames.Select( entryName => GetData<T>( entryName, token ) ).ToList();
 
 		var results = await Task.WhenAll( dataTasks );
 
@@ -75,26 +77,20 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 			.ToDictionary( x => x.Key, x => x.Value );
 	}
 
-	public virtual async Task<List<string>> GetAllIndexes<T>() where T : IDatabaseEntry
+	public virtual async Task<List<string>> GetAllIndexes<T>( CancellationToken token = default ) where T : IDatabaseEntry
 	{
-		var databaseIndexes = new List<string>();
+		var entryListData = await GetData<EntryListData>( typeof( T ).Name, token );
 
-		var entryListData = await GetData<EntryListData>( typeof( T ).Name );
-		if( entryListData != null )
-		{
-			databaseIndexes.AddRange( entryListData.Entries );
-		}
-
-		return databaseIndexes;
+		return entryListData?.Entries.ToList() ?? new();
 	}
 
-	public virtual async Task Add<T>( T data ) where T : IDatabaseEntry => await Add<T>( data.DatabaseIndex );
-
-	public virtual async Task Add<T>( IEnumerable<string> databaseIndexes ) where T : IDatabaseEntry => await Add<T>( databaseIndexes.ToArray() );
-
-	public virtual async Task Add<T>( params string[] databaseIndexes ) where T : IDatabaseEntry
+	public virtual async Task Add<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry => await Add<T>( data.DatabaseIndex, token );
+	public virtual async Task Add<T>( string databaseIndex, CancellationToken token = default ) where T : IDatabaseEntry => await Add<T>( EnumerableExtensions.AsSingleton( databaseIndex ), token );
+	public virtual async Task Add<T>( IEnumerable<string> databaseIndexes, CancellationToken token = default ) where T : IDatabaseEntry
 	{
-		var entryListData = await GetData<EntryListData>( typeof( T ).Name );
+		var typeName = typeof( T ).Name;
+
+		var entryListData = await GetData<EntryListData>( typeName, token );
 
 		bool doAdd = false;
 
@@ -102,27 +98,38 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 		{
 			entryListData = new EntryListData()
 			{
-				Type = typeof( T ).Name
+				Type = typeName
 			};
 
 			//signal that we need to add this to the EntryListData itself
-			doAdd = entryListData.Type != entryListData.GetType().Name;
+			doAdd = entryListData.Type != typeof( EntryListData ).Name;
 		}
 
-		foreach( var dbEntry in databaseIndexes )
-		{
-			if( !entryListData.Entries.Contains( dbEntry ) )
-			{
-				entryListData.Entries.Add( dbEntry );
-			}
-		}
+		entryListData.Entries.UnionWith( databaseIndexes );
 
 		if( doAdd )
 		{
-			await Add( entryListData );
+			await Add( entryListData, token );
 		}
 
-		await SaveData( entryListData );
+		await SaveData( entryListData, token );
+	}
+
+	public virtual async Task Remove<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry => await Remove<T>( data.DatabaseIndex, token );
+	public virtual async Task Remove<T>( string databaseIndex, CancellationToken token = default ) where T : IDatabaseEntry => await Remove<T>( EnumerableExtensions.AsSingleton( databaseIndex ), token );
+	public virtual async Task Remove<T>( IEnumerable<string> databaseIndexes, CancellationToken token = default ) where T : IDatabaseEntry
+	{
+		var typeName = typeof( T ).Name;
+		var entryListData = await GetData<EntryListData>( typeName, token );
+
+		if( entryListData is null )
+		{
+			return;
+		}
+
+		entryListData.Entries.ExceptWith( databaseIndexes );
+
+		await SaveData( entryListData, token );
 	}
 
 	protected virtual void Dispose( bool disposing )

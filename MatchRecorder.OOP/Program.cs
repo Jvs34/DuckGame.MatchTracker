@@ -22,7 +22,7 @@ var host = WebApplication.CreateBuilder( args );
 host.Configuration
 	.AddJsonFile( Path.Combine( "Settings", "shared.json" ) )
 #if DEBUG
-	.AddJsonFile( Path.Combine( "Settings", "shared_debug.json" ) )
+	.AddJsonFile( Path.Combine( "Settings", "shared_debug.json" ), true )
 #endif
 	.AddJsonFile( Path.Combine( "Settings", "obs.json" ) )
 	.AddCommandLine( args )

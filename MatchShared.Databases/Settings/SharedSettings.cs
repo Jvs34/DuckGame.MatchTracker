@@ -12,7 +12,6 @@ namespace MatchShared.Databases.Settings;
 public sealed class SharedSettings
 {
 	public string BaseRecordingFolder { get; set; }
-	public string BaseRepositoryUrl { get; set; } //this has to be a github url for raw access
 	public string DataName { get; set; }
 	public string RoundVideoFile { get; set; }
 	public string RoundVoiceFile { get; set; }

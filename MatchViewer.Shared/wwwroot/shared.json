@@ -1,12 +1,9 @@
 {
-  "BaseRecordingFolder": "E:\\DuckGameRecordings",
-  "BaseRepositoryUrl": "https://raw.githubusercontent.com/Jvs34/DuckGame.MatchDB2/master/",
-  "DataName": "data.json",
-  "LevelPreviewFile": "preview.png",
-  "TimestampFormat": "yyyy-MM-dd HH-mm-ss",
-  "RoundVideoFile": "video.mp4",
-  "RoundVoiceFile": "voice.ogg",
-  "DatabaseFile": "duckgame.litedb",
-  "RoundReplayFile": "replaydata.bin",
-  "RoundReplayFileCompressed": "replaydata.zip"
+	"BaseRecordingFolder": "E:\\DuckGameRecordings",
+	"DataName": "data.json",
+	"LevelPreviewFile": "preview.png",
+	"TimestampFormat": "yyyy-MM-dd HH-mm-ss",
+	"RoundVideoFile": "video.mp4",
+	"RoundVoiceFile": "voice.ogg",
+	"DatabaseFile": "duckgame.litedb"
 }

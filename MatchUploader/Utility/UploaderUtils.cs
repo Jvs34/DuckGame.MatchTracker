@@ -23,16 +23,31 @@ internal static class UploaderUtils
 	/// <returns>EG: "Willox Jvs"</returns>
 	internal static async Task<string> GetAllWinners( IGameDatabase DB, IWinner data )
 	{
-		string winners = string.Empty;
-		var playerWinners = await DB.GetAllData<PlayerData>( data.GetWinners() );
-		winners = string.Join( " ", playerWinners.Select( x => x?.GetName() ) );
+		var stringBuilder = new StringBuilder();
 
-		if( string.IsNullOrEmpty( winners ) )
+		var winners = data.GetWinners();
+
+		if( winners.Count == 0 )
 		{
-			winners = "Nobody";
+			stringBuilder.Append( "Nobody" );
+		}
+		else
+		{
+			foreach( var winnerIndex in winners )
+			{
+				var playerData = await DB.GetData<PlayerData>( winnerIndex );
+				if( playerData is null )
+				{
+					continue;
+				}
+
+				stringBuilder
+					.Append( playerData.GetName() ?? string.Empty )
+					.Append( ' ' );
+			}
 		}
 
-		return winners;
+		return stringBuilder.ToString();
 	}
 
 	/// <summary>

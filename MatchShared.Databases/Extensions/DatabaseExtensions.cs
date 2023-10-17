@@ -3,6 +3,7 @@ using MatchShared.DataClasses;
 using MatchShared.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,19 +27,19 @@ public static class DatabaseExtensions
 	//	};
 	//}
 
-	public static async Task ImportBackup( this IGameDatabase db, Dictionary<string, Dictionary<string, IDatabaseEntry>> backup )
-	{
-		foreach( var dataTypeKV in backup )
-		{
-			var dataTypeName = dataTypeKV.Key;
-			var dataTypeValue = dataTypeKV.Value;
+	//public static async Task ImportBackup( this IGameDatabase db, Dictionary<string, Dictionary<string, IDatabaseEntry>> backup )
+	//{
+	//	foreach( var dataTypeKV in backup )
+	//	{
+	//		var dataTypeName = dataTypeKV.Key;
+	//		var dataTypeValue = dataTypeKV.Value;
 
-			foreach( var dataEntry in dataTypeValue )
-			{
-				await db.SaveData( dataEntry.Value );
-			}
-		}
-	}
+	//		foreach( var dataEntry in dataTypeValue )
+	//		{
+	//			await db.SaveData( dataEntry.Value );
+	//		}
+	//	}
+	//}
 
 	private static async Task IteratorTask<T>( IGameDatabase db, string dataName, Func<T, Task<bool>> callback, List<Task> tasks, CancellationTokenSource tokenSource ) where T : IDatabaseEntry
 	{
@@ -86,6 +87,26 @@ public static class DatabaseExtensions
 		await db.IterateOver( callback, await db.GetAllIndexes<T>() );
 	}
 
+	public static async IAsyncEnumerable<T> GetAllData<T>( this IGameDatabase db, List<string> databaseIndexes, [EnumeratorCancellation] CancellationToken token = default ) where T : IDatabaseEntry
+	{
+		if( databaseIndexes == null || databaseIndexes.Count == 0 )
+		{
+			yield break;
+		}
+
+		foreach( var index in databaseIndexes )
+		{
+			var data = await db.GetData<T>( index, token );
+
+			if( data == null )
+			{
+				continue;
+			}
+
+			yield return data;
+		}
+	}
+
 	public static async Task AddTag( this IGameDatabase db, string unicode, string fancyName, ITagsList tagsList = null )
 	{
 		string emojiDatabaseIndex = string.Join( " ", Encoding.UTF8.GetBytes( unicode ) );
@@ -111,24 +132,5 @@ public static class DatabaseExtensions
 		{
 			tagsList.Tags.Add( emojiDatabaseIndex );
 		}
-	}
-
-	/// <summary>
-	/// Ideally these two should not be used whatsoever, please deprecate after moving the code over
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	/// <param name="db"></param>
-	/// <param name="databaseIndexes"></param>
-	[Obsolete]
-	public static async Task<List<T>> GetAllData<T>( this IGameDatabase db, List<string> databaseIndexes ) where T : IDatabaseEntry
-	{
-		var dataList = new List<T>();
-
-		foreach( var entryIndex in databaseIndexes )
-		{
-			dataList.Add( await db.GetData<T>( entryIndex ) );
-		}
-
-		return dataList;
 	}
 }

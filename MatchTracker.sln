@@ -48,7 +48,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Settings", "Settings", "{98
 		Settings\bot.json = Settings\bot.json
 		Settings\obs.json = Settings\obs.json
 		Settings\shared.json = Settings\shared.json
-		Settings\shared_debug.json = Settings\shared_debug.json
+		Settings\shared_debug_disabled.json = Settings\shared_debug_disabled.json
 		Settings\uploader.json = Settings\uploader.json
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject

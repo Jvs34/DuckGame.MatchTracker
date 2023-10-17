@@ -4,6 +4,11 @@ namespace MatchViewer.Wasm;
 
 public class BlazorGameDatabase : BaseGameDatabase
 {
+	public override Task<bool> DeleteData<T>( IEnumerable<string> databaseIndexes, CancellationToken token = default )
+	{
+		throw new NotImplementedException();
+	}
+
 	public override async Task<T> GetData<T>( string dataId = "", CancellationToken token = default )
 	{
 		return default;
