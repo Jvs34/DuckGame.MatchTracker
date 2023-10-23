@@ -59,7 +59,7 @@ internal static class RecorderUtils
 	public static PlayerData ConvertDuckGameProfileToPlayerData( Profile profile ) => new()
 	{
 		Name = profile.name,
-		UserId = GetPlayerID( profile ),
+		UserId = GetPlayerID( profile )
 	};
 
 	public static TeamData ConvertDuckGameProfileToTeamData( Profile profile )

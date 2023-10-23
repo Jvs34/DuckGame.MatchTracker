@@ -19,11 +19,11 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 
 	protected override void DefineMappingInternal<T>() => Mapper.Entity<T>().Id( x => x.DatabaseIndex );
 
-	public override Task Load( CancellationToken token = default )
+	public override Task<bool> Load( CancellationToken token = default )
 	{
 		if( IsLoaded )
 		{
-			return Task.CompletedTask;
+			return Task.FromResult( IsLoadedInternal );
 		}
 
 		var connectionString = new ConnectionString
@@ -35,19 +35,17 @@ public class LiteDBGameDatabase : BaseGameDatabase, IDisposable
 
 		Database = new LiteDatabase( connectionString, Mapper );
 		IsLoadedInternal = true;
-		return Task.CompletedTask;
+		return Task.FromResult( IsLoadedInternal );
 	}
 
 	public override Task<T> GetData<T>( string dataId = "", CancellationToken token = default )
 	{
 		var typeName = typeof( T ).Name;
 		dataId = string.IsNullOrEmpty( dataId ) ? typeName : dataId;
-
 		return Task.FromResult( Database.GetCollection<T>( typeName ).FindById( dataId ) );
 	}
 
 	public override Task<bool> SaveData<T>( T data, CancellationToken token = default ) => SaveData( EnumerableExtensions.AsSingleton( data ), token );
-
 	public override Task<bool> SaveData<T>( IEnumerable<T> datas, CancellationToken token = default )
 	{
 		return Task.FromResult( Database.GetCollection<T>( typeof( T ).Name ).Upsert( datas ) > 0 );

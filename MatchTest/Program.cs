@@ -1,4 +1,5 @@
-﻿using MatchShared.Databases;
+﻿using LiteDB;
+using MatchShared.Databases;
 using MatchShared.Databases.LiteDB;
 using MatchShared.DataClasses;
 using Microsoft.Extensions.Configuration;
@@ -8,7 +9,7 @@ using System.IO;
 var configuration = new ConfigurationBuilder()
 	.SetBasePath( Directory.GetCurrentDirectory() )
 	.AddJsonFile( Path.Combine( "Settings", "shared.json" ) )
-//.AddJsonFile( Path.Combine( "Settings", "shared_debug_disabled.json" ) )
+	.AddJsonFile( Path.Combine( "Settings", "shared_debug_disabled.json" ) )
 .Build();
 
 using var db = new LiteDBGameDatabase();
@@ -17,11 +18,25 @@ configuration.Bind( db.SharedSettings );
 await db.Load();
 
 
+
 Console.WriteLine( "Done, press a key to stop" );
 Console.ReadKey();
 
 
 #region bullshit
+//var litedb = db.Database;
+
+//var coll = litedb.GetCollection<MatchData>();
+
+
+//var indexes = await db.GetAllIndexes<MatchData>();
+
+//var test = from item in coll.Query()
+//		   where indexes.Contains( item.DatabaseIndex )
+//		   select item;
+
+//var testlist = test.ToList();
+
 //var indexes = await db.GetAllIndexes<RoundData>();
 
 //await db.Remove<RoundData>( indexes );

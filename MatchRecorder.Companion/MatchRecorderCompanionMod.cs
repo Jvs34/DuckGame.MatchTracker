@@ -8,15 +8,9 @@ public class MatchRecorderCompanionMod : ClientMod //Mod
 {
 	private Harmony HarmonyInstance { get; set; }
 
-	public MatchRecorderCompanionMod()
-	{
-		HarmonyInstance = new Harmony( GetType().Namespace );
-	}
+	public MatchRecorderCompanionMod() => HarmonyInstance = new Harmony( GetType().Namespace );
 
-	protected override void OnPostInitialize()
-	{
-		HarmonyInstance.PatchAll( Assembly.GetExecutingAssembly() );
-	}
+	protected override void OnPostInitialize() => HarmonyInstance.PatchAll( Assembly.GetExecutingAssembly() );
 }
 
 #region HOOKS

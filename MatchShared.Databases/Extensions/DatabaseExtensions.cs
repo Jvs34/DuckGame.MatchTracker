@@ -2,6 +2,7 @@
 using MatchShared.DataClasses;
 using MatchShared.Interfaces;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -41,42 +42,41 @@ public static class DatabaseExtensions
 	//	}
 	//}
 
-	private static async Task IteratorTask<T>( IGameDatabase db, string dataName, Func<T, Task<bool>> callback, List<Task> tasks, CancellationTokenSource tokenSource ) where T : IDatabaseEntry
+	private static async Task IteratorTask<T>( IGameDatabase db, SemaphoreSlim semaphore, string dataName, Func<T, Task<bool>> callback, CancellationTokenSource tokenSource ) where T : IDatabaseEntry
 	{
-		if( tokenSource.IsCancellationRequested )
+		await semaphore.WaitAsync();
+
+		try
 		{
-			return;
+			if( tokenSource.IsCancellationRequested )
+			{
+				return;
+			}
+
+			T iterateItem = await db.GetData<T>( dataName, tokenSource.Token );
+
+			if( !await callback( iterateItem ) )
+			{
+				tokenSource.Cancel();
+			}
 		}
-
-		T iterateItem = await db.GetData<T>( dataName, tokenSource.Token );
-
-		if( !await callback( iterateItem ) )
+		finally
 		{
-			tokenSource.Cancel();
-
-			//immediately clear the tasks list so we don't await anything for no reason anymore
-			//the tasks may still run but they won't get any further than the cancellation request check
-			tasks.Clear();
+			semaphore.Release();
 		}
 	}
 
-	/// <summary>
-	/// Iterate over the specified 
-	/// </summary>
-	/// <typeparam name="T"></typeparam>
-	/// <param name="db"></param>
-	/// <param name="callback"></param>
-	/// <param name="databaseIndexes"></param>
-	/// <returns></returns>
 	public static async Task IterateOver<T>( this IGameDatabase db, Func<T, Task<bool>> callback, List<string> databaseIndexes ) where T : IDatabaseEntry
 	{
+		using var maxTasksSemaphore = new SemaphoreSlim( 20, 20 );
+
 		var tasks = new List<Task>();
 
 		var tokenSource = new CancellationTokenSource();
 
 		foreach( string dataName in databaseIndexes )
 		{
-			tasks.Add( IteratorTask( db, dataName, callback, tasks, tokenSource ) );
+			tasks.Add( IteratorTask( db, maxTasksSemaphore, dataName, callback, tokenSource ) );
 		}
 
 		await Task.WhenAll( tasks );
@@ -87,15 +87,20 @@ public static class DatabaseExtensions
 		await db.IterateOver( callback, await db.GetAllIndexes<T>() );
 	}
 
-	public static async IAsyncEnumerable<T> GetAllData<T>( this IGameDatabase db, List<string> databaseIndexes, [EnumeratorCancellation] CancellationToken token = default ) where T : IDatabaseEntry
+	public static async IAsyncEnumerable<T> GetDataEnumerable<T>( this IGameDatabase db, List<string> databaseIndexes, [EnumeratorCancellation] CancellationToken token = default ) where T : IDatabaseEntry
 	{
-		if( databaseIndexes == null || databaseIndexes.Count == 0 )
+		if( databaseIndexes == null || databaseIndexes.Count == 0 || token.IsCancellationRequested )
 		{
 			yield break;
 		}
 
 		foreach( var index in databaseIndexes )
 		{
+			if( token.IsCancellationRequested )
+			{
+				yield break;
+			}
+
 			var data = await db.GetData<T>( index, token );
 
 			if( data == null )
@@ -103,6 +108,20 @@ public static class DatabaseExtensions
 				continue;
 			}
 
+			yield return data;
+		}
+	}
+
+	public static async IAsyncEnumerable<T> GetAllDataEnumberable<T>( this IGameDatabase db, [EnumeratorCancellation] CancellationToken token = default ) where T : IDatabaseEntry
+	{
+		if( token.IsCancellationRequested )
+		{
+			yield break;
+		}
+
+		var databaseIndexes = await db.GetAllIndexes<T>( token );
+		await foreach( var data in GetDataEnumerable<T>( db, databaseIndexes, token ) )
+		{
 			yield return data;
 		}
 	}

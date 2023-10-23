@@ -2,6 +2,7 @@
 using DSharpPlus.Entities;
 using DSharpPlus.SlashCommands;
 using MatchBot.Utils;
+using MatchShared.Databases.Extensions;
 using MatchShared.Databases.Interfaces;
 using MatchShared.DataClasses;
 using System.Text;
@@ -27,7 +28,7 @@ internal class MatchTrackerSlashCommands : ApplicationCommandModule
 	[SlashCommand( "lastplayed", "Checks when was the last time someone played" )]
 	public async Task LastPlayedCommand( InteractionContext context, [Option( "user", "target, can be empty" )] DiscordUser? target = null )
 	{
-		await context.CreateResponseAsync( "Looking through the database...", true );
+		await context.CreateResponseAsync( "Looking through the database...", false );
 
 		var response = new StringBuilder();
 
@@ -42,7 +43,7 @@ internal class MatchTrackerSlashCommands : ApplicationCommandModule
 			if( foundPlayer != null )
 			{
 				DateTime lastPlayed = await Database.GetLastTimePlayed( foundPlayer );
-				response.Append( $"The last time {foundPlayer.GetName()} played was {Formatter.Timestamp( lastPlayed, TimestampFormat.LongDateTime )}" );
+				response.Append( $"The last time {foundPlayer.GetName( true )} played was {Formatter.Timestamp( lastPlayed, TimestampFormat.LongDateTime )}" );
 			}
 			else
 			{
@@ -59,7 +60,7 @@ internal class MatchTrackerSlashCommands : ApplicationCommandModule
 		[Option( "matchOrRound", "Whether we're doing this for a match(true) or a round(false)" )] bool matchOrRound = true,
 		[Option( "user", "target, can be empty" )] DiscordUser? target = null )
 	{
-		await context.CreateResponseAsync( "Looking through the database...", true );
+		await context.CreateResponseAsync( "Looking through the database...", false );
 
 		var response = new StringBuilder();
 
@@ -75,7 +76,7 @@ internal class MatchTrackerSlashCommands : ApplicationCommandModule
 			if( foundPlayer != null )
 			{
 				var playerStats = await Database.GetTimesPlayed( foundPlayer, matchOrRound );
-				response.Append( $"{foundPlayer.GetName()} played {playerStats.TimesPlayed} {( matchOrRound ? "matches" : "rounds" )} with a playtime of {playerStats.DurationPlayed.ToString( "c" )}" );
+				response.Append( $"{foundPlayer.GetName( true )} played {playerStats.TimesPlayed} {( matchOrRound ? "matches" : "rounds" )} with a playtime of {playerStats.DurationPlayed.ToString( "c" )}" );
 			}
 			else
 			{
@@ -92,29 +93,39 @@ internal class MatchTrackerSlashCommands : ApplicationCommandModule
 	[Option( "matchOrRound", "Whether we're doing this for a match(true) or a round(false)" )] bool matchOrRound = true,
 	[Option( "user", "target, can be empty" )] DiscordUser? target = null )
 	{
-		await context.CreateResponseAsync( "Looking through the database...", true );
+		await context.CreateResponseAsync( "Looking through the database...", false );
 
 		var response = new StringBuilder();
 
 
 		if( target is null )
 		{
-			PlayerData? mostWinsWinner = null;
+			//PlayerData? mostWinsWinner = null;
 
 			var allWinsAndLosses = await Database.GetAllPlayerWinsAndLosses( matchOrRound );
 
-			var highestStats = allWinsAndLosses.MaxBy( x => x.Value.Wins );
+			//var highestStats = allWinsAndLosses.MaxBy( x => x.Value.Wins );
 
-			mostWinsWinner = await Database.GetData<PlayerData>( highestStats.Key ?? string.Empty );
+			//mostWinsWinner = await Database.GetData<PlayerData>( highestStats.Key ?? string.Empty );
 
-			if( mostWinsWinner != null )
+			var orderedWinsAndLosses = allWinsAndLosses.OrderByDescending( x => x.Value.Wins );
+
+			foreach( var playerWinsAndLosses in orderedWinsAndLosses )
 			{
-				response.Append( $"{mostWinsWinner.GetName()} won {highestStats.Value.Wins} and lost {highestStats.Value.Losses} {( matchOrRound ? "matches" : "rounds" )}" );
+				var playerData = await Database.GetData<PlayerData>( playerWinsAndLosses.Key );
+				response
+					.Append( $"{playerData.GetName( true )} won {playerWinsAndLosses.Value.Wins} and lost {playerWinsAndLosses.Value.Losses} {( matchOrRound ? "matches" : "rounds" )}" )
+					.AppendLine();
 			}
-			else
-			{
-				response.Append( "Doesn't seem like there's someone with more wins than anybody else" );
-			}
+
+			//if( mostWinsWinner != null )
+			//{
+			//	response.Append( $"{mostWinsWinner.GetName( true )} won {highestStats.Value.Wins} and lost {highestStats.Value.Losses} {( matchOrRound ? "matches" : "rounds" )}" );
+			//}
+			//else
+			//{
+			//	response.Append( "Doesn't seem like there's someone with more wins than anybody else" );
+			//}
 		}
 		else
 		{
@@ -124,7 +135,7 @@ internal class MatchTrackerSlashCommands : ApplicationCommandModule
 			{
 				var stats = await Database.GetPlayerWinsAndLosses( foundPlayer, matchOrRound );
 
-				response.Append( $"{foundPlayer.GetName()} won {stats.Wins} and lost {stats.Losses} {( matchOrRound ? "matches" : "rounds" )}" );
+				response.Append( $"{foundPlayer.GetName( true )} won {stats.Wins} and lost {stats.Losses} {( matchOrRound ? "matches" : "rounds" )}" );
 			}
 			else
 			{

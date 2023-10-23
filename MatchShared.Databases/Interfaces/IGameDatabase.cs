@@ -15,7 +15,7 @@ public interface IGameDatabase : IDisposable
 	bool IsReadOnly { get; }
 	bool IsLoaded { get; }
 
-	Task Load( CancellationToken token = default );
+	Task<bool> Load( CancellationToken token = default );
 
 	Task<bool> SaveData<T>( T data, CancellationToken token = default ) where T : IDatabaseEntry;
 	Task<bool> SaveData<T>( IEnumerable<T> datas, CancellationToken token = default ) where T : IDatabaseEntry;
@@ -51,7 +51,7 @@ public interface IGameDatabase : IDisposable
 	Task Add<T>( string databaseIndex, CancellationToken token = default ) where T : IDatabaseEntry;
 
 	/// <summary>
-	/// Adds these indexes to the EntryDataList of this type
+	/// Adds these indexes to the EntryDataList for this type
 	/// <para/>NOTE: this will not save the data itself, call db.SaveData for that
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
