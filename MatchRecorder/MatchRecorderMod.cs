@@ -7,7 +7,7 @@ namespace MatchRecorder;
 /// <summary>
 /// Basically the entry point of the mod
 /// </summary>
-public class MatchRecorderMod : DuckGame.ClientMod, IDisposable //TODO: DuckGame does not dispose mods, seeks alternative
+public class MatchRecorderMod : DuckGame.ClientMod, IDisposable //TODO: DuckGame does not dispose mods, seek alternative
 {
 	private bool IsDisposed { get; set; }
 

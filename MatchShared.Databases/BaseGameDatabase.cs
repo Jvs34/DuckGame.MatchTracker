@@ -38,7 +38,7 @@ public abstract class BaseGameDatabase : IGameDatabase, IDisposable
 		DefineMappingInternal<T>();
 	}
 
-	public abstract Task Load( CancellationToken token = default );
+	public abstract Task<bool> Load( CancellationToken token = default );
 	protected abstract void DefineMappingInternal<T>() where T : IDatabaseEntry;
 	protected abstract void InternalDispose();
 

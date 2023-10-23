@@ -48,8 +48,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Settings", "Settings", "{98
 		Settings\bot.json = Settings\bot.json
 		Settings\obs.json = Settings\obs.json
 		Settings\shared.json = Settings\shared.json
-		Settings\shared_debug_disabled.json = Settings\shared_debug_disabled.json
 		Settings\uploader.json = Settings\uploader.json
+		Settings\shared_debug.json = Settings\shared_debug.json
 	EndProjectSection
 	ProjectSection(FolderGlobals) = preProject
 		C_5_4Users_4Jvsth_4OneDrive_4Documents_4DuckGameMods_4MatchTracker_4Settings_4bot_1json__JsonSchema = 
