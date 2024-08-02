@@ -84,18 +84,6 @@ internal class OBSRawVideoRecorder : BaseRecorder
 		await tempTaskCompletionSource.Task;
 	}
 
-	/// <summary>
-	/// Needed for now as the stable OBS doesn't have an up to date obs-websocket
-	/// and calling handler.SetRecordDirectory throws an error as it doesn't exist in that version
-	/// </summary>
-	/// <param name="recordingFolder"></param>
-	/// <returns></returns>
-	private async Task SetRecordDirectoryWorkaroundAsync( string recordingFolder )
-	{
-		await ObsHandler.SetProfileParameterAsync( "AdvOut", "RecFilePath", recordingFolder );
-		await ObsHandler.SetProfileParameterAsync( "SimpleOutput", "FilePath", recordingFolder );
-	}
-
 	protected override async Task StartRecordingMatchInternal()
 	{
 		DateTime recordingTime = DateTime.Now;
@@ -104,7 +92,7 @@ internal class OBSRawVideoRecorder : BaseRecorder
 
 		Directory.CreateDirectory( matchPath );
 
-		await SetRecordDirectoryWorkaroundAsync( matchPath );
+		await ObsHandler.SetRecordDirectoryAsync( matchPath );
 		await ObsHandler.StartRecordAsync();
 		await WaitUntilRecordingState( ObsOutputState.Started );
 

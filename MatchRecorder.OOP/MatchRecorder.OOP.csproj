@@ -10,9 +10,9 @@
 		<ProjectReference Include="..\MatchRecorder.Shared\MatchRecorder.Shared.csproj" />
 		<ProjectReference Include="..\MatchShared.Databases\MatchShared.Databases.csproj" />
 		<ProjectReference Include="..\MatchShared.Databases.LiteDB\MatchShared.Databases.LiteDB.csproj" />
-		<PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="3.0.0" />
+		<PackageReference Include="Extensions.Hosting.AsyncInitialization" Version="3.0.1" />
 		<PackageReference Include="ObsStrawket" Version="0.14.0" />
-		<PackageReference Include="SixLabors.ImageSharp" Version="3.0.2" />
+		<PackageReference Include="SixLabors.ImageSharp" Version="3.1.5" />
 	</ItemGroup>
 
 </Project>
